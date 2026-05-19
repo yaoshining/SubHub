@@ -1,3 +1,11 @@
+<h1 align="left">SubHub</h1>
+
+A self-hosted subtitle gateway for aggregating subtitle providers, caching downloads, and managing manual uploads. 
+
+<p align="left">
+  🇺🇸 <a href="./README.md">English</a> | 🇨🇳 <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
 ## Overview
 
 SubHub is designed for teams or individuals who want a unified subtitle service instead of depending on a single subtitle provider.
