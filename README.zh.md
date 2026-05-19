@@ -1,6 +1,10 @@
-# SubHub
+<h1 align="left">SubHub</h1>
 
 一个可自托管的字幕聚合与中转服务，支持多字幕源接入、本地缓存、字幕上传和统一 API。
+
+<p align="left">
+  🇺🇸 <a href="./README.md">English</a> | 🇨🇳 <a href="./README.zh-CN.md">简体中文</a>
+</p>
 
 ## 项目简介
 
