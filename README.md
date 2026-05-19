@@ -1,6 +1,6 @@
 ## Overview
 
-SubBridge is designed for teams or individuals who want a unified subtitle service instead of depending on a single subtitle provider.
+SubHub is designed for teams or individuals who want a unified subtitle service instead of depending on a single subtitle provider.
 
 It can sit between your applications and multiple subtitle sources, providing:
 
@@ -22,7 +22,7 @@ Most subtitle providers have one or more of the following limitations:
 - Missing upload or management workflows
 - No local cache or unified API layer
 
-SubBridge addresses these problems by introducing a provider abstraction layer and a local subtitle store, so applications only need to integrate once.
+SubHub addresses these problems by introducing a provider abstraction layer and a local subtitle store, so applications only need to integrate once.
 
 ## Core Features
 
@@ -53,7 +53,7 @@ SubBridge addresses these problems by introducing a provider abstraction layer a
 
 ## Architecture
 
-SubBridge is intended to follow a modular architecture:
+SubHub is intended to follow a modular architecture:
 
 - API Layer
   - Exposes unified search, download, upload, and cache endpoints
