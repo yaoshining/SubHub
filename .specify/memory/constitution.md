@@ -1,50 +1,92 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: template placeholder → 1.0.0
+- Modified principles:
+  - Template Principle 1 → I. Code Quality Is a Release Gate
+  - Template Principle 2 → II. Tests Are Mandatory and Layered
+  - Template Principle 3 → III. User Experience Must Stay Consistent
+  - Template Principle 4 → IV. Performance Budgets Are Required
+  - Template Principle 5 → V. Maintainability and Simplicity by Default
+- Added sections:
+  - Quality Gates & Delivery Standards
+  - Delivery Workflow & Review Expectations
+- Removed sections:
+  - None
+- Templates requiring updates:
+  - ✅ .specify/templates/plan-template.md
+  - ✅ .specify/templates/spec-template.md
+  - ✅ .specify/templates/tasks-template.md
+  - ✅ .specify/templates/commands/*.md (path not present; no updates required)
+- Deferred TODOs:
+  - None
+-->
+# SubHub Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Code Quality Is a Release Gate
+All production code MUST pass formatting, linting, and static analysis checks before merge.
+Each change MUST keep code readable, modular, and documented at API boundaries.
+Any accepted technical debt MUST include an owner, rationale, and follow-up task.
+Rationale: consistent quality controls reduce regressions and long-term maintenance cost.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Tests Are Mandatory and Layered
+Every feature and bug fix MUST include tests that fail before implementation and pass after.
+Test coverage MUST include unit tests for core logic and integration/contract tests for adapter
+boundaries, API behavior, and cache/storage interactions.
+Pull requests MUST not be merged when required tests fail.
+Rationale: layered tests are the primary safety mechanism for a provider-aggregating service.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. User Experience Must Stay Consistent
+Public API behavior MUST remain predictable across providers, including response shape, error
+format, pagination/sorting semantics, and status code usage.
+When breaking UX/API behavior is unavoidable, teams MUST document migration impact and provide
+compatibility guidance in release notes.
+Rationale: downstream media clients depend on stable and uniform integration behavior.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Performance Budgets Are Required
+Each feature MUST define measurable performance targets before implementation (for example:
+p95 latency, cache hit ratio, and memory/storage constraints where relevant).
+Changes that risk exceeding agreed budgets MUST include benchmark evidence and mitigation plans
+before merge.
+Rationale: SubHub must stay responsive under multi-provider and cache-heavy workloads.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Maintainability and Simplicity by Default
+Designs MUST prefer simple, replaceable modules over tightly coupled abstractions.
+Provider integrations MUST be isolated behind stable interfaces to prevent source-specific
+behavior from leaking into core APIs.
+Rationale: modular simplicity keeps the system extensible as providers and policies evolve.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Quality Gates & Delivery Standards
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- Every feature spec MUST include: test strategy, UX/API consistency expectations, and
+  performance targets.
+- Every implementation plan MUST pass a Constitution Check for all five principles.
+- Every task plan MUST include explicit tasks for tests, UX/API consistency validation, and
+  performance verification.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Delivery Workflow & Review Expectations
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- Implement in small, reviewable increments; each pull request MUST state principle compliance.
+- Reviewers MUST block merge when any constitutional gate is missing evidence.
+- CI MUST run formatting, linting, static analysis, and required test suites on every PR.
+- Runtime and API-facing documentation MUST be updated when behavior changes.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution is the top-level engineering policy for SubHub. If other guidance conflicts,
+this document takes precedence.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+Amendments require: (1) a documented proposal, (2) reviewer approval from maintainers, and
+(3) synchronization updates to affected templates and guidance docs in the same change.
+
+Versioning policy:
+- MAJOR: backward-incompatible governance or principle removals/redefinitions.
+- MINOR: new principle/section or materially expanded policy guidance.
+- PATCH: clarifications, wording improvements, and non-semantic refinements.
+
+Compliance review expectations:
+- Every PR review MUST include an explicit constitution compliance check.
+- Periodic audits MUST sample active specs/plans/tasks for policy alignment.
+
+**Version**: 1.0.0 | **Ratified**: 2026-05-21 | **Last Amended**: 2026-05-21

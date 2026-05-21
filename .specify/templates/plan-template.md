@@ -40,7 +40,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Code quality gate defined (format, lint, static analysis) with enforcement in CI.
+- Required test strategy defined (unit + integration/contract where applicable).
+- UX/API consistency constraints defined for externally visible behavior.
+- Performance budgets defined with measurable targets and validation approach.
+- Simplicity/modularity approach documented for long-term maintainability.
 
 ## Project Structure
 
