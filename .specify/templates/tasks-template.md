@@ -10,7 +10,7 @@ description: "Task list template for feature implementation"
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
 **Tests**: The examples below include test tasks. Tests are REQUIRED by default and MUST cover
-unit plus integration/contract scenarios as applicable.
+unit + integration/contract scenarios as applicable.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
