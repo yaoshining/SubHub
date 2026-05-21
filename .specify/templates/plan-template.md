@@ -1,110 +1,111 @@
-# Implementation Plan: [FEATURE]
+# 实施计划: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**分支**: `[###-feature-name]` | **日期**: [DATE] | **规格**: [link]
 
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**输入**: 来自 `/specs/[###-feature-name]/spec.md` 的功能规格
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**说明**: 本模板由 `/speckit.plan` 命令填充。执行流程见 `.specify/templates/plan-template.md`。
 
-## Summary
+## 摘要
 
-[Extract from feature spec: primary requirement + technical approach from research]
+[从功能规格中提取：核心需求 + 研究得出的技术方案]
 
-## Design Context
+## 设计上下文
 
-**Global Design System**: `DESIGN.md`
+**全局设计系统**: `DESIGN.md`
 
-**Relevant Page Specs**:
-- [List page specs referenced by this feature, e.g. `docs/pages/dashboard.md`]
+**相关页面规范**:
+- [列出本功能引用的页面规范，例如 `docs/pages/dashboard.md`]
 
-**Design Inputs Reviewed**:
-- [List prototypes, screenshots, HTML artifacts, or other design references used for planning]
+**已评审的设计输入**:
+- [列出用于规划的原型、截图、HTML 制品或其他设计参考]
 
-## Technical Context
+## 技术上下文
 
 <!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
+  ACTION REQUIRED: 用项目的技术细节替换本节内容。
+  此结构作为建议性框架，用于指导迭代过程。
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**语言/版本**: [例如 Python 3.11、Swift 5.9、Rust 1.75，或 NEEDS CLARIFICATION]
 
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**核心依赖**: [例如 FastAPI、UIKit、LLVM，或 NEEDS CLARIFICATION]
 
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**存储**: [如适用，例如 PostgreSQL、CoreData、files，或 N/A]
 
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
+**测试**: [例如 pytest、XCTest、cargo test，或 NEEDS CLARIFICATION]
 
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**目标平台**: [例如 Linux server、iOS 15+、WASM，或 NEEDS CLARIFICATION]
 
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
+**项目类型**: [例如 library/cli/web-service/mobile-app/compiler/desktop-app，或 NEEDS CLARIFICATION]
 
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**性能目标**: [领域相关，例如 1000 req/s、10k lines/sec、60 fps，或 NEEDS CLARIFICATION]
 
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
+**约束条件**: [领域相关，例如 <200ms p95、<100MB memory、offline-capable，或 NEEDS CLARIFICATION]
 
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**规模/范围**: [领域相关，例如 10k users、1M LOC、50 screens，或 NEEDS CLARIFICATION]
 
-## Constitution Check
+## 宪章检查
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。*
 
-- Code quality gate defined (format, lint, static analysis) with enforcement in CI.
-- Required test strategy defined (unit + integration/contract where applicable).
-- UX/API consistency constraints defined for externally visible behavior.
-- Performance budgets defined with measurable targets and validation approach.
-- Simplicity/modularity approach documented for long-term maintainability.
-- Design sources identified (`DESIGN.md` + relevant `docs/pages/*.md`) and mapped to the feature scope.
-- Plan states whether any new system-level rule requires a `DESIGN.md` update.
+- 已定义代码质量门禁（format、lint、static analysis），并在 CI 中强制执行。
+- 已定义必需测试策略（适用时包含 unit + integration/contract）。
+- 已定义对外行为的 UX/API 一致性约束。
+- 已定义可度量性能预算与验证方法。
+- 已记录面向长期可维护性的简洁化/模块化方案。
+- 已识别设计来源（`DESIGN.md` + 相关 `docs/pages/*.md`），并映射到功能范围。
+- 计划已声明是否需要对 `DESIGN.md` 增补系统级规则。
+- 已明确 worktree 隔离：一个 worktree 仅对应一个 active feature。
+- 已明确可追溯关系：feature id 映射到一个 spec 目录、一个分支与一个主 issue。
+- 已明确 issue 同步范围：同步 task issue 时不得跨 spec 混批。
 
-## Design Mapping
+## 设计映射
 
-### Rules in Scope
+### 适用规则
 
-- **Global Rules**: [List the relevant `DESIGN.md` sections, tokens, or component rules]
-- **Page Rules**: [List the page-specific layout, state, and hierarchy rules this feature must follow]
+- **全局规则**: [列出相关 `DESIGN.md` 章节、设计令牌或组件规则]
+- **页面规则**: [列出本功能必须遵循的页面级布局、状态与层级规则]
 
-### Planned Documentation Changes
+### 计划中的文档变更
 
-- **Update `DESIGN.md`**: [Yes/No + why]
-- **Update existing page specs**: [List files or `None`]
-- **Create new page specs**: [List files or `None`]
+- **更新 `DESIGN.md`**: [Yes/No + 原因]
+- **更新既有页面规范**: [列出文件或 `None`]
+- **新建页面规范**: [列出文件或 `None`]
 
-## Project Structure
+## 项目结构
 
-### Documentation (this feature)
+### 文档（本功能）
 
 ```text
 specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+├── plan.md              # 本文件（/speckit.plan 产物）
+├── research.md          # 第 0 阶段产物（/speckit.plan）
+├── data-model.md        # 第 1 阶段产物（/speckit.plan）
+├── quickstart.md        # 第 1 阶段产物（/speckit.plan）
+├── contracts/           # 第 1 阶段产物（/speckit.plan）
+└── tasks.md             # 第 2 阶段产物（/speckit.tasks，非 /speckit.plan 创建）
 ```
 
-### Design Documentation (repository root)
+### 设计文档（仓库根目录）
 
 ```text
-DESIGN.md                # Global design system and visual rules
+DESIGN.md                # 全局设计系统与视觉规则
 docs/
 └── pages/
     ├── page-spec-template.md
-    └── [page-name].md   # Page-specific goals, modules, states, and overrides
+  └── [page-name].md   # 页面级目标、模块、状态与覆盖规则
 ```
 
-### Source Code (repository root)
+### 源码（仓库根目录）
 <!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
+  ACTION REQUIRED: 将下方占位目录树替换为本功能的真实结构。
+  删除未使用选项，并用真实路径扩展所选结构（如 apps/admin、packages/...）。
+  最终计划中不得保留 Option 标签。
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+# [REMOVE IF UNUSED] Option 1: 单体项目（默认）
 src/
 ├── models/
 ├── services/
@@ -116,7 +117,7 @@ tests/
 ├── integration/
 └── unit/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+# [REMOVE IF UNUSED] Option 2: Web 应用（检测到 "frontend" + "backend" 时）
 backend/
 ├── src/
 │   ├── models/
@@ -131,29 +132,28 @@ frontend/
 │   └── services/
 └── tests/
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+# [REMOVE IF UNUSED] Option 3: 移动端 + API（检测到 "iOS/Android" 时）
 api/
-└── [same as backend above]
+└── [与上方 backend 类似]
 
 ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+└── [平台特定结构：功能模块、UI 流程、平台测试]
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**结构决策**: [记录所选结构，并引用上方真实目录]
 
-## Implementation Strategy for Design Fidelity
+## 设计保真实施策略
 
-- Reuse existing visual and interaction rules before introducing new patterns.
-- Validate code against both `DESIGN.md` and the relevant page specs during implementation.
-- If implementation reveals a page-only change, update that page spec in the same feature.
-- If implementation reveals a new cross-page rule, update `DESIGN.md` in the same feature.
+- 在引入新模式前，优先复用既有视觉与交互规则。
+- 实施过程中，代码校验必须同时对照 `DESIGN.md` 与相关页面规范。
+- 若实现暴露页面级变更，必须在同一 feature 中更新对应页面规范。
+- 若实现暴露跨页面新规则，必须在同一 feature 中更新 `DESIGN.md`。
 
-## Complexity Tracking
+## 复杂度追踪
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
+> **仅当宪章检查存在需说明的例外时填写**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
+| 例外项 | 必要原因 | 为何拒绝更简单方案 |
 |-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| [例如：第 4 个子项目] | [当前需求] | [为何 3 个子项目不足] |
+| [例如：Repository 模式] | [具体问题] | [为何直接 DB 访问不足] |
