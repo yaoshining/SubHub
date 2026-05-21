@@ -5,4 +5,4 @@ shell commands, and other important information, read the current plan
 
 ## 语言规范
 
-- 所有回复、文档撰写、PR 与 Issue 默认使用中文表达。
+- 所有回复、文档撰写、git提交消息、PR 与 Issue 默认使用中文表达。
