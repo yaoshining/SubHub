@@ -8,6 +8,27 @@
 
 **Input**: User description: "$ARGUMENTS"
 
+## Design Context *(mandatory)*
+
+### Design Sources
+
+- **Global Design System**: `DESIGN.md`
+- **Page Specs**: `docs/pages/*.md`
+- **Feature-Specific Design Artifacts**: [List any mockups, HTML prototypes, screenshots, or page specs referenced by this feature]
+
+### Design Scope
+
+- **Affected Pages**: [List the page specs this feature touches, e.g. `docs/pages/dashboard.md`]
+- **New Pages**: [List any new page specs to create, or write `None`]
+- **Design System Impact**: [State whether this feature reuses existing rules or requires updates to `DESIGN.md`]
+
+### Design Constraints
+
+- Implementation MUST follow `DESIGN.md` for visual language, tokens, component rules, and interaction tone.
+- Page-specific structure, module hierarchy, and behavior MUST follow the relevant files in `docs/pages/*.md`.
+- This spec MUST explicitly call out any intentional deviation from existing design rules.
+- New system-level design rules MUST be added to `DESIGN.md`; page-only changes MUST be documented in the relevant page spec.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -104,6 +125,7 @@
 - **NFR-002 (Testing)**: Feature MUST define required unit and integration/contract tests.
 - **NFR-003 (UX Consistency)**: Feature MUST define API/UX consistency rules and error format expectations.
 - **NFR-004 (Performance)**: Feature MUST define measurable performance targets and acceptance thresholds.
+- **NFR-005 (Design Fidelity)**: Feature MUST define which `DESIGN.md` rules and page spec rules are in scope for implementation and validation.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -136,3 +158,9 @@
 - [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
 - [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
 - [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+
+## Page Spec Updates
+
+- **Existing page specs to update**: [e.g., `docs/pages/dashboard.md` or `None`]
+- **New page specs to create**: [e.g., `docs/pages/provider-detail.md` or `None`]
+- **`DESIGN.md` updates required**: [Yes/No, with a short reason]

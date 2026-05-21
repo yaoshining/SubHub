@@ -10,6 +10,16 @@
 
 [Extract from feature spec: primary requirement + technical approach from research]
 
+## Design Context
+
+**Global Design System**: `DESIGN.md`
+
+**Relevant Page Specs**:
+- [List page specs referenced by this feature, e.g. `docs/pages/dashboard.md`]
+
+**Design Inputs Reviewed**:
+- [List prototypes, screenshots, HTML artifacts, or other design references used for planning]
+
 ## Technical Context
 
 <!--
@@ -45,6 +55,21 @@
 - UX/API consistency constraints defined for externally visible behavior.
 - Performance budgets defined with measurable targets and validation approach.
 - Simplicity/modularity approach documented for long-term maintainability.
+- Design sources identified (`DESIGN.md` + relevant `docs/pages/*.md`) and mapped to the feature scope.
+- Plan states whether any new system-level rule requires a `DESIGN.md` update.
+
+## Design Mapping
+
+### Rules in Scope
+
+- **Global Rules**: [List the relevant `DESIGN.md` sections, tokens, or component rules]
+- **Page Rules**: [List the page-specific layout, state, and hierarchy rules this feature must follow]
+
+### Planned Documentation Changes
+
+- **Update `DESIGN.md`**: [Yes/No + why]
+- **Update existing page specs**: [List files or `None`]
+- **Create new page specs**: [List files or `None`]
 
 ## Project Structure
 
@@ -58,6 +83,16 @@ specs/[###-feature]/
 ├── quickstart.md        # Phase 1 output (/speckit.plan command)
 ├── contracts/           # Phase 1 output (/speckit.plan command)
 └── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+```
+
+### Design Documentation (repository root)
+
+```text
+DESIGN.md                # Global design system and visual rules
+docs/
+└── pages/
+    ├── page-spec-template.md
+    └── [page-name].md   # Page-specific goals, modules, states, and overrides
 ```
 
 ### Source Code (repository root)
@@ -106,6 +141,13 @@ ios/ or android/
 
 **Structure Decision**: [Document the selected structure and reference the real
 directories captured above]
+
+## Implementation Strategy for Design Fidelity
+
+- Reuse existing visual and interaction rules before introducing new patterns.
+- Validate code against both `DESIGN.md` and the relevant page specs during implementation.
+- If implementation reveals a page-only change, update that page spec in the same feature.
+- If implementation reveals a new cross-page rule, update `DESIGN.md` in the same feature.
 
 ## Complexity Tracking
 

@@ -37,21 +37,28 @@ boundaries, API behavior, and cache/storage interactions.
 Pull requests MUST not be merged when required tests fail.
 Rationale: layered tests are the primary safety mechanism for a provider-aggregating service.
 
-### III. User Experience Must Stay Consistent
+## III. Design Sources of Truth
+- Project-wide visual and interaction rules live in `DESIGN.md`.
+- Page-specific behavior and layout constraints live in `docs/pages/*.md`.
+- Implementation must not invent new visual language when existing rules already cover the case.
+- If a new page or component requires a new system-level rule, update `DESIGN.md`.
+- If a change affects only one page, update that page spec instead of `DESIGN.md`.
+
+### IV. User Experience Must Stay Consistent
 Public API behavior MUST remain predictable across providers, including response shape, error
 format, pagination/sorting semantics, and status code usage.
 When breaking UX/API behavior is unavoidable, teams MUST document migration impact and provide
 compatibility guidance in release notes.
 Rationale: downstream media clients depend on stable and uniform integration behavior.
 
-### IV. Performance Budgets Are Required
+### V. Performance Budgets Are Required
 Each feature MUST define measurable performance targets before implementation (for example:
 p95 latency, cache hit ratio, and memory/storage constraints where relevant).
 Changes that risk exceeding agreed budgets MUST include benchmark evidence and mitigation plans
 before merge.
 Rationale: SubHub must stay responsive under multi-provider and cache-heavy workloads.
 
-### V. Maintainability and Simplicity by Default
+### VI. Maintainability and Simplicity by Default
 Designs MUST prefer simple, replaceable modules over tightly coupled abstractions.
 Provider integrations MUST be isolated behind stable interfaces to prevent source-specific
 behavior from leaking into core APIs.
