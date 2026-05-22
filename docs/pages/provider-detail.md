@@ -53,7 +53,7 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `8.4 Provider 运营 / Provider 配置详情`、`9.1 提供方故障与令牌故障切换`、`5. 产品原则`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.3 输入框、选择器与表单`、`7.4 表格与列表`、`7.5 状态标签、Badge、Chip`、`8. 状态与反馈规则`
 - **Allowed overrides**: MVP 可收敛高级策略项，但必须保留权重、并发限制、冷却、回退和 Token 池五类核心信息。
 - **Forbidden deviations**: 不得把 Provider 凭据与下游调用方 Key 混在一张表里；不得把异常隔离设计成隐式自动消失。
 

@@ -53,7 +53,7 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `6.1 主题`、`6.3 页面外壳`、`8.1 认证入口`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`3.1 主题策略`、`6.1 全局外壳`、`8. 状态与反馈规则`、`10. 可访问性与交互底线`
 - **Allowed overrides**: 未登录状态允许使用更简化的页面外壳，不显示完整后台导航。
 - **Forbidden deviations**: 不得做成营销首页；不得在未认证状态暴露 Provider、Key 或用户运营数据。
 

@@ -53,7 +53,7 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `8.6 API 能力治理 / API Key 管理`、`9.3 外部 API 治理`、`11. 内容规则`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.3 输入框、选择器与表单`、`7.4 表格与列表`、`7.5 状态标签、Badge、Chip`、`8. 状态与反馈规则`、`9. 数据展示与技术信息呈现`
 - **Allowed overrides**: MVP 可简化环境、配额和作用域枚举，但必须保留 Key 生命周期视角。
 - **Forbidden deviations**: 不得把 API Key 页面做成单次生成表单；不得让停用、轮换结果无状态反馈。
 

@@ -54,7 +54,7 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `8.7 用户与权限治理 / 用户管理`、`8.7 用户与权限治理 / 权限策略`、`11. 内容规则`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.3 输入框、选择器与表单`、`7.4 表格与列表`、`7.5 状态标签、Badge、Chip`、`8. 状态与反馈规则`
 - **Allowed overrides**: MVP 可不实现复杂角色矩阵，但必须保留成员状态、邀请状态和风险会话的基础可见性。
 - **Forbidden deviations**: 不得把用户页扩展成通用组织后台；不得隐藏高风险会话或把其放入难以发现的位置。
 
