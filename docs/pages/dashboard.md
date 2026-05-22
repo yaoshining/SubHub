@@ -20,7 +20,7 @@
 
 ## Modules / Sections
 
-1. **顶部摘要区**: 展示当前总览标题、主题切换和高优先级入口动作。
+1. **顶部摘要区**: 展示当前总览标题和高优先级入口动作。不承载主题切换入口（主题切换统一位于 Sidebar Footer，见 `DESIGN.md §3.1`）。
 2. **北极星状态区**: 用一句话总结系统整体状态，突出“现在系统整体怎么样”。
 3. **系统健康概览区**: 汇总服务是否具备对外能力、近期异常数量与是否需要人工介入。
 4. **队列与压力摘要区**: 展示任务压力、处理中断点或需要重试的信号。
@@ -54,9 +54,52 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.2 卡片与面板`、`8. 状态与反馈规则`、`9. 数据展示与技术信息呈现`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.2 卡片与面板`、`7.9 组件系统基线`、`8. 状态与反馈规则`、`9. 数据展示与技术信息呈现`
 - **Allowed overrides**: 可根据 MVP 简化趋势维度与图表丰富度，但不能拿掉“下一步去哪处理”的引导性信息。
 - **Forbidden deviations**: 不得把 Dashboard 做成纯数字看板；不得隐藏未就绪或失败状态。
+
+## Component Patterns (shadcn/ui)
+
+本页面组件实现必须优先映射到以下 shadcn/ui 组件结构，不得引入自定义替代。
+
+### Card 结构
+
+- 各信息模块（队列摘要、缓存信号、Provider 快照、下一步动作）使用 `Card` 组件。
+- `CardHeader`：标题文字 + 可选 action link，底部加 `Separator`（`border-b`）与内容区分隔。
+- `CardContent`：统计子卡片 / 表格 / 动作卡片区。
+- 子统计卡片（metric sub-card）映射到内嵌小型 `Card`，`bg-muted/30` 背景与 `border` 边框。
+
+### Badge
+
+- 所有运行状态（运行中、正常、无积压、良好、无缺口等）必须使用 `Badge`，`rounded-full` 药丸形。
+- 语义映射：
+  - 成功/健康：`variant="outline"` + success token（`border-success text-success bg-success/10`）
+  - 警告：`variant="outline"` + warning token
+  - 错误/停用：`variant="destructive"`
+  - 中性/时间标签（如 "24h"）：`variant="secondary"`
+- 禁止用纯色文字代替 Badge 表示状态。
+
+### Button
+
+- 跨页跳转动作（"前往 Providers →"、"管理 Providers →"）：`variant="outline" size="sm"`
+- 内联次要动作（"查看详情"）：`variant="outline" size="sm"` 或 `variant="ghost" size="sm"`
+- 刷新：`variant="outline" size="icon"`
+- 时间范围选择器：`Select size="sm"`，高度 `h-8`（32px）
+
+### Table
+
+- Provider 快照表格使用 shadcn/ui `Table`。
+- `TableHeader`：`bg-muted/50`，字段标签 `text-xs font-medium text-muted-foreground`。
+- 行操作："查看详情" 为 `Button variant="outline" size="sm"`。
+
+### Avatar
+
+- 侧边栏用户区域使用 `Avatar`，展示首字母，accent 色背景与边框。
+
+### Alert（North Star 状态栏）
+
+- 系统健康横幅映射到 `Alert` 组件。
+- 成功态：左侧展示 `CheckCircle2` 填充圆图标，描述与时间戳行内排列，时间戳用 `text-muted-foreground`。
 
 ## Data / Dependencies
 
