@@ -101,6 +101,11 @@ handoffs:
 
 - 使用任何技能前，先查阅 `DESIGN.md` 与 `docs/pages/*.md`。
 - 任务需要页面级界面推理、组件结构强化、布局改进或设计系统细化时，使用 `ui-ux-pro-max`。
+- 当 `ui-ux-pro-max` 从 `.github` 目录运行时，其持久化产物通常位于 `.github/design-system/<project-name>/`；本仓库常见路径为 `.github/design-system/subhub/`。
+- 其中 `MASTER.md` 与 `pages/*.md` 默认视为中间生成参考，而非最终真源。
+- 可读取上述中间文件作为输入，但应将可复用内容吸收到 `DESIGN.md` 与 `docs/pages/*.md`。
+- 不应要求用户长期并行维护 `.github/design-system/...` 与 `DESIGN.md` / `docs/pages/*.md` 两套同级权威。
+- 若中间产物内容已吸收进项目真源文档，后续优先基于 `DESIGN.md` 与 `docs/pages/*.md` 工作。
 - 结构正确但视觉偏弱、通用、扁平或层级不足时，使用 `taste`。
 - 需要评审、审计、一致性检查或最终润色时，使用 `impeccable`。
 - 仅在任务明确要求产出或更新 `.pen` 设计工件时，使用 `Pencil`。
