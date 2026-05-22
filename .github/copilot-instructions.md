@@ -7,6 +7,19 @@ shell commands, and other important information, read the current plan
 
 - 所有回复、文档撰写、git提交消息、PR 与 Issue 默认使用中文表达。
 
+## 前端实现约束：TailwindCSS + shadcn/ui
+
+本项目前端界面默认优先使用 **TailwindCSS + shadcn/ui** 进行组件化实现。
+
+**编码代理与 UI 代理必须遵守以下规则：**
+
+- 实现基础界面元素（按钮、输入框、表单、弹层、表格、标签、卡片等）时，优先复用 `shadcn/ui` 现有组件与模式，不得随意自造基础组件。
+- 允许通过 Tailwind token、`variant`、`slot`、组合方式等对组件进行适配，以符合项目设计语言（详见 `DESIGN.md` § 7.9）。
+- 只有在现有 `shadcn/ui` 模式明显无法承载需求时，才允许新增自定义基础组件，且须在对应页面规范（`docs/pages/*.md`）中说明理由。
+- 页面实现应保持组件可复用、可组合、可变体化，不追求一次性页面特化写法。
+- 若设计稿或页面规范中存在可映射到 `shadcn/ui` 的结构，应优先按该组件体系落地，而不是重新发明等价实现。
+- 若设计意图与 `shadcn/ui` 默认模式冲突，应先提出映射方案或 tradeoff，再由人工确认是否引入新组件。
+
 ## ui-ux-pro-max 产物约定（SubHub）
 
 - `ui-ux-pro-max` 安装于 `.github/prompts/ui-ux-pro-max/`。
