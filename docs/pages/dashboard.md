@@ -54,7 +54,7 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `8.2 运营核心 / 运营总览`、`9.1 提供方故障与令牌故障切换`、`11. 内容规则`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.2 卡片与面板`、`8. 状态与反馈规则`、`9. 数据展示与技术信息呈现`
 - **Allowed overrides**: 可根据 MVP 简化趋势维度与图表丰富度，但不能拿掉“下一步去哪处理”的引导性信息。
 - **Forbidden deviations**: 不得把 Dashboard 做成纯数字看板；不得隐藏未就绪或失败状态。
 
