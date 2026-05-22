@@ -20,6 +20,15 @@ shell commands, and other important information, read the current plan
 - 若设计稿或页面规范中存在可映射到 `shadcn/ui` 的结构，应优先按该组件体系落地，而不是重新发明等价实现。
 - 若设计意图与 `shadcn/ui` 默认模式冲突，应先提出映射方案或 tradeoff，再由人工确认是否引入新组件。
 
+## 设计稿文件约定
+
+所有设计稿工件统一存放于 `design/` 目录：
+
+- `design/main.pen`：**设计稿主文件**，包含深/浅主题 Dashboard 设计稿（Pencil 格式）
+- 新增页面设计稿应命名为 `design/<page-name>.pen` 或放入 `design/main.pen` 内的对应 Frame
+
+设计代理（UI 代理）在操作设计稿时，默认以 `design/main.pen` 为入口文件。
+
 ## ui-ux-pro-max 产物约定（SubHub）
 
 - `ui-ux-pro-max` 安装于 `.github/prompts/ui-ux-pro-max/`。
