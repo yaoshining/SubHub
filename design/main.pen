@@ -13509,6 +13509,1324 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "gY5xE",
+      "x": -39,
+      "y": 3084,
+      "name": "Login – Dark",
+      "theme": {
+        "mode": "dark"
+      },
+      "width": 1440,
+      "height": 900,
+      "fill": "$--bg-canvas",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "e930q",
+          "name": "Auth Card",
+          "width": 440,
+          "fill": "$--bg-surface",
+          "cornerRadius": 8,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$--border-default"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "yErJp",
+              "name": "Card Header",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                32,
+                32,
+                24,
+                32
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "hQJtR",
+                  "name": "Logo Row",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Uz751",
+                      "name": "Logo Icon",
+                      "width": 23,
+                      "height": 24,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "images/logo-dark.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wfymS",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ki1Pm",
+                          "fill": "$--font-primary",
+                          "content": "Sub",
+                          "fontFamily": "Space Grotesk",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "aNv8L",
+                          "fill": "#3672FC",
+                          "content": "Hub",
+                          "fontFamily": "Space Grotesk",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KkJZ7",
+                  "name": "Admin Badge",
+                  "fill": "$--accent-subtle",
+                  "cornerRadius": 4,
+                  "gap": 4,
+                  "padding": [
+                    3,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uQ2QU",
+                      "fill": "$--accent",
+                      "content": "Admin Console",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "opM6T",
+              "name": "Divider",
+              "width": "fill_container",
+              "height": 1,
+              "fill": "$--border-default"
+            },
+            {
+              "type": "frame",
+              "id": "b3di2",
+              "name": "Card Body",
+              "width": 440,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                24,
+                32,
+                28,
+                32
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "HZqz4",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VwBnc",
+                      "fill": "$--font-primary",
+                      "content": "登录控制台",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "p0owgW",
+                      "fill": "$--font-muted",
+                      "content": "仅限授权管理员访问",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zLHZN",
+                  "width": 376,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "rNmJi",
+                      "width": 376,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "c1CFSW",
+                          "fill": "$--font-secondary",
+                          "content": "邮箱或用户名",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eWuEI",
+                          "name": "Input Email",
+                          "width": 376,
+                          "height": 36,
+                          "fill": "$--bg-canvas",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "JFv9O",
+                              "fill": "$--font-muted",
+                              "content": "admin@example.com",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uPlVK",
+                      "width": 376,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zT2Oy",
+                          "fill": "$--font-secondary",
+                          "content": "密码",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MKDpU",
+                          "name": "Input Password",
+                          "width": 376,
+                          "height": 36,
+                          "fill": "$--bg-canvas",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cbWPh",
+                              "fill": "$--font-primary",
+                              "content": "••••••••••••",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HzPwG",
+                              "name": "Icon Eye",
+                              "width": 14,
+                              "height": 14,
+                              "fill": "$--font-muted"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VK2Tr",
+                  "name": "Button Primary",
+                  "width": 376,
+                  "height": 36,
+                  "fill": "$--accent",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ImfQc",
+                      "fill": "$--accent-foreground",
+                      "content": "登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p0WkaQ",
+                  "name": "Separator",
+                  "width": 376,
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AK2yn",
+                      "width": 140,
+                      "height": 1,
+                      "fill": "$--border-default"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ebB2c",
+                      "fill": "$--font-muted",
+                      "content": "或使用其他方式",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "V4Eaa",
+                      "width": 140,
+                      "height": 1,
+                      "fill": "$--border-default"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NgNq3",
+                  "name": "SSO Callout",
+                  "width": 376,
+                  "fill": "$--accent-subtle",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border-default"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OCLMt",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZGJr6",
+                          "fill": "$--font-secondary",
+                          "content": "SSO / 2FA",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sKfUP",
+                          "fill": "$--border-default",
+                          "cornerRadius": 3,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OpcFc",
+                              "fill": "$--font-muted",
+                              "content": "未启用",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Jmdgz",
+                      "fill": "$--font-muted",
+                      "content": "单点登录与双因素认证在当前版本未开启。\n如需启用，请联系系统管理员。",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "n4FWg",
+              "name": "Card Footer",
+              "width": 440,
+              "padding": [
+                12,
+                32,
+                20,
+                32
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xllgO",
+                  "fill": "$--font-muted",
+                  "content": "登录成功后将进入控制台 Dashboard",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jzxK0",
+      "x": 1560,
+      "y": 3084,
+      "name": "Login – Light",
+      "theme": {
+        "mode": "light"
+      },
+      "width": 1440,
+      "height": 900,
+      "fill": "$--bg-canvas",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "TToQL",
+          "name": "Auth Card",
+          "width": 440,
+          "fill": "$--bg-surface",
+          "cornerRadius": 8,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$--border-default"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "FjS5v",
+              "name": "Card Header",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                32,
+                32,
+                24,
+                32
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "b8qatp",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "UPG6Z",
+                      "name": "Logo Icon",
+                      "width": 23,
+                      "height": 24,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "images/logo-light.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sCIen",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jnYCc",
+                          "fill": "$--font-primary",
+                          "content": "Sub",
+                          "fontFamily": "Space Grotesk",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KCoVf",
+                          "fill": "#1748E8",
+                          "content": "Hub",
+                          "fontFamily": "Space Grotesk",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fZJLM",
+                  "fill": "$--accent-subtle",
+                  "cornerRadius": 4,
+                  "gap": 4,
+                  "padding": [
+                    3,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "JQdpm",
+                      "fill": "$--accent",
+                      "content": "Admin Console",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "H7pve",
+              "width": 440,
+              "height": 1,
+              "fill": "$--border-default"
+            },
+            {
+              "type": "frame",
+              "id": "j9fTZ",
+              "name": "Card Body",
+              "width": 440,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                24,
+                32,
+                28,
+                32
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WmA5R",
+                  "width": 376,
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eBCSG",
+                      "fill": "$--font-primary",
+                      "content": "登录控制台",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jV3hg",
+                      "fill": "$--font-muted",
+                      "content": "仅限授权管理员访问",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "I32pah",
+                  "width": 376,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "e18P7",
+                      "width": 376,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "F3BVc",
+                          "fill": "$--font-secondary",
+                          "content": "邮箱或用户名",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "e8LCyY",
+                          "width": 376,
+                          "height": 36,
+                          "fill": "$--bg-canvas",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "acgPl",
+                              "fill": "$--font-muted",
+                              "content": "admin@example.com",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XNH0G",
+                      "width": 376,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IE3gb",
+                          "fill": "$--font-secondary",
+                          "content": "密码",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ktILh",
+                          "width": 376,
+                          "height": 36,
+                          "fill": "$--bg-canvas",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "T6lpb",
+                              "fill": "$--font-primary",
+                              "content": "••••••••••••",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "hzl65",
+                              "name": "Icon Eye",
+                              "width": 14,
+                              "height": 14,
+                              "fill": "$--font-muted"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Kq5h4",
+                  "width": 376,
+                  "height": 36,
+                  "fill": "$--accent",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "b6ito",
+                      "fill": "$--accent-foreground",
+                      "content": "登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SIwDW",
+                  "width": 376,
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "r8vK8",
+                      "width": 140,
+                      "height": 1,
+                      "fill": "$--border-default"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AZsBB",
+                      "fill": "$--font-muted",
+                      "content": "或使用其他方式",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Dduuu",
+                      "width": 140,
+                      "height": 1,
+                      "fill": "$--border-default"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "j72dd",
+                  "width": 376,
+                  "fill": "$--accent-subtle",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border-default"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "as4Zb",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lMxwj",
+                          "fill": "$--font-secondary",
+                          "content": "SSO / 2FA",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "trgtM",
+                          "fill": "$--border-default",
+                          "cornerRadius": 3,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "E9MTAw",
+                              "fill": "$--font-muted",
+                              "content": "未启用",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Qv87h",
+                      "fill": "$--font-muted",
+                      "content": "单点登录与双因素认证在当前版本未开启。\n如需启用，请联系系统管理员。",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sIeRQ",
+              "width": 440,
+              "padding": [
+                12,
+                32,
+                20,
+                32
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Apl2T",
+                  "fill": "$--font-muted",
+                  "content": "登录成功后将进入控制台 Dashboard",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "F2wDb",
+      "x": 3100,
+      "y": 3084,
+      "name": "Login – Dark (Error State)",
+      "theme": {
+        "mode": "dark"
+      },
+      "width": 1440,
+      "height": 900,
+      "fill": "$--bg-canvas",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "MyvYi",
+          "name": "Auth Card",
+          "width": 440,
+          "fill": "$--bg-surface",
+          "cornerRadius": 8,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$--border-default"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "jpgZI",
+              "name": "Card Header",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                32,
+                32,
+                24,
+                32
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nhaFU",
+                  "name": "Logo Row",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NroGE",
+                      "name": "Logo Icon",
+                      "width": 23,
+                      "height": 24,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "images/logo-dark.png",
+                        "mode": "fit"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Kmbx6",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Ca0CL",
+                          "fill": "$--font-primary",
+                          "content": "Sub",
+                          "fontFamily": "Space Grotesk",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ba2Vi",
+                          "fill": "#3672FC",
+                          "content": "Hub",
+                          "fontFamily": "Space Grotesk",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CpukW",
+                  "name": "Admin Badge",
+                  "fill": "$--accent-subtle",
+                  "cornerRadius": 4,
+                  "gap": 4,
+                  "padding": [
+                    3,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tBf7n",
+                      "fill": "$--accent",
+                      "content": "Admin Console",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "F2Y40",
+              "name": "Divider",
+              "width": "fill_container",
+              "height": 1,
+              "fill": "$--border-default"
+            },
+            {
+              "type": "frame",
+              "id": "t8EKh",
+              "name": "Card Body",
+              "width": 440,
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                24,
+                32,
+                28,
+                32
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "v1TcQ",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vYcjO",
+                      "fill": "$--font-primary",
+                      "content": "登录控制台",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ptreI",
+                      "fill": "$--font-muted",
+                      "content": "仅限授权管理员访问",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "l6e6z5",
+                  "width": 376,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tLACn",
+                      "width": 376,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--danger"
+                      },
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vRF3z",
+                          "fill": "$--font-secondary",
+                          "content": "邮箱或用户名",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "R3ZnA0",
+                          "name": "Input Email",
+                          "width": 376,
+                          "height": 36,
+                          "fill": "$--bg-canvas",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "DqIB9",
+                              "fill": "$--font-muted",
+                              "content": "admin@example.com",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j0dnxS",
+                      "width": 376,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "NapDe",
+                          "fill": "$--font-secondary",
+                          "content": "密码",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "YuhBP",
+                          "name": "Input Password",
+                          "width": 376,
+                          "height": 36,
+                          "fill": "$--bg-canvas",
+                          "cornerRadius": 6,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "gap": 8,
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "v33WL",
+                              "fill": "$--font-primary",
+                              "content": "••••••••••••",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "i0ikI",
+                              "name": "Icon Eye",
+                              "width": 14,
+                              "height": 14,
+                              "fill": "$--font-muted"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qgLEt",
+                  "name": "Button Primary",
+                  "width": 376,
+                  "height": 36,
+                  "fill": "$--accent",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XG8Lz",
+                      "fill": "$--accent-foreground",
+                      "content": "登录",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uvD2D",
+                  "name": "Error Alert",
+                  "width": 376,
+                  "fill": "$--danger-subtle",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--danger"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    10,
+                    12
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "EkTn9",
+                      "fill": "$--danger",
+                      "content": "邮箱或密码错误，请检查后重试。连续失败 5 次将锁定账号。",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NmoDP",
+                  "name": "Separator",
+                  "width": 376,
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gPc4m",
+                      "width": 140,
+                      "height": 1,
+                      "fill": "$--border-default"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gmonO",
+                      "fill": "$--font-muted",
+                      "content": "或使用其他方式",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ydxxn",
+                      "width": 140,
+                      "height": 1,
+                      "fill": "$--border-default"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W7x7D",
+                  "name": "SSO Callout",
+                  "width": 376,
+                  "fill": "$--accent-subtle",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border-default"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QmUjg",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "D4SV1e",
+                          "fill": "$--font-secondary",
+                          "content": "SSO / 2FA",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pQ1b7",
+                          "fill": "$--border-default",
+                          "cornerRadius": 3,
+                          "padding": [
+                            2,
+                            6
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "WU7n0",
+                              "fill": "$--font-muted",
+                              "content": "未启用",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "l01kz6",
+                      "fill": "$--font-muted",
+                      "content": "单点登录与双因素认证在当前版本未开启。\n如需启用，请联系系统管理员。",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qt8JS",
+              "name": "Card Footer",
+              "width": 440,
+              "padding": [
+                12,
+                32,
+                20,
+                32
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "NuOiQ",
+                  "fill": "$--font-muted",
+                  "content": "登录成功后将进入控制台 Dashboard",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
