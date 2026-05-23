@@ -21,7 +21,13 @@
 ### 设计来源
 
 - **全局设计系统**: `DESIGN.md`
-- **页面规范**: `docs/pages/*.md`（当前仓库尚未提供本功能对应页面规范，后续如进入实现需补齐）
+- **页面规范**:
+  - `docs/pages/login.md`
+  - `docs/pages/dashboard.md`
+  - `docs/pages/providers.md`
+  - `docs/pages/provider-detail.md`
+  - `docs/pages/api-keys.md`
+  - `docs/pages/users.md`
 - **功能特定设计工件**:
   - 原型 `dashboard.html`
   - 原型 `providers.html`
@@ -168,12 +174,12 @@
 
 ## 页面规范更新
 
-- **需更新的既有页面规范**: `None`
-- **需新建的页面规范**:
+- **需更新的既有页面规范**:
   - `docs/pages/login.md`
   - `docs/pages/dashboard.md`
   - `docs/pages/providers.md`
   - `docs/pages/provider-detail.md`
   - `docs/pages/api-keys.md`
   - `docs/pages/users.md`
+- **需新建的页面规范**: `None`
 - **是否需要更新 `DESIGN.md`**: `No`，当前功能复用既有控制台原型和全局规则，新增的是页面落地规范而不是系统级视觉语言
