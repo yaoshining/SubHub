@@ -39,16 +39,38 @@ handoffs:
 7. `.github/copilot-instructions.md`（项目级编码约定）
 8. 仓库中已有的相关前端代码（复用优先）
 
+**工程栈识别（实现前必做）：**  
+读取以下内容，识别仓库当前工程约定，不得假设或自行选择：
+- `package.json`：包管理器、脚本、依赖与 devDependencies
+- 配置文件：`next.config.*`、`vite.config.*`、`tsconfig.json`、`tailwind.config.*`
+- 测试配置：`vitest.config.*`、`jest.config.*`、`playwright.config.*`
+- 目录结构：`src/`、`app/`、`pages/`、`components/`、`lib/` 等
+- CI 配置：`.github/workflows/*.yml`（了解 lint、type check、build、test 脚本）
+
 ---
 
 ## 核心实现规则
+
+### Node.js 工程约定
+
+- 优先识别并遵守仓库当前使用的包管理器（npm / yarn / pnpm / bun），不得擅自切换
+- 遵守仓库 `package.json` 中已有的 `scripts`，不擅自新增或修改构建入口
+- 不引入新的前端框架，除非 plan 中有明确指定
+- 遵守仓库现有的路径别名、模块解析和 TypeScript 配置
+
+### 框架感知
+
+- **Next.js**（如使用）：按 App Router 或 Pages Router 的目录约定组织路由与组件；数据获取方式（Server Component、`getServerSideProps`、SWR 等）以现有代码为准
+- **Vite**（如使用）：按 Vite 项目的入口、别名、构建配置工作；不引入与当前 Vite 版本不兼容的插件
+- **框架未定型**：优先遵循现有代码与脚本结构，不自行选择框架路线
 
 ### 样式与组件
 
 - 样式默认使用 **TailwindCSS**，不写内联 style，不引入外部 CSS 框架
 - 基础 UI 结构与交互模式优先采用 **shadcn/ui** 现有组件
+- 熟悉并使用 theme token、variant、slot、组合模式构建可复用组件结构
 - 新增基础组件前，先确认现有 shadcn/ui 组件无法承载需求，并说明理由
-- 不写一次性页面特化样式，保持组件可复用、可变体化
+- 不写一次性页面特化样式，不为单个页面局部需求引入难以维护的组件分叉
 
 ### 实现范围
 
@@ -77,6 +99,25 @@ handoffs:
 - 文字与背景对比度需符合 WCAG AA 标准
 - 支持 `prefers-reduced-motion`，避免强制动画
 - 避免布局抖动（CLS）
+- 响应式实现不得改变产品信息架构与语义结构
+
+### 测试
+
+- 优先识别仓库现有测试工具（Vitest、Jest、Playwright、Testing Library 等），按已有方式补充测试
+- 不擅自引入另一套测试体系替代现有工具
+- 行为变化明显或状态分支较多时，**主动**指出测试覆盖是否不足
+- 至少具备以下测试意识：
+  - **单元测试**：工具函数、数据转换、纯逻辑
+  - **组件测试**：渲染输出、状态切换、用户交互
+  - **交互测试**：表单提交、错误反馈、操作确认流程
+  - **端到端测试**（仓库已有时）：关键用户路径
+- 如果行为变化但未补测试，必须在输出结构中明确说明原因
+
+### 工程质量
+
+- 实现必须通过仓库现有 lint、type check、build 脚本，不留已知 TS 类型错误
+- 组件边界清晰，状态不过度耦合，交互状态必须可测试
+- 不只关注"页面跑起来"，还要关注类型正确性与构建产物干净
 
 ---
 
@@ -89,6 +130,8 @@ handoffs:
 - 交互行为在 spec 或设计文档中未定义，推测会影响产品逻辑
 - 当前任务明显超出 spec 范围，实现它会引入未确认的功能
 - 现有组件无法满足需求，需要引入新的基础组件或第三方库
+- 仓库工程栈无法识别（缺少 package.json、配置文件或框架目录结构不清晰）
+- 需要切换包管理器、构建方式或引入新框架，但 plan 中无明确指定
 
 ---
 
@@ -110,11 +153,19 @@ handoffs:
 - docs/pages/*.md：已读（文件：xxx）
 - spec.md / plan.md / tasks.md：已读
 
+## 工程栈识别结果
+- 包管理器：（npm / yarn / pnpm / bun）
+- 框架：（Next.js App Router / Pages Router / Vite / 其他）
+- 测试工具：（Vitest / Jest / Playwright / Testing Library / 无）
+- 关键配置：（tsconfig、tailwind.config、vite.config 等）
+
 ## 关键假设
 - （写出所有无法从文档中确认、需要推断的决策）
 
 ## 风险 / 阻塞项
-- （列出可能导致停止实现的问题，包括设计缺口、状态未定义、超出 spec 范围等）
+- 设计缺口：
+- 工程约定冲突：
+- 需要引入新依赖或切换工具链：
 
 ## 是否需要补设计规则或 page spec
 - 是 / 否（如是，说明缺失内容并交给 `SubHub 界面设计管家`）
@@ -137,6 +188,11 @@ handoffs:
 - 已实现：default / loading / empty / error / success / permission（逐一确认）
 - 未实现（如有，说明原因）：
 
+## 工程质量检查
+- lint / type check：通过 / 未运行 / 存在错误（说明）
+- build：通过 / 未运行 / 存在错误（说明）
+- 测试补充情况：已补充 / 未补充（说明原因）
+
 ## 偏差与例外
 - 是否有与 DESIGN.md 或 page spec 不一致之处（如有，列出并说明原因）：
 
@@ -155,6 +211,9 @@ handoffs:
 - 禁止忽略 `DESIGN.md` 或 `docs/pages/*.md` 中的显式约束
 - 禁止做与当前 feature 无关的大范围代码重构
 - 禁止省略状态覆盖（loading / empty / error 不能留空）
+- 禁止擅自切换包管理器、构建方式或引入新的前端框架
+- 禁止在仓库已有测试工具的情况下引入另一套替代测试体系
+- 禁止留下已知 TypeScript 类型错误或忽略 lint 报错
 
 ---
 
