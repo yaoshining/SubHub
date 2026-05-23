@@ -60,9 +60,66 @@
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.3 输入框、选择器与表单`、`7.4 表格与列表`、`7.5 状态标签、Badge、Chip`、`8. 状态与反馈规则`
+- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.3 输入框、选择器与表单`、`7.4 表格与列表`、`7.5 状态标签、Badge、Chip`、`7.9 组件系统基线`、`8. 状态与反馈规则`
 - **Allowed overrides**: MVP 可收敛高级策略项，但必须保留权重、并发限制、冷却、回退和 Token 池五类核心信息；允许通过提示区强调“创建后待补配置”的实例状态。
 - **Forbidden deviations**: 不得把 Provider 凭据与下游调用方 Key 混在一张表里；不得把异常隔离设计成隐式自动消失；不得让用户回到列表页后才知道哪些关键策略尚未设置。
+
+## Component Patterns (shadcn/ui)
+
+本页面组件实现必须优先映射到以下 shadcn/ui 组件结构，不得引入自定义替代。
+
+### 页头与返回区
+
+- 返回列表：`Button variant="ghost" size="sm"` + `ChevronLeft` 图标，置于页面左上角。
+- 页面标题（Provider 实例名称）：`h1` 级别文字，`text-foreground`。
+- Provider 类型标签（如 "OpenSubtitles"）：`Badge variant="secondary"`。
+- 未保存变更指示：`Badge variant="outline"` + warning token（`border-warning text-warning bg-warning/10`），出现于页头右侧或标题下方，文案如"含未保存变更"。
+- 保存配置：`Button variant="default"`（Primary）；保存中状态：`Button disabled` + 内联 spinner；成功/失败反馈：`toast`（Sonner）。
+
+### 关键指标卡区
+
+- 外层容器：`Card`，`bg-surface-elevated`，内含 `CardHeader`（标题 + 可选刷新按钮）和 `CardContent`。
+- 各指标子卡片：内嵌小型 `Card`，`bg-muted/30` + `border`，展示指标标签（`text-xs text-muted-foreground`）与数值（`text-2xl font-semibold text-foreground`）。
+- 活跃 Token 数、冷却中 Token 数等状态摘要：每项附 `Badge`，语义同 §7.5：成功 → `border-success text-success bg-success/10`，警告 → warning token，危险 → `variant="destructive"`。
+
+### 运行策略区
+
+- 外层容器：`Card` with `CardHeader`（标题 + Separator）、`CardContent`。
+- 策略项按"权重与并发"、"轮换与冷却"、"失败切换与回退"分组，每组以子标题（`text-sm font-medium text-foreground`）隔开，组间使用 `Separator`。
+- 文本输入项：`Label` + `Input`，`size="sm"`，错误反馈紧贴字段下方（`text-xs text-destructive`）。
+- 数值选择项（优先级、并发上限）：`Label` + `Input type="number"` 或 `Select`。
+- 开关项（是否启用轮换、冷却）：`Label` + `Switch`，标签与开关行内排列，间距 `gap-3`。
+- 下拉选择（回退目标 Provider）：`Select`，选项按可用性排序，不可用目标加 `disabled` 属性并附 `text-muted-foreground`。
+- 若策略项尚未配置（新创建实例），对应字段通过 `Callout`（`Alert variant="warning"`）在组顶部提示"此项策略尚未设置，将影响自动切换稳定性"。
+
+### Token 池区
+
+- 外层容器：`Card` with `CardHeader`（标题 + "新增凭据" `Button variant="outline" size="sm"`）、`CardContent`。
+- 凭据列表：shadcn/ui `Table`。
+  - `TableHeader`：`bg-muted/50`，列标签 `text-xs font-medium text-muted-foreground`。
+  - 列定义：Token 片段（等宽字体 `font-mono`）| 状态 `Badge` | 剩余额度 | 最近异常摘要 | 操作列。
+  - 状态 `Badge` 语义：活跃 → success token；冷却中 → warning token；已隔离/停用 → `variant="destructive"`；未知 → `variant="secondary"`。
+  - 隔离操作：`Button variant="destructive" size="sm"` + 确认对话框（`AlertDialog`）；确认文案明确"该凭据将立即从活跃池中移出"。
+  - 恢复操作（若支持）：`Button variant="outline" size="sm"`。
+- 空状态（无任何凭据）：`TableRow` 占满宽度，展示 `Alert variant="destructive"` 提示"当前无活跃凭据，对外服务已中断，请立即添加"。
+
+### 最近行为区
+
+- 外层容器：`Card` with `CardHeader`（标题 + 时间范围 `Select size="sm"` h-8）、`CardContent`。
+- 事件列表：shadcn/ui `Table`，列定义：时间（`font-mono text-xs`）| 事件类型 `Badge` | 相关凭据 | 说明。
+- 事件类型 `Badge` 语义：切换 → info token；异常 → warning/destructive token；恢复 → success token。
+
+### 配置说明区
+
+- 外层容器：`Card` with `CardHeader`（标题）、`CardContent`。
+- 说明文本：`Textarea`（只读或可编辑），`text-sm text-muted-foreground`；编辑时变为标准 `Textarea`，标注"更新说明不需要单独保存，将随策略变更一同提交"。
+
+### Post-Create 引导
+
+- 若由列表页创建后跳转而来，页面顶部展示 `Alert variant="warning"`，说明"Provider 已创建，以下策略项仍待补充"，并列出：权重、并发限制、冷却策略、失败切换目标、回退 Provider。
+- 每个待补充项对应页内锚点链接（`Button variant="link" size="sm"`），点击后页面滚动至对应策略表单组。
+
+---
 
 ## Data / Dependencies
 
