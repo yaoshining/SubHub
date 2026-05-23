@@ -32,6 +32,7 @@
 - **Default state**: 展示摘要卡、Key inventory、生成与授权表单，以及当前选中 Key 的详情。
 - **Loading state**: 先展示页头、摘要卡和 inventory 骨架，再加载选中项详情与最近使用信息。
 - **Empty state**: 尚未创建任何调用方 Key 时，页面必须突出“创建首个 Key”的表单与用途说明，并明确当前对外服务尚不可用。
+- **No-selection state**: 当页面已有 Key，但当前没有选中项时，右侧详情区必须显示“未选择 Key”的上下文空态，明确提示从左侧 inventory 选择对象；不得留白，也不得残留上一条 Key 的旧数据。
 - **Error state**: 创建、停用、轮换或详情加载失败时，必须指出失败对象与恢复动作，并保留当前 inventory 与已知上下文。
 - **Permission / access state**: 只读用户可查看摘要、inventory 和业务状态，但不能轮换、停用、reveal 或 copy 完整明文。
 - **Reveal window state**: 新 Key 创建后或当前 Key 轮换成功后，Selected key 详情进入受控窗口，允许显示完整明文并执行复制；窗口结束后仅保留受控片段与业务信息。
@@ -51,6 +52,8 @@
 - 调用方名称允许以两层信息呈现：主行显示名称，副行显示环境或 Scope 摘要；名称过长时最多两行并截断。
 - Key 列只展示受控片段（如前后缀），使用等宽字体；不得在 inventory 中直接暴露完整明文。
 - 右侧 Selected key 详情必须显示完整业务信息，包括完整调用方名称、环境、Scope、配额、最近使用和最近轮换结果；即使列表已截断，详情也应帮助管理员确认对象。
+- 当页面存在可见 Key 时，应默认自动选中首个可见对象；No-selection state 只作为兜底状态，不应成为常态首屏。
+- 当当前没有选中项时，右侧面板显示“未选择 Key”空态，说明下一步是从左侧 inventory 选择对象；该状态不得显示任何旧的业务详情、受控片段或 reveal / copy 动作。
 - 完整明文只允许在新建 / 轮换后的受控窗口内通过眼睛按钮 reveal，并允许通过复制按钮写入剪贴板；窗口结束后移除 reveal / copy，仅保留参考片段。
 - Key inventory 的筛选必须保留当前选中上下文；若当前选中对象被筛选隐藏，详情区仍需保留该对象并明确提示“当前对象不在筛选结果中”。
 - 停用与轮换是不同动作：停用应立即阻止新请求，轮换应创建新版本并更新当前状态，不得混成单一“重置”动作。
@@ -102,6 +105,7 @@
 ### Selected key 详情区
 
 - 外层容器：`Card` with `CardHeader`（当前调用方名称 + 状态 `Badge`）和 `CardContent`。
+- No-selection state：同样沿用 `Card` 容器，但 `CardHeader` 改为“未选择 Key”，`CardContent` 展示一段空态说明文本；不得渲染旧数据占位。
 - 元信息使用 `Badge` 组展示环境、配额、Scope。
 - 最近 24h 使用、最近轮换结果等可拆成内嵌子卡片或结构化信息行，仍优先使用 `Card` / `Separator` / `Badge` 体系。
 - 停用动作：`Button variant="destructive"`，必要时搭配 `AlertDialog`。
@@ -117,6 +121,7 @@
 ## Data / Dependencies
 
 - **Data sources**: 调用方 Key 清单、当前选中 Key 详情、Key 状态、最近 24h 使用摘要、轮换记录、Scope / 配额配置、受控 reveal window 状态
+- **Derived UI state**: 当前是否存在选中项、当前选中项是否已被筛选隐藏、No-selection state 提示文案
 - **External dependencies**: 外部应用接入关系、系统剪贴板能力（仅在受控 copy 行为触发时使用）
 - **Cross-page dependencies**: `docs/pages/dashboard.md`
 
