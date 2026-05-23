@@ -13513,8 +13513,8 @@
     {
       "type": "frame",
       "id": "gY5xE",
-      "x": -39,
-      "y": 3084,
+      "x": -46,
+      "y": 3376,
       "name": "Login – Dark",
       "theme": {
         "mode": "dark"
@@ -13944,8 +13944,8 @@
     {
       "type": "frame",
       "id": "jzxK0",
-      "x": 1560,
-      "y": 3084,
+      "x": 1588,
+      "y": 3376,
       "name": "Login – Light",
       "theme": {
         "mode": "light"
@@ -14366,8 +14366,8 @@
     {
       "type": "frame",
       "id": "F2wDb",
-      "x": 3100,
-      "y": 3084,
+      "x": 3246,
+      "y": 3376,
       "name": "Login – Dark (Error State)",
       "theme": {
         "mode": "dark"
