@@ -1991,7 +1991,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "logo-light.png",
+                    "url": "images/logo-light.png",
                     "mode": "fit"
                   }
                 },
@@ -3865,13 +3865,16 @@
       "width": 1440,
       "height": 860,
       "fill": "$--bg-canvas",
+      "layout": "none",
       "children": [
         {
           "type": "frame",
           "id": "g4MHL",
+          "x": 0,
+          "y": 0,
           "name": "Sidebar",
           "width": 220,
-          "height": "fill_container",
+          "height": 860,
           "fill": "$--bg-surface",
           "stroke": {
             "align": "inside",
@@ -4211,9 +4214,11 @@
         {
           "type": "frame",
           "id": "BsQms",
+          "x": 220,
+          "y": 0,
           "name": "Main Area",
-          "width": "fill_container",
-          "height": "fill_container",
+          "width": 1220,
+          "height": 860,
           "fill": "$--bg-canvas",
           "layout": "vertical",
           "children": [
@@ -4328,7 +4333,7 @@
                           "type": "text",
                           "id": "EfXSz",
                           "fill": "$--accent-foreground",
-                          "content": "+ 添加 Provider",
+                          "content": "新增 OpenSubtitles",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "600"
@@ -4353,6 +4358,115 @@
                 24
               ],
               "children": [
+                {
+                  "type": "frame",
+                  "id": "providerSuccessDark",
+                  "name": "Create Success Banner",
+                  "width": "fill_container",
+                  "fill": "$--success-subtle",
+                  "cornerRadius": "$--radius-md",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--success"
+                  },
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "providerSuccessDarkCopy",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "providerSuccessDarkTitle",
+                          "fill": "$--success",
+                          "content": "OpenSubtitles 主池已创建",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "providerSuccessDarkDesc",
+                          "fill": "$--font-primary",
+                          "content": "已完成建档与 API Key 录入。下一步请继续补齐权重、并发、轮换/冷却、失败切换与回退目标。",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "providerSuccessDarkActions",
+                      "fill": "#00000000",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "providerSuccessDarkPrimary",
+                          "height": 30,
+                          "fill": "$--accent",
+                          "cornerRadius": "$--radius-sm",
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "providerSuccessDarkPrimaryText",
+                              "fill": "$--accent-foreground",
+                              "content": "继续配置",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "providerSuccessDarkSecondary",
+                          "height": 30,
+                          "fill": "#00000000",
+                          "cornerRadius": "$--radius-sm",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "providerSuccessDarkSecondaryText",
+                              "fill": "$--font-secondary",
+                              "content": "留在列表",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
                 {
                   "type": "frame",
                   "id": "aZj1i",
@@ -4431,7 +4545,7 @@
                               "fill": "$--font-muted",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "OpenSubtitles 3 · Subscene 1 · SubDL 1",
+                              "content": "OpenSubtitles 主池 1 · 既有主力池 3 · SubDL 1",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "normal"
@@ -4480,7 +4594,7 @@
                               "fill": "$--font-muted",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Subscene 已触发 429 限速",
+                              "content": "SubDL 已触发 429 限速",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "normal"
@@ -4855,7 +4969,7 @@
                     {
                       "type": "frame",
                       "id": "kdPUy",
-                      "name": "Row - OpenSubtitles",
+                      "name": "Row - OpenSubtitles Draft",
                       "width": "fill_container",
                       "height": 64,
                       "fill": "#00000000",
@@ -4877,7 +4991,7 @@
                               "type": "text",
                               "id": "Slnu2",
                               "fill": "$--font-primary",
-                              "content": "OpenSubtitles",
+                              "content": "OpenSubtitles 主池",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "600"
@@ -4893,7 +5007,7 @@
                                   "type": "text",
                                   "id": "iPsPT",
                                   "fill": "$--font-muted",
-                                  "content": "opensubtitles.com",
+                                  "content": "新建实例 · 待补配置",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
@@ -4912,7 +5026,7 @@
                             {
                               "type": "frame",
                               "id": "oAyqk",
-                              "fill": "$--success-subtle",
+                              "fill": "$--warning-subtle",
                               "cornerRadius": "$--radius-sm",
                               "padding": [
                                 4,
@@ -4923,8 +5037,8 @@
                                 {
                                   "type": "text",
                                   "id": "ayzx4",
-                                  "fill": "$--success",
-                                  "content": "健康",
+                                  "fill": "$--warning",
+                                  "content": "待配置",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "600"
@@ -4939,7 +5053,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 100,
-                          "content": "3 / 3",
+                          "content": "1 / 1",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -4950,7 +5064,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "99.2%",
+                          "content": "基础可用",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -4961,7 +5075,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 90,
-                          "content": "892 次",
+                          "content": "—",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -4972,7 +5086,7 @@
                           "fill": "$--font-muted",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "—",
+                          "content": "待补策略",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -5034,7 +5148,7 @@
                                   "type": "text",
                                   "id": "UCaVc",
                                   "fill": "$--accent",
-                                  "content": "配置",
+                                  "content": "继续配置",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "500"
@@ -5048,7 +5162,7 @@
                     {
                       "type": "frame",
                       "id": "h7w7X",
-                      "name": "Row - Subscene",
+                      "name": "Row - OpenSubtitles Existing",
                       "width": "fill_container",
                       "height": 64,
                       "fill": "#00000000",
@@ -5077,7 +5191,7 @@
                               "type": "text",
                               "id": "N0ZWKk",
                               "fill": "$--font-primary",
-                              "content": "Subscene",
+                              "content": "OpenSubtitles 既有主力池",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "600"
@@ -5093,7 +5207,7 @@
                                   "type": "text",
                                   "id": "w1YaPH",
                                   "fill": "$--font-muted",
-                                  "content": "subscene.com",
+                                  "content": "稳定实例 · 已投产",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
@@ -5113,7 +5227,7 @@
                                       "type": "text",
                                       "id": "ONIYH",
                                       "fill": "$--warning",
-                                      "content": "1 Token 冷却中",
+                                      "content": "主力回源",
                                       "fontFamily": "Inter",
                                       "fontSize": 10,
                                       "fontWeight": "500"
@@ -5134,7 +5248,7 @@
                             {
                               "type": "frame",
                               "id": "SKigV",
-                              "fill": "$--warning-subtle",
+                              "fill": "$--success-subtle",
                               "cornerRadius": "$--radius-sm",
                               "padding": [
                                 4,
@@ -5145,8 +5259,8 @@
                                 {
                                   "type": "text",
                                   "id": "YJ18N",
-                                  "fill": "$--warning",
-                                  "content": "降级",
+                                  "fill": "$--success",
+                                  "content": "健康",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "600"
@@ -5161,7 +5275,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 100,
-                          "content": "1 / 2",
+                          "content": "3 / 5",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -5169,10 +5283,10 @@
                         {
                           "type": "text",
                           "id": "Pthyk",
-                          "fill": "$--warning",
+                          "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "87.4%",
+                          "content": "92.0%",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -5183,7 +5297,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 90,
-                          "content": "348 次",
+                          "content": "1284 次",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -5191,10 +5305,10 @@
                         {
                           "type": "text",
                           "id": "spts1",
-                          "fill": "$--warning",
+                          "fill": "$--font-muted",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "2 次",
+                          "content": "—",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -5487,6 +5601,259 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "providerDrawerDark",
+          "x": 1080,
+          "y": 56,
+          "name": "Create OpenSubtitles Drawer Preview",
+          "width": 360,
+          "height": 804,
+          "fill": "$--bg-surface",
+          "cornerRadius": "$--radius-lg",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$--border-default"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "providerDrawerDarkHeader",
+              "width": "fill_container",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "bottom": 1
+                },
+                "fill": "$--border-default"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                14,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "providerDrawerDarkEyebrow",
+                  "fill": "$--font-secondary",
+                  "content": "Create OpenSubtitles provider",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "providerDrawerDarkTitle",
+                  "fill": "$--font-primary",
+                  "content": "新增 OpenSubtitles Provider",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "providerDrawerDarkDesc",
+                  "fill": "$--font-muted",
+                  "content": "先完成建档和 API Key 录入，运行策略稍后到详情页补充。",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "providerDrawerDarkBody",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "padding": [
+                14,
+                16
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "providerDrawerDarkFieldName",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "providerDrawerDarkFieldNameLabel",
+                      "fill": "$--font-secondary",
+                      "content": "Provider 名称",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "providerDrawerDarkFieldNameInput",
+                      "width": "fill_container",
+                      "height": 32,
+                      "fill": "$--bg-canvas",
+                      "cornerRadius": "$--radius-sm",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border-default"
+                      },
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "providerDrawerDarkFieldNameValue",
+                          "fill": "$--font-primary",
+                          "content": "OpenSubtitles 主池",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "providerDrawerDarkFieldKey",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "providerDrawerDarkFieldKeyLabel",
+                      "fill": "$--font-secondary",
+                      "content": "API Key 列表",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "providerDrawerDarkFieldKeyInput",
+                      "width": "fill_container",
+                      "height": 32,
+                      "fill": "$--bg-canvas",
+                      "cornerRadius": "$--radius-sm",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border-default"
+                      },
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "providerDrawerDarkFieldKeyValue",
+                          "fill": "$--font-primary",
+                          "content": "ops_main_key_01",
+                          "fontFamily": "IBM Plex Mono",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "providerDrawerDarkFieldKeyHint",
+                      "fill": "$--font-muted",
+                      "content": "至少填写一个 API Key。创建后回到列表页，并从该实例继续配置。",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "providerDrawerDarkFooter",
+              "width": "fill_container",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "top": 1
+                },
+                "fill": "$--border-default"
+              },
+              "gap": 8,
+              "padding": [
+                12,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "providerDrawerDarkCancel",
+                  "height": 30,
+                  "fill": "#00000000",
+                  "cornerRadius": "$--radius-sm",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border-default"
+                  },
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "providerDrawerDarkCancelText",
+                      "fill": "$--font-secondary",
+                      "content": "取消",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "providerDrawerDarkCreate",
+                  "height": 30,
+                  "fill": "$--accent",
+                  "cornerRadius": "$--radius-sm",
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "providerDrawerDarkCreateText",
+                      "fill": "$--accent-foreground",
+                      "content": "创建 Provider",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -5502,13 +5869,16 @@
       "width": 1440,
       "height": 860,
       "fill": "$--bg-canvas",
+      "layout": "none",
       "children": [
         {
           "type": "frame",
           "id": "a9gBk",
+          "x": 0,
+          "y": 0,
           "name": "Sidebar",
           "width": 220,
-          "height": "fill_container",
+          "height": 860,
           "fill": "$--bg-surface",
           "stroke": {
             "align": "inside",
@@ -5548,7 +5918,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "logo-light.png",
+                    "url": "images/logo-light.png",
                     "mode": "fit"
                   }
                 },
@@ -5848,9 +6218,11 @@
         {
           "type": "frame",
           "id": "V2uUX",
+          "x": 220,
+          "y": 0,
           "name": "Main Area",
-          "width": "fill_container",
-          "height": "fill_container",
+          "width": 1220,
+          "height": 860,
           "fill": "$--bg-canvas",
           "layout": "vertical",
           "children": [
@@ -5965,7 +6337,7 @@
                           "type": "text",
                           "id": "bV4us",
                           "fill": "$--accent-foreground",
-                          "content": "+ 添加 Provider",
+                          "content": "新增 OpenSubtitles",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "600"
@@ -5990,6 +6362,115 @@
                 24
               ],
               "children": [
+                {
+                  "type": "frame",
+                  "id": "providerSuccessLight",
+                  "name": "Create Success Banner",
+                  "width": "fill_container",
+                  "fill": "$--success-subtle",
+                  "cornerRadius": "$--radius-md",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--success"
+                  },
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "providerSuccessLightCopy",
+                      "width": "fill_container",
+                      "fill": "#00000000",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "providerSuccessLightTitle",
+                          "fill": "$--success",
+                          "content": "OpenSubtitles 主池已创建",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "providerSuccessLightDesc",
+                          "fill": "$--font-primary",
+                          "content": "已完成建档与 API Key 录入。下一步请继续补齐权重、并发、轮换/冷却、失败切换与回退目标。",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "providerSuccessLightActions",
+                      "fill": "#00000000",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "providerSuccessLightPrimary",
+                          "height": 30,
+                          "fill": "$--accent",
+                          "cornerRadius": "$--radius-sm",
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "providerSuccessLightPrimaryText",
+                              "fill": "$--accent-foreground",
+                              "content": "继续配置",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "providerSuccessLightSecondary",
+                          "height": 30,
+                          "fill": "#00000000",
+                          "cornerRadius": "$--radius-sm",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--border-default"
+                          },
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "providerSuccessLightSecondaryText",
+                              "fill": "$--font-secondary",
+                              "content": "留在列表",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
                 {
                   "type": "frame",
                   "id": "Cvsmy",
@@ -6068,7 +6549,7 @@
                               "fill": "$--font-muted",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "OpenSubtitles 3 · Subscene 1 · SubDL 1",
+                              "content": "OpenSubtitles 主池 1 · 既有主力池 3 · SubDL 1",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "normal"
@@ -6117,7 +6598,7 @@
                               "fill": "$--font-muted",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Subscene 已触发 429 限速",
+                              "content": "SubDL 已触发 429 限速",
                               "fontFamily": "Inter",
                               "fontSize": 10,
                               "fontWeight": "normal"
@@ -6492,7 +6973,7 @@
                     {
                       "type": "frame",
                       "id": "anFYS",
-                      "name": "Row - OpenSubtitles",
+                      "name": "Row - OpenSubtitles Draft",
                       "width": "fill_container",
                       "height": 64,
                       "fill": "#00000000",
@@ -6514,7 +6995,7 @@
                               "type": "text",
                               "id": "OjpVF",
                               "fill": "$--font-primary",
-                              "content": "OpenSubtitles",
+                              "content": "OpenSubtitles 主池",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "600"
@@ -6530,7 +7011,7 @@
                                   "type": "text",
                                   "id": "rXNl0",
                                   "fill": "$--font-muted",
-                                  "content": "opensubtitles.com",
+                                  "content": "新建实例 · 待补配置",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
@@ -6549,7 +7030,7 @@
                             {
                               "type": "frame",
                               "id": "VXTxR",
-                              "fill": "$--success-subtle",
+                              "fill": "$--warning-subtle",
                               "cornerRadius": "$--radius-sm",
                               "padding": [
                                 4,
@@ -6560,8 +7041,8 @@
                                 {
                                   "type": "text",
                                   "id": "kKsni",
-                                  "fill": "$--success",
-                                  "content": "健康",
+                                  "fill": "$--warning",
+                                  "content": "待配置",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "600"
@@ -6576,7 +7057,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 100,
-                          "content": "3 / 3",
+                          "content": "1 / 1",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6587,7 +7068,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "99.2%",
+                          "content": "基础可用",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6598,7 +7079,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 90,
-                          "content": "892 次",
+                          "content": "—",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6609,7 +7090,7 @@
                           "fill": "$--font-muted",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "—",
+                          "content": "待补策略",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6671,7 +7152,7 @@
                                   "type": "text",
                                   "id": "qNEbD",
                                   "fill": "$--accent",
-                                  "content": "配置",
+                                  "content": "继续配置",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "500"
@@ -6685,7 +7166,7 @@
                     {
                       "type": "frame",
                       "id": "LtZ5s",
-                      "name": "Row - Subscene",
+                      "name": "Row - OpenSubtitles Existing",
                       "width": "fill_container",
                       "height": 64,
                       "fill": "#00000000",
@@ -6714,7 +7195,7 @@
                               "type": "text",
                               "id": "j3xZ7",
                               "fill": "$--font-primary",
-                              "content": "Subscene",
+                              "content": "OpenSubtitles 既有主力池",
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "600"
@@ -6730,7 +7211,7 @@
                                   "type": "text",
                                   "id": "BIkwh",
                                   "fill": "$--font-muted",
-                                  "content": "subscene.com",
+                                  "content": "稳定实例 · 已投产",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "normal"
@@ -6750,7 +7231,7 @@
                                       "type": "text",
                                       "id": "pTNJC",
                                       "fill": "$--warning",
-                                      "content": "1 Token 冷却中",
+                                      "content": "主力回源",
                                       "fontFamily": "Inter",
                                       "fontSize": 10,
                                       "fontWeight": "500"
@@ -6771,7 +7252,7 @@
                             {
                               "type": "frame",
                               "id": "Suznq",
-                              "fill": "$--warning-subtle",
+                              "fill": "$--success-subtle",
                               "cornerRadius": "$--radius-sm",
                               "padding": [
                                 4,
@@ -6782,8 +7263,8 @@
                                 {
                                   "type": "text",
                                   "id": "nWzon",
-                                  "fill": "$--warning",
-                                  "content": "降级",
+                                  "fill": "$--success",
+                                  "content": "健康",
                                   "fontFamily": "Inter",
                                   "fontSize": 11,
                                   "fontWeight": "600"
@@ -6798,7 +7279,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 100,
-                          "content": "1 / 2",
+                          "content": "3 / 5",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6806,10 +7287,10 @@
                         {
                           "type": "text",
                           "id": "k6elUA",
-                          "fill": "$--warning",
+                          "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "87.4%",
+                          "content": "92.0%",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6820,7 +7301,7 @@
                           "fill": "$--font-primary",
                           "textGrowth": "fixed-width",
                           "width": 90,
-                          "content": "348 次",
+                          "content": "1284 次",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -6828,10 +7309,10 @@
                         {
                           "type": "text",
                           "id": "f20x9W",
-                          "fill": "$--warning",
+                          "fill": "$--font-muted",
                           "textGrowth": "fixed-width",
                           "width": 80,
-                          "content": "2 次",
+                          "content": "—",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -7124,1651 +7605,182 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "pIXtw",
-      "x": 3102,
-      "y": 0,
-      "name": "SubHub – Brand Proposal",
-      "clip": true,
-      "width": 1440,
-      "height": 1160,
-      "fill": "#F1F5F9",
-      "layout": "vertical",
-      "gap": 28,
-      "padding": 56,
-      "children": [
-        {
-          "type": "frame",
-          "id": "ovJMk",
-          "width": "fill_container",
-          "fill": "#00000000",
-          "gap": 10,
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "F4pUQ",
-              "fill": "#0F172A",
-              "content": "SubHub",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "700"
-            },
-            {
-              "type": "rectangle",
-              "id": "yE95T",
-              "fill": "#CBD5E1",
-              "width": 1,
-              "height": 12
-            },
-            {
-              "type": "text",
-              "id": "DGQxr",
-              "fill": "#94A3B8",
-              "content": "Brand Identity System · Light Theme",
-              "fontFamily": "Inter",
-              "fontSize": 11,
-              "fontWeight": "normal"
-            }
-          ]
         },
         {
           "type": "frame",
-          "id": "D9rJik",
-          "width": "fill_container",
-          "fill": "#00000000",
-          "gap": 20,
-          "children": [
-            {
-              "type": "frame",
-              "id": "c83xJ",
-              "width": "fill_container",
-              "fill": "#FFFFFF",
-              "cornerRadius": 14,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "#E2E8F0"
-              },
-              "layout": "vertical",
-              "gap": 20,
-              "padding": 36,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "m4QCiD",
-                  "fill": "#CBD5E1",
-                  "content": "ICON",
-                  "fontFamily": "Inter",
-                  "fontSize": 9,
-                  "fontWeight": "600",
-                  "letterSpacing": 2
-                },
-                {
-                  "type": "frame",
-                  "id": "iVsw4",
-                  "width": 96,
-                  "height": 96,
-                  "fill": "#FFFFFF",
-                  "layout": "none",
-                  "children": [
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "hyLCp",
-                      "x": 4,
-                      "y": 2,
-                      "fill": "#0F172A",
-                      "width": 32,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "cYqdt",
-                      "x": 42,
-                      "y": 2,
-                      "fill": "#06B6D4",
-                      "width": 20,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "vncB8",
-                      "x": 68,
-                      "y": 2,
-                      "fill": "#2563EB",
-                      "width": 24,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "IryaJ",
-                      "x": 4,
-                      "y": 18,
-                      "fill": "#0F172A",
-                      "width": 6,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "SCe7P",
-                      "x": 14,
-                      "y": 18,
-                      "fill": "#0F172A",
-                      "width": 28,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "BdgLw",
-                      "x": 50,
-                      "y": 18,
-                      "fill": "#06B6D4",
-                      "width": 40,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "PAoAg",
-                      "x": 4,
-                      "y": 34,
-                      "fill": "#0F172A",
-                      "width": 36,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "qVxgt",
-                      "x": 48,
-                      "y": 50,
-                      "fill": "#2563EB",
-                      "width": 14,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "yywVV",
-                      "x": 66,
-                      "y": 50,
-                      "fill": "#0F172A",
-                      "width": 26,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "RDir8",
-                      "x": 18,
-                      "y": 66,
-                      "fill": "#0F172A",
-                      "width": 74,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "E4FjvF",
-                      "x": 4,
-                      "y": 82,
-                      "fill": "#0F172A",
-                      "width": 22,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "nskmz",
-                      "x": 32,
-                      "y": 82,
-                      "fill": "#0F172A",
-                      "width": 18,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "k6enRs",
-                      "x": 58,
-                      "y": 82,
-                      "fill": "#06B6D4",
-                      "width": 34,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "WMEjj",
-                      "x": 43,
-                      "y": 18,
-                      "fill": "#2563EB",
-                      "width": 1,
-                      "height": 60
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "sqcCZ",
-                      "x": 40,
-                      "y": 29,
-                      "fill": "#2563EB",
-                      "width": 5,
-                      "height": 5
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "iJw0M",
-                      "x": 40,
-                      "y": 45,
-                      "fill": "#2563EB",
-                      "width": 5,
-                      "height": 5
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "f8HUst",
-                      "x": 40,
-                      "y": 61,
-                      "fill": "#2563EB",
-                      "width": 5,
-                      "height": 5
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "WsZtl",
-                  "fill": "#334155",
-                  "content": "Timeline S",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "600"
-                },
-                {
-                  "type": "text",
-                  "id": "o8msMM",
-                  "fill": "#94A3B8",
-                  "content": "6 subtitle tracks  ·  vertical sync cursor",
-                  "fontFamily": "Inter",
-                  "fontSize": 10,
-                  "fontWeight": "normal"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "juFSD",
-              "width": "fill_container",
-              "fill": "#00000000",
-              "layout": "vertical",
-              "gap": 16,
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "YwTwU",
-                  "width": "fill_container",
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 14,
-                  "stroke": {
-                    "align": "inside",
-                    "thickness": 1,
-                    "fill": "#E2E8F0"
-                  },
-                  "layout": "vertical",
-                  "gap": 10,
-                  "padding": 32,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "S2DL8",
-                      "fill": "#CBD5E1",
-                      "content": "WORDMARK",
-                      "fontFamily": "Inter",
-                      "fontSize": 9,
-                      "fontWeight": "600",
-                      "letterSpacing": 2
-                    },
-                    {
-                      "type": "text",
-                      "id": "QYXKQ",
-                      "fill": "#0F172A",
-                      "content": "SubHub",
-                      "fontFamily": "Inter",
-                      "fontSize": 40,
-                      "fontWeight": "700",
-                      "letterSpacing": -1
-                    },
-                    {
-                      "type": "text",
-                      "id": "xP1XQ",
-                      "fill": "#2563EB",
-                      "content": "Geometric sans · tight tracking · #2563EB accent",
-                      "fontFamily": "Inter",
-                      "fontSize": 9,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "uhRAW",
-                  "width": "fill_container",
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 14,
-                  "stroke": {
-                    "align": "inside",
-                    "thickness": 1,
-                    "fill": "#E2E8F0"
-                  },
-                  "layout": "vertical",
-                  "gap": 12,
-                  "padding": 32,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "o0f56k",
-                      "fill": "#CBD5E1",
-                      "content": "LOCKUP · HORIZONTAL",
-                      "fontFamily": "Inter",
-                      "fontSize": 9,
-                      "fontWeight": "600",
-                      "letterSpacing": 2
-                    },
-                    {
-                      "type": "frame",
-                      "id": "BMFbp",
-                      "fill": "#00000000",
-                      "gap": 10,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "S2Cuq",
-                          "width": 24,
-                          "height": 24,
-                          "fill": "#FFFFFF",
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "LhcwA",
-                              "x": 1,
-                              "y": 0,
-                              "fill": "#0F172A",
-                              "width": 8,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "jmntY",
-                              "x": 11,
-                              "y": 0,
-                              "fill": "#06B6D4",
-                              "width": 5,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "D5fGaK",
-                              "x": 17,
-                              "y": 0,
-                              "fill": "#2563EB",
-                              "width": 6,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "QTY5C",
-                              "x": 1,
-                              "y": 4,
-                              "fill": "#0F172A",
-                              "width": 2,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "N0cSQN",
-                              "x": 4,
-                              "y": 4,
-                              "fill": "#0F172A",
-                              "width": 7,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "IRQjt",
-                              "x": 13,
-                              "y": 4,
-                              "fill": "#06B6D4",
-                              "width": 10,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "PxH2P",
-                              "x": 1,
-                              "y": 9,
-                              "fill": "#0F172A",
-                              "width": 9,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "rZDa3",
-                              "x": 12,
-                              "y": 13,
-                              "fill": "#2563EB",
-                              "width": 4,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "ssLN2",
-                              "x": 17,
-                              "y": 13,
-                              "fill": "#0F172A",
-                              "width": 6,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "m1vX8",
-                              "x": 5,
-                              "y": 17,
-                              "fill": "#0F172A",
-                              "width": 18,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "pafZc",
-                              "x": 1,
-                              "y": 21,
-                              "fill": "#0F172A",
-                              "width": 6,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "bmbgC",
-                              "x": 8,
-                              "y": 21,
-                              "fill": "#0F172A",
-                              "width": 5,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "RZI19",
-                              "x": 15,
-                              "y": 21,
-                              "fill": "#06B6D4",
-                              "width": 8,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "T331K",
-                              "x": 11,
-                              "y": 4,
-                              "fill": "#2563EB",
-                              "width": 1,
-                              "height": 15
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "oOzyO",
-                          "fill": "#0F172A",
-                          "content": "SubHub",
-                          "fontFamily": "Inter",
-                          "fontSize": 22,
-                          "fontWeight": "700",
-                          "letterSpacing": -0.3
-                        }
-                      ]
-                    },
-                    {
-                      "type": "text",
-                      "id": "jhMl2",
-                      "fill": "#94A3B8",
-                      "content": "Standard nav lockup  ·  22px wordmark",
-                      "fontFamily": "Inter",
-                      "fontSize": 9,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "Nqhnp",
-              "width": "fill_container",
-              "fill": "#FFFFFF",
-              "cornerRadius": 14,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "#E2E8F0"
-              },
-              "layout": "vertical",
-              "gap": 20,
-              "padding": 36,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "xiuqr",
-                  "fill": "#CBD5E1",
-                  "content": "SIZE PREVIEWS",
-                  "fontFamily": "Inter",
-                  "fontSize": 9,
-                  "fontWeight": "600",
-                  "letterSpacing": 2
-                },
-                {
-                  "type": "frame",
-                  "id": "yh0xF",
-                  "fill": "#00000000",
-                  "gap": 20,
-                  "alignItems": "end",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "KUpsJ",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 6,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "GNIDG",
-                          "clip": true,
-                          "width": 16,
-                          "height": 16,
-                          "fill": "#F1F5F9",
-                          "cornerRadius": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "JToK0",
-                              "x": 1,
-                              "y": 0,
-                              "fill": "#0F172A",
-                              "width": 15,
-                              "height": 2
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "inls1",
-                              "x": 1,
-                              "y": 3,
-                              "fill": "#0F172A",
-                              "width": 12,
-                              "height": 2
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "a1VvPv",
-                              "x": 1,
-                              "y": 6,
-                              "fill": "#0F172A",
-                              "width": 7,
-                              "height": 2
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "H6oOxU",
-                              "x": 9,
-                              "y": 8,
-                              "fill": "#0F172A",
-                              "width": 7,
-                              "height": 2
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "aSkCp",
-                              "x": 3,
-                              "y": 11,
-                              "fill": "#0F172A",
-                              "width": 12,
-                              "height": 2
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "eK1p9",
-                              "x": 1,
-                              "y": 14,
-                              "fill": "#0F172A",
-                              "width": 15,
-                              "height": 2
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "F2UCr",
-                              "x": 7,
-                              "y": 3,
-                              "fill": "#2563EB",
-                              "width": 1,
-                              "height": 10
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "JKPLZ",
-                          "fill": "#94A3B8",
-                          "content": "16px",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "rDG5u",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 6,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "C2Zen",
-                          "clip": true,
-                          "width": 24,
-                          "height": 24,
-                          "fill": "#F1F5F9",
-                          "cornerRadius": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "cBiIv",
-                              "x": 1,
-                              "y": 1,
-                              "fill": "#0F172A",
-                              "width": 22,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "VnejF",
-                              "x": 2,
-                              "y": 5,
-                              "fill": "#0F172A",
-                              "width": 19,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "h6ywB",
-                              "x": 1,
-                              "y": 9,
-                              "fill": "#0F172A",
-                              "width": 10,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "SmaoE",
-                              "x": 13,
-                              "y": 13,
-                              "fill": "#0F172A",
-                              "width": 10,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "AdNkH",
-                              "x": 5,
-                              "y": 17,
-                              "fill": "#0F172A",
-                              "width": 19,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "vyEO0",
-                              "x": 1,
-                              "y": 21,
-                              "fill": "#0F172A",
-                              "width": 22,
-                              "height": 3
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "iCXlA",
-                              "x": 11,
-                              "y": 5,
-                              "fill": "#2563EB",
-                              "width": 1,
-                              "height": 15
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "ghm79",
-                          "fill": "#94A3B8",
-                          "content": "24px",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "fumEF",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 6,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "HQSV8",
-                          "clip": true,
-                          "width": 32,
-                          "height": 32,
-                          "fill": "#F1F5F9",
-                          "cornerRadius": 1,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "Sd8Mn",
-                              "x": 1,
-                              "y": 1,
-                              "fill": "#0F172A",
-                              "width": 29,
-                              "height": 4
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "GofPI",
-                              "x": 3,
-                              "y": 6,
-                              "fill": "#0F172A",
-                              "width": 25,
-                              "height": 4
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "MRkqS",
-                              "x": 1,
-                              "y": 11,
-                              "fill": "#0F172A",
-                              "width": 13,
-                              "height": 4
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "v7zIJ0",
-                              "x": 17,
-                              "y": 17,
-                              "fill": "#0F172A",
-                              "width": 13,
-                              "height": 4
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "fPQAE",
-                              "x": 6,
-                              "y": 22,
-                              "fill": "#0F172A",
-                              "width": 25,
-                              "height": 4
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 1,
-                              "id": "M0DRjK",
-                              "x": 1,
-                              "y": 27,
-                              "fill": "#0F172A",
-                              "width": 29,
-                              "height": 4
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "p0Uq0",
-                              "x": 14,
-                              "y": 6,
-                              "fill": "#2563EB",
-                              "width": 1,
-                              "height": 20
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "fJm4z",
-                          "fill": "#94A3B8",
-                          "content": "32px",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "ePi1m",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 6,
-                      "alignItems": "center",
-                      "children": [
-                        {
-                          "type": "frame",
-                          "id": "TTyWY",
-                          "clip": true,
-                          "width": 48,
-                          "height": 48,
-                          "fill": "#F1F5F9",
-                          "cornerRadius": 2,
-                          "layout": "none",
-                          "children": [
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 2,
-                              "id": "b7Vwd3",
-                              "x": 2,
-                              "y": 1,
-                              "fill": "#0F172A",
-                              "width": 44,
-                              "height": 6
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 2,
-                              "id": "X2JQ7q",
-                              "x": 4,
-                              "y": 9,
-                              "fill": "#0F172A",
-                              "width": 37,
-                              "height": 6
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 2,
-                              "id": "gpYKr",
-                              "x": 2,
-                              "y": 17,
-                              "fill": "#0F172A",
-                              "width": 20,
-                              "height": 6
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 2,
-                              "id": "bsds2",
-                              "x": 26,
-                              "y": 25,
-                              "fill": "#0F172A",
-                              "width": 20,
-                              "height": 6
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 2,
-                              "id": "Vf2wH",
-                              "x": 9,
-                              "y": 33,
-                              "fill": "#0F172A",
-                              "width": 37,
-                              "height": 6
-                            },
-                            {
-                              "type": "rectangle",
-                              "cornerRadius": 2,
-                              "id": "bjfLL",
-                              "x": 2,
-                              "y": 41,
-                              "fill": "#0F172A",
-                              "width": 44,
-                              "height": 6
-                            },
-                            {
-                              "type": "rectangle",
-                              "id": "xkLMZ",
-                              "x": 22,
-                              "y": 9,
-                              "fill": "#2563EB",
-                              "width": 1,
-                              "height": 30
-                            }
-                          ]
-                        },
-                        {
-                          "type": "text",
-                          "id": "EUeC5",
-                          "fill": "#94A3B8",
-                          "content": "48px",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "NMWMm",
-                  "fill": "#94A3B8",
-                  "content": "Silhouette holds at 16 × 16",
-                  "fontFamily": "Inter",
-                  "fontSize": 10,
-                  "fontWeight": "normal"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "rectangle",
-          "id": "bQYzF",
-          "fill": "#E2E8F0",
-          "width": "fill_container",
-          "height": 1
-        },
-        {
-          "type": "frame",
-          "id": "k3QcAN",
-          "width": "fill_container",
-          "fill": "#FFFFFF",
-          "cornerRadius": 14,
+          "id": "providerDrawerLight",
+          "x": 1080,
+          "y": 56,
+          "name": "Create OpenSubtitles Drawer Preview",
+          "width": 360,
+          "height": 804,
+          "fill": "$--bg-surface",
+          "cornerRadius": "$--radius-lg",
           "stroke": {
             "align": "inside",
             "thickness": 1,
-            "fill": "#E2E8F0"
+            "fill": "$--border-default"
           },
-          "gap": 16,
-          "padding": 20,
-          "alignItems": "center",
+          "layout": "vertical",
           "children": [
             {
               "type": "frame",
-              "id": "eqFgP",
-              "width": 20,
-              "height": 20,
-              "fill": "#FFFFFF",
-              "layout": "none",
+              "id": "providerDrawerLightHeader",
+              "width": "fill_container",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "bottom": 1
+                },
+                "fill": "$--border-default"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                14,
+                16
+              ],
               "children": [
                 {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "IXrSl",
-                  "x": 1,
-                  "y": 0,
-                  "fill": "#0F172A",
-                  "width": 7,
-                  "height": 2
+                  "type": "text",
+                  "id": "providerDrawerLightEyebrow",
+                  "fill": "$--font-secondary",
+                  "content": "Create OpenSubtitles provider",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
                 },
                 {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "j6165q",
-                  "x": 10,
-                  "y": 0,
-                  "fill": "#06B6D4",
-                  "width": 4,
-                  "height": 2
+                  "type": "text",
+                  "id": "providerDrawerLightTitle",
+                  "fill": "$--font-primary",
+                  "content": "新增 OpenSubtitles Provider",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
                 },
                 {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "YUcJJ",
-                  "x": 15,
-                  "y": 0,
-                  "fill": "#2563EB",
-                  "width": 5,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "YHy1f",
-                  "x": 1,
-                  "y": 4,
-                  "fill": "#0F172A",
-                  "width": 2,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "Pl798",
-                  "x": 3,
-                  "y": 4,
-                  "fill": "#0F172A",
-                  "width": 6,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "TeOPy",
-                  "x": 11,
-                  "y": 4,
-                  "fill": "#06B6D4",
-                  "width": 8,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "J3g55",
-                  "x": 1,
-                  "y": 8,
-                  "fill": "#0F172A",
-                  "width": 8,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "gdaJt",
-                  "x": 10,
-                  "y": 11,
-                  "fill": "#2563EB",
-                  "width": 3,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "YOb2K",
-                  "x": 14,
-                  "y": 11,
-                  "fill": "#0F172A",
-                  "width": 5,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "S8YLR",
-                  "x": 4,
-                  "y": 14,
-                  "fill": "#0F172A",
-                  "width": 15,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "YctLT",
-                  "x": 1,
-                  "y": 17,
-                  "fill": "#0F172A",
-                  "width": 5,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "lEWXQ",
-                  "x": 7,
-                  "y": 17,
-                  "fill": "#0F172A",
-                  "width": 4,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 1,
-                  "id": "XLfGV",
-                  "x": 12,
-                  "y": 17,
-                  "fill": "#06B6D4",
-                  "width": 7,
-                  "height": 2
-                },
-                {
-                  "type": "rectangle",
-                  "id": "vud0I",
-                  "x": 9,
-                  "y": 4,
-                  "fill": "#2563EB",
-                  "width": 1,
-                  "height": 12
+                  "type": "text",
+                  "id": "providerDrawerLightDesc",
+                  "fill": "$--font-muted",
+                  "content": "先完成建档和 API Key 录入，运行策略稍后到详情页补充。",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
                 }
               ]
             },
             {
-              "type": "text",
-              "id": "P4KTVV",
-              "fill": "#0F172A",
-              "content": "SubHub",
-              "fontFamily": "Inter",
-              "fontSize": 16,
-              "fontWeight": "700",
-              "letterSpacing": -0.2
-            },
-            {
-              "type": "rectangle",
-              "id": "DlWTw",
-              "fill": "#E2E8F0",
-              "width": 1,
-              "height": 16
-            },
-            {
-              "type": "text",
-              "id": "YwDCJ",
-              "fill": "#2563EB",
-              "content": "Dashboard",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "normal"
-            },
-            {
-              "type": "text",
-              "id": "y7Usjv",
-              "fill": "#64748B",
-              "content": "Providers",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "normal"
-            },
-            {
-              "type": "text",
-              "id": "Ayy8V",
-              "fill": "#64748B",
-              "content": "Subtitles",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "normal"
-            },
-            {
-              "type": "text",
-              "id": "v5tJkk",
-              "fill": "#64748B",
-              "content": "Settings",
-              "fontFamily": "Inter",
-              "fontSize": 13,
-              "fontWeight": "normal"
-            },
-            {
               "type": "frame",
-              "id": "s499MR",
+              "id": "providerDrawerLightBody",
               "width": "fill_container",
-              "height": 1,
-              "fill": "#00000000"
-            },
-            {
-              "type": "text",
-              "id": "Fy39A",
-              "fill": "#94A3B8",
-              "content": "Dashboard nav application  ·  20px icon lockup",
-              "fontFamily": "Inter",
-              "fontSize": 9,
-              "fontWeight": "normal"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "nGDrA",
-          "width": "fill_container",
-          "fill": "#00000000",
-          "gap": 20,
-          "children": [
-            {
-              "type": "frame",
-              "id": "oXOlz",
-              "width": "fill_container",
-              "fill": "#0F172A",
-              "cornerRadius": 14,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "#334155"
-              },
               "layout": "vertical",
-              "gap": 20,
-              "padding": 36,
-              "alignItems": "center",
+              "gap": 12,
+              "padding": [
+                14,
+                16
+              ],
               "children": [
                 {
-                  "type": "text",
-                  "id": "Oma0K",
-                  "fill": "#475569",
-                  "content": "DARK THEME",
-                  "fontFamily": "Inter",
-                  "fontSize": 9,
-                  "fontWeight": "600",
-                  "letterSpacing": 2
-                },
-                {
                   "type": "frame",
-                  "id": "u3R7L",
-                  "width": 96,
-                  "height": 96,
-                  "fill": "#1E293B",
-                  "cornerRadius": 12,
-                  "layout": "none",
+                  "id": "providerDrawerLightFieldName",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
                   "children": [
                     {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "BCT6r",
-                      "x": 4,
-                      "y": 2,
-                      "fill": "#F8FAFC",
-                      "width": 32,
-                      "height": 12
+                      "type": "text",
+                      "id": "providerDrawerLightFieldNameLabel",
+                      "fill": "$--font-secondary",
+                      "content": "Provider 名称",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
                     },
                     {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "z12D1",
-                      "x": 42,
-                      "y": 2,
-                      "fill": "#67E8F9",
-                      "width": 20,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "tIvpG",
-                      "x": 68,
-                      "y": 2,
-                      "fill": "#60A5FA",
-                      "width": 24,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "yoQdQ",
-                      "x": 4,
-                      "y": 18,
-                      "fill": "#F8FAFC",
-                      "width": 6,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "G97fMa",
-                      "x": 14,
-                      "y": 18,
-                      "fill": "#F8FAFC",
-                      "width": 28,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "lw6ba",
-                      "x": 50,
-                      "y": 18,
-                      "fill": "#67E8F9",
-                      "width": 40,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "fi06S",
-                      "x": 4,
-                      "y": 34,
-                      "fill": "#F8FAFC",
-                      "width": 36,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "kyb3r",
-                      "x": 48,
-                      "y": 50,
-                      "fill": "#60A5FA",
-                      "width": 14,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "L84G9",
-                      "x": 66,
-                      "y": 50,
-                      "fill": "#F8FAFC",
-                      "width": 26,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "Yb0dr",
-                      "x": 18,
-                      "y": 66,
-                      "fill": "#F8FAFC",
-                      "width": 74,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "kJ15D",
-                      "x": 4,
-                      "y": 82,
-                      "fill": "#F8FAFC",
-                      "width": 22,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "VFdI5",
-                      "x": 32,
-                      "y": 82,
-                      "fill": "#F8FAFC",
-                      "width": 18,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 3,
-                      "id": "m9rpH",
-                      "x": 58,
-                      "y": 82,
-                      "fill": "#67E8F9",
-                      "width": 34,
-                      "height": 12
-                    },
-                    {
-                      "type": "rectangle",
-                      "id": "cYKwp",
-                      "x": 43,
-                      "y": 18,
-                      "fill": "#60A5FA",
-                      "width": 1,
-                      "height": 60
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "qr0r6",
-                      "x": 40,
-                      "y": 29,
-                      "fill": "#60A5FA",
-                      "width": 5,
-                      "height": 5
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "R48cX",
-                      "x": 40,
-                      "y": 45,
-                      "fill": "#60A5FA",
-                      "width": 5,
-                      "height": 5
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "ql63J",
-                      "x": 40,
-                      "y": 61,
-                      "fill": "#60A5FA",
-                      "width": 5,
-                      "height": 5
+                      "type": "frame",
+                      "id": "providerDrawerLightFieldNameInput",
+                      "width": "fill_container",
+                      "height": 32,
+                      "fill": "$--bg-canvas",
+                      "cornerRadius": "$--radius-sm",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border-default"
+                      },
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "providerDrawerLightFieldNameValue",
+                          "fill": "$--font-primary",
+                          "content": "OpenSubtitles 主池",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "text",
-                  "id": "xyiTY",
-                  "fill": "#94A3B8",
-                  "content": "On dark background",
-                  "fontFamily": "Inter",
-                  "fontSize": 10,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "bOoa3",
-              "width": "fill_container",
-              "fill": "#0F172A",
-              "cornerRadius": 14,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "#334155"
-              },
-              "layout": "vertical",
-              "gap": 20,
-              "padding": 36,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "c78aqF",
-                  "fill": "#475569",
-                  "content": "DARK LOCKUP",
-                  "fontFamily": "Inter",
-                  "fontSize": 9,
-                  "fontWeight": "600",
-                  "letterSpacing": 2
-                },
-                {
                   "type": "frame",
-                  "id": "fst4N",
-                  "fill": "#00000000",
-                  "gap": 10,
-                  "alignItems": "center",
+                  "id": "providerDrawerLightFieldKey",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
                   "children": [
                     {
+                      "type": "text",
+                      "id": "providerDrawerLightFieldKeyLabel",
+                      "fill": "$--font-secondary",
+                      "content": "API Key 列表",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    },
+                    {
                       "type": "frame",
-                      "id": "Z8OClD",
-                      "width": 24,
-                      "height": 24,
-                      "fill": "#0F172A",
-                      "layout": "none",
+                      "id": "providerDrawerLightFieldKeyInput",
+                      "width": "fill_container",
+                      "height": 32,
+                      "fill": "$--bg-canvas",
+                      "cornerRadius": "$--radius-sm",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$--border-default"
+                      },
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "alignItems": "center",
                       "children": [
                         {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "TTUWe",
-                          "x": 1,
-                          "y": 0,
-                          "fill": "#F8FAFC",
-                          "width": 8,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "fotKI",
-                          "x": 11,
-                          "y": 0,
-                          "fill": "#67E8F9",
-                          "width": 5,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "xkE85",
-                          "x": 17,
-                          "y": 0,
-                          "fill": "#60A5FA",
-                          "width": 6,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "u1LFkm",
-                          "x": 1,
-                          "y": 4,
-                          "fill": "#F8FAFC",
-                          "width": 2,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "zDUTN",
-                          "x": 4,
-                          "y": 4,
-                          "fill": "#F8FAFC",
-                          "width": 7,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "Rlttd",
-                          "x": 13,
-                          "y": 4,
-                          "fill": "#67E8F9",
-                          "width": 10,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "g2F55G",
-                          "x": 1,
-                          "y": 9,
-                          "fill": "#F8FAFC",
-                          "width": 9,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "FP7CG",
-                          "x": 12,
-                          "y": 13,
-                          "fill": "#60A5FA",
-                          "width": 4,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "Msuiu",
-                          "x": 17,
-                          "y": 13,
-                          "fill": "#F8FAFC",
-                          "width": 6,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "o3Mrq",
-                          "x": 5,
-                          "y": 17,
-                          "fill": "#F8FAFC",
-                          "width": 18,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "fu0OO",
-                          "x": 1,
-                          "y": 21,
-                          "fill": "#F8FAFC",
-                          "width": 6,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "Tp9V1",
-                          "x": 8,
-                          "y": 21,
-                          "fill": "#F8FAFC",
-                          "width": 5,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "cornerRadius": 1,
-                          "id": "mGVzE",
-                          "x": 15,
-                          "y": 21,
-                          "fill": "#67E8F9",
-                          "width": 8,
-                          "height": 3
-                        },
-                        {
-                          "type": "rectangle",
-                          "id": "R87h0b",
-                          "x": 11,
-                          "y": 4,
-                          "fill": "#60A5FA",
-                          "width": 1,
-                          "height": 15
+                          "type": "text",
+                          "id": "providerDrawerLightFieldKeyValue",
+                          "fill": "$--font-primary",
+                          "content": "ops_main_key_01",
+                          "fontFamily": "IBM Plex Mono",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
                     {
                       "type": "text",
-                      "id": "DsgB4",
-                      "fill": "#F8FAFC",
-                      "content": "SubHub",
+                      "id": "providerDrawerLightFieldKeyHint",
+                      "fill": "$--font-muted",
+                      "content": "至少填写一个 API Key。创建后回到列表页，并从该实例继续配置。",
                       "fontFamily": "Inter",
-                      "fontSize": 22,
-                      "fontWeight": "700",
-                      "letterSpacing": -0.3
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -8776,222 +7788,70 @@
             },
             {
               "type": "frame",
-              "id": "bbuHr",
+              "id": "providerDrawerLightFooter",
               "width": "fill_container",
-              "fill": "#0F172A",
-              "cornerRadius": 14,
               "stroke": {
                 "align": "inside",
-                "thickness": 1,
-                "fill": "#334155"
+                "thickness": {
+                  "top": 1
+                },
+                "fill": "$--border-default"
               },
-              "layout": "vertical",
-              "gap": 16,
-              "padding": 36,
+              "gap": 8,
+              "padding": [
+                12,
+                16
+              ],
+              "alignItems": "center",
               "children": [
                 {
-                  "type": "text",
-                  "id": "vad5n",
-                  "fill": "#475569",
-                  "content": "COLOR TOKENS",
-                  "fontFamily": "Inter",
-                  "fontSize": 9,
-                  "fontWeight": "600",
-                  "letterSpacing": 2
-                },
-                {
                   "type": "frame",
-                  "id": "MYrjZ",
+                  "id": "providerDrawerLightCancel",
+                  "height": 30,
                   "fill": "#00000000",
-                  "gap": 10,
+                  "cornerRadius": "$--radius-sm",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$--border-default"
+                  },
+                  "padding": [
+                    0,
+                    12
+                  ],
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "rectangle",
-                      "cornerRadius": 4,
-                      "id": "agHVy",
-                      "fill": "#F8FAFC",
-                      "width": 24,
-                      "height": 24,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#334155"
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "MJMSS",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 2,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "acRhz",
-                          "fill": "#94A3B8",
-                          "content": "foreground-inv",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "YgGz7",
-                          "fill": "#64748B",
-                          "content": "#F8FAFC",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
+                      "type": "text",
+                      "id": "providerDrawerLightCancelText",
+                      "fill": "$--font-secondary",
+                      "content": "取消",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
                 {
                   "type": "frame",
-                  "id": "R3zIr",
-                  "fill": "#00000000",
-                  "gap": 10,
+                  "id": "providerDrawerLightCreate",
+                  "height": 30,
+                  "fill": "$--accent",
+                  "cornerRadius": "$--radius-sm",
+                  "padding": [
+                    0,
+                    12
+                  ],
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "rectangle",
-                      "cornerRadius": 4,
-                      "id": "td9t5",
-                      "fill": "#67E8F9",
-                      "width": 24,
-                      "height": 24,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#334155"
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "cR4HG",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 2,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "GKkHi",
-                          "fill": "#94A3B8",
-                          "content": "accent-cyan",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "DdWDa",
-                          "fill": "#64748B",
-                          "content": "#67E8F9",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "fMVAu",
-                  "fill": "#00000000",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 4,
-                      "id": "SkGk5",
-                      "fill": "#60A5FA",
-                      "width": 24,
-                      "height": 24,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#334155"
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "bKJpp",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 2,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "c2UtZ",
-                          "fill": "#94A3B8",
-                          "content": "primary-blue",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "ZVZoH",
-                          "fill": "#64748B",
-                          "content": "#60A5FA",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "DHGvj",
-                  "fill": "#00000000",
-                  "gap": 10,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "rectangle",
-                      "cornerRadius": 4,
-                      "id": "AcPg3",
-                      "fill": "#0F172A",
-                      "width": 24,
-                      "height": 24,
-                      "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "#334155"
-                      }
-                    },
-                    {
-                      "type": "frame",
-                      "id": "wFYK4",
-                      "fill": "#00000000",
-                      "layout": "vertical",
-                      "gap": 2,
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "a7mvuj",
-                          "fill": "#94A3B8",
-                          "content": "background",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "500"
-                        },
-                        {
-                          "type": "text",
-                          "id": "fdV9U",
-                          "fill": "#64748B",
-                          "content": "#0F172A",
-                          "fontFamily": "Inter",
-                          "fontSize": 9,
-                          "fontWeight": "normal"
-                        }
-                      ]
+                      "type": "text",
+                      "id": "providerDrawerLightCreateText",
+                      "fill": "$--accent-foreground",
+                      "content": "创建 Provider",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
                     }
                   ]
                 }
@@ -9239,7 +8099,7 @@
     {
       "type": "frame",
       "id": "ABzDa",
-      "x": 4602,
+      "x": 3246,
       "y": 20,
       "name": "Provider Detail – Dark",
       "theme": {
@@ -9657,7 +8517,7 @@
                           "type": "text",
                           "id": "J5iKn9",
                           "fill": "$--font-primary",
-                          "content": "OpenSubtitles",
+                          "content": "OpenSubtitles 主池",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "500"
@@ -9668,7 +8528,7 @@
                       "type": "text",
                       "id": "HVgPg",
                       "fill": "$--font-secondary",
-                      "content": "配置策略 · Token 池管理 · 异常隔离",
+                      "content": "已完成建档与 API Key 录入 · 待补齐运行策略",
                       "fontFamily": "Inter",
                       "fontSize": 11,
                       "fontWeight": "normal"
@@ -9793,7 +8653,7 @@
                           "type": "text",
                           "id": "oUbtE",
                           "fill": "$--warning",
-                          "content": "当前无活跃凭据，对外服务存在中断风险",
+                          "content": "已完成建档与 API Key 录入，当前仍处于待完善配置状态",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "500"
@@ -9802,7 +8662,7 @@
                           "type": "text",
                           "id": "GppIR",
                           "fill": "$--warning",
-                          "content": "请立即添加至少一个可用 Token 或取消隔离已冻结凭据",
+                          "content": "请优先补齐权重、并发、轮换/冷却、失败切换与回退目标，再投入正式调度",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -9826,7 +8686,7 @@
                           "type": "text",
                           "id": "jXT7x",
                           "fill": "#211505",
-                          "content": "添加凭据",
+                          "content": "继续配置",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "500"
@@ -9883,7 +8743,7 @@
                           "type": "text",
                           "id": "prZCA",
                           "fill": "$--font-muted",
-                          "content": "最高优先调度",
+                          "content": "创建后待设置",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -9930,7 +8790,7 @@
                           "type": "text",
                           "id": "WhrRh",
                           "fill": "$--font-muted",
-                          "content": "共 5 个凭据",
+                          "content": "已录入 1 个凭据",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -9968,7 +8828,7 @@
                           "type": "text",
                           "id": "iGB26",
                           "fill": "$--font-primary",
-                          "content": "60s",
+                          "content": "待设置",
                           "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": "600"
@@ -9977,7 +8837,7 @@
                           "type": "text",
                           "id": "cNdnT",
                           "fill": "$--font-muted",
-                          "content": "标准冷却时长",
+                          "content": "创建后默认未配置",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -10015,7 +8875,7 @@
                           "type": "text",
                           "id": "q2GEC",
                           "fill": "$--font-primary",
-                          "content": "Subscene",
+                          "content": "待设置",
                           "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": "600"
@@ -10024,7 +8884,7 @@
                           "type": "text",
                           "id": "HqF09",
                           "fill": "$--font-muted",
-                          "content": "降级后转发至",
+                          "content": "建议回退到 Private Mirror",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -10594,7 +9454,7 @@
                                           "type": "text",
                                           "id": "m66MIS",
                                           "fill": "$--font-primary",
-                                          "content": "Subscene",
+                                          "content": "待设置",
                                           "fontFamily": "Inter",
                                           "fontSize": 13,
                                           "fontWeight": "normal"
@@ -11558,7 +10418,7 @@
                               "type": "text",
                               "id": "vCp23",
                               "fill": "$--font-secondary",
-                              "content": "OpenSubtitles 为主力来源，权重最高。冷却 60s 是结合 429 频率和额度预算综合测试后的最优值。回退 Subscene 是在 OSD 完全不可用时的应急保障。",
+                              "content": "当前实例已完成建档与 API Key 录入。建议先补齐权重、并发、轮换/冷却、失败切换与回退目标，再投入正式调度。",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
@@ -11578,8 +10438,8 @@
     {
       "type": "frame",
       "id": "qomuV",
-      "x": 4602,
-      "y": 1180,
+      "x": 3246,
+      "y": 1584,
       "name": "Provider Detail – Light",
       "theme": {
         "mode": "light"
@@ -11633,7 +10493,7 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "logo-light.png",
+                    "url": "images/logo-light.png",
                     "mode": "fit"
                   }
                 },
@@ -11996,7 +10856,7 @@
                           "type": "text",
                           "id": "F5ydOG",
                           "fill": "$--font-primary",
-                          "content": "OpenSubtitles",
+                          "content": "OpenSubtitles 主池",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "500"
@@ -12007,7 +10867,7 @@
                       "type": "text",
                       "id": "HbrbL",
                       "fill": "$--font-secondary",
-                      "content": "配置策略 · Token 池管理 · 异常隔离",
+                      "content": "已完成建档与 API Key 录入 · 待补齐运行策略",
                       "fontFamily": "Inter",
                       "fontSize": 11,
                       "fontWeight": "normal"
@@ -12132,7 +10992,7 @@
                           "type": "text",
                           "id": "w2OWMJ",
                           "fill": "$--warning",
-                          "content": "当前无活跃凭据，对外服务存在中断风险",
+                          "content": "已完成建档与 API Key 录入，当前仍处于待完善配置状态",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "500"
@@ -12141,7 +11001,7 @@
                           "type": "text",
                           "id": "mYxK5",
                           "fill": "$--warning",
-                          "content": "请立即添加至少一个可用 Token 或取消隔离已冻结凭据",
+                          "content": "请优先补齐权重、并发、轮换/冷却、失败切换与回退目标，再投入正式调度",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -12165,7 +11025,7 @@
                           "type": "text",
                           "id": "zubUu",
                           "fill": "#211505",
-                          "content": "添加凭据",
+                          "content": "继续配置",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "500"
@@ -12222,7 +11082,7 @@
                           "type": "text",
                           "id": "bpTOJ",
                           "fill": "$--font-muted",
-                          "content": "最高优先调度",
+                          "content": "创建后待设置",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -12269,7 +11129,7 @@
                           "type": "text",
                           "id": "DEfBg",
                           "fill": "$--font-muted",
-                          "content": "共 5 个凭据",
+                          "content": "已录入 1 个凭据",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -12307,7 +11167,7 @@
                           "type": "text",
                           "id": "BFvvG",
                           "fill": "$--font-primary",
-                          "content": "60s",
+                          "content": "待设置",
                           "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": "600"
@@ -12316,7 +11176,7 @@
                           "type": "text",
                           "id": "gnhGm",
                           "fill": "$--font-muted",
-                          "content": "标准冷却时长",
+                          "content": "创建后默认未配置",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -12354,7 +11214,7 @@
                           "type": "text",
                           "id": "voVuf",
                           "fill": "$--font-primary",
-                          "content": "Subscene",
+                          "content": "待设置",
                           "fontFamily": "Inter",
                           "fontSize": 22,
                           "fontWeight": "600"
@@ -12363,7 +11223,7 @@
                           "type": "text",
                           "id": "obKcH",
                           "fill": "$--font-muted",
-                          "content": "降级后转发至",
+                          "content": "建议回退到 Private Mirror",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -12933,7 +11793,7 @@
                                           "type": "text",
                                           "id": "D5ffgT",
                                           "fill": "$--font-primary",
-                                          "content": "Subscene",
+                                          "content": "待设置",
                                           "fontFamily": "Inter",
                                           "fontSize": 13,
                                           "fontWeight": "normal"
@@ -13897,7 +12757,7 @@
                               "type": "text",
                               "id": "y3XUcz",
                               "fill": "$--font-secondary",
-                              "content": "OpenSubtitles 为主力来源，权重最高。冷却 60s 是结合 429 频率和额度预算综合测试后的最优值。回退 Subscene 是在 OSD 完全不可用时的应急保障。",
+                              "content": "当前实例已完成建档与 API Key 录入。建议先补齐权重、并发、轮换/冷却、失败切换与回退目标，再投入正式调度。",
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "normal"
