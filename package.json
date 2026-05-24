@@ -1,0 +1,10 @@
+{
+  "name": "subhub",
+  "private": true,
+  "scripts": {
+    "api:spec": "echo \"[placeholder] sync and validate OpenAPI spec at docs/api/openapi.yaml\"",
+    "api:client": "echo \"[placeholder] generate client/types from orval.config.ts to src/lib/api/generated/\"",
+    "api:docs": "echo \"[placeholder] build/serve Scalar docs at /docs/api\"",
+    "api:check": "echo \"[placeholder] check api chain: docs/api/openapi.yaml + orval.config.ts + src/lib/api/generated/ + /docs/api\""
+  }
+}
