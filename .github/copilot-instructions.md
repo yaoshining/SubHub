@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-<!-- SPECKIT END -->`
+<!-- SPECKIT END -->
 
 ## 语言规范
 
@@ -36,3 +36,15 @@ shell commands, and other important information, read the current plan
 	- 更新最终项目设计文档。
 - 若内容已吸收进入真源文档，不应反复要求用户回查 `.github/design-system/...`。
 - 本约定仅适用于 `ui-ux-pro-max` 生成工件（如 `.github/design-system/subhub/`），不泛化到所有 `.github/design-system/*` 内容。
+
+## API 契约链路约定（OpenAPI / Orval / Scalar）
+
+- OpenAPI 真源文件固定为：`docs/api/openapi.yaml`。凡涉及 API 契约定义、变更、评审、对齐，默认以该路径为正式约定。
+- Orval 配置文件固定为：`orval.config.ts`。
+- 前端生成 client/types 输出目录固定为：`src/lib/api/generated/`。
+- API 手写封装层目录固定为：`src/lib/api/`。生成代码与手写适配逻辑必须分开维护，不得混写。
+- API 文档展示默认入口为：`/docs/api`（Scalar）。凡涉及 API 文档展示与联调，默认按该路由检查。
+- 约定脚本标准命名为：`api:spec`、`api:client`、`api:docs`，可选校验脚本为：`api:check`。
+- 当实现、评审或集成涉及接口变化时，必须提醒检查：`docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/`、`api:spec`、`api:client`、`api:docs`。
+- 即使仓库暂未落地上述脚本，也应将其视为预期标准命名，不得自行发明替代命名。
+- 未经用户明确要求，不得自行创建另一套 OpenAPI 路径、Orval 路径或 API 脚本命名。

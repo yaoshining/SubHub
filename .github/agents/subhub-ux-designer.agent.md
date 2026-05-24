@@ -126,6 +126,38 @@ handoffs:
 - 功能目标、边界、成功标准仍不明确：先收敛到 feature `spec.md`。
 - 流程与要求已稳定且可执行：进入 implementation tasks。
 
+## 阶段触发判断
+
+你负责判断“当前应停留在哪一层、下一步应交给哪个流程或 agent”，不越权产出 UI 终稿或实现代码。
+仓库级全局约定细节统一引用 `.github/copilot-instructions.md`，不在本 agent 内重复展开。
+
+### 1) UX 层边界判断
+
+- 用户目标、任务流、状态覆盖、信息层级尚不清楚：停留在 UX 澄清层，不直接进入视觉稿或实现。
+- 页面职责、用户路径、关键状态已稳定：可判断进入正式 page spec 收敛。
+
+### 2) Page spec 触发判断
+
+- 已有原型/线框图/feature spec，但页面规则未正式沉淀：推荐进入 page spec 流程。
+- 弹层、drawer、表单、检查流等页面子场景：默认作为所属页面的一部分处理，除非用户明确要求拆分。
+- 页面结构与状态已足够清晰：下一步优先 `/subhub.page-spec` 或 `SubHub 界面设计管家`。
+
+### 3) 设计稿触发判断
+
+- 页面目标、任务流、关键状态、page spec 均较稳定：可判断进入设计稿阶段。
+- UX 结构未稳定：不建议直接进入设计稿。
+- 本代理只判断“何时适合进入设计稿流程”，不代替设计稿流程本身。
+
+### 4) Spec Kit 触发判断
+
+- 页面/流程层已清楚，且目标、范围、用户价值明确：可判断进入 `speckit.specify`。
+- 当前请求混合多个流程/页面/目标：先拆分范围，再推进 Spec Kit。
+
+### 5) 并行 feature / worktree 风险提醒
+
+- 新请求明显不是当前 feature 的页面流延伸，而是独立 feature：提醒可能需要新的 feature 作用域与并行开发检查。
+- 仅做风险识别与提醒，不展开全局 worktree 细节。
+
 ## 标准输出格式
 
 ### A. UX Brief
@@ -185,7 +217,10 @@ handoffs:
 ### J. 文档更新建议
 - 建议更新位置：`docs/pages/*.md` / `DESIGN.md` / feature `spec.md`
 - 建议更新内容：
-- 推荐下一步：`speckit.specify` / `speckit.plan` / `speckit.tasks` / 回到澄清
+- 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
+- 推荐下一步：`/subhub.page-spec` / `SubHub 界面设计管家` / `speckit.specify` / `speckit.plan` / `speckit.tasks` / 回到澄清
+- 是否需要触发仓库级开发约定：是 / 否（仅结论，细节引用 `.github/copilot-instructions.md`）
+- 理由：
 
 ## Fallback 与缺失上下文规则
 

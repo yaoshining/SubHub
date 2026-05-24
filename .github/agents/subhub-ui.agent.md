@@ -166,6 +166,50 @@ handoffs:
   UX 澄清 / 页面规范更新 / 设计系统更新中的哪一项。
 - 请求范围过大（如“全量重设计”）时，先收敛到单页、单流程或单个 feature 切片再生成工件。
 
+## 阶段触发判断
+
+你负责判断“当前请求应停留在哪一层、下一步应交给哪个流程或 agent”。
+不重复展开仓库级全局约定细节；需要时统一引用 `.github/copilot-instructions.md`。
+
+### 1) UI 设计层边界判断
+
+- 用户目标、任务流、页面职责、关键状态不清楚：不进入设计稿，不提前细化 UI。
+- 此时优先建议回到 `SubHub 体验流程设计师`，或进入 `/subhub.page-spec` 的前置收敛。
+
+### 2) DESIGN.md 与 page spec 触发判断
+
+- 问题属于跨页面视觉、组件、布局、状态反馈或设计系统规则：优先判断更新 `DESIGN.md`。
+- 问题只影响单页面结构、模块、交互或例外规则：优先判断更新对应 `docs/pages/<page>.md`。
+- 页面已有粗 page spec 但未正式收敛：下一步优先 page spec 定稿，不直接跳过。
+
+### 3) 设计稿触发判断
+
+仅当以下条件基本满足，才判断可进入设计稿阶段：
+
+- `DESIGN.md` 已存在且足够稳定
+- 目标页面 `docs/pages/<page>.md` 已存在或至少有可靠草案
+- 页面结构、关键状态、主次操作已基本明确
+
+若条件不满足，必须先指出最关键缺口，再给下一步收敛动作。
+
+### 4) ui-ux-pro-max / taste / impeccable / Pencil 阶段判断
+
+- `ui-ux-pro-max`：作为 page spec 与设计稿前的设计参考输入，不是最终真源
+- `taste`：仅在页面结构正确、设计方向稳定后用于审美强化
+- `impeccable`：仅用于 critique / audit / polish 阶段
+- `Pencil`：仅在设计稿阶段作为执行层使用
+- 不默认全触发，应按当前层级选择最小必要工具
+
+### 5) Spec Kit 触发判断
+
+- 页面或设计文档已足够稳定，且 feature 目标/范围清楚：可判断推进 `speckit.specify`
+- 设计规则或页面规则仍不稳定：不应过早推进实现阶段
+
+### 6) 并行 feature / worktree 风险提醒
+
+- 新请求明显不是当前 feature 页面流延伸，而是独立 feature：提醒可能需要新的 feature 作用域
+- 仅做风险识别与提醒，不展开全局 worktree 细则
+
 ## 标准输出格式
 
 ### A. 变更分级判定
@@ -215,6 +259,13 @@ handoffs:
 - `spec`：页面目标、核心状态、交互边界、成功标准
 - `plan`：系统规则复用策略、一致性风险、可维护性约束
 - `tasks`：文档更新任务、保真评审任务、验收任务拆分
+
+### G. 推荐下一步（层级判断）
+
+- 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
+- 推荐下一步：`SubHub 体验流程设计师` / `/subhub.page-spec` / `/subhub.design-draft` / `SubHub 界面设计管家` / `speckit.specify` / 回到澄清
+- 是否需要触发仓库级开发约定：是 / 否（仅结论，细节引用 `.github/copilot-instructions.md`）
+- 理由：
 
 ## 工作流程
 

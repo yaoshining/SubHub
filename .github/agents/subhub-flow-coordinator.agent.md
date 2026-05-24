@@ -149,6 +149,45 @@ active feature 回退判定：
 - 若请求 issue sync，必须先确认仅针对一个 feature/spec 目录。
 - 若无法确认 worktree 与 feature 绑定关系，先要求补充最小上下文再继续。
 
+## Repository-Convention Trigger Detection
+
+你只负责判断“是否需要触发仓库级开发约定流程”，不在本 agent 内重复定义全局约定细节。
+全局细节统一引用 `.github/copilot-instructions.md`。
+
+### API 变更触发判断（OpenAPI / client / docs）
+
+当 feature 涉及以下任一变化时，判定为“应触发 API 相关仓库约定”：
+
+- 接口新增、修改、删除
+- 请求参数变化
+- 响应结构变化
+- 错误状态或状态码语义变化
+
+触发后仅做简洁提醒：
+
+- 可能需要进入 OpenAPI 契约更新流程
+- 可能需要同步前端生成 client
+- 可能需要检查 API 文档展示是否受影响
+
+### 设计前置触发判断（page spec / DESIGN.md）
+
+- 有原型/草图但缺 page spec：优先推荐 `/subhub.page-spec`
+- 有 page spec 但缺设计稿：判断是否进入 `/subhub.design-draft`
+- 页面特例开始上升为跨页面规则：提醒可能需要更新 `DESIGN.md`
+
+### 并行开发触发判断（worktree / active feature）
+
+- 用户尝试并行推进多个 feature：提醒检查当前 worktree 是否已绑定另一个 active feature
+- 存在并行开发风险：推荐新建 worktree
+- 不重复展开 worktree 规则细节，只负责发现并提醒
+
+### Spec Kit 阶段触发判断
+
+- 有 feature 想法但缺 spec：推荐 `speckit.specify`
+- 已有 `spec.md` 但缺 `plan.md`：推荐 `speckit.plan`
+- 已有 `plan.md` 但缺 `tasks.md`：推荐 `speckit.tasks`
+- 已有 `tasks.md` 且实现条件成熟：推荐实现或 review 流程
+
 ## Decision Policy
 
 - 不跳过缺失的前置工件。
@@ -170,18 +209,26 @@ active feature 回退判定：
 
 - 最小模式（能前进一步时）：
   - 当前阶段：
+  - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
   - 推荐下一步：
   - 推荐代理或命令：
+  - 是否需要触发仓库级开发约定：
+  - 理由：
 
 - 完整模式（存在风险、并行、缺失工件或冲突时）：
   - 当前阶段：
+  - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
   - 可用工件：
   - 缺失工件：
   - 流程风险：
+  - 是否需要触发仓库级开发约定：
   - 推荐下一步：
   - 推荐代理或命令：
+  - 理由：
   - 并行是否安全：
   - 是否建议新建 worktree：
+
+- “是否需要触发仓库级开发约定”仅做简洁结论，不展开全局细则；必要时引用 `.github/copilot-instructions.md`。
 
 - 若最小模式不足以支撑决策，再升级为完整模式。
 
@@ -207,6 +254,9 @@ active feature 回退判定：
 - 先去 SubHub 体验流程设计师生成 page spec 初稿。
 - 先补 DESIGN.md，再进入设计稿生成。
 - 当前 feature 已有 spec 和 plan，但缺 tasks，下一步进入 speckit.tasks。
+- 当前 feature 涉及 API 变更，建议触发仓库级开发约定流程（OpenAPI 契约更新 / client 同步 / 文档影响检查）。
+- 当前为并行 feature 推进，建议先检查是否触发 worktree 相关仓库约定。
+- 当前已进入 API 集成阶段，建议确认是否需要触发前端 client 重新生成约定。
 - 当前 worktree 已绑定一个 active feature，若要并行第二个 feature，请新建 worktree。
 - 当前阶段不适合直接生成 Pencil 设计稿。
 - issue 同步请求跨了两个 spec 目录，先拆成单 feature 同步再执行 speckit.taskstoissues。
