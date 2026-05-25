@@ -20,6 +20,35 @@ shell commands, and other important information, read the current plan
 - 若设计稿或页面规范中存在可映射到 `shadcn/ui` 的结构，应优先按该组件体系落地，而不是重新发明等价实现。
 - 若设计意图与 `shadcn/ui` 默认模式冲突，应先提出映射方案或 tradeoff，再由人工确认是否引入新组件。
 
+## 图标系统约定（Lucide）
+
+- 本项目默认图标系统为 **Lucide**。
+- 设计稿、页面规范、前端实现、代码评审默认优先使用 Lucide 图标；非必要不得混用风格差异明显的图标集。
+- 设计稿中的图标默认通过 Pencil `icon_font` 能力使用 Lucide，`iconFontFamily` 默认使用 `lucide`。
+- 图标资产统一维护在 `design/main.pen` 的 `Assets / Icons / Lucide` 区域；需复用时优先做成可复用组件（reusable icon assets）。
+- 设计稿图标命名应尽量与 Lucide 原始图标名一致，例如：`menu`、`panel-left`、`settings`、`users`、`shield`、`key-round`。
+- UI / UX 相关 agent 在补充图标时，应优先按场景选择语义清晰、风格克制的 Lucide 图标；若设计稿缺失，可补入 `Assets / Icons / Lucide`，并优先复用同名或等价资产，避免重复创建。
+- 前端实现默认使用 `lucide-react`；若设计稿或页面规范已指定 Lucide 图标名，应优先使用同名 `lucide-react` 组件。
+- 未经用户明确要求，不应将 Lucide 图标随意替换为其他图标库近似图标；若设计稿与代码命名不一致，应先指出并收敛命名，不得静默偏离。
+- 涉及图标实现的代码评审应检查：是否使用约定 Lucide 命名、是否与设计稿和页面规范语义一致、是否无必要混入其他图标库、是否出现同一语义在不同页面使用不同图标。
+- 仅当 Lucide 明显无法覆盖需求时，才允许引入额外图标源；如需引入，必须在对应 page spec、设计文档或实现说明中明确原因。
+- 未经说明，不应自行扩展为多图标系统并行维护。
+
+### 常用语义到 Lucide 图标名映射（默认）
+
+| 语义 | 默认 Lucide 名称 |
+|------|------------------|
+| 菜单/主导航入口 | `menu` |
+| 侧边栏/面板切换 | `panel-left` |
+| 系统设置 | `settings` |
+| 用户/成员管理 | `users` |
+| 安全/权限 | `shield` |
+| 凭据/API Key | `key-round` |
+
+- 上述映射为默认优先映射；若页面场景确需不同图标，必须保持语义更清晰且在页面规范或实现说明中记录原因。
+- 同一语义在同一产品域内应保持图标名一致，避免跨页面漂移命名。
+- 设计稿、页面规范、前端代码与评审结论引用图标时，默认以上述名称作为优先对齐基线。
+
 ## ui-ux-pro-max 产物约定（SubHub）
 
 - `ui-ux-pro-max` 安装于 `.github/prompts/ui-ux-pro-max/`。
