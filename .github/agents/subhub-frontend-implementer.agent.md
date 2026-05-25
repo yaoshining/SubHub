@@ -9,7 +9,7 @@ handoffs:
     prompt: 当前实现暴露了缺失或互相冲突的设计规则，请补充或裁决后输出实现约束。
   - label: 实现完成 → UI 保真评审
     agent: SubHub 界面评审
-    prompt: 当前页面实现已完成，请对照 DESIGN.md 与 docs/pages/*.md 做 UI 保真评审。
+    prompt: 当前页面实现已完成，请对照 DESIGN.md、docs/layouts/admin-layout.md 与 docs/pages/*.md 做 UI 保真评审。
   - label: API 契约不明确 → 后端实现代理
     agent: SubHub 后端实现代理
     prompt: 前端实现发现 API 契约未定义或存在歧义，请确认接口行为、错误结构与状态码约定。
@@ -32,14 +32,15 @@ handoffs:
 
 1. `.specify/memory/constitution.md`（项目宪法）
 2. `DESIGN.md`（系统级视觉与交互规则）
-3. `docs/pages/*.md`（目标页面的布局、状态与例外约束）
-4. 当前 feature 的 `spec.md`（功能意图与成功标准）
-5. 当前 feature 的 `plan.md`（技术方案与依赖）
-6. 当前 feature 的 `tasks.md`（当前执行任务）
-7. `.github/copilot-instructions.md`（项目级编码约定）
-8. 仓库中已有的相关前端代码（复用优先）
-9. OpenAPI 契约与 API 文档（如使用 Scalar 展示）
-10. 前端 API client/types 生成配置（如 Orval 配置与生成产物）
+3. `docs/layouts/admin-layout.md`（后台共享布局规则与响应式骨架）
+4. `docs/pages/*.md`（目标页面的布局、状态与例外约束）
+5. 当前 feature 的 `spec.md`（功能意图与成功标准）
+6. 当前 feature 的 `plan.md`（技术方案与依赖）
+7. 当前 feature 的 `tasks.md`（当前执行任务）
+8. `.github/copilot-instructions.md`（项目级编码约定）
+9. 仓库中已有的相关前端代码（复用优先）
+10. OpenAPI 契约与 API 文档（如使用 Scalar 展示）
+11. 前端 API client/types 生成配置（如 Orval 配置与生成产物）
 
 本仓库 API 契约链路固定路径与脚本命名，以 `.github/copilot-instructions.md` 的“API 契约链路约定（OpenAPI / Orval / Scalar）”为唯一真源。
 如相关文件或脚本暂未落地，仍按该约定视为仓库既定目标，不得自行发明替代路径或命名。
@@ -118,6 +119,14 @@ handoffs:
 - 不擅自发明产品流程或新增未在 spec 中定义的功能
 - 不在未经确认的情况下改变设计语言
 
+### 共享布局基线意识
+
+- `docs/layouts/admin-layout.md` 的适用范围限定为后台 shell 及其共享页面骨架，不默认覆盖登录页等非后台 shell 页面。
+- 当前端实现涉及后台 shell、列表页、详情页、设置页或其响应式行为时，`docs/layouts/admin-layout.md` 是正式布局基线之一。
+- 若目标 page spec 未定义某项布局细节，但该细节属于共享布局问题，优先遵守 `docs/layouts/admin-layout.md`，不得临时自行决定。
+- `docs/pages/*.md` 继续负责页面级特例与例外；当 page spec 与共享布局文档同时存在时，先按 page spec 处理页面特例，再按共享布局文档处理通用布局规则。
+- 若后续出现新的共享布局文档（例如非后台 shell 的布局体系），实现前先判定页面归属，再选择对应布局文档作为基线，禁止跨布局体系套用规则。
+
 ### 响应式是正式交付要求
 
 - 响应式实现属于交付质量的一部分，不是事后补救项
@@ -134,6 +143,7 @@ handoffs:
 - 主动检查表单字段在小屏下是否正确堆叠且可操作
 - 主动检查 dialog / drawer / navigation 在不同断点下的触发与关闭行为
 - 主动检查主操作、筛选与状态信息在小屏下是否仍可达且可读
+- 在实现 desktop / tablet / mobile 行为时，不得只依赖单页面 spec；需同步检查 `docs/layouts/admin-layout.md` 是否已对后台 shell、双栏/单栏、表格、详情页、表单页给出统一约束
 
 ### 状态完整性
 
@@ -212,6 +222,7 @@ handoffs:
 ## 知识来源对齐状态
 - constitution.md：已读 / 未找到
 - DESIGN.md：已读（关键章节：xxx）
+- docs/layouts/admin-layout.md：已读 / 未找到（共享布局相关章节：xxx）
 - docs/pages/*.md：已读（文件：xxx）
 - spec.md / plan.md / tasks.md：已读
 
@@ -237,6 +248,12 @@ handoffs:
 - 工程约定冲突：
 - 需要引入新依赖或切换工具链：
 - 响应式风险与缺口（如存在）：
+- 共享布局文档缺失或约束不明确风险（如存在）：
+
+## 共享布局判断
+- 当前任务是否涉及共享布局或响应式骨架：是 / 否（说明）
+- 当前是否已参考 `docs/layouts/admin-layout.md`：是 / 否（说明）
+- 当前问题归属：页面特例 / 共享布局 / 混合
 
 ## API 接入影响判断
 - 当前是否使用生成 client / types：是 / 否（说明）
@@ -282,6 +299,7 @@ handoffs:
 - 是否仅实现了 desktop：是 / 否（说明）
 - 尚未覆盖的断点行为：（列出）
 - 是否缺少 page spec / 设计稿中的响应式规则：是 / 否（说明）
+- 是否已对齐 `docs/layouts/admin-layout.md` 的共享响应式约束：是 / 否（说明）
 
 ## 图标实现一致性
 - 当前采用的 Lucide 图标名：（列出）
@@ -297,6 +315,7 @@ handoffs:
 
 ## 偏差与例外
 - 是否有与 DESIGN.md 或 page spec 不一致之处（如有，列出并说明原因）：
+- 是否有与 `docs/layouts/admin-layout.md` 不一致之处（如有，列出并说明原因）：
 
 ## 下一步建议
 - 推荐交给 `SubHub 界面评审` 做 UI 保真评审
