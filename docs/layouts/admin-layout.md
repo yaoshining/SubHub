@@ -202,6 +202,27 @@
 - 复用要求：空状态应包含原因与下一步动作；错误状态应包含恢复路径。
 - 稳定性要求：同类错误反馈的语气与结构保持一致，不做装饰化差异。
 
+#### 5.8.1 空状态卡片视觉结构（设计稿基线）
+
+以下为可复用的空状态卡片结构，来源于 `design/main.pen → Empty States – Reference (Dark)`，适用于 Providers、API Keys、Users 等列表型页面的整页空状态或主区块空状态：
+
+| 层级 | 结构说明 | Token |
+|------|---------|-------|
+| 外层容器 | 垂直布局，居中对齐，padding 48/32，gap 20 | `fill: $--bg-surface`，`stroke: $--border-default`，`corner-radius: $--radius-lg` |
+| 图标容器 | 56×56，垂直居中 | `fill: $--bg-canvas`，`stroke: $--border-default`，`corner-radius: $--radius-lg` |
+| 图标 | 24×24，使用 **Lucide** 语义图标 | `fill: $--font-muted` |
+| 主标题 | Inter 15px / 600 | `fill: $--font-primary` |
+| 描述文字 | Inter 13px / regular，居中 | `fill: $--font-muted` |
+| CTA 按钮 | height 36，padding 16，图标（16×16）+ 文字 | `fill: $--accent`，`color: $--accent-foreground`，`corner-radius: $--radius-md` |
+
+**图标约定**（优先使用 `design/main.pen → Assets / Icons / Lucide` 中已有资产）：
+
+- Providers 空状态：`cloud-off`
+- API Keys 空状态：`key-round`
+- Users 空状态：`users`
+
+**禁止行为**：不得在空状态中使用 Material Symbols 或其他非 Lucide 图标库；不得只显示空白无任何引导性文字或动作。
+
 ## 6. 响应式布局规则
 
 本节为本规范核心，定义后台共享骨架在不同断点下的明确行为。
@@ -317,9 +338,11 @@
 - 列表 / 管理页面骨架
 - 设置 / 表单页面骨架
 
-### A.2 建议后续在 `docs/pages/*.md` 补充特例的方向
+### A.2 页面特有响应式规则状态
 
-- provider-detail：对象详情中的主栏/次级栏信息优先级与降级顺序
-- access-control：权限矩阵在 tablet/mobile 下的可读性策略
-- api-keys：高风险动作与轮换流程在窄屏下的操作可达性
-- users：批量操作与筛选条件在小屏下的收敛策略
+以下页面已在各自 `docs/pages/*.md` 中补充了 `Responsive Behavior (Page-Specific)` 章节：
+
+- ✅ `provider-detail.md`：Tablet 次级栏下沉策略、Mobile 单栏堆叠顺序与高风险动作可达性
+- ✅ `access-control.md`：Tablet 角色列表堆叠规则、Mobile 权限矩阵横向滚动策略与高风险动作保护
+- ✅ `api-keys.md`：Tablet 双栏堆叠、Mobile 卡片化列表与高风险动作二次确认保护
+- ✅ `users.md`：Tablet 筛选保持横排、Mobile 批量操作收敛与成员详情堆叠顺序

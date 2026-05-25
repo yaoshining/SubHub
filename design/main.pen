@@ -60714,8 +60714,8 @@
                   "id": "N0FjKM",
                   "width": 24,
                   "height": 24,
-                  "iconFontName": "cloud_off",
-                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "cloud-off",
+                  "iconFontFamily": "lucide",
                   "fill": "$--font-muted"
                 }
               ]
@@ -60816,8 +60816,8 @@
                   "id": "q88nzT",
                   "width": 24,
                   "height": 24,
-                  "iconFontName": "key_off",
-                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "key-round",
+                  "iconFontFamily": "lucide",
                   "fill": "$--font-muted"
                 }
               ]
@@ -60918,8 +60918,8 @@
                   "id": "xaLIw",
                   "width": 24,
                   "height": 24,
-                  "iconFontName": "group_off",
-                  "iconFontFamily": "Material Symbols Rounded",
+                  "iconFontName": "users",
+                  "iconFontFamily": "lucide",
                   "fill": "$--font-muted"
                 }
               ]
@@ -89977,6 +89977,49 @@
                   "id": "eweYV",
                   "fill": "#7F8CA3",
                   "content": "sun",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 8,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b7SRN",
+              "name": "cloud-off",
+              "width": 88,
+              "height": 92,
+              "fill": "#121A2B",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#25324A"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                10,
+                8
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "J57T4S",
+                  "name": "cloud-off-icon",
+                  "width": 50,
+                  "height": 50,
+                  "iconFontName": "cloud-off",
+                  "iconFontFamily": "lucide",
+                  "fill": "#A7B4C8"
+                },
+                {
+                  "type": "text",
+                  "id": "y44LBc",
+                  "fill": "#7F8CA3",
+                  "content": "cloud-off",
                   "textAlign": "center",
                   "fontFamily": "Inter",
                   "fontSize": 8,

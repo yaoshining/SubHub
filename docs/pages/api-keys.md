@@ -125,6 +125,23 @@
 - **External dependencies**: 外部应用接入关系、系统剪贴板能力（仅在受控 copy 行为触发时使用）
 - **Cross-page dependencies**: `docs/pages/dashboard.md`
 
+## Responsive Behavior (Page-Specific)
+
+> 共享响应式骨架规则参见 `docs/layouts/admin-layout.md §6`；以下为本页特有例外与优先级约定。
+
+### Tablet
+
+- 左侧 inventory 与右侧 Selected Key 详情可调整为垂直堆叠，Inventory 在上，详情在下。
+- 高风险动作（停用、轮换）按钮必须在详情区首屏可见，不得下沉到需要滚动才可触达的位置。
+- 受控 reveal / copy 动作在 Tablet 下保持与桌面相同的视觉层级，不得折叠为"更多"菜单。
+
+### Mobile
+
+- 统一转单列：Key 摘要卡 → Key inventory（卡片化或窄表格）→ Selected Key 详情（独立区块）。
+- 生成新 Key 等主操作可提升为固定底部按钮或首屏 FAB，确保在 inventory 较长时仍可触达。
+- 停用与轮换为高风险动作，在 Mobile 下必须保留 `AlertDialog` 二次确认，不得因屏幕窄而简化确认流程。
+- 受控 reveal 窗口在 Mobile 下应确保明文可读，不因容器宽度导致截断；建议使用 `Textarea` 只读样式承载。
+
 ## Notes
 
 - 本页只管理下游调用方 Key，不管理上游 Provider 凭据；上游凭据归属 `docs/pages/provider-detail.md`。

@@ -116,6 +116,23 @@
 - **External dependencies**: 无
 - **Cross-page dependencies**: `docs/pages/users.md`、`docs/pages/settings.md`、`docs/pages/api-keys.md`、`docs/pages/provider-detail.md`
 
+## Responsive Behavior (Page-Specific)
+
+> 共享响应式骨架规则参见 `docs/layouts/admin-layout.md §6`；以下为本页特有例外与优先级约定。
+
+### Tablet
+
+- 左侧角色预设列表与右侧矩阵 + 详情区可调整为垂直堆叠，角色列表在上、矩阵在下。
+- 治理摘要卡在 Tablet 下保持多列横向排布；若卡片数 > 3，可折叠为 2 列网格。
+- "发布策略"等高风险动作按钮必须在首屏可达，不得被折叠至溢出菜单。
+
+### Mobile
+
+- 统一转单列：治理摘要卡 → 角色预设列表 → 选中角色详情（含矩阵视图）→ 护栏区 → 审计流。
+- 权限矩阵（动作 × 角色）在 Mobile 下优先采用**横向滚动**策略，保持矩阵完整性，不折叠角色列。
+- 若矩阵列数超过 3 列，需确保第一列（动作名称）固定不滚动，便于用户对照行信息横扫角色列。
+- "发布策略"高风险动作在 Mobile 下必须保留 `AlertDialog` 二次确认，不允许因屏幕窄而降级为普通 `Button`。
+
 ## Notes
 
 - 本页是 `users` 页中角色分配能力的上游治理页：`users` 负责“人”，本页负责“角色规则与审批边界”。

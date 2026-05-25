@@ -113,6 +113,23 @@
 - **External dependencies**: 无
 - **Cross-page dependencies**: `docs/pages/login.md`、`docs/pages/settings.md`
 
+## Responsive Behavior (Page-Specific)
+
+> 共享响应式骨架规则参见 `docs/layouts/admin-layout.md §6`；以下为本页特有例外与优先级约定。
+
+### Tablet
+
+- 左侧成员列表与右侧成员详情可下沉为垂直堆叠，列表在上、详情在下。
+- 筛选条件（活跃 / 待接受 / 已暂停）在 Tablet 下保持横向 Tab 排列，不折叠为下拉选择器。
+- 风险会话摘要卡和"发送邀请"主操作在首屏保持可达，不依赖横向双栏位置。
+
+### Mobile
+
+- 统一转单列：成员摘要卡 → 成员列表（卡片化）→ 邀请流程 → 选中成员详情 → 会话 / 风险动作。
+- 批量操作（如批量暂停）在 Mobile 下收敛为顶部动作条，仅在有选中项时出现，不常驻占位。
+- 暂停 / 恢复成员为高风险动作，Mobile 下必须保留 `AlertDialog` 二次确认，不因屏幕窄而简化。
+- 成员详情在 Mobile 下按"角色与权限 → 最近活动 → 负责模块 → 会话与风险"顺序堆叠，高风险动作置于底部。
+
 ## Notes
 
 - 若首版只存在单管理员，本页仍应保留最小结构，以支持后续邀请和会话治理扩展。
