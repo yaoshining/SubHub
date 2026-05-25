@@ -35,7 +35,10 @@
 - **Empty state**: 尚未配置任何 Provider 时，展示“先添加首个 OpenSubtitles Provider”的空状态与入口，并说明创建后仍需进入详情页补充策略。
 - **Create drawer state**: 点击“新增 OpenSubtitles”后打开右侧抽屉；抽屉仅允许填写 Provider 名称和 API Key 列表。
 - **Create success state**: 创建成功后关闭抽屉，返回列表并自动选中新建实例，显示成功反馈与“继续配置”CTA。
+  - **Mobile 表达**：不使用右侧面板；成功反馈以内联 Callout Banner 形式出现在列表顶部（对应 Module 2），展示“已成功创建，策略待补充”说明，并提供次操作按钮“留在列表”（左）和主操作按钮“继续配置”（右）。此 Banner 在用户执行任一操作后或离开页面时消失，不持久展示。
+  - **语义约束**：“继续配置”为 primary（跳转 provider-detail）；“留在列表”为 secondary（关闭 Banner 留页）。两者层级不可互换。
 - **Needs-config state**: 刚创建的 Provider 必须以“待完善配置 / 基础可用”呈现，不得伪装为已完全稳定运行。
+  - **Mobile 卡片按钮顺序**：行内操作区排列为“更多”（次操作 / 左）+“继续配置”（主操作 / 右），遵循 DESIGN.md § 7.1 移动端主操作右对齐规则。
 - **Error state**: Provider 列表、摘要卡、创建动作或池检查区加载失败时，说明哪些信息不可用，并保留新增或重试入口。
 - **Permission / access state**: 无权限用户不可编辑 Provider；只读用户可浏览状态，但不能执行新增、模拟切换或高风险操作。
 
