@@ -423,6 +423,19 @@ SubHub 长期支持以下几类布局：
   | Users | 用户 |
   | Settings | 设置 |
   | Access Control | 访问控制 |
+- **侧边栏图标统一使用 Lucide**：导航项图标与主题切换图标使用以下命名映射，避免页面间语义漂移：
+   | 场景 | Lucide 名称 |
+   |------|-------------|
+   | Dashboard | `layout-dashboard` |
+   | Providers | `server` |
+   | API Keys | `key-round` |
+   | Users | `users` |
+   | Theme Toggle（深色） | `moon` |
+   | Theme Toggle（浅色） | `sun` |
+- **Sidebar 组件化维护**：Sidebar 应作为可复用组件维护，页面内优先使用组件实例而非复制新结构；需要页面特定高亮态时，通过实例覆写实现，不再维护多份独立 Sidebar 结构。
+- **Sidebar 组件命名规范**：统一采用 `Sidebar / <Theme> / <Active Route>` 命名（例如 `Sidebar / Dark / Users`、`Sidebar / Light / API Keys`）；禁止使用 `Master`、临时后缀或与主题不一致的命名。
+- **Sidebar 选中态规则**：各页面必须保证与当前路由一致的导航项为选中态（含图标与文字高亮、背景与描边状态）；组件化后通过实例覆写维护选中项，不得在多个独立 Sidebar 副本中分散维护。
+- **Sidebar active menu 覆写方式**：基础组件默认不预设激活项；页面实例通过 `descendants` 覆写当前路由对应菜单样式，等效于 `activeMenu` 参数化配置。
 
 ### 7.9 组件系统基线
 
