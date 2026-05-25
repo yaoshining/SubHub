@@ -93422,6 +93422,81 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "td3ED",
+      "x": 16601,
+      "y": -1781,
+      "name": "Assets / Icons / Lucide",
+      "fill": "#0F1726",
+      "cornerRadius": 16,
+      "stroke": {
+        "thickness": 1,
+        "fill": "#25324A"
+      },
+      "layout": "vertical",
+      "gap": 24,
+      "padding": 24,
+      "children": [
+        {
+          "type": "text",
+          "id": "qaz0l",
+          "fill": "#E8EEF8",
+          "content": "Icons / Lucide",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "frame",
+          "id": "X5t0V",
+          "name": "Navigation",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Y4j1g",
+              "name": "menu",
+              "reusable": true,
+              "width": 56,
+              "height": 65,
+              "fill": "#121A2B",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#25324A"
+              },
+              "layout": "none",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "X6Q4I",
+                  "x": 16,
+                  "y": 10,
+                  "name": "menu-icon",
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "menu",
+                  "iconFontFamily": "lucide",
+                  "fill": "#A7B4C8"
+                },
+                {
+                  "type": "text",
+                  "id": "cRoPN",
+                  "x": 11.5,
+                  "y": 40,
+                  "fill": "#7F8CA3",
+                  "content": "menu",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "themes": {
