@@ -4,6 +4,8 @@
 
 **创建日期**: 2026-05-22
 
+**最后更新**: 2026-05-26
+
 **状态**: Draft
 
 **输入**: 用户描述: "先实现最主要功能，有一个简单用户可以登录控制台，然后配置字幕库，比如 opensubtitle，然后配置几个 api key，api key 可以自动切换，然后可以提供出口 api 服务，让其他应用调用查询字幕并下载字幕就行；其他功能可以之后再补"
@@ -20,8 +22,10 @@
 
 ### 设计来源
 
-- **全局设计系统**: `DESIGN.md`
-- **页面规范**:
+- **全局设计系统**: `DESIGN.md`（权威来源，涵盖视觉语言、图标体系、状态规则、可访问性）
+- **共享布局规范**: `docs/layouts/admin-layout.md`（后台 Shell 结构、4 类页面骨架、响应式规则的权威来源）
+- **设计稿主文件**: `design/main.pen`（包含深/浅主题 Dashboard 设计稿与共享组件资产，含空状态卡片基线）
+- **页面规范**（均已建立，Status: Active）:
   - `docs/pages/login.md`
   - `docs/pages/dashboard.md`
   - `docs/pages/providers.md`
@@ -29,35 +33,35 @@
   - `docs/pages/api-keys.md`
   - `docs/pages/users.md`
   - `docs/pages/settings.md`
-- **功能特定设计工件**:
-  - 原型 `dashboard.html`
-  - 原型 `providers.html`
-  - 原型 `provider-detail.html`
-  - 原型 `api-keys.html`
-  - 原型 `users.html`
-  - 原型 `settings.html`
-  - 原型路径: `/Users/yaoshining/Library/Application Support/Open Design/namespaces/release-stable/data/projects/b0a5494b-1e75-4214-bd6f-59a7c2034bd9/screens/`
+- **范围外参考**（仅参考，不在本 feature 交付范围内）:
+  - `docs/pages/access-control.md`（Status: Draft，权限矩阵与审批护栏治理，属于后续 feature）
 
 ### 设计范围
 
-- **受影响页面**:
-  - 管理控制台登录入口
-  - Provider 管理
-  - Provider 配置
-  - API Key 管理
-  - Dashboard
-  - Users
-  - Settings
-- **新增页面**: 管理控制台登录入口页、系统设置页
-- **对设计系统的影响**: 复用现有控制台视觉与信息架构，不新增系统级设计规则
+- **当前 feature 交付页面**（7 页，全部具备正式 page spec）:
+  - 管理控制台登录入口（`/login`）
+  - 仪表盘（`/dashboard`）
+  - 服务商管理列表（`/providers`）
+  - 服务商详情配置（`/providers/:providerId`）
+  - API 密钥管理（`/api-keys`）
+  - 用户管理（`/users`）
+  - 系统设置（`/settings`）
+- **明确不在本 feature 范围**:
+  - 访问控制（`/access-control`）——权限矩阵与审批护栏治理，`settings` 页提供分流入口，实现留给后续 feature
+- **对设计系统的影响**: 复用现有控制台视觉与信息架构；共享布局规则已沉淀入 `docs/layouts/admin-layout.md`，不新增系统级设计规则
 
 ### 设计约束
 
-- 实现 MUST 遵循 `DESIGN.md` 中“Provider 管理是核心工作流”“令牌池是共享资源”“API Key 是受管理产品资源”的规则。
-- 控制台 MUST 保持现有控制台外壳、深浅主题与响应式导航行为。
+- 实现 MUST 遵循 `DESIGN.md` 中"Provider 管理是核心工作流""令牌池是共享资源""API Key 是受管理产品资源"的规则。
+- 控制台后台 Shell MUST 遵循 `docs/layouts/admin-layout.md §3` 定义的 Sidebar / Topbar / Main Content / Secondary Panel 结构。
+- 响应式行为 MUST 遵循 `docs/layouts/admin-layout.md §6` 定义的断点骨架规则（Desktop ≥1280px / Tablet 768–1279px / Mobile <768px）；各 page spec 中声明的页面级响应式特例具有更高优先级。
+- 侧边栏导航项与页面标题 MUST 使用中文（仪表盘 / 服务商 / API 密钥 / 用户 / 设置），遵循 `DESIGN.md §7.8`。
+- 图标 MUST 使用 Lucide 图标体系（前端使用 `lucide-react`），图标命名遵循 `DESIGN.md §7.8` 及 `docs/layouts/admin-layout.md §5.8.1` 中的语义映射；不得混用其他图标库。
+- 所有基础界面元素（按钮、输入框、表格、弹层、标签、卡片等）MUST 优先复用 `shadcn/ui` 组件（遵循 `DESIGN.md §7.9`）；各 page spec 的 `Component Patterns (shadcn/ui)` 章节为强制实现基线，仅在 page spec 明确说明理由时才允许自定义基础组件。
+- 空状态展示 MUST 遵循 `docs/layouts/admin-layout.md §5.8.1` 定义的卡片结构（Icon + Title + Body + CTA），并使用 page spec 中指定的 Lucide 图标（服务商: `cloud-off`，API 密钥: `key-round`，用户: `users`）。
 - 本功能的首个可交付版本 MUST 聚焦于单维护者可运营的最小闭环，而非一次覆盖全部治理能力。
 - 登录、Provider 配置、API Key 管理与统一出口服务 MUST 使用一致的运维语言，不引入营销式表述。
-- Settings 页 MUST 保持“系统状态确认 + 配置分流 + 后续能力边界”的低频边界页定位，不得演变为通用系统配置中心。
+- Settings 页 MUST 保持"系统状态确认 + 配置分流 + 后续能力边界"的低频边界页定位，不得演变为通用系统配置中心。
 
 ## 用户场景与测试 *(mandatory)*
 
@@ -165,9 +169,12 @@
 - **NFR-002 (测试)**: Feature MUST 定义覆盖登录访问控制、Provider 凭据切换、调用方 Key 授权、查询与下载主流程的单元测试与集成/契约测试。
 - **NFR-003 (UX 一致性)**: Feature MUST 对管理员与外部调用方分别提供一致、可识别的成功、失败、未就绪与未授权反馈。
 - **NFR-004 (性能)**: Feature MUST 以“可用于日常调用”为目标，要求大多数合法查询请求在可接受等待时间内返回结果或明确状态，且凭据切换不造成长时间请求挂起。
-- **NFR-005 (设计保真)**: Feature MUST 遵循 `DESIGN.md` 中 Dashboard、Providers、Provider Detail、API Keys、Users、Settings 的信息分层与控制台交互风格。
+- **NFR-005 (设计保真)**: Feature MUST 遵循 `DESIGN.md` 及各 page spec 中的信息分层与控制台交互风格；`docs/layouts/admin-layout.md` 作为共享布局规范，与 `DESIGN.md` 同级约束。
 - **NFR-006 (并行隔离)**: Feature MUST 绑定当前 active feature 目录 `specs/001-mvp-admin-console`，并保持 worktree 仅跟踪该功能。
 - **NFR-007 (Issue 同步范围)**: 后续 issue 同步 MUST 仅面向 `specs/001-mvp-admin-console`，不得混入其他功能任务。
+- **NFR-008 (响应式)**: 所有后台页面 MUST 在 Mobile / Tablet / Desktop 三个断点下遵循 `docs/layouts/admin-layout.md §6` 的响应式骨架行为；页面级特例（Provider Detail 次级栏下沉、API Keys 双栏堆叠、Users 批量操作收敛等）遵循对应 page spec 的 Responsive Behavior 章节。
+- **NFR-009 (组件实现)**: 基础 UI 元素实现 MUST 优先映射到 `shadcn/ui` 组件；仅当 page spec 明确说明现有组件无法承载时，才允许引入自定义基础组件，并须在 page spec 中记录理由。
+- **NFR-010 (图标一致性)**: 前端图标实现 MUST 使用 `lucide-react`；图标命名须与 page spec 和设计稿保持一致，不得跨页面使用语义不一致的图标，不得混用其他图标库。
 
 ### 关键实体 *(如功能涉及数据请填写)*
 
@@ -199,14 +206,18 @@
 - 系统设置页在首个版本中仅承担信息确认、部署读数和配置分流职责，不承接全局可编辑策略表单。
 - 若后续需要更多 Provider、权限模型、统计分析和告警能力，应在后续 feature 中逐步扩展，而不是并入当前 MVP。
 
-## 页面规范更新
+## 页面规范状态
 
-- **需更新的既有页面规范**:
-  - `docs/pages/login.md`
-  - `docs/pages/dashboard.md`
-  - `docs/pages/providers.md`
-  - `docs/pages/provider-detail.md`
-  - `docs/pages/api-keys.md`
-  - `docs/pages/users.md`
-- **需新建的页面规范**: `docs/pages/settings.md`
-- **是否需要更新 `DESIGN.md`**: `No`，当前功能复用既有控制台原型和全局规则，新增的是页面落地规范而不是系统级视觉语言
+- **已完成的页面规范**（7 页，均已包含 Component Patterns 与 Key States）:
+  - `docs/pages/login.md`（Updated: 2026-05-23）
+  - `docs/pages/dashboard.md`（Updated: 2026-05-22）
+  - `docs/pages/providers.md`（Updated: 2026-05-23）
+  - `docs/pages/provider-detail.md`（Updated: 2026-05-23，含 Responsive Behavior + Component Patterns）
+  - `docs/pages/api-keys.md`（Updated: 2026-05-24，含 Responsive Behavior + Component Patterns）
+  - `docs/pages/users.md`（Updated: 2026-05-24，含 Responsive Behavior + Component Patterns）
+  - `docs/pages/settings.md`（Updated: 2026-05-24）
+- **共享布局规范**（已完成）:
+  - `docs/layouts/admin-layout.md`（spec 创建后新建，是后台 Shell 结构与响应式规则的权威文档）
+- **范围外页面规范**（Draft，属于后续 feature）:
+  - `docs/pages/access-control.md`（Status: Draft，Related Feature Specs 引用了本 feature，但权限矩阵与审批护栏治理的实现不属于当前 MVP 交付范围）
+- **是否需要更新 `DESIGN.md`**: `No`，当前功能复用既有控制台视觉语言和全局规则，新增的是页面落地规范与共享布局规则，而不是系统级视觉语言变化
