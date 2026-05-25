@@ -148,7 +148,7 @@
                       "type": "text",
                       "id": "w9uwA",
                       "fill": "$--accent",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -183,7 +183,7 @@
                       "type": "text",
                       "id": "fSHQA",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -218,7 +218,7 @@
                       "type": "text",
                       "id": "MMyDn",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -253,7 +253,7 @@
                       "type": "text",
                       "id": "B7bmU",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -410,7 +410,7 @@
                       "type": "text",
                       "id": "rpntW",
                       "fill": "$--font-primary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -2068,7 +2068,7 @@
                       "type": "text",
                       "id": "tIXJn",
                       "fill": "$--accent",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -2103,7 +2103,7 @@
                       "type": "text",
                       "id": "fE90H",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -2138,7 +2138,7 @@
                       "type": "text",
                       "id": "Vmd5I",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -2173,7 +2173,7 @@
                       "type": "text",
                       "id": "SnX4f",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -2330,7 +2330,7 @@
                       "type": "text",
                       "id": "ss3Zq",
                       "fill": "$--font-primary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -3986,7 +3986,7 @@
                       "type": "text",
                       "id": "o9dL5g",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -4026,7 +4026,7 @@
                       "type": "text",
                       "id": "JGVrT",
                       "fill": "$--accent",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -4061,7 +4061,7 @@
                       "type": "text",
                       "id": "Ln4ov",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -4096,7 +4096,7 @@
                       "type": "text",
                       "id": "d82zK",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -4255,7 +4255,7 @@
                       "type": "text",
                       "id": "Z3PtyK",
                       "fill": "$--font-primary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -6023,7 +6023,7 @@
                       "type": "text",
                       "id": "AtzmS",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -6063,7 +6063,7 @@
                       "type": "text",
                       "id": "q07wvH",
                       "fill": "$--accent",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -6098,7 +6098,7 @@
                       "type": "text",
                       "id": "A2Iz50",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -6133,7 +6133,7 @@
                       "type": "text",
                       "id": "t7T6e",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -6292,7 +6292,7 @@
                       "type": "text",
                       "id": "e9OGt",
                       "fill": "$--font-primary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -8292,7 +8292,7 @@
                       "type": "text",
                       "id": "xELrP",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -8332,7 +8332,7 @@
                       "type": "text",
                       "id": "hzoOd",
                       "fill": "$--accent",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -8367,7 +8367,7 @@
                       "type": "text",
                       "id": "T2VoZ",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -8402,7 +8402,7 @@
                       "type": "text",
                       "id": "P2Y4Tg",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -11034,7 +11034,7 @@
                       "type": "text",
                       "id": "T2tLLZ",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -11074,7 +11074,7 @@
                       "type": "text",
                       "id": "EADxr",
                       "fill": "$--accent",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -11109,7 +11109,7 @@
                       "type": "text",
                       "id": "F6vn0U",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -11144,7 +11144,7 @@
                       "type": "text",
                       "id": "N9B9el",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -15927,7 +15927,7 @@
                       "type": "text",
                       "id": "t7Hxw",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -15962,7 +15962,7 @@
                       "type": "text",
                       "id": "irv9T",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -15997,7 +15997,7 @@
                       "type": "text",
                       "id": "FLgx6",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -16032,7 +16032,7 @@
                       "type": "text",
                       "id": "RBQ6h",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -16072,7 +16072,7 @@
                       "type": "text",
                       "id": "l2NV5M",
                       "fill": "$--accent",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -16227,7 +16227,7 @@
                       "type": "text",
                       "id": "eHbkR",
                       "fill": "$--font-primary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -17687,7 +17687,7 @@
                       "type": "text",
                       "id": "ctChf",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -17722,7 +17722,7 @@
                       "type": "text",
                       "id": "bpEBd",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -17757,7 +17757,7 @@
                       "type": "text",
                       "id": "f5kYQT",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -17792,7 +17792,7 @@
                       "type": "text",
                       "id": "WKxDA",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -17832,7 +17832,7 @@
                       "type": "text",
                       "id": "Q5MdM",
                       "fill": "$--accent",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -17987,7 +17987,7 @@
                       "type": "text",
                       "id": "Q2MKCm",
                       "fill": "$--font-primary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -19461,7 +19461,7 @@
                       "type": "text",
                       "id": "Q3QeVo",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -19495,7 +19495,7 @@
                       "type": "text",
                       "id": "ZGwfu",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -19534,7 +19534,7 @@
                       "type": "text",
                       "id": "LDZCI",
                       "fill": "$--accent",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -19568,7 +19568,7 @@
                       "type": "text",
                       "id": "fUBwn",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -19602,7 +19602,7 @@
                       "type": "text",
                       "id": "iNO8i",
                       "fill": "$--font-secondary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -19758,7 +19758,7 @@
                       "type": "text",
                       "id": "pdZR7",
                       "fill": "$--font-primary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -22098,7 +22098,7 @@
                       "type": "text",
                       "id": "coMc3",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -22132,7 +22132,7 @@
                       "type": "text",
                       "id": "ZqDl5",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -22171,7 +22171,7 @@
                       "type": "text",
                       "id": "gdz7y",
                       "fill": "$--accent",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -22205,7 +22205,7 @@
                       "type": "text",
                       "id": "BI8yk",
                       "fill": "$--font-secondary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -22239,7 +22239,7 @@
                       "type": "text",
                       "id": "p65rF7",
                       "fill": "$--font-secondary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -22395,7 +22395,7 @@
                       "type": "text",
                       "id": "rjfFj",
                       "fill": "$--font-primary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -24923,7 +24923,7 @@
                       "type": "text",
                       "id": "ITHs1",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -24957,7 +24957,7 @@
                       "type": "text",
                       "id": "A3KZS",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -24996,7 +24996,7 @@
                       "type": "text",
                       "id": "CVuUl",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -25035,7 +25035,7 @@
                       "type": "text",
                       "id": "gQFKU",
                       "fill": "$--accent",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -25069,7 +25069,7 @@
                       "type": "text",
                       "id": "EUvHl",
                       "fill": "$--font-secondary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -25225,7 +25225,7 @@
                       "type": "text",
                       "id": "FF9fS",
                       "fill": "$--font-primary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -27705,7 +27705,7 @@
                       "type": "text",
                       "id": "E3J1s1",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -27739,7 +27739,7 @@
                       "type": "text",
                       "id": "F1FMZ",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -27778,7 +27778,7 @@
                       "type": "text",
                       "id": "yIWhL",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -27817,7 +27817,7 @@
                       "type": "text",
                       "id": "UO9lF",
                       "fill": "$--accent",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -27851,7 +27851,7 @@
                       "type": "text",
                       "id": "j9ucLw",
                       "fill": "$--font-secondary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -28007,7 +28007,7 @@
                       "type": "text",
                       "id": "Z3ZICB",
                       "fill": "$--font-primary",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -30487,7 +30487,7 @@
                       "type": "text",
                       "id": "hqwUE",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -30521,7 +30521,7 @@
                       "type": "text",
                       "id": "i3x7qJ",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -30560,7 +30560,7 @@
                       "type": "text",
                       "id": "mGPJ9",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -30599,7 +30599,7 @@
                       "type": "text",
                       "id": "CSHoW",
                       "fill": "$--accent",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -30633,7 +30633,7 @@
                       "type": "text",
                       "id": "EOaDL",
                       "fill": "$--font-secondary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -30789,7 +30789,7 @@
                       "type": "text",
                       "id": "HMqOk",
                       "fill": "$--font-primary",
-                      "content": "Access Control",
+                      "content": "访问控制",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -33570,7 +33570,7 @@
                       "type": "text",
                       "id": "wL3Rs",
                       "fill": "$--font-secondary",
-                      "content": "Dashboard",
+                      "content": "仪表盘",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -33604,7 +33604,7 @@
                       "type": "text",
                       "id": "MFJXA",
                       "fill": "$--font-secondary",
-                      "content": "Providers",
+                      "content": "服务商",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -33643,7 +33643,7 @@
                       "type": "text",
                       "id": "kIGr0",
                       "fill": "$--font-secondary",
-                      "content": "API Keys",
+                      "content": "API 密钥",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -33682,7 +33682,7 @@
                       "type": "text",
                       "id": "ivtlv",
                       "fill": "$--accent",
-                      "content": "Users",
+                      "content": "用户",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -33716,7 +33716,7 @@
                       "type": "text",
                       "id": "jgYBL",
                       "fill": "$--font-secondary",
-                      "content": "Settings",
+                      "content": "设置",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -33872,7 +33872,7 @@
                       "type": "text",
                       "id": "WF0w0",
                       "fill": "$--font-primary",
-                      "content": "Access Control",
+                      "content": "访问控制",
                       "fontFamily": "Inter",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -36573,7 +36573,7 @@
                     {
                       "type": "frame",
                       "id": "uW8GS",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -36586,13 +36586,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "Fellb",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "eXJQy",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -36607,7 +36607,7 @@
                           "type": "text",
                           "id": "H27o3O",
                           "fill": "#E8EEF8",
-                          "content": "Dashboard",
+                          "content": "仪表盘",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -38179,7 +38179,7 @@
                     {
                       "type": "frame",
                       "id": "M8PEUH",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -38192,13 +38192,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "oKgLf",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "GsomI",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -38213,7 +38213,7 @@
                           "type": "text",
                           "id": "XuoR4",
                           "fill": "#E8EEF8",
-                          "content": "Dashboard",
+                          "content": "仪表盘",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -39504,7 +39504,7 @@
                     {
                       "type": "frame",
                       "id": "c0C6NL",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -39517,13 +39517,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "BOi1C",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "PdiKs",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -39538,7 +39538,7 @@
                           "type": "text",
                           "id": "WyoLB",
                           "fill": "#E8EEF8",
-                          "content": "Providers",
+                          "content": "服务商",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -40908,7 +40908,7 @@
                     {
                       "type": "frame",
                       "id": "J1Ij4k",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -40921,13 +40921,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "rYPGs",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "qrb5j",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -40942,7 +40942,7 @@
                           "type": "text",
                           "id": "TyoKy",
                           "fill": "#E8EEF8",
-                          "content": "Providers",
+                          "content": "服务商",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -42222,7 +42222,7 @@
                     {
                       "type": "frame",
                       "id": "o9slV",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -42235,13 +42235,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "v7Npr",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "PK9f5",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -42256,7 +42256,7 @@
                           "type": "text",
                           "id": "f1O94S",
                           "fill": "#E8EEF8",
-                          "content": "Provider Detail",
+                          "content": "服务商详情",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -44546,7 +44546,7 @@
                     {
                       "type": "frame",
                       "id": "OJ9BB",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -44559,13 +44559,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "hJeOl",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "dU2BI",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -44580,7 +44580,7 @@
                           "type": "text",
                           "id": "i0btS",
                           "fill": "#E8EEF8",
-                          "content": "Provider Detail",
+                          "content": "服务商详情",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -46873,7 +46873,7 @@
                     {
                       "type": "frame",
                       "id": "mssql",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -46886,13 +46886,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "tCrxk",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "uBjbQ",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -46907,7 +46907,7 @@
                           "type": "text",
                           "id": "J8GAF",
                           "fill": "#E8EEF8",
-                          "content": "API Keys",
+                          "content": "API 密钥",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -49071,7 +49071,7 @@
                     {
                       "type": "frame",
                       "id": "oXHhq",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -49084,13 +49084,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "jwhy5",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "i02YJ4",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -49105,7 +49105,7 @@
                           "type": "text",
                           "id": "XDEnl",
                           "fill": "#E8EEF8",
-                          "content": "API Keys",
+                          "content": "API 密钥",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -51199,7 +51199,7 @@
                     {
                       "type": "frame",
                       "id": "vQaw3",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -51212,13 +51212,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "xZnBr",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "T8e9wl",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -51233,7 +51233,7 @@
                           "type": "text",
                           "id": "WmpVG",
                           "fill": "#E8EEF8",
-                          "content": "Users",
+                          "content": "用户",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -53577,7 +53577,7 @@
                     {
                       "type": "frame",
                       "id": "o0CVAD",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -53590,13 +53590,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "IBTje",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "GyF2E",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -53611,7 +53611,7 @@
                           "type": "text",
                           "id": "FwCId",
                           "fill": "#E8EEF8",
-                          "content": "Users",
+                          "content": "用户",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -55910,7 +55910,7 @@
                     {
                       "type": "frame",
                       "id": "g7OjL",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -55923,13 +55923,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "bvmeY",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "SiTFh",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -55944,7 +55944,7 @@
                           "type": "text",
                           "id": "k4eRjL",
                           "fill": "#E8EEF8",
-                          "content": "Settings",
+                          "content": "设置",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -57278,7 +57278,7 @@
                     {
                       "type": "frame",
                       "id": "ROtfL",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -57291,13 +57291,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "J2jpB1",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "tf3pv",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -57312,7 +57312,7 @@
                           "type": "text",
                           "id": "v1cJHp",
                           "fill": "#E8EEF8",
-                          "content": "Settings",
+                          "content": "设置",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -58649,7 +58649,7 @@
                     {
                       "type": "frame",
                       "id": "hTZ4J",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -58662,13 +58662,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "VLWpf",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "aMsb8",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -58683,7 +58683,7 @@
                           "type": "text",
                           "id": "VyGoP",
                           "fill": "#E8EEF8",
-                          "content": "Access Control",
+                          "content": "访问控制",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -61326,7 +61326,7 @@
                     {
                       "type": "frame",
                       "id": "xyXGy",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#182235",
                       "cornerRadius": 6,
@@ -61339,13 +61339,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "FTWVX",
-                          "fill": "#E8EEF8",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "l2cZN",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -61360,7 +61360,7 @@
                           "type": "text",
                           "id": "paWXT",
                           "fill": "#E8EEF8",
-                          "content": "Access Control",
+                          "content": "访问控制",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -65187,7 +65187,7 @@
                     {
                       "type": "frame",
                       "id": "rmkLI",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -65200,13 +65200,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "Pr5hS",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "zCfci",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -65221,7 +65221,7 @@
                           "type": "text",
                           "id": "BeVl3",
                           "fill": "#0f172a",
-                          "content": "Dashboard",
+                          "content": "仪表盘",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -66796,7 +66796,7 @@
                     {
                       "type": "frame",
                       "id": "o6Ceyv",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -66809,13 +66809,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "oWapg",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "h8fS90",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -66830,7 +66830,7 @@
                           "type": "text",
                           "id": "f1Q8HT",
                           "fill": "#0f172a",
-                          "content": "Providers",
+                          "content": "服务商",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -68198,7 +68198,7 @@
                     {
                       "type": "frame",
                       "id": "AuZs3",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -68211,13 +68211,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "w5DZXo",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "t5gMW",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -68232,7 +68232,7 @@
                           "type": "text",
                           "id": "A9xtt",
                           "fill": "#0f172a",
-                          "content": "Provider Detail",
+                          "content": "服务商详情",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -70525,7 +70525,7 @@
                     {
                       "type": "frame",
                       "id": "RxZzv",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -70538,13 +70538,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "tgaQK",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "JKqaO",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -70559,7 +70559,7 @@
                           "type": "text",
                           "id": "z1Ng4",
                           "fill": "#0f172a",
-                          "content": "API Keys",
+                          "content": "API 密钥",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -72724,7 +72724,7 @@
                     {
                       "type": "frame",
                       "id": "xfukw",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -72737,13 +72737,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "fxtb0",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "Dse9C",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -72758,7 +72758,7 @@
                           "type": "text",
                           "id": "jRoCi",
                           "fill": "#0f172a",
-                          "content": "Users",
+                          "content": "用户",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -75100,7 +75100,7 @@
                     {
                       "type": "frame",
                       "id": "konqx",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -75113,13 +75113,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "kTpRL",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "AHAtW",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -75134,7 +75134,7 @@
                           "type": "text",
                           "id": "WoHNl",
                           "fill": "#0f172a",
-                          "content": "Settings",
+                          "content": "设置",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -76471,7 +76471,7 @@
                     {
                       "type": "frame",
                       "id": "qf0Ls",
-                      "width": 68,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -76484,13 +76484,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "R4aWa",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "e45NA8",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -76505,7 +76505,7 @@
                           "type": "text",
                           "id": "Hbkjc",
                           "fill": "#0f172a",
-                          "content": "Access Control",
+                          "content": "访问控制",
                           "fontFamily": "Inter",
                           "fontSize": 16,
                           "fontWeight": "600"
@@ -79576,7 +79576,7 @@
                     {
                       "type": "frame",
                       "id": "vEzup",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -79589,13 +79589,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "a8Z28w",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "f059Rt",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -79610,7 +79610,7 @@
                           "type": "text",
                           "id": "F6O4P",
                           "fill": "#0f172a",
-                          "content": "Dashboard",
+                          "content": "仪表盘",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -80900,7 +80900,7 @@
                     {
                       "type": "frame",
                       "id": "D6gNaP",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -80913,13 +80913,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "Ecuk9",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "t4HmVF",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -80934,7 +80934,7 @@
                           "type": "text",
                           "id": "Y93BdU",
                           "fill": "#0f172a",
-                          "content": "Providers",
+                          "content": "服务商",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -82214,7 +82214,7 @@
                     {
                       "type": "frame",
                       "id": "Be7iU",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -82227,13 +82227,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "DraKk",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "SNdpT",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -82248,7 +82248,7 @@
                           "type": "text",
                           "id": "uWMrw",
                           "fill": "#0f172a",
-                          "content": "Provider Detail",
+                          "content": "服务商详情",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -84540,7 +84540,7 @@
                     {
                       "type": "frame",
                       "id": "CcmJX",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -84553,13 +84553,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "x2aWJO",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "qjlob",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -84574,7 +84574,7 @@
                           "type": "text",
                           "id": "Y8jWES",
                           "fill": "#0f172a",
-                          "content": "API Keys",
+                          "content": "API 密钥",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -86667,7 +86667,7 @@
                     {
                       "type": "frame",
                       "id": "pkaZe",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -86680,13 +86680,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "i1Cph",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "db8Dq",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -86701,7 +86701,7 @@
                           "type": "text",
                           "id": "A4yYE",
                           "fill": "#0f172a",
-                          "content": "Users",
+                          "content": "用户",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -89000,7 +89000,7 @@
                     {
                       "type": "frame",
                       "id": "kqcjT",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -89013,13 +89013,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "VbMZ0",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "V2h4Ih",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -89034,7 +89034,7 @@
                           "type": "text",
                           "id": "Cch2f",
                           "fill": "#0f172a",
-                          "content": "Settings",
+                          "content": "设置",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
@@ -90371,7 +90371,7 @@
                     {
                       "type": "frame",
                       "id": "nwO7l",
-                      "width": 64,
+                      "width": 32,
                       "height": 32,
                       "fill": "#fcfdfe",
                       "cornerRadius": 6,
@@ -90384,13 +90384,13 @@
                       "alignItems": "center",
                       "children": [
                         {
-                          "type": "text",
-                          "id": "QpgHy",
-                          "fill": "#0f172a",
-                          "content": "Menu",
-                          "fontFamily": "Inter",
-                          "fontSize": 12,
-                          "fontWeight": "600"
+                          "type": "icon_font",
+                          "id": "oYFNr",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$--font-primary"
                         }
                       ]
                     },
@@ -90405,7 +90405,7 @@
                           "type": "text",
                           "id": "jbHzq",
                           "fill": "#0f172a",
-                          "content": "Access Control",
+                          "content": "访问控制",
                           "fontFamily": "Inter",
                           "fontSize": 15,
                           "fontWeight": "600"
