@@ -4,11 +4,11 @@
 
 **输入**: 来自 `specs/001-mvp-admin-console/spec.md` 的最新功能规格，以及 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`、`.github/copilot-instructions.md`
 
-**说明**: 本计划用于后续 `speckit.tasks` 拆分任务。当前 feature 只覆盖 MVP 管理控制台、OpenSubtitles 首发 Provider、Provider 凭据池、下游调用方 Key、统一字幕查询/下载出口与只读系统设置总览；`docs/pages/access-control.md` 为后续 feature 参考，不进入本期实现范围。
+**说明**: 本计划用于后续 `speckit.tasks` 拆分任务。当前 feature 只覆盖 MVP 管理控制台、OpenSubtitles 首发 Provider、Provider 凭据池、下游调用方 Key、统一字幕查询/下载出口、Users 基础成员管理与只读系统设置总览；`docs/pages/access-control.md` 为后续 feature 参考，不进入本期实现范围。
 
 ## 摘要
 
-本 feature 将 SubHub 从规划文档推进到一个可自托管、单实例、单维护者/小团队可用的最小闭环：管理员可初始化并登录控制台，配置 OpenSubtitles Provider 与多个上游凭据，创建和轮换下游调用方 Key，并通过受控统一 API 完成字幕查询与下载。前端实现以 Next.js + TypeScript 为基线，后台页面严格对齐 `DESIGN.md`、`docs/layouts/admin-layout.md`、7 个 Active page spec 与 `design/main.pen`；后端以模块化服务边界实现认证、Provider 调度、凭据切换、调用方授权、查询/下载网关和设置状态汇总。
+本 feature 将 SubHub 从规划文档推进到一个可自托管、单实例、单维护者/小团队可用的最小闭环：管理员可初始化并登录控制台，配置 OpenSubtitles Provider 与多个上游凭据，创建和轮换下游调用方 Key，完成后台成员邀请、暂停/恢复与基础会话处置，并通过受控统一 API 完成字幕查询与下载。前端实现以 Next.js + TypeScript 为基线，后台页面严格对齐 `DESIGN.md`、`docs/layouts/admin-layout.md`、7 个 Active page spec 与 `design/main.pen`；后端以模块化服务边界实现认证、Provider 调度、凭据切换、调用方授权、基础成员管理、查询/下载网关和设置状态汇总。
 
 API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/`、`src/lib/api/` 和 `/docs/api` Scalar 展示入口。响应式、Lucide 图标一致性、UI review 与 code review 都是正式交付范围，不作为事后 polish。
 
@@ -24,7 +24,7 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - `docs/pages/providers.md` - `/providers`，Provider 比较、分诊、OpenSubtitles 建档
 - `docs/pages/provider-detail.md` - `/providers/:providerId`，运行策略与上游凭据池深配
 - `docs/pages/api-keys.md` - `/api-keys`，下游调用方 Key 生命周期
-- `docs/pages/users.md` - `/users`，后台成员、邀请与风险会话的 MVP 治理入口
+- `docs/pages/users.md` - `/users`，后台成员、邀请、暂停/恢复与基础会话处置的 MVP 治理入口
 - `docs/pages/settings.md` - `/settings`，只读系统状态确认与配置分流
 
 **范围外参考**:
@@ -47,11 +47,11 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - 后端模块：Next.js Route Handlers 或同等 Next.js server 边界；Provider adapter、credential pool、caller key auth、subtitle gateway、audit/action result logging 必须按模块隔离
 - 首发 Provider：OpenSubtitles adapter
 
-**存储**: 首版需要持久化管理员账号、会话、Provider、Provider 凭据、调用方 Key、轮换历史、查询/下载记录摘要、关键管理动作结果。实现任务必须选择并固定一个自托管友好的持久化方案；在未引入完整数据库前，不得使用仅内存存储作为可交付实现。推荐任务阶段优先评估 SQLite + ORM/迁移工具或等价轻量数据库方案，并同步写入 quickstart。
+**存储**: 首版需要持久化管理员账号、后台成员状态、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、轮换历史、查询/下载记录摘要、关键管理动作结果。实现任务必须选择并固定一个自托管友好的持久化方案；在未引入完整数据库前，不得使用仅内存存储作为可交付实现。推荐任务阶段优先评估 SQLite + ORM/迁移工具或等价轻量数据库方案，并同步写入 quickstart。
 
 **测试**:
-- 单元测试：认证校验、Provider 状态流转、凭据池选择/隔离、调用方 Key 校验、统一错误映射
-- API/契约测试：登录/初始化、Provider CRUD、Provider 凭据启停、调用方 Key 创建/轮换/停用、字幕查询/下载、未就绪/未授权错误
+- 单元测试：认证校验、基础成员管理、Provider 状态流转、凭据池选择/隔离、调用方 Key 校验、统一错误映射
+- API/契约测试：登录/初始化、成员邀请、成员暂停/恢复、基础会话处置、Provider CRUD、Provider 凭据启停、调用方 Key 创建/轮换/停用、字幕查询/下载、未就绪/未授权错误
 - 前端测试：关键页面状态、关键交互、受控 reveal/copy、未保存变更、空状态、错误状态、响应式行为
 - 评审验证：UI review 对照 `DESIGN.md`、`docs/layouts/admin-layout.md`、page specs、`design/main.pen`；code review 对照 spec/plan/tasks 与 OpenAPI 链路
 
@@ -71,12 +71,13 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - Provider 凭据与下游调用方 Key 必须在数据模型、API、UI 文案和表格中保持明确区分。
 - API 变更必须同步 OpenAPI、Orval、生成 client/types、手写 API 适配层与 Scalar 文档入口。
 - Lucide 是唯一默认图标系统；不得混用其他图标库。
+- Users 页只承接 MVP 基础成员管理、邀请、暂停/恢复与基础会话处置，不承接完整身份治理中心、权限矩阵、审批工作流、审计导出或高级风控策略。
 - `settings` 页只读确认与分流，不承接 Provider、API Key、用户或权限深配置。
 
 **规模/范围**:
 - 本 feature 交付 7 个后台页面与 1 组统一字幕出口 API。
 - 首发上游 Provider 仅要求 OpenSubtitles。
-- 不包含公开注册、多租户、完整 RBAC、权限矩阵、审批流、手动上传、高级缓存治理、统计分析或告警中心。
+- 不包含公开注册、多租户、完整 RBAC、权限矩阵、审批流、完整身份治理中心、高级风险分析/风控策略系统、审计导出、手动上传、高级缓存治理、统计分析或告警中心。
 
 ## 宪章检查
 
@@ -243,15 +244,16 @@ orval.config.ts
 - 管理员初始化、登录、会话校验、受保护路由/API 鉴权。
 - Provider 实体、OpenSubtitles adapter、Provider 启停、运行状态、Token/Provider API Key 凭据池、自动切换、冷却、隔离与恢复。
 - 下游调用方 Key 创建、受控明文展示窗口、轮换、停用、授权校验、调用方标识与状态追踪。
+- Users 基础成员管理：成员列表、成员邀请、成员暂停/恢复、后台会话摘要与基础会话处置；不得扩展为完整身份治理、权限矩阵、审批或高级风控。
 - 统一字幕查询与下载 API：标准化请求/响应、Provider 调度、无结果/失败/未就绪/未授权错误映射。
 - Settings 状态聚合：环境、版本、首个管理员状态、Provider 可用性、调用方 Key 可用性、统一出口就绪度。
-- 关键管理动作结果记录：Provider 启停、凭据隔离/恢复、调用方 Key 停用/轮换、登录/初始化结果。
+- 关键管理动作结果记录：Provider 启停、凭据隔离/恢复、调用方 Key 停用/轮换、成员邀请、成员暂停/恢复、基础会话处置、登录/初始化结果。
 
 ### 前端任务范围
 
 - 搭建 Next.js + TypeScript + TailwindCSS + shadcn/ui + lucide-react 基础工程。
 - 实现 Admin Shell、Sidebar、Topbar/Page Header、Main Content、Secondary Panel、响应式 Drawer、主题切换、空状态卡片。
-- 实现 7 个页面及其 key states、loading、empty、error、permission、success、post-create、dirty/unsaved、reveal window、risk-session 等状态。
+- 实现 7 个页面及其 key states、loading、empty、error、permission、success、post-create、dirty/unsaved、reveal window、基础会话处置等状态。
 - 使用 OpenAPI/Orval 生成 client/types，并通过 `src/lib/api/` 手写层接入页面。
 - 实现 Mobile/Tablet/Desktop 断点行为，确保页面根无横向滚动、表格局部横向滚动可控、移动端高风险动作仍可达。
 - 保持 Lucide 图标命名一致，并在引入新图标时同步设计稿资产。
@@ -265,9 +267,10 @@ orval.config.ts
 ### 明确排除
 
 - `access-control` 页面实现、权限矩阵、审批护栏、完整 RBAC。
+- 完整身份治理中心、高级风险分析/风控策略系统、审计导出。
 - 多租户、公开注册、SSO/2FA 可用主流程。
 - 多 Provider 通用接入模型、Custom Adapter、Base URL 自定义。
-- 手动上传、缓存治理、高级统计分析、告警中心、审计导出。
+- 手动上传、缓存治理、高级统计分析、告警中心。
 
 ## API 契约链路
 
@@ -287,7 +290,7 @@ orval.config.ts
 - Provider 凭据：list/create/isolate/restore/status。
 - Dashboard/Settings 摘要：readiness、health、system status、deployment/version reads。
 - 下游调用方 Key：list/create/rotate/suspend/reveal window、usage summary。
-- 用户管理：members/invitations/session risks 的 MVP 接口。
+- 用户管理：members、invitations、suspend/restore、basic session remediation 的 MVP 接口。
 - 对外字幕 API：search subtitles、download subtitle。
 
 ### 错误与状态约束
@@ -322,7 +325,7 @@ orval.config.ts
 
 1. 工程基础与质量门禁：Next.js/TypeScript/Tailwind/shadcn/lucide、format/lint/type-check/test、CI、基础目录。
 2. API 契约链路：`docs/api/openapi.yaml`、`orval.config.ts`、`api:*` scripts、Scalar `/docs/api`、生成 client/types。
-3. 存储与领域模型：管理员、会话、Provider、Provider 凭据、调用方 Key、查询/下载记录、动作结果日志。
+3. 存储与领域模型：管理员、后台成员、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、查询/下载记录、动作结果日志。
 4. 认证闭环：初始化首个管理员、登录、会话、受保护后台页/API、未认证重定向。
 5. Provider 与凭据池后端：OpenSubtitles adapter、Provider CRUD、凭据状态、自动切换、隔离/恢复、最近异常。
 6. 下游调用方 Key 后端：创建、受控明文窗口、轮换、停用、授权校验、最近使用。
@@ -350,7 +353,7 @@ orval.config.ts
 - Providers：空状态、创建抽屉、创建成功 banner、选中 Provider、移动端按钮顺序。
 - Provider Detail：post-create alert、dirty/unsaved、保存中、隔离凭据确认、移动端 Accordion。
 - API Keys：空状态、no-selection、reveal window、copy、rotate、suspend、筛选后选中项保留。
-- Users：邀请、暂停/恢复、风险会话状态、移动端批量操作收敛。
+- Users：成员列表、邀请、暂停/恢复、基础会话处置状态、移动端批量操作收敛。
 - Settings：只读状态、分流入口、未就绪原因、部署读数失败局部错误。
 - 响应式：Desktop/Tablet/Mobile 下 Sidebar、Header、列表/详情/表单转换；页面根不得横向滚动。
 

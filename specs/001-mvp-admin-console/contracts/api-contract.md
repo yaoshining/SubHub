@@ -236,25 +236,100 @@
 
 ## 用户管理
 
+MVP 用户管理接口只覆盖后台访问生命周期的最小治理：成员可见、成员邀请、暂停/恢复与基础会话处置。该契约不得被解释为完整身份治理中心、权限矩阵、审批工作流、审计导出或高级风险分析/风控策略系统。
+
 ### `GET /api/admin/users`
 
-返回成员、邀请和风险会话摘要。
+返回后台成员、待接受邀请、成员状态与需要管理员关注的基础会话摘要。
+
+**200 response**:
+```json
+{
+  "members": [
+    {
+      "id": "admin_001",
+      "identifier": "admin@example.com",
+      "displayName": "Admin",
+      "status": "active",
+      "rolePreset": "admin",
+      "lastActiveAt": "2026-05-26T00:00:00.000Z"
+    }
+  ],
+  "invitations": [
+    {
+      "id": "invite_001",
+      "identifier": "operator@example.com",
+      "status": "pending",
+      "rolePreset": "operator",
+      "accessPreset": "admin_console",
+      "expiresAt": "2026-05-27T00:00:00.000Z"
+    }
+  ],
+  "sessionsNeedingAttention": [
+    {
+      "id": "session_001",
+      "memberId": "admin_001",
+      "status": "needs_attention",
+      "reason": "unusual_location",
+      "lastSeenAt": "2026-05-26T00:00:00.000Z"
+    }
+  ]
+}
+```
 
 ### `POST /api/admin/users/invitations`
 
-创建成员邀请；MVP 只允许预设角色和接入范围。
+创建成员邀请；MVP 只允许预设角色和接入范围，不允许在 Users 接口中定义角色策略或权限矩阵。
+
+**request**:
+```json
+{
+  "identifier": "operator@example.com",
+  "rolePreset": "operator",
+  "accessPreset": "admin_console"
+}
+```
+
+**201 response**:
+```json
+{
+  "id": "invite_001",
+  "identifier": "operator@example.com",
+  "status": "pending",
+  "rolePreset": "operator",
+  "accessPreset": "admin_console",
+  "expiresAt": "2026-05-27T00:00:00.000Z"
+}
+```
 
 ### `POST /api/admin/users/{userId}/suspend`
 
-暂停成员。
+暂停成员，并使其不再能够登录或执行受保护后台管理动作。
 
 ### `POST /api/admin/users/{userId}/restore`
 
-恢复成员。
+恢复已暂停成员的后台访问状态。
 
 ### `POST /api/admin/sessions/{sessionId}/remediate`
 
-处置风险会话。
+执行基础会话处置，用于当前后台安全维护需要，例如撤销需要关注的后台会话或标记为已处理；不包含风险评分、设备指纹、自动风控策略或完整审计调查流。
+
+**request**:
+```json
+{
+  "action": "revoke",
+  "reason": "admin_review"
+}
+```
+
+**200 response**:
+```json
+{
+  "sessionId": "session_001",
+  "status": "remediated",
+  "action": "revoke"
+}
+```
 
 ## 对外字幕 API
 
