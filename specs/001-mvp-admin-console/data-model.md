@@ -26,7 +26,7 @@
 
 ## AdminSession
 
-**用途**: 管理后台登录会话。
+**用途**: 管理后台登录会话；MVP 中的风险状态仅用于标记需要管理员基础处置的后台会话，不代表完整风险评分、设备指纹或风控策略系统。
 
 **字段**:
 - `id`
@@ -36,11 +36,12 @@
 - `expiresAt`
 - `lastSeenAt`
 - `deviceLabel`
-- `riskReason`
+- `riskReason`: 基础关注原因，用于解释为什么该会话需要管理员处置；不得扩展为高级风险分析模型。
 
 **验证规则**:
 - 受保护后台页面与管理 API 必须校验 active session。
 - `revoked`、`expired`、`risk` session 不得继续访问高风险动作。
+- `risk` session 只表示需要基础会话处置，不触发权限矩阵、审批流、审计导出或完整风控流程。
 
 ## Provider
 

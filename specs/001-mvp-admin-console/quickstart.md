@@ -1,6 +1,6 @@
 # MVP 管理控制台与统一字幕出口 - Quickstart
 
-本 quickstart 用于实现完成后的本地验证路径。当前仓库仍处于规划/早期开发阶段，因此 tasks 需要先补齐 Next.js 工程、依赖、持久化与 API 契约链路。
+本 quickstart 用于实现完成后的本地验收路径，不代表当前仓库已经具备可运行应用。当前仓库仍处于规划/早期开发阶段，因此 tasks 需要先补齐 Next.js 工程、依赖、持久化与 API 契约链路；在这些任务完成前，下列命令和路由是目标验收路径，而不是当前现状。
 
 ## 前置条件
 
@@ -9,7 +9,7 @@
 - 已配置本地持久化存储。
 - 已配置至少一个 OpenSubtitles 可用凭据。
 
-## 初始化项目
+## 实现后契约链路验证
 
 ```bash
 npm install
@@ -22,6 +22,7 @@ npm run api:docs
 - `docs/api/openapi.yaml` 可校验。
 - `src/lib/api/generated/` 已生成。
 - `/docs/api` 可展示 Scalar 文档。
+- 若上述脚本、OpenAPI 文件或生成目录尚未落地，应回到 `tasks` 补齐实现前置项，而不是把当前规划态视为运行失败。
 
 ## 启动本地服务
 
