@@ -11,7 +11,7 @@ handoffs:
     prompt: 请基于 DESIGN.md 与页面规范判断设计变更分级，并给出文档更新提案。
   - label: 03 UI 保真评审
     agent: SubHub 界面评审
-    prompt: 请对照 DESIGN.md 与 docs/pages 评审当前实现/草稿的偏差与修复优先级。
+    prompt: 请对照 DESIGN.md、docs/layouts/admin-layout.md 与 docs/pages 评审当前实现/草稿的偏差与修复优先级。
   - label: 04 生成 feature spec
     agent: speckit.specify
     prompt: 请基于当前输入生成或更新该 feature 的 spec。
@@ -46,10 +46,11 @@ handoffs:
 1. `.specify/memory/constitution.md`
 2. `docs/workflows/spec-github-worktree.md`
 3. `DESIGN.md`
-4. `docs/pages/*.md`
-5. 当前 feature 的 `spec.md`、`plan.md`、`tasks.md`
-6. `.github/copilot-instructions.md`
-7. 相关 issue、讨论、截图（若可用）
+4. `docs/layouts/admin-layout.md`（后台 shell 共享布局）
+5. `docs/pages/*.md`
+6. 当前 feature 的 `spec.md`、`plan.md`、`tasks.md`
+7. `.github/copilot-instructions.md`
+8. 相关 issue、讨论、截图（若可用）
 
 ## Repo-State First
 
@@ -175,6 +176,14 @@ active feature 回退判定：
 - 有 page spec 但缺设计稿：判断是否进入 `/subhub.design-draft`
 - 页面特例开始上升为跨页面规则：提醒可能需要更新 `DESIGN.md`
 
+### 共享布局层触发判断（admin layout）
+
+- 当问题涉及后台 shell、侧边栏、页头、列表页骨架、详情页骨架、设置页骨架、双栏/单栏切换、表格布局或跨页面响应式行为时，优先判断为共享布局层缺口，而非默认归为单页 page spec 缺口。
+- 当问题仅影响单一页面的模块顺序、页面特有交互或单页例外布局时，继续走 page spec 路径。
+- 当问题影响多个页面共用的布局模式或断点行为时，优先提示补充 `docs/layouts/admin-layout.md`，不应直接全部回流到 `docs/pages/*.md`。
+- 非后台 shell 页面默认不使用 `docs/layouts/admin-layout.md` 作为布局触发基线，除非对应 page spec 显式引用。
+- 协调器只负责识别并路由共享布局层问题，不代替共享布局文档编写。
+
 ### 并行开发触发判断（worktree / active feature）
 
 - 用户尝试并行推进多个 feature：提醒检查当前 worktree 是否已绑定另一个 active feature
@@ -202,6 +211,8 @@ active feature 回退判定：
     - 关键输入存在明显冲突；或
     - 文档仍含关键未决标记（如 TODO / NEEDS CLARIFICATION）。
 - 若任务可用一个简单动作前进，不要过度流程化。
+- 当设计稿阶段卡住且根因不是页面职责不清，而是共享骨架与响应式行为缺少统一规则时，优先推荐先补 `docs/layouts/admin-layout.md`，再继续设计稿。
+- 当准备进入实现阶段但共享布局与响应式骨架尚未统一时，必须提示实现漂移与 review 成本上升风险，并将“补共享布局文档”作为实现前推荐前置步骤之一。
 
 ## Output Format
 
@@ -210,6 +221,7 @@ active feature 回退判定：
 - 最小模式（能前进一步时）：
   - 当前阶段：
   - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
+  - 当前缺口类型：page spec 缺口 / 共享布局文档缺口 / 设计稿缺口 / spec-plan-tasks 缺口
   - 推荐下一步：
   - 推荐代理或命令：
   - 是否需要触发仓库级开发约定：
@@ -218,6 +230,7 @@ active feature 回退判定：
 - 完整模式（存在风险、并行、缺失工件或冲突时）：
   - 当前阶段：
   - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
+  - 当前缺口类型：page spec 缺口 / 共享布局文档缺口 / 设计稿缺口 / spec-plan-tasks 缺口
   - 可用工件：
   - 缺失工件：
   - 流程风险：
