@@ -57,6 +57,15 @@ shell commands, and other important information, read the current plan
 - 同一语义在同一产品域内应保持图标名一致，避免跨页面漂移命名。
 - 设计稿、页面规范、前端代码与评审结论引用图标时，默认以上述名称作为优先对齐基线。
 
+## Lucide 图标资产同步约定
+
+- 以下为仓库级图标资产同步规则，适用于设计、实现与评审全流程。
+- 项目默认图标系统为 Lucide；设计稿中默认通过 Pencil 的 `icon_font` 使用，`iconFontFamily` 使用 `lucide`。
+- `design/main.pen` 的 `Assets / Icons / Lucide` 为项目级图标资产区，维护已采纳且可复用的 Lucide 图标集合。
+- 正式设计流程首次引入且存在复用可能的新图标，应同步到该资产区；页面用图标应优先复用该资产区，避免重复创建。
+- 仅用于短暂探索草稿可临时使用；进入正式设计稿、page spec 对齐或多页面复用阶段后，必须回写到资产区。
+- 资产命名尽量与 Lucide 原始图标名一致，前端实现与代码评审默认以资产区名称作为 `lucide-react` 映射与对齐基线。
+
 ## ui-ux-pro-max 产物约定（SubHub）
 
 - `ui-ux-pro-max` 安装于 `.github/prompts/ui-ux-pro-max/`。
