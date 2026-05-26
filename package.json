@@ -11,7 +11,7 @@
     "api:spec": "orval --config orval.config.ts --fail-on-warnings --formatter prettier",
     "api:client": "orval --config orval.config.ts --clean src/lib/api/generated --formatter prettier",
     "api:docs": "next build",
-    "api:check": "pnpm run api:spec && npm run api:client",
+    "api:check": "pnpm api:spec && pnpm api:client",
     "db:generate": "node -e \"const fs=require('fs'); if(!fs.existsSync('src/server/storage/schema.ts')) { console.error('Drizzle schema 尚未落地：请先完成 T021，并对齐 specs/001-mvp-admin-console/database-design.md'); process.exit(1); }\" && drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "node -e \"const fs=require('fs'); if(!fs.existsSync('src/server/storage/migrations')) { console.error('Drizzle migrations 尚未落地：请先完成 T022，并对齐 specs/001-mvp-admin-console/database-design.md'); process.exit(1); }\" && drizzle-kit migrate --config drizzle.config.ts",
     "db:check": "node -e \"const fs=require('fs'); for (const path of ['specs/001-mvp-admin-console/database-design.md', 'drizzle.config.ts', 'src/server/storage/schema.ts']) { if(!fs.existsSync(path)) { console.error('数据库链路未就绪：缺少 ' + path); process.exit(1); } }\" && drizzle-kit check --config drizzle.config.ts"
