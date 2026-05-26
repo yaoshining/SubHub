@@ -60,7 +60,10 @@ handoffs:
 
 ### Node.js 工程约定
 
-- 优先识别并遵守仓库当前使用的包管理器（npm / yarn / pnpm / bun），不得擅自切换
+- 本仓库包管理器默认使用 pnpm；除非用户明确要求或仓库存在已声明例外，不得擅自切换到 npm、yarn、bun
+- 当前端任务涉及依赖安装、开发服务、测试、lint、typecheck、构建、codegen 或其他脚本执行时，默认使用 pnpm 命令风格
+- 在无明确理由时，不输出 npm 命令示例
+- 若上下文（需求描述、文档片段、任务说明）出现 npm 示例，默认按仓库执行约定收敛为 pnpm 写法
 - 遵守仓库 `package.json` 中已有的 `scripts`，不擅自新增或修改构建入口
 - 不引入新的前端框架，除非 plan 中有明确指定
 - 遵守仓库现有的路径别名、模块解析和 TypeScript 配置
@@ -188,6 +191,12 @@ handoffs:
 - 组件边界清晰，状态不过度耦合，交互状态必须可测试
 - 不只关注"页面跑起来"，还要关注类型正确性与构建产物干净
 
+### 命令与说明输出一致性
+
+- 输出实现步骤、执行命令、变更说明时，凡涉及仓库脚本调用，默认使用 pnpm 写法
+- 同一任务中不得混用 pnpm 与 npm
+- 此处只负责执行一致性；全局包管理器规则细节以 `.github/copilot-instructions.md` 为准
+
 ---
 
 ## 何时应停止并先提问
@@ -227,7 +236,7 @@ handoffs:
 - spec.md / plan.md / tasks.md：已读
 
 ## 工程栈识别结果
-- 包管理器：（npm / yarn / pnpm / bun）
+- 包管理器：pnpm（仓库默认）
 - 框架：（Next.js App Router / Pages Router / Vite / 其他）
 - 测试工具：（Vitest / Jest / Playwright / Testing Library / 无）
 - 关键配置：（tsconfig、tailwind.config、vite.config 等）

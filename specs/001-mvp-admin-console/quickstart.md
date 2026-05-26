@@ -2,7 +2,7 @@
 
 本 quickstart 用于实现完成后的本地验收路径，不代表当前仓库已经具备可运行应用。当前仓库仍处于规划/早期开发阶段，因此 tasks 需要先补齐 Next.js 工程、依赖、持久化与 API 契约链路；在这些任务完成前，下列命令和路由是目标验收路径，而不是当前现状。
 
-> **当前阶段提示**: 本文中的 `npm run api:*`、`npm run dev` 与页面/API 路由均为实现完成后的目标状态。若命令不存在或路由不可访问，优先检查对应 tasks 是否已完成，而不是将其视为当前仓库验证失败。
+> **当前阶段提示**: 本文中的 `pnpm api:*`、`pnpm dev` 与页面/API 路由均为实现完成后的目标状态。若命令不存在或路由不可访问，优先检查对应 tasks 是否已完成，而不是将其视为当前仓库验证失败。
 
 ## 前置条件
 
@@ -14,10 +14,10 @@
 ## 实现后契约链路验证
 
 ```bash
-npm install
-npm run api:spec
-npm run api:client
-npm run api:docs
+pnpm install
+pnpm api:spec
+pnpm api:client
+pnpm api:docs
 ```
 
 预期结果：
@@ -29,7 +29,7 @@ npm run api:docs
 ## 启动本地服务
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 预期结果：
@@ -125,11 +125,11 @@ curl -H "Authorization: Bearer <caller-key>" \
 ## 交付前检查
 
 ```bash
-npm run format
-npm run lint
-npm run typecheck
-npm test
-npm run api:check
+pnpm format
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm api:check
 ```
 
 预期结果：
