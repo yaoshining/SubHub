@@ -2,7 +2,7 @@
 
 **输入**: 来自 `specs/001-mvp-admin-console/` 的设计文档
 
-**前置条件**: `plan.md`、`spec.md`、`research.md`、`data-model.md`、`contracts/api-contract.md`、`quickstart.md`、`DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`
+**前置条件**: `plan.md`、`spec.md`、`research.md`、`data-model.md`、`database-design.md`、`contracts/api-contract.md`、`quickstart.md`、`DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`
 
 **可追溯前置条件**: Feature ID `001`，spec 目录 `specs/001-mvp-admin-console/`，分支 `feat/001-mvp-admin-console`，主 Issue 仍为 `TBD`；同步 task issue 前必须补齐主 Issue 关联。
 
@@ -32,7 +32,7 @@ To execute: `/speckit.git.commit`
 **目的**: 建立 Next.js + TypeScript + TailwindCSS + shadcn/ui + lucide-react 的最小工程骨架，并固定仓库级质量门禁。
 
 - [ ] T001 在 `package.json` 固定 Next.js、React、TypeScript、TailwindCSS、shadcn/ui 相关依赖与测试工具版本
-- [ ] T002 在 `package.json` 添加 `dev`、`build`、`format`、`lint`、`typecheck`、`test`、`api:spec`、`api:client`、`api:docs`、`api:check` 脚本
+- [ ] T002 在 `package.json` 添加 `dev`、`build`、`format`、`lint`、`typecheck`、`test`、`api:spec`、`api:client`、`api:docs`、`api:check`、`db:generate`、`db:migrate`、`db:check` 脚本，数据库脚本必须对齐 `specs/001-mvp-admin-console/database-design.md`
 - [ ] T003 在 `tsconfig.json` 配置 Next.js TypeScript 严格模式、路径别名和生成代码引用边界
 - [ ] T004 在 `next.config.ts` 创建 Next.js 应用配置并启用当前 MVP 所需的 App Router 基线
 - [ ] T005 在 `tailwind.config.ts` 配置 TailwindCSS 内容扫描、语义 token、响应式断点和 shadcn/ui token 映射
@@ -40,7 +40,7 @@ To execute: `/speckit.git.commit`
 - [ ] T007 在 `components.json` 初始化 shadcn/ui 配置并绑定 `src/components/ui/` 输出目录
 - [ ] T008 在 `src/app/globals.css` 定义 `DESIGN.md` 对应的深色默认主题、浅色主题、状态色和基础可访问性 token
 - [ ] T009 在 `src/app/layout.tsx` 创建应用根布局、主题类挂载点和全局字体结构
-- [ ] T010 在 `src/lib/env.ts` 创建环境变量读取与校验入口，覆盖 OpenSubtitles、存储、应用 URL 和安全密钥配置
+- [ ] T010 在 `src/lib/env.ts` 创建环境变量读取与校验入口，覆盖 OpenSubtitles、SQLite 数据库路径、Provider 凭据加密密钥、应用 URL 和安全密钥配置，并对齐 `specs/001-mvp-admin-console/database-design.md` 的敏感字段要求
 - [ ] T011 在 `src/lib/errors.ts` 创建统一错误类型，覆盖 `AUTHENTICATION_REQUIRED`、`FORBIDDEN`、`VALIDATION_FAILED`、`SERVICE_NOT_READY`、`CALLER_KEY_INVALID`、`CALLER_KEY_SUSPENDED`、`PROVIDER_UNAVAILABLE`、`PROVIDER_CREDENTIAL_EXHAUSTED`、`NO_RESULTS`、`SUBTITLE_NOT_FOUND`、`UPSTREAM_FAILED`
 - [ ] T012 [P] 在 `src/components/ui/` 安装并导出 Button、Input、Select、Table、Card、Badge、Tabs、Alert、Dialog、Drawer、AlertDialog、Switch、Accordion、Textarea、Separator、Avatar、Sonner 组件
 - [ ] T013 [P] 在 `src/components/icons/lucide.tsx` 建立 Lucide 图标集中导出，覆盖 `menu`、`panel-left`、`settings`、`users`、`shield`、`key-round`、`layout-dashboard`、`server`、`cloud-off`、`moon`、`sun`
@@ -48,7 +48,7 @@ To execute: `/speckit.git.commit`
 - [ ] T015 [P] 在 `orval.config.ts` 创建 Orval 配置，输出到 `src/lib/api/generated/`
 - [ ] T016 [P] 在 `src/lib/api/index.ts` 创建手写 API 封装层入口，禁止直接修改 `src/lib/api/generated/`
 - [ ] T017 [P] 在 `src/app/docs/api/page.tsx` 创建 Scalar API 文档展示入口骨架
-- [ ] T018 [P] 在 `tests/setup.ts` 创建测试环境初始化入口，覆盖 DOM、fetch、环境变量和数据库测试隔离基础
+- [ ] T018 [P] 在 `tests/setup.ts` 创建测试环境初始化入口，覆盖 DOM、fetch、环境变量、独立 SQLite 测试数据库、drizzle-kit migration 应用和数据库测试隔离基础
 - [ ] T019 [P] 在 `tests/helpers/api.ts` 创建 API 测试请求与错误断言辅助函数
 - [ ] T020 [P] 在 `tests/helpers/ui.tsx` 创建前端页面渲染、路由、主题和断点测试辅助函数
 
@@ -62,9 +62,9 @@ To execute: `/speckit.git.commit`
 
 **⚠️ CRITICAL**: 本阶段完成前不得开始任何用户故事实现。
 
-- [ ] T021 在 `src/server/storage/schema.ts` 定义 AdminUser、AdminInvitation、AdminSession、Provider、ProviderCredential、CallerKey、CallerKeyRotation、SubtitleSearchRequest、SubtitleDownloadRequest、AdminActionResult 的数据库 schema
-- [ ] T022 在 `src/server/storage/migrations/001_mvp_admin_console.ts` 创建初始迁移，覆盖所有 `data-model.md` 实体与必要索引
-- [ ] T023 在 `src/server/storage/client.ts` 创建 SQLite 或等价轻量数据库连接、事务封装和测试数据库切换能力
+- [ ] T021 在 `src/server/storage/schema.ts` 和 `drizzle.config.ts` 按 `specs/001-mvp-admin-console/database-design.md` 定义 SQLite + Drizzle schema，覆盖 AdminUser、AdminInvitation、AdminSession、Provider、ProviderCredential、CallerKey、CallerKeyRotation、SubtitleSearchRequest、SubtitleDownloadRequest、AdminActionResult 的表、字段、状态、外键、唯一约束和 PostgreSQL 可迁移命名
+- [ ] T022 在 `src/server/storage/migrations/001_mvp_admin_console.ts` 通过 drizzle-kit 创建初始迁移，按 `specs/001-mvp-admin-console/database-design.md` 覆盖所有表、索引、外键、pending 邀请唯一约束、状态字段约束和 migration 版本管理要求
+- [ ] T023 在 `src/server/storage/client.ts` 创建 SQLite + Drizzle 数据库连接、foreign key enforcement、事务封装、migration 应用入口和测试数据库切换能力，禁止业务服务绕过该入口直连数据库
 - [ ] T024 [P] 在 `src/server/audit/action-results.ts` 实现 AdminActionResult 写入服务，覆盖 Provider、Credential、CallerKey、AdminInvitation、AdminUser、AdminSession、Login、Bootstrap 动作类型
 - [ ] T025 [P] 在 `src/lib/auth/password.ts` 实现密码哈希、密码校验和强度校验函数
 - [ ] T026 [P] 在 `src/lib/auth/session.ts` 实现后台会话创建、读取、撤销、过期判断和 `risk` 会话拒绝高风险动作逻辑
@@ -82,7 +82,7 @@ To execute: `/speckit.git.commit`
 - [ ] T038 [P] 在 `src/components/admin/status-badge.tsx` 实现 success、warning、destructive、secondary 状态 Badge 映射
 - [ ] T039 [P] 在 `src/components/admin/protected-layout.tsx` 实现后台页共享受保护布局和当前用户上下文注入
 - [ ] T040 在 `src/app/(admin)/layout.tsx` 接入 Admin Shell、Sidebar、Topbar、响应式 Drawer 和主题持久化
-- [ ] T041 在 `tests/unit/storage/schema.test.ts` 测试 schema 迁移、唯一约束、邀请状态约束和会话状态约束
+- [ ] T041 在 `tests/unit/storage/schema.test.ts` 按 `specs/001-mvp-admin-console/database-design.md` 测试 schema migration、核心表存在性、唯一约束、外键约束、pending 邀请唯一约束、索引依赖查询、邀请状态约束、会话状态约束和 SQLite 到 PostgreSQL 可迁移性守卫
 - [ ] T042 [P] 在 `tests/unit/auth/session.test.ts` 测试 active、revoked、expired、risk 会话的访问控制
 - [ ] T043 [P] 在 `tests/unit/api/errors.test.ts` 测试统一错误结构和错误码映射
 - [ ] T044 [P] 在 `tests/ui/admin-shell-responsive.test.tsx` 测试 Sidebar、Drawer、Page Header 在 Desktop、Tablet、Mobile 下的骨架行为
@@ -308,13 +308,13 @@ To execute: `/speckit.git.commit`
 - [ ] T175 在 `src/components/icons/lucide.tsx` 和 `design/main.pen` 对齐 Lucide 图标资产，确认 `cloud-off`、`key-round`、`users`、`layout-dashboard`、`server`、`settings`、`menu`、`panel-left`、`moon`、`sun` 均有一致命名
 - [ ] T176 [P] 在 `tests/ui/responsive-regression.test.tsx` 增加 360px、390px、430px、768px、834px、1024px、1180px、1280px 断点回归测试
 - [ ] T177 [P] 在 `tests/ui/accessibility.test.tsx` 增加键盘焦点、颜色非唯一状态表达、按钮可达性和 reduced motion 基线测试
-- [ ] T178 [P] 在 `tests/security/secrets.test.ts` 增加 ProviderCredential、CallerKey、reveal window 和日志输出不泄露明文测试
+- [ ] T178 [P] 在 `tests/security/secrets.test.ts` 按 `specs/001-mvp-admin-console/database-design.md` 增加 AdminUser 密码、ProviderCredential、CallerKey、session token、reveal window、AdminActionResult message 和日志输出不泄露明文测试
 - [ ] T179 在 `specs/001-mvp-admin-console/quickstart.md` 执行并核对实现后验收路径，修复 `package.json`、`docs/api/openapi.yaml`、`src/app/`、`tests/` 中发现的不一致
 - [ ] T180 在 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md` 检查实现是否引入新跨页面规则；若没有新规则，不修改设计真源
 - [ ] T181 在 `design/main.pen` 检查深/浅主题与 Tablet/Mobile 设计稿对照结果，必要时同步新增 Lucide 可复用图标资产
 - [ ] T182 在 `src/app/`、`src/components/`、`src/server/`、`docs/api/openapi.yaml` 运行 UI review，对照 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen` 修复保真、响应式与图标偏差
 - [ ] T183 在 `src/app/`、`src/server/`、`src/lib/api/`、`tests/` 运行 code review，检查行为正确性、状态流转、测试缺口、API 契约链路、安全边界和 Users MVP 范围
-- [ ] T184 在 `package.json` 执行 `npm run format`、`npm run lint`、`npm run typecheck`、`npm test`、`npm run api:check` 并修复所有失败项
+- [ ] T184 在 `package.json` 执行 `npm run format`、`npm run lint`、`npm run typecheck`、`npm test`、`npm run api:check`、`npm run db:check` 并修复所有失败项，确认 Drizzle schema、migration 文件与 `specs/001-mvp-admin-console/database-design.md` 保持一致
 - [ ] T185 在 `specs/001-mvp-admin-console/tasks.md` 回填实现过程中发现的任务拆分偏差，确保后续 task issue 同步仍限定在 `specs/001-mvp-admin-console/`
 
 ---

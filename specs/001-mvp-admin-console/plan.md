@@ -2,7 +2,7 @@
 
 **分支**: `feat/001-mvp-admin-console` | **日期**: 2026-05-26 | **规格**: `specs/001-mvp-admin-console/spec.md`
 
-**输入**: 来自 `specs/001-mvp-admin-console/spec.md` 的最新功能规格，以及 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`、`.github/copilot-instructions.md`
+**输入**: 来自 `specs/001-mvp-admin-console/spec.md` 的最新功能规格，以及 `specs/001-mvp-admin-console/data-model.md`、`specs/001-mvp-admin-console/database-design.md`、`specs/001-mvp-admin-console/contracts/api-contract.md`、`DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`、`.github/copilot-instructions.md`
 
 **说明**: 本计划用于后续 `speckit.tasks` 拆分任务。当前 feature 只覆盖 MVP 管理控制台、OpenSubtitles 首发 Provider、Provider 凭据池、下游调用方 Key、统一字幕查询/下载出口、Users 基础成员管理与只读系统设置总览；`docs/pages/access-control.md` 为后续 feature 参考，不进入本期实现范围。
 
@@ -44,10 +44,11 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - UI：TailwindCSS + shadcn/ui；基础组件优先使用 Button、Input、Select、Table、Card、Badge、Tabs、Alert、Dialog、Drawer、AlertDialog、Switch、Accordion、Textarea、Separator、Toast/Sonner
 - 图标：Lucide / `lucide-react`
 - API 契约：OpenAPI 真源 `docs/api/openapi.yaml`；Orval 配置 `orval.config.ts`；生成代码 `src/lib/api/generated/`；手写 API 层 `src/lib/api/`；Scalar 文档入口 `/docs/api`
+- 数据库：SQLite + Drizzle ORM + drizzle-kit；数据库落地设计以 `specs/001-mvp-admin-console/database-design.md` 为正式输入
 - 后端模块：Next.js Route Handlers 或同等 Next.js server 边界；Provider adapter、credential pool、caller key auth、subtitle gateway、audit/action result logging 必须按模块隔离
 - 首发 Provider：OpenSubtitles adapter
 
-**存储**: 首版需要持久化管理员账号、后台成员状态、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、轮换历史、查询/下载记录摘要、关键管理动作结果。实现任务必须选择并固定一个自托管友好的持久化方案；在未引入完整数据库前，不得使用仅内存存储作为可交付实现。推荐任务阶段优先评估 SQLite + ORM/迁移工具或等价轻量数据库方案，并同步写入 quickstart。
+**存储**: 首版采用 SQLite + Drizzle ORM + drizzle-kit，持久化管理员账号、后台成员状态、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、轮换历史、查询/下载记录摘要、关键管理动作结果。数据库 schema、migration、访问入口、Drizzle 配置、表设计、索引、约束、敏感字段处理、迁移策略与未来 PostgreSQL 可迁移边界必须遵循 `specs/001-mvp-admin-console/database-design.md`；在未完成该数据库落地前，不得使用仅内存存储作为可交付实现。
 
 **测试**:
 - 单元测试：认证校验、基础成员管理、Provider 状态流转、凭据池选择/隔离、调用方 Key 校验、统一错误映射
@@ -152,6 +153,7 @@ specs/001-mvp-admin-console/
 ├── plan.md
 ├── research.md
 ├── data-model.md
+├── database-design.md
 ├── quickstart.md
 ├── contracts/
 │   └── api-contract.md
@@ -222,7 +224,9 @@ src/
 │   └── audit/
 └── server/
     ├── storage/
-    ├── migrations/
+    │   ├── schema.ts
+    │   ├── client.ts
+    │   └── migrations/
     └── config/
 tests/
 ├── unit/
@@ -233,6 +237,7 @@ docs/
 └── api/
     └── openapi.yaml
 orval.config.ts
+drizzle.config.ts
 ```
 
 **结构决策**: 采用 Next.js 全栈单体结构，前端页面、Route Handlers、服务模块和 API 契约同仓维护。生成 API client/types 与手写 API 适配层必须分开：`src/lib/api/generated/` 不手改，`src/lib/api/` 只承载手写封装和业务适配。
@@ -309,12 +314,13 @@ orval.config.ts
 - Next.js 全栈单体是当前仓库最小可交付路径。
 - `docs/layouts/admin-layout.md` 是共享布局正式基线。
 - OpenAPI/Orval/Scalar 链路必须在首批 API 实现中落地。
-- SQLite + 迁移工具是自托管 MVP 的优先评估方向；若任务阶段选择其他持久化方案，必须保持自托管、迁移、测试和 quickstart 可执行。
+- SQLite + Drizzle ORM + drizzle-kit 是当前 MVP 的正式数据库方案；schema、migration、client、Drizzle 配置、索引、约束、敏感数据处理和未来 PostgreSQL 可迁移规则以 `specs/001-mvp-admin-console/database-design.md` 为准。
 - `design/main.pen` 已覆盖本 feature 主要页面与响应式画板，设计先行缺口不阻塞计划，但实现偏离必须回写文档。
 
 ## Phase 1: 设计与契约产物
 
 - 数据模型：`specs/001-mvp-admin-console/data-model.md`
+- 数据库落地设计：`specs/001-mvp-admin-console/database-design.md`
 - API 契约规划：`specs/001-mvp-admin-console/contracts/api-contract.md`
 - 快速验证说明：`specs/001-mvp-admin-console/quickstart.md`
 - Agent context：`.github/copilot-instructions.md` 的 Spec Kit plan 引用必须指向本文件。
@@ -325,7 +331,7 @@ orval.config.ts
 
 1. 工程基础与质量门禁：Next.js/TypeScript/Tailwind/shadcn/lucide、format/lint/type-check/test、CI、基础目录。
 2. API 契约链路：`docs/api/openapi.yaml`、`orval.config.ts`、`api:*` scripts、Scalar `/docs/api`、生成 client/types。
-3. 存储与领域模型：管理员、后台成员、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、查询/下载记录、动作结果日志。
+3. 存储与领域模型：按 `specs/001-mvp-admin-console/database-design.md` 落地 SQLite + Drizzle ORM + drizzle-kit，覆盖 `src/server/storage/schema.ts`、`src/server/storage/migrations/`、`src/server/storage/client.ts`、`drizzle.config.ts`，并实现管理员、后台成员、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、查询/下载记录、动作结果日志的表、索引、约束、敏感字段处理和 migration。
 4. 认证闭环：初始化首个管理员、登录、会话、受保护后台页/API、未认证重定向。
 5. Provider 与凭据池后端：OpenSubtitles adapter、Provider CRUD、凭据状态、自动切换、隔离/恢复、最近异常。
 6. 下游调用方 Key 后端：创建、受控明文窗口、轮换、停用、授权校验、最近使用。
