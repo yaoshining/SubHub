@@ -11,12 +11,38 @@ import {
 
 export const adminUserStatuses = ["active", "suspended"] as const;
 export const adminRoles = ["admin", "operator"] as const;
-export const adminInvitationStatuses = ["pending", "accepted", "expired", "revoked"] as const;
-export const adminSessionStatuses = ["active", "revoked", "expired", "needs_attention", "remediated"] as const;
+export const adminInvitationStatuses = [
+  "pending",
+  "accepted",
+  "expired",
+  "revoked",
+] as const;
+export const adminSessionStatuses = [
+  "active",
+  "revoked",
+  "expired",
+  "needs_attention",
+  "remediated",
+] as const;
 export const providerTypes = ["opensubtitles"] as const;
-export const providerStatuses = ["enabled", "disabled", "needs_config", "degraded"] as const;
-export const providerCredentialStatuses = ["active", "cooldown", "isolated", "disabled", "exhausted"] as const;
-export const callerKeyEnvironments = ["production", "staging", "development"] as const;
+export const providerStatuses = [
+  "enabled",
+  "disabled",
+  "needs_config",
+  "degraded",
+] as const;
+export const providerCredentialStatuses = [
+  "active",
+  "cooldown",
+  "isolated",
+  "disabled",
+  "exhausted",
+] as const;
+export const callerKeyEnvironments = [
+  "production",
+  "staging",
+  "development",
+] as const;
 export const callerKeyStatuses = ["active", "suspended", "rotated"] as const;
 export const callerKeyRotationResults = ["success", "failed"] as const;
 export const subtitleSearchStatuses = [
@@ -106,11 +132,26 @@ export const adminInvitations = sqliteTable(
     uniqueIndex("admin_invitations_pending_identifier_unique")
       .on(table.identifier)
       .where(sql`${table.status} = 'pending'`),
-    index("admin_invitations_identifier_status_idx").on(table.identifier, table.status),
-    index("admin_invitations_invited_by_created_at_idx").on(table.invitedByAdminUserId, table.createdAt),
-    check("admin_invitations_status_check", inSet(table.status, adminInvitationStatuses)),
-    check("admin_invitations_role_preset_check", inSet(table.rolePreset, adminRoles)),
-    check("admin_invitations_access_preset_check", sql`${table.accessPreset} in ('admin_console')`),
+    index("admin_invitations_identifier_status_idx").on(
+      table.identifier,
+      table.status,
+    ),
+    index("admin_invitations_invited_by_created_at_idx").on(
+      table.invitedByAdminUserId,
+      table.createdAt,
+    ),
+    check(
+      "admin_invitations_status_check",
+      inSet(table.status, adminInvitationStatuses),
+    ),
+    check(
+      "admin_invitations_role_preset_check",
+      inSet(table.rolePreset, adminRoles),
+    ),
+    check(
+      "admin_invitations_access_preset_check",
+      sql`${table.accessPreset} in ('admin_console')`,
+    ),
     foreignKey({
       columns: [table.invitedByAdminUserId],
       foreignColumns: [adminUsers.id],
@@ -140,11 +181,22 @@ export const adminSessions = sqliteTable(
     remediatedByAdminUserId: text("remediated_by_admin_user_id"),
   },
   (table) => [
-    uniqueIndex("admin_sessions_session_token_hash_unique").on(table.sessionTokenHash),
-    index("admin_sessions_admin_user_id_status_idx").on(table.adminUserId, table.status),
-    index("admin_sessions_status_last_seen_at_idx").on(table.status, table.lastSeenAt),
+    uniqueIndex("admin_sessions_session_token_hash_unique").on(
+      table.sessionTokenHash,
+    ),
+    index("admin_sessions_admin_user_id_status_idx").on(
+      table.adminUserId,
+      table.status,
+    ),
+    index("admin_sessions_status_last_seen_at_idx").on(
+      table.status,
+      table.lastSeenAt,
+    ),
     index("admin_sessions_expires_at_idx").on(table.expiresAt),
-    check("admin_sessions_status_check", inSet(table.status, adminSessionStatuses)),
+    check(
+      "admin_sessions_status_check",
+      inSet(table.status, adminSessionStatuses),
+    ),
     foreignKey({
       columns: [table.adminUserId],
       foreignColumns: [adminUsers.id],
@@ -168,7 +220,9 @@ export const providers = sqliteTable(
     priority: integer("priority").notNull().default(100),
     weight: integer("weight").notNull().default(100),
     concurrencyLimit: integer("concurrency_limit").notNull().default(1),
-    rotationEnabled: integer("rotation_enabled", { mode: "boolean" }).notNull().default(true),
+    rotationEnabled: integer("rotation_enabled", { mode: "boolean" })
+      .notNull()
+      .default(true),
     cooldownSeconds: integer("cooldown_seconds").notNull().default(60),
     fallbackProviderId: text("fallback_provider_id"),
     lastHealthStatus: text("last_health_status"),
@@ -182,7 +236,10 @@ export const providers = sqliteTable(
     index("providers_status_priority_idx").on(table.status, table.priority),
     check("providers_type_check", inSet(table.type, providerTypes)),
     check("providers_status_check", inSet(table.status, providerStatuses)),
-    check("providers_rotation_enabled_check", sql`${table.rotationEnabled} in (0, 1)`),
+    check(
+      "providers_rotation_enabled_check",
+      sql`${table.rotationEnabled} in (0, 1)`,
+    ),
     foreignKey({
       columns: [table.fallbackProviderId],
       foreignColumns: [table.id],
@@ -211,16 +268,28 @@ export const providerCredentials = sqliteTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
-    uniqueIndex("provider_credentials_provider_id_label_unique").on(table.providerId, table.label),
-    uniqueIndex("provider_credentials_provider_id_secret_hash_unique").on(table.providerId, table.secretHash),
-    index("provider_credentials_provider_id_status_idx").on(table.providerId, table.status),
+    uniqueIndex("provider_credentials_provider_id_label_unique").on(
+      table.providerId,
+      table.label,
+    ),
+    uniqueIndex("provider_credentials_provider_id_secret_hash_unique").on(
+      table.providerId,
+      table.secretHash,
+    ),
+    index("provider_credentials_provider_id_status_idx").on(
+      table.providerId,
+      table.status,
+    ),
     index("provider_credentials_provider_id_status_cooldown_until_idx").on(
       table.providerId,
       table.status,
       table.cooldownUntil,
     ),
     index("provider_credentials_last_used_at_idx").on(table.lastUsedAt),
-    check("provider_credentials_status_check", inSet(table.status, providerCredentialStatuses)),
+    check(
+      "provider_credentials_status_check",
+      inSet(table.status, providerCredentialStatuses),
+    ),
     foreignKey({
       columns: [table.providerId],
       foreignColumns: [providers.id],
@@ -250,9 +319,15 @@ export const callerKeys = sqliteTable(
   },
   (table) => [
     uniqueIndex("caller_keys_key_hash_unique").on(table.keyHash),
-    index("caller_keys_status_environment_idx").on(table.status, table.environment),
+    index("caller_keys_status_environment_idx").on(
+      table.status,
+      table.environment,
+    ),
     index("caller_keys_last_used_at_idx").on(table.lastUsedAt),
-    check("caller_keys_environment_check", inSet(table.environment, callerKeyEnvironments)),
+    check(
+      "caller_keys_environment_check",
+      inSet(table.environment, callerKeyEnvironments),
+    ),
     check("caller_keys_status_check", inSet(table.status, callerKeyStatuses)),
     check("caller_keys_scope_check", sql`${table.scope} in ('subtitles:read')`),
   ],
@@ -271,8 +346,14 @@ export const callerKeyRotations = sqliteTable(
     performedByAdminUserId: text("performed_by_admin_user_id"),
   },
   (table) => [
-    index("caller_key_rotations_caller_key_id_created_at_idx").on(table.callerKeyId, table.createdAt),
-    check("caller_key_rotations_result_check", inSet(table.result, callerKeyRotationResults)),
+    index("caller_key_rotations_caller_key_id_created_at_idx").on(
+      table.callerKeyId,
+      table.createdAt,
+    ),
+    check(
+      "caller_key_rotations_result_check",
+      inSet(table.result, callerKeyRotationResults),
+    ),
     foreignKey({
       columns: [table.callerKeyId],
       foreignColumns: [callerKeys.id],
@@ -304,13 +385,37 @@ export const subtitleSearchRequests = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    index("subtitle_search_requests_caller_key_id_created_at_idx").on(table.callerKeyId, table.createdAt),
-    index("subtitle_search_requests_provider_id_created_at_idx").on(table.providerId, table.createdAt),
-    index("subtitle_search_requests_status_created_at_idx").on(table.status, table.createdAt),
-    check("subtitle_search_requests_status_check", inSet(table.status, subtitleSearchStatuses)),
-    foreignKey({ columns: [table.callerKeyId], foreignColumns: [callerKeys.id], name: "subtitle_search_requests_caller_key_id_fk" }),
-    foreignKey({ columns: [table.providerId], foreignColumns: [providers.id], name: "subtitle_search_requests_provider_id_fk" }),
-    foreignKey({ columns: [table.credentialId], foreignColumns: [providerCredentials.id], name: "subtitle_search_requests_credential_id_fk" }),
+    index("subtitle_search_requests_caller_key_id_created_at_idx").on(
+      table.callerKeyId,
+      table.createdAt,
+    ),
+    index("subtitle_search_requests_provider_id_created_at_idx").on(
+      table.providerId,
+      table.createdAt,
+    ),
+    index("subtitle_search_requests_status_created_at_idx").on(
+      table.status,
+      table.createdAt,
+    ),
+    check(
+      "subtitle_search_requests_status_check",
+      inSet(table.status, subtitleSearchStatuses),
+    ),
+    foreignKey({
+      columns: [table.callerKeyId],
+      foreignColumns: [callerKeys.id],
+      name: "subtitle_search_requests_caller_key_id_fk",
+    }),
+    foreignKey({
+      columns: [table.providerId],
+      foreignColumns: [providers.id],
+      name: "subtitle_search_requests_provider_id_fk",
+    }),
+    foreignKey({
+      columns: [table.credentialId],
+      foreignColumns: [providerCredentials.id],
+      name: "subtitle_search_requests_credential_id_fk",
+    }),
   ],
 );
 
@@ -328,13 +433,37 @@ export const subtitleDownloadRequests = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    index("subtitle_download_requests_caller_key_id_created_at_idx").on(table.callerKeyId, table.createdAt),
-    index("subtitle_download_requests_provider_id_created_at_idx").on(table.providerId, table.createdAt),
-    index("subtitle_download_requests_status_created_at_idx").on(table.status, table.createdAt),
-    check("subtitle_download_requests_status_check", inSet(table.status, subtitleDownloadStatuses)),
-    foreignKey({ columns: [table.callerKeyId], foreignColumns: [callerKeys.id], name: "subtitle_download_requests_caller_key_id_fk" }),
-    foreignKey({ columns: [table.providerId], foreignColumns: [providers.id], name: "subtitle_download_requests_provider_id_fk" }),
-    foreignKey({ columns: [table.credentialId], foreignColumns: [providerCredentials.id], name: "subtitle_download_requests_credential_id_fk" }),
+    index("subtitle_download_requests_caller_key_id_created_at_idx").on(
+      table.callerKeyId,
+      table.createdAt,
+    ),
+    index("subtitle_download_requests_provider_id_created_at_idx").on(
+      table.providerId,
+      table.createdAt,
+    ),
+    index("subtitle_download_requests_status_created_at_idx").on(
+      table.status,
+      table.createdAt,
+    ),
+    check(
+      "subtitle_download_requests_status_check",
+      inSet(table.status, subtitleDownloadStatuses),
+    ),
+    foreignKey({
+      columns: [table.callerKeyId],
+      foreignColumns: [callerKeys.id],
+      name: "subtitle_download_requests_caller_key_id_fk",
+    }),
+    foreignKey({
+      columns: [table.providerId],
+      foreignColumns: [providers.id],
+      name: "subtitle_download_requests_provider_id_fk",
+    }),
+    foreignKey({
+      columns: [table.credentialId],
+      foreignColumns: [providerCredentials.id],
+      name: "subtitle_download_requests_credential_id_fk",
+    }),
   ],
 );
 
@@ -351,12 +480,31 @@ export const adminActionResults = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   (table) => [
-    index("admin_action_results_actor_admin_user_id_created_at_idx").on(table.actorAdminUserId, table.createdAt),
-    index("admin_action_results_target_type_target_id_created_at_idx").on(table.targetType, table.targetId, table.createdAt),
-    index("admin_action_results_action_type_created_at_idx").on(table.actionType, table.createdAt),
-    check("admin_action_results_action_type_check", inSet(table.actionType, adminActionTypes)),
-    check("admin_action_results_target_type_check", inSet(table.targetType, adminActionTargetTypes)),
-    check("admin_action_results_result_check", inSet(table.result, adminActionResultStatuses)),
+    index("admin_action_results_actor_admin_user_id_created_at_idx").on(
+      table.actorAdminUserId,
+      table.createdAt,
+    ),
+    index("admin_action_results_target_type_target_id_created_at_idx").on(
+      table.targetType,
+      table.targetId,
+      table.createdAt,
+    ),
+    index("admin_action_results_action_type_created_at_idx").on(
+      table.actionType,
+      table.createdAt,
+    ),
+    check(
+      "admin_action_results_action_type_check",
+      inSet(table.actionType, adminActionTypes),
+    ),
+    check(
+      "admin_action_results_target_type_check",
+      inSet(table.targetType, adminActionTargetTypes),
+    ),
+    check(
+      "admin_action_results_result_check",
+      inSet(table.result, adminActionResultStatuses),
+    ),
     foreignKey({
       columns: [table.actorAdminUserId],
       foreignColumns: [adminUsers.id],
@@ -393,8 +541,11 @@ export type NewCallerKey = typeof callerKeys.$inferInsert;
 export type CallerKeyRotation = typeof callerKeyRotations.$inferSelect;
 export type NewCallerKeyRotation = typeof callerKeyRotations.$inferInsert;
 export type SubtitleSearchRequest = typeof subtitleSearchRequests.$inferSelect;
-export type NewSubtitleSearchRequest = typeof subtitleSearchRequests.$inferInsert;
-export type SubtitleDownloadRequest = typeof subtitleDownloadRequests.$inferSelect;
-export type NewSubtitleDownloadRequest = typeof subtitleDownloadRequests.$inferInsert;
+export type NewSubtitleSearchRequest =
+  typeof subtitleSearchRequests.$inferInsert;
+export type SubtitleDownloadRequest =
+  typeof subtitleDownloadRequests.$inferSelect;
+export type NewSubtitleDownloadRequest =
+  typeof subtitleDownloadRequests.$inferInsert;
 export type AdminActionResult = typeof adminActionResults.$inferSelect;
 export type NewAdminActionResult = typeof adminActionResults.$inferInsert;

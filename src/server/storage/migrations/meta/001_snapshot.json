@@ -67,27 +67,17 @@
       "indexes": {
         "admin_action_results_actor_admin_user_id_created_at_idx": {
           "name": "admin_action_results_actor_admin_user_id_created_at_idx",
-          "columns": [
-            "actor_admin_user_id",
-            "created_at"
-          ],
+          "columns": ["actor_admin_user_id", "created_at"],
           "isUnique": false
         },
         "admin_action_results_target_type_target_id_created_at_idx": {
           "name": "admin_action_results_target_type_target_id_created_at_idx",
-          "columns": [
-            "target_type",
-            "target_id",
-            "created_at"
-          ],
+          "columns": ["target_type", "target_id", "created_at"],
           "isUnique": false
         },
         "admin_action_results_action_type_created_at_idx": {
           "name": "admin_action_results_action_type_created_at_idx",
-          "columns": [
-            "action_type",
-            "created_at"
-          ],
+          "columns": ["action_type", "created_at"],
           "isUnique": false
         }
       },
@@ -96,12 +86,8 @@
           "name": "admin_action_results_actor_admin_user_id_fk",
           "tableFrom": "admin_action_results",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "actor_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -214,26 +200,18 @@
       "indexes": {
         "admin_invitations_pending_identifier_unique": {
           "name": "admin_invitations_pending_identifier_unique",
-          "columns": [
-            "identifier"
-          ],
+          "columns": ["identifier"],
           "isUnique": true,
           "where": "\"admin_invitations\".\"status\" = 'pending'"
         },
         "admin_invitations_identifier_status_idx": {
           "name": "admin_invitations_identifier_status_idx",
-          "columns": [
-            "identifier",
-            "status"
-          ],
+          "columns": ["identifier", "status"],
           "isUnique": false
         },
         "admin_invitations_invited_by_created_at_idx": {
           "name": "admin_invitations_invited_by_created_at_idx",
-          "columns": [
-            "invited_by_admin_user_id",
-            "created_at"
-          ],
+          "columns": ["invited_by_admin_user_id", "created_at"],
           "isUnique": false
         }
       },
@@ -242,12 +220,8 @@
           "name": "admin_invitations_invited_by_admin_user_id_fk",
           "tableFrom": "admin_invitations",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "invited_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -255,12 +229,8 @@
           "name": "admin_invitations_accepted_admin_user_id_fk",
           "tableFrom": "admin_invitations",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "accepted_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -366,32 +336,22 @@
       "indexes": {
         "admin_sessions_session_token_hash_unique": {
           "name": "admin_sessions_session_token_hash_unique",
-          "columns": [
-            "session_token_hash"
-          ],
+          "columns": ["session_token_hash"],
           "isUnique": true
         },
         "admin_sessions_admin_user_id_status_idx": {
           "name": "admin_sessions_admin_user_id_status_idx",
-          "columns": [
-            "admin_user_id",
-            "status"
-          ],
+          "columns": ["admin_user_id", "status"],
           "isUnique": false
         },
         "admin_sessions_status_last_seen_at_idx": {
           "name": "admin_sessions_status_last_seen_at_idx",
-          "columns": [
-            "status",
-            "last_seen_at"
-          ],
+          "columns": ["status", "last_seen_at"],
           "isUnique": false
         },
         "admin_sessions_expires_at_idx": {
           "name": "admin_sessions_expires_at_idx",
-          "columns": [
-            "expires_at"
-          ],
+          "columns": ["expires_at"],
           "isUnique": false
         }
       },
@@ -400,12 +360,8 @@
           "name": "admin_sessions_admin_user_id_fk",
           "tableFrom": "admin_sessions",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -413,12 +369,8 @@
           "name": "admin_sessions_remediated_by_admin_user_id_fk",
           "tableFrom": "admin_sessions",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "remediated_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["remediated_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -502,9 +454,7 @@
       "indexes": {
         "admin_users_identifier_unique": {
           "name": "admin_users_identifier_unique",
-          "columns": [
-            "identifier"
-          ],
+          "columns": ["identifier"],
           "isUnique": true
         }
       },
@@ -585,10 +535,7 @@
       "indexes": {
         "caller_key_rotations_caller_key_id_created_at_idx": {
           "name": "caller_key_rotations_caller_key_id_created_at_idx",
-          "columns": [
-            "caller_key_id",
-            "created_at"
-          ],
+          "columns": ["caller_key_id", "created_at"],
           "isUnique": false
         }
       },
@@ -597,12 +544,8 @@
           "name": "caller_key_rotations_caller_key_id_fk",
           "tableFrom": "caller_key_rotations",
           "tableTo": "caller_keys",
-          "columnsFrom": [
-            "caller_key_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caller_key_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -610,12 +553,8 @@
           "name": "caller_key_rotations_performed_by_admin_user_id_fk",
           "tableFrom": "caller_key_rotations",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "performed_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performed_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -741,24 +680,17 @@
       "indexes": {
         "caller_keys_key_hash_unique": {
           "name": "caller_keys_key_hash_unique",
-          "columns": [
-            "key_hash"
-          ],
+          "columns": ["key_hash"],
           "isUnique": true
         },
         "caller_keys_status_environment_idx": {
           "name": "caller_keys_status_environment_idx",
-          "columns": [
-            "status",
-            "environment"
-          ],
+          "columns": ["status", "environment"],
           "isUnique": false
         },
         "caller_keys_last_used_at_idx": {
           "name": "caller_keys_last_used_at_idx",
-          "columns": [
-            "last_used_at"
-          ],
+          "columns": ["last_used_at"],
           "isUnique": false
         }
       },
@@ -892,42 +824,27 @@
       "indexes": {
         "provider_credentials_provider_id_label_unique": {
           "name": "provider_credentials_provider_id_label_unique",
-          "columns": [
-            "provider_id",
-            "label"
-          ],
+          "columns": ["provider_id", "label"],
           "isUnique": true
         },
         "provider_credentials_provider_id_secret_hash_unique": {
           "name": "provider_credentials_provider_id_secret_hash_unique",
-          "columns": [
-            "provider_id",
-            "secret_hash"
-          ],
+          "columns": ["provider_id", "secret_hash"],
           "isUnique": true
         },
         "provider_credentials_provider_id_status_idx": {
           "name": "provider_credentials_provider_id_status_idx",
-          "columns": [
-            "provider_id",
-            "status"
-          ],
+          "columns": ["provider_id", "status"],
           "isUnique": false
         },
         "provider_credentials_provider_id_status_cooldown_until_idx": {
           "name": "provider_credentials_provider_id_status_cooldown_until_idx",
-          "columns": [
-            "provider_id",
-            "status",
-            "cooldown_until"
-          ],
+          "columns": ["provider_id", "status", "cooldown_until"],
           "isUnique": false
         },
         "provider_credentials_last_used_at_idx": {
           "name": "provider_credentials_last_used_at_idx",
-          "columns": [
-            "last_used_at"
-          ],
+          "columns": ["last_used_at"],
           "isUnique": false
         }
       },
@@ -936,12 +853,8 @@
           "name": "provider_credentials_provider_id_fk",
           "tableFrom": "provider_credentials",
           "tableTo": "providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1065,26 +978,17 @@
       "indexes": {
         "providers_type_name_unique": {
           "name": "providers_type_name_unique",
-          "columns": [
-            "type",
-            "name"
-          ],
+          "columns": ["type", "name"],
           "isUnique": true
         },
         "providers_type_status_idx": {
           "name": "providers_type_status_idx",
-          "columns": [
-            "type",
-            "status"
-          ],
+          "columns": ["type", "status"],
           "isUnique": false
         },
         "providers_status_priority_idx": {
           "name": "providers_status_priority_idx",
-          "columns": [
-            "status",
-            "priority"
-          ],
+          "columns": ["status", "priority"],
           "isUnique": false
         }
       },
@@ -1093,12 +997,8 @@
           "name": "providers_fallback_provider_id_fk",
           "tableFrom": "providers",
           "tableTo": "providers",
-          "columnsFrom": [
-            "fallback_provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fallback_provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1190,26 +1090,17 @@
       "indexes": {
         "subtitle_download_requests_caller_key_id_created_at_idx": {
           "name": "subtitle_download_requests_caller_key_id_created_at_idx",
-          "columns": [
-            "caller_key_id",
-            "created_at"
-          ],
+          "columns": ["caller_key_id", "created_at"],
           "isUnique": false
         },
         "subtitle_download_requests_provider_id_created_at_idx": {
           "name": "subtitle_download_requests_provider_id_created_at_idx",
-          "columns": [
-            "provider_id",
-            "created_at"
-          ],
+          "columns": ["provider_id", "created_at"],
           "isUnique": false
         },
         "subtitle_download_requests_status_created_at_idx": {
           "name": "subtitle_download_requests_status_created_at_idx",
-          "columns": [
-            "status",
-            "created_at"
-          ],
+          "columns": ["status", "created_at"],
           "isUnique": false
         }
       },
@@ -1218,12 +1109,8 @@
           "name": "subtitle_download_requests_caller_key_id_fk",
           "tableFrom": "subtitle_download_requests",
           "tableTo": "caller_keys",
-          "columnsFrom": [
-            "caller_key_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caller_key_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1231,12 +1118,8 @@
           "name": "subtitle_download_requests_provider_id_fk",
           "tableFrom": "subtitle_download_requests",
           "tableTo": "providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1244,12 +1127,8 @@
           "name": "subtitle_download_requests_credential_id_fk",
           "tableFrom": "subtitle_download_requests",
           "tableTo": "provider_credentials",
-          "columnsFrom": [
-            "credential_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credential_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1362,26 +1241,17 @@
       "indexes": {
         "subtitle_search_requests_caller_key_id_created_at_idx": {
           "name": "subtitle_search_requests_caller_key_id_created_at_idx",
-          "columns": [
-            "caller_key_id",
-            "created_at"
-          ],
+          "columns": ["caller_key_id", "created_at"],
           "isUnique": false
         },
         "subtitle_search_requests_provider_id_created_at_idx": {
           "name": "subtitle_search_requests_provider_id_created_at_idx",
-          "columns": [
-            "provider_id",
-            "created_at"
-          ],
+          "columns": ["provider_id", "created_at"],
           "isUnique": false
         },
         "subtitle_search_requests_status_created_at_idx": {
           "name": "subtitle_search_requests_status_created_at_idx",
-          "columns": [
-            "status",
-            "created_at"
-          ],
+          "columns": ["status", "created_at"],
           "isUnique": false
         }
       },
@@ -1390,12 +1260,8 @@
           "name": "subtitle_search_requests_caller_key_id_fk",
           "tableFrom": "subtitle_search_requests",
           "tableTo": "caller_keys",
-          "columnsFrom": [
-            "caller_key_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caller_key_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1403,12 +1269,8 @@
           "name": "subtitle_search_requests_provider_id_fk",
           "tableFrom": "subtitle_search_requests",
           "tableTo": "providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1416,12 +1278,8 @@
           "name": "subtitle_search_requests_credential_id_fk",
           "tableFrom": "subtitle_search_requests",
           "tableTo": "provider_credentials",
-          "columnsFrom": [
-            "credential_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credential_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

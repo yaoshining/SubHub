@@ -4,7 +4,10 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createStorageClient, type StorageClient } from "../../../src/server/storage/client.js";
+import {
+  createStorageClient,
+  type StorageClient,
+} from "../../../src/server/storage/client.js";
 
 const coreTables = [
   "admin_users",
@@ -30,12 +33,24 @@ const insertAdminUser = (id = "admin_test") => {
         id, identifier, display_name, password_hash, status, role, created_at, updated_at
       ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .run(id, `${id}@example.com`, "Test Admin", "password_hash", "active", "admin", now, now);
+    .run(
+      id,
+      `${id}@example.com`,
+      "Test Admin",
+      "password_hash",
+      "active",
+      "admin",
+      now,
+      now,
+    );
 };
 
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-storage-"));
-  client = createStorageClient({ sqlitePath: join(tempDir, "test.sqlite"), runMigrations: true });
+  client = createStorageClient({
+    sqlitePath: join(tempDir, "test.sqlite"),
+    runMigrations: true,
+  });
 });
 
 afterEach(() => {
@@ -66,7 +81,16 @@ describe("SQLite + Drizzle storage schema", () => {
             id, identifier, display_name, password_hash, status, role, created_at, updated_at
           ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run("admin_duplicate_identifier", "admin_unique@example.com", "Duplicate", "hash", "active", "admin", now, now);
+        .run(
+          "admin_duplicate_identifier",
+          "admin_unique@example.com",
+          "Duplicate",
+          "hash",
+          "active",
+          "admin",
+          now,
+          now,
+        );
     }).toThrow();
 
     expect(() => {
@@ -76,7 +100,16 @@ describe("SQLite + Drizzle storage schema", () => {
             id, identifier, display_name, password_hash, status, role, created_at, updated_at
           ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run("admin_invalid_status", "invalid@example.com", "Invalid", "hash", "locked", "admin", now, now);
+        .run(
+          "admin_invalid_status",
+          "invalid@example.com",
+          "Invalid",
+          "hash",
+          "locked",
+          "admin",
+          now,
+          now,
+        );
     }).toThrow();
   });
 
@@ -88,7 +121,14 @@ describe("SQLite + Drizzle storage schema", () => {
             id, admin_user_id, session_token_hash, status, created_at, expires_at
           ) values (?, ?, ?, ?, ?, ?)`,
         )
-        .run("session_missing_user", "missing_admin", "session_hash", "active", now, now);
+        .run(
+          "session_missing_user",
+          "missing_admin",
+          "session_hash",
+          "active",
+          now,
+          now,
+        );
     }).toThrow();
 
     insertAdminUser("admin_session_owner");
@@ -100,7 +140,14 @@ describe("SQLite + Drizzle storage schema", () => {
             id, admin_user_id, session_token_hash, status, created_at, expires_at
           ) values (?, ?, ?, ?, ?, ?)`,
         )
-        .run("session_invalid_status", "admin_session_owner", "session_hash", "risk", now, now);
+        .run(
+          "session_invalid_status",
+          "admin_session_owner",
+          "session_hash",
+          "risk",
+          now,
+          now,
+        );
     }).toThrow();
 
     expect(() => {
@@ -110,7 +157,14 @@ describe("SQLite + Drizzle storage schema", () => {
             id, admin_user_id, session_token_hash, status, created_at, expires_at
           ) values (?, ?, ?, ?, ?, ?)`,
         )
-        .run("session_attention", "admin_session_owner", "session_hash_attention", "needs_attention", now, now);
+        .run(
+          "session_attention",
+          "admin_session_owner",
+          "session_hash_attention",
+          "needs_attention",
+          now,
+          now,
+        );
     }).not.toThrow();
   });
 
@@ -173,7 +227,19 @@ describe("SQLite + Drizzle storage schema", () => {
           rotation_enabled, cooldown_seconds, created_at, updated_at
         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run("provider_1", "OpenSubtitles Primary", "opensubtitles", "needs_config", 100, 100, 1, 1, 60, now, now);
+      .run(
+        "provider_1",
+        "OpenSubtitles Primary",
+        "opensubtitles",
+        "needs_config",
+        100,
+        100,
+        1,
+        1,
+        60,
+        now,
+        now,
+      );
 
     const insertCredential = client.sqlite.prepare(
       `insert into provider_credentials (
@@ -181,18 +247,43 @@ describe("SQLite + Drizzle storage schema", () => {
       ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
 
-    insertCredential.run("cred_1", "provider_1", "primary", "secret_hash_1", "encrypted_secret", "active", now, now);
+    insertCredential.run(
+      "cred_1",
+      "provider_1",
+      "primary",
+      "secret_hash_1",
+      "encrypted_secret",
+      "active",
+      now,
+      now,
+    );
 
     expect(() => {
-      insertCredential.run("cred_duplicate_label", "provider_1", "primary", "secret_hash_2", "encrypted_secret", "active", now, now);
+      insertCredential.run(
+        "cred_duplicate_label",
+        "provider_1",
+        "primary",
+        "secret_hash_2",
+        "encrypted_secret",
+        "active",
+        now,
+        now,
+      );
     }).toThrow();
 
     expect(() => {
-      insertCredential.run("cred_invalid_status", "provider_1", "backup", "secret_hash_3", "encrypted_secret", "pending", now, now);
+      insertCredential.run(
+        "cred_invalid_status",
+        "provider_1",
+        "backup",
+        "secret_hash_3",
+        "encrypted_secret",
+        "pending",
+        now,
+        now,
+      );
     }).toThrow();
   });
-
-
 
   it("enforces caller key uniqueness, status and scope constraints", () => {
     const insertCallerKey = client.sqlite.prepare(
@@ -264,7 +355,17 @@ describe("SQLite + Drizzle storage schema", () => {
           id, caller_name, environment, scope, quota_policy, key_hash, status, created_at, updated_at
         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run("ck_rotation", "Jellyfin Home", "production", "subtitles:read", "default", "hash_rotation", "active", now, now);
+      .run(
+        "ck_rotation",
+        "Jellyfin Home",
+        "production",
+        "subtitles:read",
+        "default",
+        "hash_rotation",
+        "active",
+        now,
+        now,
+      );
 
     const insertRotation = client.sqlite.prepare(
       `insert into caller_key_rotations (
@@ -273,15 +374,39 @@ describe("SQLite + Drizzle storage schema", () => {
     );
 
     expect(() => {
-      insertRotation.run("ckr_1", "ck_rotation", "old", "new", "success", now, "admin_rotation_actor");
+      insertRotation.run(
+        "ckr_1",
+        "ck_rotation",
+        "old",
+        "new",
+        "success",
+        now,
+        "admin_rotation_actor",
+      );
     }).not.toThrow();
 
     expect(() => {
-      insertRotation.run("ckr_missing_key", "missing_key", "old", "new", "success", now, "admin_rotation_actor");
+      insertRotation.run(
+        "ckr_missing_key",
+        "missing_key",
+        "old",
+        "new",
+        "success",
+        now,
+        "admin_rotation_actor",
+      );
     }).toThrow();
 
     expect(() => {
-      insertRotation.run("ckr_invalid_result", "ck_rotation", "old", "new", "partial", now, "admin_rotation_actor");
+      insertRotation.run(
+        "ckr_invalid_result",
+        "ck_rotation",
+        "old",
+        "new",
+        "partial",
+        now,
+        "admin_rotation_actor",
+      );
     }).toThrow();
   });
 
@@ -292,7 +417,17 @@ describe("SQLite + Drizzle storage schema", () => {
           id, caller_name, environment, scope, quota_policy, key_hash, status, created_at, updated_at
         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run("ck_subtitles", "Jellyfin Home", "production", "subtitles:read", "default", "hash_subtitles", "active", now, now);
+      .run(
+        "ck_subtitles",
+        "Jellyfin Home",
+        "production",
+        "subtitles:read",
+        "default",
+        "hash_subtitles",
+        "active",
+        now,
+        now,
+      );
     client.sqlite
       .prepare(
         `insert into providers (
@@ -300,14 +435,35 @@ describe("SQLite + Drizzle storage schema", () => {
           rotation_enabled, cooldown_seconds, created_at, updated_at
         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run("provider_subtitles", "OpenSubtitles Search", "opensubtitles", "enabled", 100, 100, 1, 1, 60, now, now);
+      .run(
+        "provider_subtitles",
+        "OpenSubtitles Search",
+        "opensubtitles",
+        "enabled",
+        100,
+        100,
+        1,
+        1,
+        60,
+        now,
+        now,
+      );
     client.sqlite
       .prepare(
         `insert into provider_credentials (
           id, provider_id, label, secret_hash, secret_encrypted, status, created_at, updated_at
         ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run("cred_subtitles", "provider_subtitles", "primary", "secret_hash_subtitles", "encrypted_secret", "active", now, now);
+      .run(
+        "cred_subtitles",
+        "provider_subtitles",
+        "primary",
+        "secret_hash_subtitles",
+        "encrypted_secret",
+        "active",
+        now,
+        now,
+      );
 
     expect(() => {
       client.sqlite
@@ -316,7 +472,16 @@ describe("SQLite + Drizzle storage schema", () => {
             id, caller_key_id, media_title, status, result_count, provider_id, credential_id, created_at
           ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run("search_1", "ck_subtitles", "Example", "no_results", 0, "provider_subtitles", "cred_subtitles", now);
+        .run(
+          "search_1",
+          "ck_subtitles",
+          "Example",
+          "no_results",
+          0,
+          "provider_subtitles",
+          "cred_subtitles",
+          now,
+        );
     }).not.toThrow();
 
     expect(() => {
@@ -326,7 +491,16 @@ describe("SQLite + Drizzle storage schema", () => {
             id, caller_key_id, media_title, status, result_count, provider_id, credential_id, created_at
           ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run("search_invalid", "ck_subtitles", "Example", "timeout", 0, "provider_subtitles", "cred_subtitles", now);
+        .run(
+          "search_invalid",
+          "ck_subtitles",
+          "Example",
+          "timeout",
+          0,
+          "provider_subtitles",
+          "cred_subtitles",
+          now,
+        );
     }).toThrow();
 
     expect(() => {
@@ -336,7 +510,15 @@ describe("SQLite + Drizzle storage schema", () => {
             id, caller_key_id, subtitle_ref, status, provider_id, credential_id, created_at
           ) values (?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run("download_missing_credential", "ck_subtitles", "subtitle_ref", "success", "provider_subtitles", "missing_credential", now);
+        .run(
+          "download_missing_credential",
+          "ck_subtitles",
+          "subtitle_ref",
+          "success",
+          "provider_subtitles",
+          "missing_credential",
+          now,
+        );
     }).toThrow();
   });
 
@@ -391,7 +573,12 @@ describe("SQLite + Drizzle storage schema", () => {
 
   it("keeps sensitive persisted fields hashed or encrypted without plaintext columns", () => {
     const columnsByTable = Object.fromEntries(
-      ["admin_users", "admin_sessions", "provider_credentials", "caller_keys"].map((tableName) => [
+      [
+        "admin_users",
+        "admin_sessions",
+        "provider_credentials",
+        "caller_keys",
+      ].map((tableName) => [
         tableName,
         client.sqlite
           .prepare(`pragma table_info(${tableName})`)
@@ -405,16 +592,24 @@ describe("SQLite + Drizzle storage schema", () => {
     expect(columnsByTable.admin_sessions).toContain("session_token_hash");
     expect(columnsByTable.admin_sessions).not.toContain("session_token");
     expect(columnsByTable.provider_credentials).toEqual(
-      expect.arrayContaining(["secret_hash", "secret_encrypted", "display_prefix", "display_suffix"]),
+      expect.arrayContaining([
+        "secret_hash",
+        "secret_encrypted",
+        "display_prefix",
+        "display_suffix",
+      ]),
     );
     expect(columnsByTable.provider_credentials).not.toContain("secret");
     expect(columnsByTable.caller_keys).toEqual(
-      expect.arrayContaining(["key_hash", "key_prefix", "key_suffix", "reveal_token_hash"]),
+      expect.arrayContaining([
+        "key_hash",
+        "key_prefix",
+        "key_suffix",
+        "reveal_token_hash",
+      ]),
     );
     expect(columnsByTable.caller_keys).not.toContain("key");
   });
-
-
 
   it("creates query-driven indexes required by the database design", () => {
     const getIndexColumns = (indexName: string) =>
@@ -423,7 +618,11 @@ describe("SQLite + Drizzle storage schema", () => {
         .all()
         .map((row) => (row as { name: string }).name);
 
-    const expectIndex = (tableName: string, indexName: string, columns: string[]) => {
+    const expectIndex = (
+      tableName: string,
+      indexName: string,
+      columns: string[],
+    ) => {
       const indexes = client.sqlite
         .prepare(`pragma index_list(${tableName})`)
         .all()
@@ -433,19 +632,29 @@ describe("SQLite + Drizzle storage schema", () => {
       expect(getIndexColumns(indexName)).toEqual(columns);
     };
 
-    expectIndex("admin_sessions", "admin_sessions_admin_user_id_status_idx", ["admin_user_id", "status"]);
-    expectIndex("provider_credentials", "provider_credentials_provider_id_status_cooldown_until_idx", [
-      "provider_id",
+    expectIndex("admin_sessions", "admin_sessions_admin_user_id_status_idx", [
+      "admin_user_id",
       "status",
-      "cooldown_until",
     ]);
-    expectIndex("caller_keys", "caller_keys_status_environment_idx", ["status", "environment"]);
-    expectIndex("subtitle_search_requests", "subtitle_search_requests_status_created_at_idx", ["status", "created_at"]);
-    expectIndex("admin_action_results", "admin_action_results_target_type_target_id_created_at_idx", [
-      "target_type",
-      "target_id",
-      "created_at",
+    expectIndex(
+      "provider_credentials",
+      "provider_credentials_provider_id_status_cooldown_until_idx",
+      ["provider_id", "status", "cooldown_until"],
+    );
+    expectIndex("caller_keys", "caller_keys_status_environment_idx", [
+      "status",
+      "environment",
     ]);
+    expectIndex(
+      "subtitle_search_requests",
+      "subtitle_search_requests_status_created_at_idx",
+      ["status", "created_at"],
+    );
+    expectIndex(
+      "admin_action_results",
+      "admin_action_results_target_type_target_id_created_at_idx",
+      ["target_type", "target_id", "created_at"],
+    );
   });
 
   it("rolls back storage client transactions on failure", () => {

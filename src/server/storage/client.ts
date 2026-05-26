@@ -2,7 +2,10 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import { mkdirSync } from "node:fs";
 
 import Database from "better-sqlite3";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import {
+  drizzle,
+  type BetterSQLite3Database,
+} from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
 import { schema } from "./schema.js";
@@ -37,7 +40,9 @@ const normalizeSqlitePath = (databasePath: string): string => {
     return withoutFileScheme;
   }
 
-  return isAbsolute(withoutFileScheme) ? withoutFileScheme : resolve(process.cwd(), withoutFileScheme);
+  return isAbsolute(withoutFileScheme)
+    ? withoutFileScheme
+    : resolve(process.cwd(), withoutFileScheme);
 };
 
 const ensureDatabaseDirectory = (databasePath: string) => {
@@ -59,7 +64,9 @@ export const resolveStorageDatabasePath = (sqlitePath?: string): string => {
   return normalizeSqlitePath(configuredPath);
 };
 
-export const createStorageClient = (options: StorageClientOptions = {}): StorageClient => {
+export const createStorageClient = (
+  options: StorageClientOptions = {},
+): StorageClient => {
   const databasePath = resolveStorageDatabasePath(options.sqlitePath);
   ensureDatabaseDirectory(databasePath);
 
@@ -83,7 +90,8 @@ export const createStorageClient = (options: StorageClientOptions = {}): Storage
       sqlite.pragma("foreign_keys = ON");
       migrate(db, { migrationsFolder });
     },
-    transaction: (callback) => db.transaction((tx) => callback(tx as StorageDatabase)),
+    transaction: (callback) =>
+      db.transaction((tx) => callback(tx as StorageDatabase)),
     close: () => sqlite.close(),
   };
 
