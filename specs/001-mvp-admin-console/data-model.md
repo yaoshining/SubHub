@@ -24,6 +24,35 @@
 - `active -> suspended`: 管理员暂停成员。
 - `suspended -> active`: 管理员恢复成员。
 
+## AdminInvitation
+
+**用途**: 管理员创建的后台成员邀请，用于 MVP 基础成员管理；不承载审批工作流、权限矩阵或完整身份治理流程。
+
+**字段**:
+- `id`
+- `identifier`: 被邀请成员的邮箱或登录标识
+- `status`: `pending` | `accepted` | `expired` | `revoked`
+- `rolePreset`: MVP 预设角色，例如 `admin` 或 `operator`；不得在邀请中定义自定义权限策略
+- `accessPreset`: MVP 预设接入范围，例如 `admin_console`
+- `invitedByAdminUserId`
+- `acceptedAdminUserId`
+- `expiresAt`
+- `acceptedAt`
+- `revokedAt`
+- `createdAt`
+- `updatedAt`
+
+**验证规则**:
+- 同一 `identifier` 不应同时存在多个有效 `pending` 邀请。
+- `expired` 或 `revoked` 邀请不得被接受。
+- 接受邀请后必须创建或绑定一个后台成员，并将邀请状态更新为 `accepted`。
+- `rolePreset` 与 `accessPreset` 只能引用 MVP 预设候选，不得引入权限矩阵编辑、审批流或多租户成员治理。
+
+**状态转换**:
+- `pending -> accepted`: 被邀请成员完成接受流程。
+- `pending -> expired`: 邀请超过有效期。
+- `pending -> revoked`: 管理员撤销邀请。
+
 ## AdminSession
 
 **用途**: 管理后台登录会话；MVP 中的风险状态仅用于标记需要管理员基础处置的后台会话，不代表完整风险评分、设备指纹或风控策略系统。
@@ -197,7 +226,7 @@
 **字段**:
 - `id`
 - `actorAdminUserId`
-- `actionType`: `provider_enabled` | `provider_disabled` | `credential_isolated` | `credential_restored` | `caller_key_suspended` | `caller_key_rotated` | `admin_login` | `bootstrap_admin_created`
+- `actionType`: `provider_enabled` | `provider_disabled` | `credential_isolated` | `credential_restored` | `caller_key_suspended` | `caller_key_rotated` | `admin_invitation_created` | `admin_invitation_revoked` | `admin_user_suspended` | `admin_user_restored` | `admin_session_remediated` | `admin_login` | `bootstrap_admin_created`
 - `targetType`
 - `targetId`
 - `result`: `success` | `failed`
@@ -205,8 +234,9 @@
 - `createdAt`
 
 **验证规则**:
-- Provider 启停、凭据隔离/恢复、调用方 Key 停用/轮换都必须记录结果。
+- Provider 启停、凭据隔离/恢复、调用方 Key 停用/轮换、成员邀请、成员暂停/恢复和基础会话处置都必须记录结果。
 - 失败结果必须包含可读原因，便于后台错误状态展示。
+- Users 相关动作结果只覆盖 MVP 基础成员管理，不扩展为完整审计导出、审批流或身份治理事件流。
 
 ## SystemReadiness
 
