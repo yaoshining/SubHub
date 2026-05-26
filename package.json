@@ -12,11 +12,13 @@
     "api:client": "orval --config orval.config.ts --clean src/lib/api/generated --formatter prettier",
     "api:docs": "next build",
     "api:check": "npm run api:spec && npm run api:client",
-    "db:generate": "echo \"[placeholder] drizzle-kit generate will target specs/001-mvp-admin-console/database-design.md via drizzle.config.ts after T021\"",
-    "db:migrate": "echo \"[placeholder] apply SQLite migrations from src/server/storage/migrations/ after T021\"",
-    "db:check": "echo \"[placeholder] validate SQLite + Drizzle schema against specs/001-mvp-admin-console/database-design.md after T021\""
+    "db:generate": "node -e \"const fs=require('fs'); if(!fs.existsSync('src/server/storage/schema.ts')) { console.error('Drizzle schema 尚未落地：请先完成 T021，并对齐 specs/001-mvp-admin-console/database-design.md'); process.exit(1); }\" && drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "node -e \"const fs=require('fs'); if(!fs.existsSync('src/server/storage/migrations')) { console.error('Drizzle migrations 尚未落地：请先完成 T022，并对齐 specs/001-mvp-admin-console/database-design.md'); process.exit(1); }\" && drizzle-kit migrate --config drizzle.config.ts",
+    "db:check": "node -e \"const fs=require('fs'); for (const path of ['specs/001-mvp-admin-console/database-design.md', 'drizzle.config.ts', 'src/server/storage/schema.ts']) { if(!fs.existsSync(path)) { console.error('数据库链路未就绪：缺少 ' + path); process.exit(1); } }\" && drizzle-kit check --config drizzle.config.ts"
   },
   "dependencies": {
+    "@fontsource/inter": "5.2.8",
+    "@fontsource/space-grotesk": "5.2.10",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
     "@radix-ui/react-avatar": "1.1.11",

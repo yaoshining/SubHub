@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const envSchema = z.object({
+const baseEnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
@@ -15,7 +15,29 @@ const envSchema = z.object({
   CALLER_KEY_SECRET: z.string().min(32).optional(),
 });
 
-export type AppEnv = z.infer<typeof envSchema>;
+const productionSecrets = [
+  "PROVIDER_CREDENTIAL_ENCRYPTION_KEY",
+  "ADMIN_SESSION_SECRET",
+  "CALLER_KEY_SECRET",
+] as const;
+
+const envSchema = baseEnvSchema.superRefine((env, ctx) => {
+  if (env.NODE_ENV !== "production") {
+    return;
+  }
+
+  for (const key of productionSecrets) {
+    if (!env[key]) {
+      ctx.addIssue({
+        code: "custom",
+        path: [key],
+        message: `${key} 在 production 环境中必须配置，且长度至少为 32 字符。`,
+      });
+    }
+  }
+});
+
+export type AppEnv = z.infer<typeof baseEnvSchema>;
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
   return envSchema.parse(source);
