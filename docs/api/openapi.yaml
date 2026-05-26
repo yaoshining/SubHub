@@ -1,0 +1,65 @@
+openapi: 3.1.0
+info:
+  title: SubHub API
+  version: 0.1.0
+  description: SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
+servers:
+  - url: http://localhost:3000
+    description: 本地开发
+paths: {}
+components:
+  securitySchemes:
+    AdminSession:
+      type: apiKey
+      in: cookie
+      name: subhub_admin_session
+      description: 管理端 API 使用的管理员会话 Cookie。
+    CallerKeyBearer:
+      type: http
+      scheme: bearer
+      description: 对外字幕 API 使用的下游调用方 Key。
+  schemas:
+    ErrorCode:
+      type: string
+      enum:
+        - AUTHENTICATION_REQUIRED
+        - FORBIDDEN
+        - VALIDATION_FAILED
+        - SERVICE_NOT_READY
+        - CALLER_KEY_INVALID
+        - CALLER_KEY_SUSPENDED
+        - PROVIDER_UNAVAILABLE
+        - PROVIDER_CREDENTIAL_EXHAUSTED
+        - NO_RESULTS
+        - SUBTITLE_NOT_FOUND
+        - UPSTREAM_FAILED
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
+        target:
+          type: string
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorDetail"
+tags:
+  - name: Admin Auth
+    description: 管理端初始化、登录与会话。
+  - name: Providers
+    description: 上游 Provider 与凭据池。
+  - name: Caller Keys
+    description: 下游调用方 Key 生命周期。
+  - name: Subtitles
+    description: 统一字幕查询与下载出口。
+  - name: System
+    description: Dashboard、Settings 与系统状态。
