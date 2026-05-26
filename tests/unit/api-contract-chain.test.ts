@@ -76,4 +76,14 @@ describe("API 契约链路基础", () => {
     );
     expect(packageJson.scripts["api:check"]).toContain("next build");
   });
+
+  it("保持 Scalar 文档构建使用的 Next 类型入口稳定，避免 api:check 产生已跟踪差异", async () => {
+    const nextEnv = await readFile(
+      join(repositoryRoot, "next-env.d.ts"),
+      "utf8",
+    );
+
+    expect(nextEnv).toContain('import "./.next/types/routes.d.ts";');
+    expect(nextEnv).not.toContain('import "./.next/dev/types/routes.d.ts";');
+  });
 });
