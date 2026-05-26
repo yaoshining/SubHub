@@ -87,7 +87,7 @@ To execute: `/speckit.git.commit`
 - [ ] T043 [P] 在 `tests/unit/api/errors.test.ts` 测试统一错误结构和错误码映射
 - [ ] T044 [P] 在 `tests/ui/admin-shell-responsive.test.tsx` 测试 Sidebar、Drawer、Page Header 在 Desktop、Tablet、Mobile 下的骨架行为
 - [ ] T045 [P] 在 `tests/ui/lucide-icons.test.tsx` 测试导航、空状态和主题切换使用约定 Lucide 图标名称
-- [ ] T046 在 `docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/`、`src/lib/api/` 验证 API 契约链路可以通过 `npm run api:check`
+- [ ] T046 在 `docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/`、`src/lib/api/` 验证 API 契约链路可以通过 `pnpm api:check`
 
 **检查点**: 数据、认证、错误、共享布局、响应式、图标和 API 契约基础就绪，可并行启动用户故事。
 
@@ -124,7 +124,7 @@ To execute: `/speckit.git.commit`
 - [ ] T064 [US1] 在 `src/lib/api/dashboard.ts` 封装 dashboard summary API 调用并接入 `src/lib/api/generated/`
 - [ ] T065 [US1] 在 `src/app/(admin)/dashboard/page.tsx` 实现摘要局部失败保留已知信息和明确失败对象提示
 - [ ] T066 [US1] 在 `src/app/login/page.tsx` 实现已登录访问 `/login` 返回原目标页或 `/dashboard` 的重定向逻辑
-- [ ] T067 [US1] 运行 `npm run api:spec`、`npm run api:client`、`npm run typecheck`、`npm test -- tests/contract/admin-auth.contract.test.ts tests/integration/admin-auth-flow.test.ts tests/ui/login-page.test.tsx tests/ui/dashboard-page.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/lib/api/generated/`、`src/app/login/page.tsx`、`src/app/(admin)/dashboard/page.tsx`
+- [ ] T067 [US1] 运行 `pnpm api:spec`、`pnpm api:client`、`pnpm typecheck`、`pnpm test -- tests/contract/admin-auth.contract.test.ts tests/integration/admin-auth-flow.test.ts tests/ui/login-page.test.tsx tests/ui/dashboard-page.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/lib/api/generated/`、`src/app/login/page.tsx`、`src/app/(admin)/dashboard/page.tsx`
 
 **检查点**: US1 可独立演示，完成最小受控后台入口。
 
@@ -170,7 +170,7 @@ To execute: `/speckit.git.commit`
 - [ ] T094 [US2] 在 `src/components/providers/provider-credential-table.tsx` 实现凭据表格、新增凭据、隔离确认、恢复动作和无活跃凭据风险提示
 - [ ] T095 [US2] 在 `src/components/providers/provider-activity.tsx` 实现最近行为表格、事件 Badge 和时间范围选择
 - [ ] T096 [US2] 在 `src/app/(admin)/providers/page.tsx` 与 `src/app/(admin)/providers/[providerId]/page.tsx` 实现 Desktop/Tablet/Mobile 响应式行为，覆盖 Mobile 成功 Banner、详情页 Accordion、页面根无横向滚动
-- [ ] T097 [US2] 运行 `npm run api:spec`、`npm run api:client`、`npm run typecheck`、`npm test -- tests/contract/providers.contract.test.ts tests/unit/providers/provider-service.test.ts tests/unit/providers/credential-pool.test.ts tests/integration/provider-management-flow.test.ts tests/ui/providers-page.test.tsx tests/ui/provider-detail-page.test.tsx tests/ui/provider-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/providers/`、`src/app/(admin)/providers/`
+- [ ] T097 [US2] 运行 `pnpm api:spec`、`pnpm api:client`、`pnpm typecheck`、`pnpm test -- tests/contract/providers.contract.test.ts tests/unit/providers/provider-service.test.ts tests/unit/providers/credential-pool.test.ts tests/integration/provider-management-flow.test.ts tests/ui/providers-page.test.tsx tests/ui/provider-detail-page.test.tsx tests/ui/provider-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/providers/`、`src/app/(admin)/providers/`
 
 **检查点**: US2 可独立演示，Provider 与上游凭据池形成可运营闭环。
 
@@ -212,7 +212,7 @@ To execute: `/speckit.git.commit`
 - [ ] T120 [US3] 在 `src/components/api-keys/caller-key-detail.tsx` 实现 selected key 详情、最近 24h 使用、轮换结果、受控 reveal/copy、停用和轮换动作
 - [ ] T121 [US3] 在 `src/components/api-keys/reveal-secret.tsx` 实现 reveal window、只读明文展示、copy 成功反馈和窗口结束后隐藏逻辑
 - [ ] T122 [US3] 在 `src/app/(admin)/api-keys/page.tsx` 实现 Desktop/Tablet/Mobile 响应式行为，覆盖 inventory 与详情堆叠、Mobile 明文可读和高风险确认
-- [ ] T123 [US3] 运行 `npm run api:spec`、`npm run api:client`、`npm run typecheck`、`npm test -- tests/contract/caller-keys.contract.test.ts tests/contract/subtitles.contract.test.ts tests/unit/caller-keys/caller-key-service.test.ts tests/unit/subtitles/subtitle-gateway.test.ts tests/integration/subtitle-gateway-flow.test.ts tests/ui/api-keys-page.test.tsx tests/ui/api-keys-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/caller-keys/`、`src/server/subtitles/`、`src/app/(admin)/api-keys/`
+- [ ] T123 [US3] 运行 `pnpm api:spec`、`pnpm api:client`、`pnpm typecheck`、`pnpm test -- tests/contract/caller-keys.contract.test.ts tests/contract/subtitles.contract.test.ts tests/unit/caller-keys/caller-key-service.test.ts tests/unit/subtitles/subtitle-gateway.test.ts tests/integration/subtitle-gateway-flow.test.ts tests/ui/api-keys-page.test.tsx tests/ui/api-keys-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/caller-keys/`、`src/server/subtitles/`、`src/app/(admin)/api-keys/`
 
 **检查点**: US3 可独立演示，统一字幕出口可被有效调用方查询与下载，停用 Key 后立即拒绝新请求。
 
@@ -256,7 +256,7 @@ To execute: `/speckit.git.commit`
 - [ ] T148 [US4] 在 `src/components/users/member-risk-actions.tsx` 实现成员暂停/恢复的 `AlertDialog` 二次确认、成功反馈和失败对象保留
 - [ ] T149 [US4] 在 `src/app/(admin)/users/page.tsx` 实现 Users Desktop/Tablet/Mobile 响应式行为，覆盖 Tablet 筛选横排、Mobile 模块顺序、批量操作收敛和高风险动作可达性
 - [ ] T150 [US4] 在 `src/app/(admin)/users/page.tsx` 移除或拒绝权限矩阵、审批流、完整 RBAC、审计导出、高级风险分析、风控策略系统和 access-control 主流程入口
-- [ ] T151 [US4] 运行 `npm run api:spec`、`npm run api:client`、`npm run typecheck`、`npm test -- tests/contract/users.contract.test.ts tests/unit/users/admin-invitation-service.test.ts tests/unit/users/admin-user-service.test.ts tests/unit/users/admin-session-remediation.test.ts tests/integration/users-management-flow.test.ts tests/ui/users-page.test.tsx tests/ui/users-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/users/`、`src/app/(admin)/users/`
+- [ ] T151 [US4] 运行 `pnpm api:spec`、`pnpm api:client`、`pnpm typecheck`、`pnpm test -- tests/contract/users.contract.test.ts tests/unit/users/admin-invitation-service.test.ts tests/unit/users/admin-user-service.test.ts tests/unit/users/admin-session-remediation.test.ts tests/integration/users-management-flow.test.ts tests/ui/users-page.test.tsx tests/ui/users-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/users/`、`src/app/(admin)/users/`
 
 **检查点**: US4 可独立演示，Users 范围严格停留在 MVP 基础成员管理与基础会话处置。
 
@@ -288,7 +288,7 @@ To execute: `/speckit.git.commit`
 - [ ] T164 [US5] 在 `src/components/settings/readiness-checklist.tsx` 实现 Provider、Caller Key、管理员认证和统一出口只读核查项
 - [ ] T165 [US5] 在 `src/app/(admin)/settings/page.tsx` 实现部署读数失败时保留已知可用信息并指出失败对象
 - [ ] T166 [US5] 在 `src/app/(admin)/settings/page.tsx` 移除或拒绝 Provider、API Key、用户、权限深配置表单和任何保存动作
-- [ ] T167 [US5] 运行 `npm run api:spec`、`npm run api:client`、`npm run typecheck`、`npm test -- tests/contract/settings.contract.test.ts tests/unit/settings/system-readiness.test.ts tests/integration/settings-readiness-flow.test.ts tests/ui/settings-page.test.tsx tests/ui/settings-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/services/settings-service.ts`、`src/app/(admin)/settings/page.tsx`
+- [ ] T167 [US5] 运行 `pnpm api:spec`、`pnpm api:client`、`pnpm typecheck`、`pnpm test -- tests/contract/settings.contract.test.ts tests/unit/settings/system-readiness.test.ts tests/integration/settings-readiness-flow.test.ts tests/ui/settings-page.test.tsx tests/ui/settings-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/services/settings-service.ts`、`src/app/(admin)/settings/page.tsx`
 
 **检查点**: US5 可独立演示，Settings 页保持只读确认与配置分流定位。
 
@@ -314,7 +314,7 @@ To execute: `/speckit.git.commit`
 - [ ] T181 在 `design/main.pen` 检查深/浅主题与 Tablet/Mobile 设计稿对照结果，必要时同步新增 Lucide 可复用图标资产
 - [ ] T182 在 `src/app/`、`src/components/`、`src/server/`、`docs/api/openapi.yaml` 运行 UI review，对照 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen` 修复保真、响应式与图标偏差
 - [ ] T183 在 `src/app/`、`src/server/`、`src/lib/api/`、`tests/` 运行 code review，检查行为正确性、状态流转、测试缺口、API 契约链路、安全边界和 Users MVP 范围
-- [ ] T184 在 `package.json` 执行 `npm run format`、`npm run lint`、`npm run typecheck`、`npm test`、`npm run api:check`、`npm run db:check` 并修复所有失败项，确认 Drizzle schema、migration 文件与 `specs/001-mvp-admin-console/database-design.md` 保持一致
+- [ ] T184 在 `package.json` 执行 `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm api:check`、`pnpm db:check` 并修复所有失败项，确认 Drizzle schema、migration 文件与 `specs/001-mvp-admin-console/database-design.md` 保持一致
 - [ ] T185 在 `specs/001-mvp-admin-console/tasks.md` 回填实现过程中发现的任务拆分偏差，确保后续 task issue 同步仍限定在 `specs/001-mvp-admin-console/`
 
 ---
