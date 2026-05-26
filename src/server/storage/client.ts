@@ -57,6 +57,7 @@ export const resolveStorageDatabasePath = (sqlitePath?: string): string => {
   const configuredPath =
     sqlitePath ??
     testDatabasePath ??
+    process.env.SQLITE_DATABASE_PATH ??
     process.env.SUBHUB_SQLITE_PATH ??
     process.env.SUBHUB_DATABASE_URL ??
     ".subhub/subhub.sqlite";
