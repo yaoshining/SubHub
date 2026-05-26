@@ -22,7 +22,7 @@ beforeAll(() => {
     ADMIN_SESSION_SECRET:
       process.env.ADMIN_SESSION_SECRET ?? "test-admin-session-secret-32-byte",
     CALLER_KEY_SECRET:
-      process.env.CALLER_KEY_SECRET ?? "test-caller-key-secret-32-byte",
+      process.env.CALLER_KEY_SECRET ?? "test-caller-key-secret-at-least-32",
   });
 });
 

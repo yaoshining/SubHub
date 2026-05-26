@@ -8,13 +8,29 @@ export async function subhubApiClient<TResponse>(
   url: string,
   options: RequestOptions = {},
 ): Promise<TResponse> {
-  const response = await fetch(options.url ?? url, {
+  const {
+    url: overrideUrl,
+    headers: requestHeaders,
+    body,
+    ...requestInit
+  } = options;
+  const headers = new Headers(requestHeaders);
+
+  if (
+    body != null &&
+    !headers.has("Content-Type") &&
+    !(body instanceof Blob) &&
+    !(body instanceof FormData) &&
+    !(body instanceof URLSearchParams)
+  ) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(overrideUrl ?? url, {
     credentials: "include",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    ...requestInit,
+    body,
+    headers,
   });
 
   if (!response.ok) {
