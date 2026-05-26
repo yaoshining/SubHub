@@ -19,3 +19,15 @@ __pycache__/
 
 # Superpowers 相关文件夹
 .superpowers
+
+# Node.js / TypeScript 构建与本地环境
+node_modules/
+dist/
+build/
+*.log
+.env*
+coverage/
+*.tmp
+*.swp
+Thumbs.db
+.vscode/

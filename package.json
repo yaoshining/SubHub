@@ -5,6 +5,23 @@
     "api:spec": "echo \"[placeholder] sync and validate OpenAPI spec at docs/api/openapi.yaml\"",
     "api:client": "echo \"[placeholder] generate client/types from orval.config.ts to src/lib/api/generated/\"",
     "api:docs": "echo \"[placeholder] build/serve Scalar docs at /docs/api\"",
-    "api:check": "echo \"[placeholder] check api chain: docs/api/openapi.yaml + orval.config.ts + src/lib/api/generated/ + /docs/api\""
+    "api:check": "echo \"[placeholder] check api chain: docs/api/openapi.yaml + orval.config.ts + src/lib/api/generated/ + /docs/api\"",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "tsx -e \"import { migrateDatabase } from './src/server/storage/client.ts'; migrateDatabase();\"",
+    "db:check": "npm run typecheck && vitest run tests/unit/storage/schema.test.ts tests/security/secrets.test.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.9.1",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   }
 }
