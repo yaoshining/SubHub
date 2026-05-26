@@ -2,10 +2,19 @@
   "name": "subhub",
   "private": true,
   "scripts": {
-    "api:spec": "echo \"[placeholder] sync and validate OpenAPI spec at docs/api/openapi.yaml\"",
-    "api:client": "echo \"[placeholder] generate client/types from orval.config.ts to src/lib/api/generated/\"",
-    "api:docs": "echo \"[placeholder] build/serve Scalar docs at /docs/api\"",
-    "api:check": "echo \"[placeholder] check api chain: docs/api/openapi.yaml + orval.config.ts + src/lib/api/generated/ + /docs/api\""
+    "dev": "next dev",
+    "build": "next build",
+    "format": "prettier --check .",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "api:spec": "orval --config orval.config.ts --fail-on-warnings",
+    "api:client": "orval --config orval.config.ts --clean src/lib/api/generated",
+    "api:docs": "next build",
+    "api:check": "npm run api:spec && npm run api:client",
+    "db:generate": "echo \"[placeholder] drizzle-kit generate will target specs/001-mvp-admin-console/database-design.md via drizzle.config.ts after T021\"",
+    "db:migrate": "echo \"[placeholder] apply SQLite migrations from src/server/storage/migrations/ after T021\"",
+    "db:check": "echo \"[placeholder] validate SQLite + Drizzle schema against specs/001-mvp-admin-console/database-design.md after T021\""
   },
   "dependencies": {
     "@radix-ui/react-accordion": "1.2.12",
@@ -49,7 +58,7 @@
     "postcss": "8.5.15",
     "prettier": "3.8.3",
     "prettier-plugin-tailwindcss": "0.8.0",
-    "tailwindcss": "4.3.0",
+    "tailwindcss": "3.4.17",
     "typescript": "5.9.3",
     "vitest": "4.1.7"
   }
