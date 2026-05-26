@@ -60,17 +60,17 @@
 **字段**:
 - `id`
 - `adminUserId`
-- `status`: `active` | `revoked` | `expired` | `risk`
+- `status`: `active` | `revoked` | `expired` | `needs_attention` | `remediated`
 - `createdAt`
 - `expiresAt`
 - `lastSeenAt`
 - `deviceLabel`
-- `riskReason`: 基础关注原因，用于解释为什么该会话需要管理员处置；不得扩展为高级风险分析模型。
+- `attentionReason`: 基础关注原因，用于解释为什么该会话需要管理员处置；对应早期文案中的 `riskReason`，不得扩展为高级风险分析模型。
 
 **验证规则**:
 - 受保护后台页面与管理 API 必须校验 active session。
-- `revoked`、`expired`、`risk` session 不得继续访问高风险动作。
-- `risk` session 只表示需要基础会话处置，不触发权限矩阵、审批流、审计导出或完整风控流程。
+- `revoked`、`expired`、`needs_attention` session 不得继续访问高风险动作。
+- `needs_attention` session 只表示需要基础会话处置，不触发权限矩阵、审批流、审计导出或完整风控流程；处置完成后进入 `remediated`。
 
 ## Provider
 
@@ -226,7 +226,7 @@
 **字段**:
 - `id`
 - `actorAdminUserId`
-- `actionType`: `provider_enabled` | `provider_disabled` | `credential_isolated` | `credential_restored` | `caller_key_suspended` | `caller_key_rotated` | `admin_invitation_created` | `admin_invitation_revoked` | `admin_user_suspended` | `admin_user_restored` | `admin_session_remediated` | `admin_login` | `bootstrap_admin_created`
+- `actionType`: `provider_enabled` | `provider_disabled` | `credential_isolated` | `credential_restored` | `credential_disabled` | `caller_key_suspended` | `caller_key_rotated` | `admin_invitation_created` | `admin_invitation_revoked` | `admin_user_suspended` | `admin_user_restored` | `admin_session_remediated` | `admin_login` | `bootstrap_admin_created`
 - `targetType`
 - `targetId`
 - `result`: `success` | `failed`
