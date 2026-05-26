@@ -4,14 +4,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "format": "prettier --check package.json package-lock.json tsconfig.json next-env.d.ts next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
+    "format": "prettier --check package.json pnpm-lock.yaml tsconfig.json next-env.d.ts next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
     "lint": "eslint src tests next.config.ts tailwind.config.ts vitest.config.ts orval.config.ts --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "api:spec": "orval --config orval.config.ts --fail-on-warnings --formatter prettier",
     "api:client": "orval --config orval.config.ts --clean src/lib/api/generated --formatter prettier",
     "api:docs": "next build",
-    "api:check": "npm run api:spec && npm run api:client",
+    "api:check": "pnpm run api:spec && npm run api:client",
     "db:generate": "node -e \"const fs=require('fs'); if(!fs.existsSync('src/server/storage/schema.ts')) { console.error('Drizzle schema 尚未落地：请先完成 T021，并对齐 specs/001-mvp-admin-console/database-design.md'); process.exit(1); }\" && drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "node -e \"const fs=require('fs'); if(!fs.existsSync('src/server/storage/migrations')) { console.error('Drizzle migrations 尚未落地：请先完成 T022，并对齐 specs/001-mvp-admin-console/database-design.md'); process.exit(1); }\" && drizzle-kit migrate --config drizzle.config.ts",
     "db:check": "node -e \"const fs=require('fs'); for (const path of ['specs/001-mvp-admin-console/database-design.md', 'drizzle.config.ts', 'src/server/storage/schema.ts']) { if(!fs.existsSync(path)) { console.error('数据库链路未就绪：缺少 ' + path); process.exit(1); } }\" && drizzle-kit check --config drizzle.config.ts"
