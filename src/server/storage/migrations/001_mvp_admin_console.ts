@@ -1,7 +1,7 @@
 export const mvpAdminConsoleMigration = {
   id: "001_mvp_admin_console",
   sqlFile: "001_mvp_admin_console.sql",
-  generatedBy: "drizzle-kit generate",
+  generatedBy: "drizzle-kit generate --name 001_mvp_admin_console --prefix none",
   covers: [
     "admin_users",
     "admin_invitations",

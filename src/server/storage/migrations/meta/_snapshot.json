@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d2e4b158-c2fb-4d00-aa83-3175c2a88d3d",
+  "id": "27982bcd-0605-4309-a1e5-26384f1ba21f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin_action_results": {
@@ -111,7 +111,7 @@
       "checkConstraints": {
         "admin_action_results_action_type_check": {
           "name": "admin_action_results_action_type_check",
-          "value": "\"admin_action_results\".\"action_type\" in ('provider_enabled', 'provider_disabled', 'credential_isolated', 'credential_restored', 'caller_key_suspended', 'caller_key_rotated', 'admin_invitation_created', 'admin_invitation_revoked', 'admin_user_suspended', 'admin_user_restored', 'admin_session_remediated', 'admin_login', 'bootstrap_admin_created')"
+          "value": "\"admin_action_results\".\"action_type\" in ('provider_enabled', 'provider_disabled', 'credential_isolated', 'credential_restored', 'credential_disabled', 'caller_key_suspended', 'caller_key_rotated', 'admin_invitation_created', 'admin_invitation_revoked', 'admin_user_suspended', 'admin_user_restored', 'admin_session_remediated', 'admin_login', 'bootstrap_admin_created')"
         },
         "admin_action_results_target_type_check": {
           "name": "admin_action_results_target_type_check",

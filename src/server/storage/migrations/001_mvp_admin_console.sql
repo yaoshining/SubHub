@@ -8,7 +8,7 @@ CREATE TABLE `admin_action_results` (
 	`message` text,
 	`created_at` text NOT NULL,
 	FOREIGN KEY (`actor_admin_user_id`) REFERENCES `admin_users`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "admin_action_results_action_type_check" CHECK("admin_action_results"."action_type" in ('provider_enabled', 'provider_disabled', 'credential_isolated', 'credential_restored', 'caller_key_suspended', 'caller_key_rotated', 'admin_invitation_created', 'admin_invitation_revoked', 'admin_user_suspended', 'admin_user_restored', 'admin_session_remediated', 'admin_login', 'bootstrap_admin_created')),
+	CONSTRAINT "admin_action_results_action_type_check" CHECK("admin_action_results"."action_type" in ('provider_enabled', 'provider_disabled', 'credential_isolated', 'credential_restored', 'credential_disabled', 'caller_key_suspended', 'caller_key_rotated', 'admin_invitation_created', 'admin_invitation_revoked', 'admin_user_suspended', 'admin_user_restored', 'admin_session_remediated', 'admin_login', 'bootstrap_admin_created')),
 	CONSTRAINT "admin_action_results_target_type_check" CHECK("admin_action_results"."target_type" in ('provider', 'provider_credential', 'caller_key', 'admin_invitation', 'admin_user', 'admin_session', 'auth', 'bootstrap')),
 	CONSTRAINT "admin_action_results_result_check" CHECK("admin_action_results"."result" in ('success', 'failed'))
 );

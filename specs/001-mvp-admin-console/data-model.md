@@ -226,7 +226,7 @@
 **字段**:
 - `id`
 - `actorAdminUserId`
-- `actionType`: `provider_enabled` | `provider_disabled` | `credential_isolated` | `credential_restored` | `caller_key_suspended` | `caller_key_rotated` | `admin_invitation_created` | `admin_invitation_revoked` | `admin_user_suspended` | `admin_user_restored` | `admin_session_remediated` | `admin_login` | `bootstrap_admin_created`
+- `actionType`: `provider_enabled` | `provider_disabled` | `credential_isolated` | `credential_restored` | `credential_disabled` | `caller_key_suspended` | `caller_key_rotated` | `admin_invitation_created` | `admin_invitation_revoked` | `admin_user_suspended` | `admin_user_restored` | `admin_session_remediated` | `admin_login` | `bootstrap_admin_created`
 - `targetType`
 - `targetId`
 - `result`: `success` | `failed`

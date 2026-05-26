@@ -49,6 +49,7 @@ export const adminActionTypes = [
   "provider_disabled",
   "credential_isolated",
   "credential_restored",
+  "credential_disabled",
   "caller_key_suspended",
   "caller_key_rotated",
   "admin_invitation_created",
