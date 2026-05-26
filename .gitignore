@@ -16,3 +16,6 @@ node_modules
 # Python 缓存文件
 __pycache__/
 *.pyc
+
+# Superpowers 相关文件夹
+.superpowers

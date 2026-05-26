@@ -34,9 +34,17 @@ handoffs:
 2. 当前 feature 的 `spec.md`（功能意图、状态定义、成功标准）
 3. 当前 feature 的 `plan.md`（技术方案、领域边界、依赖关系）
 4. 当前 feature 的 `tasks.md`（当前执行任务）
-5. `README.zh-CN.md` 与 `README.md`（系统整体背景）
-6. 仓库中已有的相关后端代码（复用与一致性优先）
-7. `DESIGN.md` 与 `docs/pages/*.md`（仅在解释系统状态、流程或 API 行为时参考）
+5. 当前 feature 的 `data-model.md`（业务实体与领域语义，若存在）
+6. 当前 feature 的 `database-design.md`（数据库落地实现、schema、约束、索引、迁移策略，若存在）
+7. `README.zh-CN.md` 与 `README.md`（系统整体背景）
+8. 仓库中已有的相关后端代码（复用与一致性优先）
+9. `DESIGN.md` 与 `docs/pages/*.md`（仅在解释系统状态、流程或 API 行为时参考）
+
+**`data-model.md` 与 `database-design.md` 的分工：**
+- `data-model.md` 是领域语义输入：业务实体、字段含义、状态流转、领域规则
+- `database-design.md` 是数据库落地输入：表结构、约束、索引、migration 策略、敏感字段处理、未来迁移边界
+- 两者同时存在时，后端实现必须同时对照：前者指导领域语义，后者指导数据库落地
+- 不得仅凭 `data-model.md` 自行推断数据库设计细节，也不得绕过 `database-design.md` 自行决定 schema、索引或 migration 策略
 
 **工程栈识别（实现前必做）：**  
 读取以下内容，识别仓库当前工程约定，不得假设或自行选择：
@@ -141,6 +149,22 @@ handoffs:
 
 **禁止**在 plan 未涵盖的情况下直接修改 schema 或运行 migration。
 
+**当当前 feature 存在 `database-design.md` 时，数据库实现必须遵守以下额外规则：**
+
+- `database-design.md` 是数据库实现的正式输入之一，不是可选参考文档
+- 实现 `schema.ts`、migration、storage client、repository 层时，必须显式对照该文档
+- schema 的表结构、字段定义、约束、索引、外键，必须与该文档保持一致，不得擅自偏离
+- 敏感字段处理（hash 存储、加密存储、禁止进日志等）必须按该文档执行
+- migration 文件必须按该文档指定路径管理，通过 drizzle-kit 生成，纳入 Git 版本控制
+- 不应绕过 migration 机制直接修改数据库结构
+- schema 与 migration 一致性检查应按该文档定义的 `db:check` 脚本验证
+- 未来 PostgreSQL 可迁移性约束（如避免 SQLite 宽松类型行为、保持字段语义与外键规范）必须在实现中遵守
+
+**实现完成后，涉及数据库改动时，输出中需额外说明：**
+- 当前是否已对照 `database-design.md`
+- 当前改动对应该文档的哪一节（如 §5 表设计、§6 索引策略、§7 敏感字段、§8 迁移策略）
+- 是否发现文档存在缺口或需要回写的问题
+
 ### 错误处理与状态
 
 - 错误场景、重试策略、失败恢复必须在实现中显式可见，不依赖隐式行为
@@ -207,6 +231,8 @@ handoffs:
 - spec.md：已读（关键状态与行为：xxx）
 - plan.md：已读（技术方案摘要：xxx）
 - tasks.md：已读（当前 task：xxx）
+- data-model.md：已读 / 未找到（领域实体摘要：xxx）
+- database-design.md：已读 / 未找到（关键约定：xxx）
 - 相关现有代码：已阅读（路径：xxx）
 
 ## 工程栈识别结果
@@ -293,6 +319,9 @@ handoffs:
 - 是否涉及 schema 变更：是 / 否
 - 是否需要 migration：是 / 否（说明兼容性）
 - 数据风险说明（如有）：
+- 是否已对照 `database-design.md`：是 / 否 / 文档未找到
+- 对应 `database-design.md` 章节：（§5 表设计 / §6 索引 / §7 敏感字段 / §8 迁移 / 其他）
+- 是否发现文档缺口或需回写问题：是（说明）/ 否
 
 ## 工程质量检查
 - lint / type check：通过 / 未运行 / 存在错误（说明）
