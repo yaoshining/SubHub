@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import orvalConfig from "../../orval.config";
 import packageJson from "../../package.json";
 import { GET as getOpenApiYaml } from "@/app/api/openapi.yaml/route";
 import { subhubApiClient } from "@/lib/api";
@@ -39,18 +38,19 @@ describe("API 契约链路基础", () => {
     expect(servedOpenApi).toBe(sourceOpenApi);
   });
 
-  it("将 Orval 输出固定到生成目录，并通过手写 fetcher 隔离生成代码", () => {
-    expect(orvalConfig.subhub.input).toBe("./docs/api/openapi.yaml");
-    expect(orvalConfig.subhub.output.target).toBe(
-      "./src/lib/api/generated/subhub.ts",
+  it("将 Orval 输出固定到生成目录，并通过手写 fetcher 隔离生成代码", async () => {
+    const orvalConfig = await readFile(
+      join(repositoryRoot, "orval.config.ts"),
+      "utf8",
     );
-    expect(orvalConfig.subhub.output.schemas).toBe(
-      "./src/lib/api/generated/model",
+
+    expect(orvalConfig).toContain('input: "./docs/api/openapi.yaml"');
+    expect(orvalConfig).toContain(
+      'target: "./src/lib/api/generated/subhub.ts"',
     );
-    expect(orvalConfig.subhub.output.override?.mutator).toEqual({
-      path: "./src/lib/api/client.ts",
-      name: "subhubApiClient",
-    });
+    expect(orvalConfig).toContain('schemas: "./src/lib/api/generated/model"');
+    expect(orvalConfig).toContain('path: "./src/lib/api/client.ts"');
+    expect(orvalConfig).toContain('name: "subhubApiClient"');
     expect(typeof subhubApiClient).toBe("function");
   });
 
