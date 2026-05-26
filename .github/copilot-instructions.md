@@ -8,6 +8,29 @@ shell commands, and other important information, read the current plan:
 
 - 所有回复、文档撰写、git提交消息、PR 与 Issue 默认使用中文表达。
 
+## 包管理器与脚本执行约定
+
+- 以下为仓库级执行约定，适用于实现类 agent、review agent、Speckit 流程与后续文档示例。
+- 本仓库默认且首选包管理器为 `pnpm`。
+- 安装依赖、运行开发服务、执行测试、运行 lint/typecheck、执行 codegen、运行 migration、运行 API 契约脚本时，默认都应优先使用 `pnpm`。
+- 未经用户明确要求，不要输出 `npm` 命令示例。
+- 若文档、prompt、agent 输出或任务说明中存在 `npm` 示例，后续更新时应优先改写为 `pnpm` 对应写法。
+- 若项目脚本已在 `package.json` 中定义，则默认使用：
+	- `pnpm install`
+	- `pnpm dev`
+	- `pnpm build`
+	- `pnpm lint`
+	- `pnpm typecheck`
+	- `pnpm test`
+	- `pnpm api:spec`
+	- `pnpm api:client`
+	- `pnpm api:docs`
+	- `pnpm api:check`
+	- `pnpm db:generate`
+	- `pnpm db:migrate`
+	- `pnpm db:check`
+- 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
+
 ## 前端实现约束：TailwindCSS + shadcn/ui
 
 本项目前端界面默认优先使用 **TailwindCSS + shadcn/ui** 进行组件化实现。
