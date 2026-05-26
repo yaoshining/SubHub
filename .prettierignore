@@ -1,0 +1,13 @@
+node_modules/
+.next/
+dist/
+build/
+coverage/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+src/lib/api/generated/
+
+.agents/
+.github/agents/
+tsconfig.tsbuildinfo

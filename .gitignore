@@ -16,3 +16,14 @@ node_modules
 # Python 缓存文件
 __pycache__/
 *.pyc
+.next/
+dist/
+build/
+coverage/
+*.log
+.env*
+*.tmp
+*.swp
+Thumbs.db
+.data/
+tsconfig.tsbuildinfo
