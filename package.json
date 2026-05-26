@@ -5,6 +5,25 @@
     "api:spec": "echo \"[placeholder] sync and validate OpenAPI spec at docs/api/openapi.yaml\"",
     "api:client": "echo \"[placeholder] generate client/types from orval.config.ts to src/lib/api/generated/\"",
     "api:docs": "echo \"[placeholder] build/serve Scalar docs at /docs/api\"",
-    "api:check": "echo \"[placeholder] check api chain: docs/api/openapi.yaml + orval.config.ts + src/lib/api/generated/ + /docs/api\""
+    "api:check": "echo \"[placeholder] check api chain: docs/api/openapi.yaml + orval.config.ts + src/lib/api/generated/ + /docs/api\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx -e \"import { getStorageClient } from './src/server/storage/client.ts'; const client = getStorageClient(); client.migrate(); client.close();\"",
+    "db:check": "npm run typecheck && vitest run tests/unit/storage/schema.test.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
+  },
+  "overrides": {
+    "esbuild": "^0.25.0"
   }
 }
