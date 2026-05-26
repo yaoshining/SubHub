@@ -80,8 +80,20 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        brand: ["var(--font-brand)", "Space Grotesk", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: [
+          "var(--font-sans)",
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        brand: [
+          "var(--font-brand)",
+          "Space Grotesk",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       width: {
         sidebar: "var(--sidebar-width)",

@@ -9,7 +9,6 @@ export default defineConfig({
       client: "fetch",
       mode: "tags-split",
       clean: true,
-      prettier: true,
       override: {
         mutator: {
           path: "./src/lib/api/client.ts",

@@ -28,4 +28,16 @@ export const lucideIcons = {
 
 export type SubHubLucideIconName = keyof typeof lucideIcons;
 
-export { CloudOff, KeyRound, LayoutDashboard, Menu, Moon, PanelLeft, Server, Settings, Shield, Sun, Users };
+export {
+  CloudOff,
+  KeyRound,
+  LayoutDashboard,
+  Menu,
+  Moon,
+  PanelLeft,
+  Server,
+  Settings,
+  Shield,
+  Sun,
+  Users,
+};

@@ -19,3 +19,17 @@ __pycache__/
 
 # Superpowers 相关文件夹
 .superpowers
+# Next.js / TypeScript 构建产物
+.next/
+out/
+tsconfig.tsbuildinfo
+
+# 测试与覆盖率产物
+coverage/
+
+# 本地环境与 SQLite 数据
+.env*.local
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

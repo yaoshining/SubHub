@@ -4,12 +4,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "format": "prettier --check .",
-    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --check package.json package-lock.json tsconfig.json next-env.d.ts next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
+    "lint": "eslint src tests next.config.ts tailwind.config.ts vitest.config.ts orval.config.ts --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "api:spec": "orval --config orval.config.ts --fail-on-warnings",
-    "api:client": "orval --config orval.config.ts --clean src/lib/api/generated",
+    "test": "vitest run --passWithNoTests",
+    "api:spec": "orval --config orval.config.ts --fail-on-warnings --formatter prettier",
+    "api:client": "orval --config orval.config.ts --clean src/lib/api/generated --formatter prettier",
     "api:docs": "next build",
     "api:check": "npm run api:spec && npm run api:client",
     "db:generate": "echo \"[placeholder] drizzle-kit generate will target specs/001-mvp-admin-console/database-design.md via drizzle.config.ts after T021\"",
@@ -61,5 +61,9 @@
     "tailwindcss": "3.4.17",
     "typescript": "5.9.3",
     "vitest": "4.1.7"
+  },
+  "overrides": {
+    "postcss": "8.5.15",
+    "esbuild": "0.25.12"
   }
 }

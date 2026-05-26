@@ -40,7 +40,7 @@ components:
         - message
       properties:
         code:
-          $ref: '#/components/schemas/ErrorCode'
+          $ref: "#/components/schemas/ErrorCode"
         message:
           type: string
         target:
@@ -51,7 +51,7 @@ components:
         - error
       properties:
         error:
-          $ref: '#/components/schemas/ErrorDetail'
+          $ref: "#/components/schemas/ErrorDetail"
 tags:
   - name: Admin Auth
     description: 管理端初始化、登录与会话。
