@@ -23,6 +23,7 @@ __pycache__/
 .next/
 out/
 tsconfig.tsbuildinfo
+next-env.d.ts
 
 # 测试与覆盖率产物
 coverage/
