@@ -106,6 +106,12 @@ export async function verifyPassword(
     return false;
   }
 
+  // base64url: 16 bytes salt ≈ 22 chars, 64 bytes key ≈ 86 chars
+  // Reject strings that are clearly too long before decoding.
+  if (salt.length > 24 || hash.length > 88) {
+    return false;
+  }
+
   const saltBytes = Buffer.from(salt, "base64url");
   const expected = Buffer.from(hash, "base64url");
 
