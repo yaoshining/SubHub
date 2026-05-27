@@ -153,7 +153,7 @@ export function ProviderPoolInspector({
           </Alert>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-3 desktop:grid-cols-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg border bg-muted/30 p-3">
             <p className="text-xs text-muted-foreground">活跃 Token</p>
             <p className="mt-1 text-xl font-semibold">{summary.active}</p>

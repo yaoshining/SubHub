@@ -333,14 +333,35 @@ export function ProviderCredentialTable({
                     恢复
                   </Button>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={readOnly || pendingId === credential.id}
-                    onClick={() => void isolateCredential(credential)}
-                  >
-                    隔离
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={readOnly || pendingId === credential.id}
+                      >
+                        隔离
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确认隔离异常凭据？</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          该凭据将立即从活跃池中移出，不影响同 Provider 下其他
+                          active 凭据继续服务。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => void isolateCredential(credential)}
+                        >
+                          确认隔离
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             </div>
