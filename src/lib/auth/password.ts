@@ -122,16 +122,11 @@ export async function verifyPassword(
     return false;
   }
 
-  const actual = await scrypt(
-    password,
-    saltBytes,
-    scryptParameters.keyLength,
-    {
-      N: Number(n),
-      r: Number(r),
-      p: Number(p),
-    },
-  );
+  const actual = await scrypt(password, saltBytes, scryptParameters.keyLength, {
+    N: Number(n),
+    r: Number(r),
+    p: Number(p),
+  });
 
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
