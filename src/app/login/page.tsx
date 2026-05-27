@@ -16,7 +16,12 @@ type LoginPageProps = {
 const getSafeReturnTo = (value: string | string[] | undefined) => {
   const target = Array.isArray(value) ? value[0] : value;
 
-  if (!target || !target.startsWith("/") || target.startsWith("//")) {
+  if (
+    !target ||
+    !target.startsWith("/") ||
+    target.startsWith("//") ||
+    /[\r\n]/.test(target)
+  ) {
     return "/dashboard";
   }
 
