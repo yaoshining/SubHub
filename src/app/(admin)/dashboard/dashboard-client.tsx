@@ -136,34 +136,40 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
   const [failedObject, setFailedObject] = React.useState<string | null>(null);
   const mountedRef = React.useRef(true);
 
-  const fetchAndSetSummary = React.useCallback(async () => {
-    if (mountedRef.current) {
-      setFailedObject(null);
-    }
+  const fetchAndSetSummary = React.useCallback(
+    async (isMounted: () => boolean = () => mountedRef.current) => {
+      if (isMounted()) {
+        setFailedObject(null);
+      }
 
-    try {
-      const nextSummary = await fetchDashboardSummary();
-      if (mountedRef.current) {
-        setSummary(nextSummary);
+      try {
+        const nextSummary = await fetchDashboardSummary();
+        if (isMounted()) {
+          setSummary(nextSummary);
+        }
+      } catch (error) {
+        if (isMounted()) {
+          setFailedObject(`Dashboard 摘要：${getErrorMessage(error)}`);
+        }
+      } finally {
+        if (isMounted()) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      if (mountedRef.current) {
-        setFailedObject(`Dashboard 摘要：${getErrorMessage(error)}`);
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, []);
+    },
+    [],
+  );
 
   React.useEffect(() => {
     if (!initialSummary) {
+      let mounted = true;
+
       const timeoutId = window.setTimeout(() => {
-        void fetchAndSetSummary();
+        void fetchAndSetSummary(() => mounted && mountedRef.current);
       }, 0);
 
       return () => {
+        mounted = false;
         window.clearTimeout(timeoutId);
       };
     }

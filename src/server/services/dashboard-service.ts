@@ -109,7 +109,10 @@ export async function getDashboardSummary({
   const credentialRows =
     providerIds.length > 0
       ? await db
-          .select({ providerId: providerCredentials.providerId })
+          .select({
+            providerId: providerCredentials.providerId,
+            activeCredentialCount: count(),
+          })
           .from(providerCredentials)
           .where(
             and(
@@ -117,6 +120,7 @@ export async function getDashboardSummary({
               inArray(providerCredentials.providerId, providerIds),
             ),
           )
+          .groupBy(providerCredentials.providerId)
       : [];
   const providerTotalCount = await countRows(
     db.select({ value: count() }).from(providers),
@@ -177,7 +181,7 @@ export async function getDashboardSummary({
   for (const credential of credentialRows) {
     activeCredentialCountByProvider.set(
       credential.providerId,
-      (activeCredentialCountByProvider.get(credential.providerId) ?? 0) + 1,
+      credential.activeCredentialCount,
     );
   }
 

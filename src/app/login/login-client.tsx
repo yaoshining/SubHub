@@ -112,8 +112,8 @@ export function LoginClient({ returnTo }: LoginClientProps) {
     }, 0);
 
     return () => {
-      window.clearTimeout(timeoutId);
       mounted = false;
+      window.clearTimeout(timeoutId);
     };
   }, [loadStatus]);
 
