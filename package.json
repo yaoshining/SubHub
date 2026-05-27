@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "format": "prettier --check package.json tsconfig.json next-env.d.ts next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
+    "format": "prettier --check package.json tsconfig.json next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
     "lint": "eslint src tests next.config.ts tailwind.config.ts vitest.config.ts orval.config.ts --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
