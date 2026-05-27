@@ -113,7 +113,9 @@ describe("管理员初始化与认证 API 契约", () => {
       }),
     );
     const loginPayload = await readJson<{
-      data: { admin: { identifier: string; displayName: string; role: string } };
+      data: {
+        admin: { identifier: string; displayName: string; role: string };
+      };
     }>(login);
     const cookie = extractSessionCookie(login);
 
@@ -125,7 +127,9 @@ describe("管理员初始化与认证 API 契约", () => {
       id: expect.stringMatching(/^admin_/),
     });
 
-    const me = await meRoute.GET(nextRequest("http://localhost/api/admin/auth/me", cookie));
+    const me = await meRoute.GET(
+      nextRequest("http://localhost/api/admin/auth/me", cookie),
+    );
     const mePayload = await readJson<{
       data: { admin: { identifier: string; displayName: string } };
     }>(me);

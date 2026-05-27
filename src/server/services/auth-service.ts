@@ -122,7 +122,11 @@ export async function loginAdmin(
   });
 
   return {
-    admin: toAdminPrincipal({ ...adminUser, lastLoginAt, updatedAt: lastLoginAt }),
+    admin: toAdminPrincipal({
+      ...adminUser,
+      lastLoginAt,
+      updatedAt: lastLoginAt,
+    }),
     session: {
       token,
       expiresAt: session.expiresAt,

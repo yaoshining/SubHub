@@ -71,11 +71,13 @@ describe("首个管理员认证流程", () => {
       .select()
       .from(adminActionResults)
       .orderBy(adminActionResults.createdAt);
-    expect(actions.map((action) => [action.actionType, action.result])).toEqual([
-      ["bootstrap_admin_created", "success"],
-      ["admin_login", "failed"],
-      ["admin_login", "success"],
-    ]);
+    expect(actions.map((action) => [action.actionType, action.result])).toEqual(
+      [
+        ["bootstrap_admin_created", "success"],
+        ["admin_login", "failed"],
+        ["admin_login", "success"],
+      ],
+    );
 
     const logout = await logoutRoute.POST(
       new NextRequest("http://localhost/api/admin/auth/logout", {

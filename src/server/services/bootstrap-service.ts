@@ -40,14 +40,20 @@ export const normalizeAdminIdentifier = (identifier: string) =>
 export async function getBootstrapStatus({
   db = getStorageClient().db,
 }: BootstrapServiceOptions = {}): Promise<BootstrapStatus> {
-  const [adminUser] = await db.select({ id: adminUsers.id }).from(adminUsers).limit(1);
+  const [adminUser] = await db
+    .select({ id: adminUsers.id })
+    .from(adminUsers)
+    .limit(1);
 
   return { initialized: Boolean(adminUser) };
 }
 
 export async function createInitialAdmin(
   input: CreateInitialAdminInput,
-  { db = getStorageClient().db, now = new Date() }: BootstrapServiceOptions = {},
+  {
+    db = getStorageClient().db,
+    now = new Date(),
+  }: BootstrapServiceOptions = {},
 ): Promise<CreateInitialAdminResult> {
   const existingStatus = await getBootstrapStatus({ db });
 
@@ -60,18 +66,30 @@ export async function createInitialAdmin(
       message: "系统已完成首轮管理员初始化。",
       createdAt: now.toISOString(),
     });
-    throw new AppError("FORBIDDEN", "系统已完成首轮管理员初始化。", "bootstrap");
+    throw new AppError(
+      "FORBIDDEN",
+      "系统已完成首轮管理员初始化。",
+      "bootstrap",
+    );
   }
 
   const identifier = normalizeAdminIdentifier(input.identifier);
   const displayName = input.displayName.trim();
 
   if (!identifier) {
-    throw new AppError("VALIDATION_FAILED", "管理员标识不能为空。", "identifier");
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "管理员标识不能为空。",
+      "identifier",
+    );
   }
 
   if (!displayName) {
-    throw new AppError("VALIDATION_FAILED", "显示名称不能为空。", "displayName");
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "显示名称不能为空。",
+      "displayName",
+    );
   }
 
   let passwordHash: string;

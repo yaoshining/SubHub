@@ -2,10 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { adminSessionCookieName } from "@/lib/auth/constants";
 import { requireAdminApiSession } from "@/server/api/admin-auth";
-import {
-  apiErrorFromUnknown,
-  apiNoContent,
-} from "@/server/api/response";
+import { apiErrorFromUnknown, apiNoContent } from "@/server/api/response";
 import { logoutAdmin } from "@/server/services/auth-service";
 
 export const dynamic = "force-dynamic";

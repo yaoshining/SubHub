@@ -1,6 +1,9 @@
 import { desc, eq } from "drizzle-orm";
 
-import { getStorageClient, type StorageDatabase } from "@/server/storage/client";
+import {
+  getStorageClient,
+  type StorageDatabase,
+} from "@/server/storage/client";
 import {
   adminActionResults,
   adminUsers,
@@ -75,7 +78,10 @@ export async function getDashboardSummary({
   db = getStorageClient().db,
   now = new Date(),
 }: DashboardServiceOptions = {}): Promise<DashboardSummary> {
-  const [adminUser] = await db.select({ id: adminUsers.id }).from(adminUsers).limit(1);
+  const [adminUser] = await db
+    .select({ id: adminUsers.id })
+    .from(adminUsers)
+    .limit(1);
   const providerRows = await db.select().from(providers);
   const credentialRows = await db
     .select()
@@ -112,7 +118,8 @@ export async function getDashboardSummary({
     };
   });
   const activeProviderCount = providerItems.filter(
-    (provider) => provider.status === "enabled" && provider.activeCredentialCount > 0,
+    (provider) =>
+      provider.status === "enabled" && provider.activeCredentialCount > 0,
   ).length;
   const activeCallerKeyCount = callerKeyRows.filter(
     (callerKey) => callerKey.status === "active",

@@ -6,8 +6,146 @@ info:
 servers:
   - url: http://localhost:3000
     description: 本地开发
-paths: {}
+paths:
+  /api/admin/bootstrap/status:
+    get:
+      tags:
+        - Admin Auth
+      operationId: getAdminBootstrapStatus
+      summary: 查询首轮管理员初始化状态
+      responses:
+        "200":
+          description: 初始化状态
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BootstrapStatusResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/bootstrap:
+    post:
+      tags:
+        - Admin Auth
+      operationId: createInitialAdmin
+      summary: 创建首个管理员
+      description: 仅允许在系统尚未完成首轮初始化时调用；重复初始化会被拒绝。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInitialAdminRequest"
+      responses:
+        "201":
+          description: 首个管理员已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInitialAdminResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/auth/login:
+    post:
+      tags:
+        - Admin Auth
+      operationId: loginAdmin
+      summary: 管理员登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginRequest"
+      responses:
+        "200":
+          description: 登录成功并写入管理员会话 Cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: "`subhub_admin_session` HttpOnly 会话 Cookie。"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/auth/logout:
+    post:
+      tags:
+        - Admin Auth
+      operationId: logoutAdmin
+      summary: 管理员登出
+      security:
+        - AdminSession: []
+      responses:
+        "204":
+          description: 当前会话已撤销，Cookie 已清理。
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/auth/me:
+    get:
+      tags:
+        - Admin Auth
+      operationId: getCurrentAdmin
+      summary: 查询当前登录管理员
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: 当前管理员
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentAdminResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/dashboard/summary:
+    get:
+      tags:
+        - System
+      operationId: getAdminDashboardSummary
+      summary: 查询 Dashboard 摘要
+      description: 返回 Dashboard 所需的首轮开通、Provider、调用方 Key、队列、缓存、最近异常和下一步入口聚合读模型。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Dashboard 摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
 components:
+  responses:
+    ErrorResponse:
+      description: 统一错误响应
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   securitySchemes:
     AdminSession:
       type: apiKey
@@ -52,6 +190,345 @@ components:
       properties:
         error:
           $ref: "#/components/schemas/ErrorDetail"
+    BootstrapStatus:
+      type: object
+      required:
+        - initialized
+      properties:
+        initialized:
+          type: boolean
+    BootstrapStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/BootstrapStatus"
+    CreateInitialAdminRequest:
+      type: object
+      required:
+        - identifier
+        - displayName
+        - password
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+          description: 管理员登录标识，服务端会规范化为小写。
+          example: admin@example.com
+        displayName:
+          type: string
+          minLength: 1
+          example: Admin
+        password:
+          type: string
+          minLength: 1
+          format: password
+    CreateInitialAdminResult:
+      type: object
+      required:
+        - adminUserId
+        - status
+      properties:
+        adminUserId:
+          type: string
+          example: admin_001
+        status:
+          type: string
+          enum:
+            - active
+    CreateInitialAdminResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CreateInitialAdminResult"
+    AdminLoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+          example: admin@example.com
+        password:
+          type: string
+          minLength: 1
+          format: password
+        deviceLabel:
+          type: string
+          maxLength: 120
+          description: 可选设备标签，用于后台会话排查。
+    AdminPrincipal:
+      type: object
+      required:
+        - id
+        - identifier
+        - displayName
+        - role
+      properties:
+        id:
+          type: string
+          example: admin_001
+        identifier:
+          type: string
+          example: admin@example.com
+        displayName:
+          type: string
+          example: Admin
+        role:
+          type: string
+          enum:
+            - admin
+            - operator
+    AdminLoginData:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminPrincipal"
+    AdminLoginResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminLoginData"
+    CurrentAdminResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminLoginData"
+    ReadinessSummary:
+      type: object
+      required:
+        - adminInitialized
+        - activeProviderCount
+        - activeCallerKeyCount
+        - gatewayReady
+        - missingConditions
+        - lastCheckedAt
+      properties:
+        adminInitialized:
+          type: boolean
+        activeProviderCount:
+          type: integer
+          minimum: 0
+        activeCallerKeyCount:
+          type: integer
+          minimum: 0
+        gatewayReady:
+          type: boolean
+        missingConditions:
+          type: array
+          items:
+            type: string
+            enum:
+              - admin
+              - provider
+              - caller_key
+        lastCheckedAt:
+          type: string
+          format: date-time
+    DashboardNorthStar:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - ready
+            - not_ready
+        message:
+          type: string
+    DashboardProviderSnapshotItem:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - activeCredentialCount
+        - lastHealthStatus
+        - lastErrorSummary
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        activeCredentialCount:
+          type: integer
+          minimum: 0
+        lastHealthStatus:
+          type: string
+          nullable: true
+        lastErrorSummary:
+          type: string
+          nullable: true
+    DashboardProviderSnapshot:
+      type: object
+      required:
+        - total
+        - available
+        - needsAttention
+        - items
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        available:
+          type: integer
+          minimum: 0
+        needsAttention:
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardProviderSnapshotItem"
+    DashboardCallerKeySnapshot:
+      type: object
+      required:
+        - active
+        - suspended
+        - rotated
+      properties:
+        active:
+          type: integer
+          minimum: 0
+        suspended:
+          type: integer
+          minimum: 0
+        rotated:
+          type: integer
+          minimum: 0
+    DashboardQueueSummary:
+      type: object
+      required:
+        - status
+        - pendingJobs
+        - failedJobs
+      properties:
+        status:
+          type: string
+          enum:
+            - idle
+        pendingJobs:
+          type: integer
+          minimum: 0
+        failedJobs:
+          type: integer
+          minimum: 0
+    DashboardCacheSummary:
+      type: object
+      required:
+        - status
+        - hitRate
+        - coverage
+      properties:
+        status:
+          type: string
+          enum:
+            - not_configured
+        hitRate:
+          type: number
+          nullable: true
+        coverage:
+          type: string
+          enum:
+            - not_available
+    DashboardRecentIssue:
+      type: object
+      required:
+        - id
+        - targetType
+        - targetId
+        - message
+        - createdAt
+      properties:
+        id:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    DashboardNextAction:
+      type: object
+      required:
+        - id
+        - label
+        - href
+        - priority
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        href:
+          type: string
+        priority:
+          type: string
+          enum:
+            - high
+            - medium
+    DashboardSummary:
+      type: object
+      required:
+        - readiness
+        - northStar
+        - providerSnapshot
+        - callerKeySnapshot
+        - queue
+        - cache
+        - recentIssues
+        - nextActions
+      properties:
+        readiness:
+          $ref: "#/components/schemas/ReadinessSummary"
+        northStar:
+          $ref: "#/components/schemas/DashboardNorthStar"
+        providerSnapshot:
+          $ref: "#/components/schemas/DashboardProviderSnapshot"
+        callerKeySnapshot:
+          $ref: "#/components/schemas/DashboardCallerKeySnapshot"
+        queue:
+          $ref: "#/components/schemas/DashboardQueueSummary"
+        cache:
+          $ref: "#/components/schemas/DashboardCacheSummary"
+        recentIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardRecentIssue"
+        nextActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardNextAction"
+    DashboardSummaryResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/DashboardSummary"
 tags:
   - name: Admin Auth
     description: 管理端初始化、登录与会话。

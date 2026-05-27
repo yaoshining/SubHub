@@ -6,6 +6,36 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./adminLoginData";
+export * from "./adminLoginRequest";
+export * from "./adminLoginResponse";
+export * from "./adminPrincipal";
+export * from "./adminPrincipalRole";
+export * from "./bootstrapStatus";
+export * from "./bootstrapStatusResponse";
+export * from "./createInitialAdminRequest";
+export * from "./createInitialAdminResponse";
+export * from "./createInitialAdminResult";
+export * from "./createInitialAdminResultStatus";
+export * from "./currentAdminResponse";
+export * from "./dashboardCacheSummary";
+export * from "./dashboardCacheSummaryCoverage";
+export * from "./dashboardCacheSummaryStatus";
+export * from "./dashboardCallerKeySnapshot";
+export * from "./dashboardNextAction";
+export * from "./dashboardNextActionPriority";
+export * from "./dashboardNorthStar";
+export * from "./dashboardNorthStarStatus";
+export * from "./dashboardProviderSnapshot";
+export * from "./dashboardProviderSnapshotItem";
+export * from "./dashboardQueueSummary";
+export * from "./dashboardQueueSummaryStatus";
+export * from "./dashboardRecentIssue";
+export * from "./dashboardSummary";
+export * from "./dashboardSummaryResponse";
 export * from "./errorCode";
 export * from "./errorDetail";
 export * from "./errorResponse";
+export * from "./errorResponseResponse";
+export * from "./readinessSummary";
+export * from "./readinessSummaryMissingConditionsItem";
