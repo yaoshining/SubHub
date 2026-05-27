@@ -50,6 +50,27 @@ const providerStatusMeta = {
   disabled: { tone: "destructive", label: "已停用" },
 } as const;
 
+const queueStatusLabels = {
+  idle: "空闲",
+  busy: "繁忙",
+  degraded: "已降级",
+  blocked: "受阻",
+} as const;
+
+const cacheStatusLabels = {
+  ready: "已就绪",
+  warming: "预热中",
+  degraded: "已降级",
+  not_configured: "未配置",
+} as const;
+
+const cacheCoverageLabels = {
+  good: "覆盖良好",
+  partial: "覆盖部分可用",
+  missing: "覆盖存在缺口",
+  not_available: "暂无信号",
+} as const;
+
 const getErrorMessage = (error: unknown) => {
   if (error instanceof AppError) {
     return error.message;
@@ -73,6 +94,21 @@ function getProviderStatusPresentation(status: string) {
       tone: "secondary" as const,
       label: status,
     }
+  );
+}
+
+function getQueueStatusLabel(status: string) {
+  return queueStatusLabels[status as keyof typeof queueStatusLabels] ?? status;
+}
+
+function getCacheStatusLabel(status: string) {
+  return cacheStatusLabels[status as keyof typeof cacheStatusLabels] ?? status;
+}
+
+function getCacheCoverageLabel(coverage: string) {
+  return (
+    cacheCoverageLabels[coverage as keyof typeof cacheCoverageLabels] ??
+    coverage
   );
 }
 
@@ -302,7 +338,7 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
                   ? "未配置"
                   : `${Math.round(summary.cache.hitRate * 100)}%`
               }
-              description={`覆盖状态：${summary.cache.coverage}`}
+              description={`覆盖状态：${getCacheCoverageLabel(summary.cache.coverage)}`}
             />
           </section>
 
@@ -327,7 +363,9 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
                         <TableHead className="text-xs">状态</TableHead>
                         <TableHead className="text-xs">活跃凭据</TableHead>
                         <TableHead className="text-xs">最近异常</TableHead>
-                        <TableHead className="text-right text-xs">操作</TableHead>
+                        <TableHead className="text-right text-xs">
+                          操作
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -351,7 +389,9 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
                                 {providerStatus.label}
                               </StatusBadge>
                             </TableCell>
-                            <TableCell>{provider.activeCredentialCount}</TableCell>
+                            <TableCell>
+                              {provider.activeCredentialCount}
+                            </TableCell>
                             <TableCell className="max-w-[16rem] text-muted-foreground">
                               {provider.lastErrorSummary ?? "无"}
                             </TableCell>
@@ -389,7 +429,7 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
                     />
                     <div>
                       <p className="text-sm font-medium">
-                        队列状态：{summary.queue.status}
+                        队列状态：{getQueueStatusLabel(summary.queue.status)}
                       </p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         当前无独立任务队列积压时，应继续关注 Provider 与调用方
@@ -404,7 +444,7 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
                     />
                     <div>
                       <p className="text-sm font-medium">
-                        缓存状态：{summary.cache.status}
+                        缓存状态：{getCacheStatusLabel(summary.cache.status)}
                       </p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         MVP 中缓存读数可为空，但必须明确展示覆盖信号。
