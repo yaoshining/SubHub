@@ -53,9 +53,14 @@ export function Sidebar({ user, onNavigate, className }: SidebarProps) {
     if (typeof window === "undefined") {
       return "dark";
     }
-    return window.localStorage.getItem("subhub-theme") === "light"
-      ? "light"
-      : "dark";
+
+    const storage = window.localStorage;
+    const getStoredTheme =
+      storage && typeof storage.getItem === "function"
+        ? storage.getItem("subhub-theme")
+        : null;
+
+    return getStoredTheme === "light" ? "light" : "dark";
   });
 
   React.useEffect(() => {
@@ -66,7 +71,9 @@ export function Sidebar({ user, onNavigate, className }: SidebarProps) {
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
-    window.localStorage.setItem("subhub-theme", nextTheme);
+    if (typeof window.localStorage?.setItem === "function") {
+      window.localStorage.setItem("subhub-theme", nextTheme);
+    }
     document.documentElement.classList.toggle("light", nextTheme === "light");
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
   };
