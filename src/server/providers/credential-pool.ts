@@ -2,6 +2,10 @@ import { and, asc, eq, isNull, lte, or } from "drizzle-orm";
 
 import { AppError } from "@/lib/errors";
 import {
+  sanitizeProviderCredential,
+  type SanitizedProviderCredential,
+} from "@/server/providers/provider-repository";
+import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
@@ -17,7 +21,7 @@ export type CredentialPoolOptions = {
   now?: Date;
 };
 
-export type SelectedProviderCredential = ProviderCredential & {
+export type SelectedProviderCredential = SanitizedProviderCredential & {
   secret: string;
 };
 
@@ -64,7 +68,7 @@ export async function selectProviderCredential(
   }
 
   return {
-    ...credential,
+    ...sanitizeProviderCredential(credential),
     secret: decryptProviderCredentialSecret(credential.secretEncrypted),
   };
 }

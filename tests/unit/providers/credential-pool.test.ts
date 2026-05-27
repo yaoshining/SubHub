@@ -47,6 +47,8 @@ describe("Provider 凭据池", () => {
 
     expect(selected.label).toBe("primary");
     expect(selected.secret).toBe("secret-primary-token");
+    expect(selected).not.toHaveProperty("secretEncrypted");
+    expect(selected).not.toHaveProperty("secretHash");
   });
 
   it("隔离单个异常凭据不会影响同 Provider 下其他 active 凭据", async () => {

@@ -135,4 +135,27 @@ describe("Provider service 状态流转", () => {
       target: "name",
     });
   });
+
+  it("无效 Provider 类型返回通用校验错误", async () => {
+    await expect(
+      createProvider({ name: "Invalid Type", type: "unknown" as never }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "provider",
+    });
+  });
+
+  it("无效 fallbackProviderId 返回对应字段错误", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Primary",
+      type: "opensubtitles",
+    });
+
+    await expect(
+      updateProvider(provider.id, { fallbackProviderId: "provider_missing" }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "fallbackProviderId",
+    });
+  });
 });

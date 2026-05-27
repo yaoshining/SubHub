@@ -77,6 +77,21 @@ const isSqliteConstraintError = (error: unknown) =>
   "code" in error &&
   String(error.code).startsWith("SQLITE_CONSTRAINT");
 
+const isSqliteUniqueConstraintError = (error: unknown) =>
+  isSqliteConstraintError(error) &&
+  (String((error as { code?: unknown }).code) === "SQLITE_CONSTRAINT_UNIQUE" ||
+    String((error as { message?: unknown }).message).includes(
+      "UNIQUE constraint failed",
+    ));
+
+const isSqliteForeignKeyConstraintError = (error: unknown) =>
+  isSqliteConstraintError(error) &&
+  (String((error as { code?: unknown }).code) ===
+    "SQLITE_CONSTRAINT_FOREIGNKEY" ||
+    String((error as { message?: unknown }).message).includes(
+      "FOREIGN KEY constraint failed",
+    ));
+
 export const sanitizeProviderCredential = (
   credential: ProviderCredential,
 ): SanitizedProviderCredential => ({
@@ -135,13 +150,20 @@ export class ProviderRepository {
             .from(providerCredentials)
             .where(inArray(providerCredentials.providerId, providerIds))
         : [];
+    const credentialsByProviderId = new Map<string, ProviderCredential[]>();
+    for (const credential of credentialRows) {
+      const credentials = credentialsByProviderId.get(credential.providerId);
+      if (credentials) {
+        credentials.push(credential);
+      } else {
+        credentialsByProviderId.set(credential.providerId, [credential]);
+      }
+    }
 
     return providerRows.map((provider) =>
       addCredentialSummary(
         provider,
-        credentialRows.filter(
-          (credential) => credential.providerId === provider.id,
-        ),
+        credentialsByProviderId.get(provider.id) ?? [],
         now,
       ),
     );
@@ -242,11 +264,20 @@ export class ProviderRepository {
         return insertedProvider;
       });
     } catch (error) {
-      if (isSqliteConstraintError(error)) {
+      if (isSqliteUniqueConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "同类型 Provider 名称或凭据已存在。",
           "name",
+        );
+      }
+      if (isSqliteConstraintError(error)) {
+        throw new AppError(
+          "VALIDATION_FAILED",
+          "Provider 配置不符合约束。",
+          isSqliteForeignKeyConstraintError(error)
+            ? "fallbackProviderId"
+            : "provider",
         );
       }
       throw error;
@@ -300,11 +331,20 @@ export class ProviderRepository {
         .set(values)
         .where(eq(providers.id, providerId));
     } catch (error) {
-      if (isSqliteConstraintError(error)) {
+      if (isSqliteUniqueConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "同类型 Provider 名称已存在。",
           "name",
+        );
+      }
+      if (isSqliteConstraintError(error)) {
+        throw new AppError(
+          "VALIDATION_FAILED",
+          "Provider 策略参数不符合约束。",
+          isSqliteForeignKeyConstraintError(error)
+            ? "fallbackProviderId"
+            : "provider",
         );
       }
       throw error;
