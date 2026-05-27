@@ -98,14 +98,35 @@ describe("首个管理员认证流程", () => {
         method: "POST",
       }),
     );
-    const protectedPage = middleware(
-      new NextRequest("http://localhost/dashboard"),
-    );
 
     expect(loginApi?.status).toBe(200);
-    expect(protectedPage?.status).toBe(307);
-    expect(protectedPage?.headers.get("location")).toBe(
-      "http://localhost/login?next=%2Fdashboard",
+    for (const path of [
+      "/dashboard",
+      "/providers",
+      "/api-keys",
+      "/users",
+      "/settings",
+    ]) {
+      const protectedPage = middleware(
+        new NextRequest(`http://localhost${path}`),
+      );
+
+      expect(protectedPage?.status).toBe(307);
+      expect(protectedPage?.headers.get("location")).toBe(
+        `http://localhost/login?next=${encodeURIComponent(path)}`,
+      );
+    }
+  });
+
+  it("未登录访问受保护管理端 API 时返回认证错误", async () => {
+    const response = middleware(
+      new NextRequest("http://localhost/api/admin/auth/me"),
     );
+
+    expect(response).toBeDefined();
+    expect(response?.status).toBe(401);
+    await expect(response!.json()).resolves.toMatchObject({
+      error: { code: "AUTHENTICATION_REQUIRED", target: "admin_session" },
+    });
   });
 });

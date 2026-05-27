@@ -190,4 +190,16 @@ describe("管理员初始化与认证 API 契约", () => {
     );
     await expectApiError(afterLogout, "AUTHENTICATION_REQUIRED");
   });
+
+  it("当前用户与 Dashboard summary 契约要求管理员会话", async () => {
+    const me = await meRoute.GET(
+      nextRequest("http://localhost/api/admin/auth/me"),
+    );
+    await expectApiError(me, "AUTHENTICATION_REQUIRED");
+
+    const summary = await dashboardSummaryRoute.GET(
+      nextRequest("http://localhost/api/admin/dashboard/summary"),
+    );
+    await expectApiError(summary, "AUTHENTICATION_REQUIRED");
+  });
 });
