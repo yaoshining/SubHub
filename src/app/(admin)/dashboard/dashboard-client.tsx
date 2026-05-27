@@ -134,17 +134,26 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
   );
   const [loading, setLoading] = React.useState(!initialSummary);
   const [failedObject, setFailedObject] = React.useState<string | null>(null);
+  const mountedRef = React.useRef(true);
 
   const fetchAndSetSummary = React.useCallback(async () => {
-    setFailedObject(null);
+    if (mountedRef.current) {
+      setFailedObject(null);
+    }
 
     try {
       const nextSummary = await fetchDashboardSummary();
-      setSummary(nextSummary);
+      if (mountedRef.current) {
+        setSummary(nextSummary);
+      }
     } catch (error) {
-      setFailedObject(`Dashboard 摘要：${getErrorMessage(error)}`);
+      if (mountedRef.current) {
+        setFailedObject(`Dashboard 摘要：${getErrorMessage(error)}`);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -175,6 +184,12 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
     }
     return undefined;
   }, [initialSummary]);
+
+  React.useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   async function refreshSummary() {
     setLoading(true);

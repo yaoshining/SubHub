@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, or } from "drizzle-orm";
 
 import {
   getStorageClient,
@@ -74,6 +74,15 @@ export type DashboardServiceOptions = {
   now?: Date;
 };
 
+const dashboardProviderSnapshotLimit = 100;
+
+async function countRows(
+  query: Promise<Array<{ value: number }>>,
+): Promise<number> {
+  const [row] = await query;
+  return row?.value ?? 0;
+}
+
 export async function getDashboardSummary({
   db = getStorageClient().db,
   now = new Date(),
@@ -82,12 +91,72 @@ export async function getDashboardSummary({
     .select({ id: adminUsers.id })
     .from(adminUsers)
     .limit(1);
-  const providerRows = await db.select().from(providers);
-  const credentialRows = await db
+  const providerRows = await db
     .select()
-    .from(providerCredentials)
-    .where(eq(providerCredentials.status, "active"));
-  const callerKeyRows = await db.select().from(callerKeys);
+    .from(providers)
+    .orderBy(providers.priority, providers.name)
+    .limit(dashboardProviderSnapshotLimit);
+  const providerIds = providerRows.map((provider) => provider.id);
+  const credentialRows =
+    providerIds.length > 0
+      ? await db
+          .select()
+          .from(providerCredentials)
+          .where(
+            and(
+              eq(providerCredentials.status, "active"),
+              inArray(providerCredentials.providerId, providerIds),
+            ),
+          )
+      : [];
+  const providerTotalCount = await countRows(
+    db.select({ value: count() }).from(providers),
+  );
+  const activeProviderRows = await db
+    .select({ id: providers.id })
+    .from(providers)
+    .innerJoin(
+      providerCredentials,
+      eq(providerCredentials.providerId, providers.id),
+    )
+    .where(
+      and(
+        eq(providers.status, "enabled"),
+        eq(providerCredentials.status, "active"),
+      ),
+    )
+    .groupBy(providers.id);
+  const activeProviderCount = activeProviderRows.length;
+  const needsAttentionProviderCount = await countRows(
+    db
+      .select({ value: count() })
+      .from(providers)
+      .where(
+        or(
+          eq(providers.status, "degraded"),
+          eq(providers.status, "needs_config"),
+          isNotNull(providers.lastErrorSummary),
+        ),
+      ),
+  );
+  const activeCallerKeyCount = await countRows(
+    db
+      .select({ value: count() })
+      .from(callerKeys)
+      .where(eq(callerKeys.status, "active")),
+  );
+  const suspendedCallerKeyCount = await countRows(
+    db
+      .select({ value: count() })
+      .from(callerKeys)
+      .where(eq(callerKeys.status, "suspended")),
+  );
+  const rotatedCallerKeyCount = await countRows(
+    db
+      .select({ value: count() })
+      .from(callerKeys)
+      .where(eq(callerKeys.status, "rotated")),
+  );
   const failedActions = await db
     .select()
     .from(adminActionResults)
@@ -117,19 +186,6 @@ export async function getDashboardSummary({
       lastErrorSummary: provider.lastErrorSummary,
     };
   });
-  const activeProviderCount = providerItems.filter(
-    (provider) =>
-      provider.status === "enabled" && provider.activeCredentialCount > 0,
-  ).length;
-  const activeCallerKeyCount = callerKeyRows.filter(
-    (callerKey) => callerKey.status === "active",
-  ).length;
-  const suspendedCallerKeyCount = callerKeyRows.filter(
-    (callerKey) => callerKey.status === "suspended",
-  ).length;
-  const rotatedCallerKeyCount = callerKeyRows.filter(
-    (callerKey) => callerKey.status === "rotated",
-  ).length;
   const missingConditions: DashboardSummary["readiness"]["missingConditions"] =
     [];
   if (!adminUser) {
@@ -191,14 +247,9 @@ export async function getDashboardSummary({
         : "当前实例尚未完成首轮服务条件，请优先处理缺失项。",
     },
     providerSnapshot: {
-      total: providerRows.length,
+      total: providerTotalCount,
       available: activeProviderCount,
-      needsAttention: providerItems.filter(
-        (provider) =>
-          provider.status === "degraded" ||
-          provider.status === "needs_config" ||
-          provider.lastErrorSummary,
-      ).length,
+      needsAttention: needsAttentionProviderCount,
       items: providerItems,
     },
     callerKeySnapshot: {

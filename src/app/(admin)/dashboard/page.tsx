@@ -2,7 +2,7 @@ import { DashboardClient } from "@/app/(admin)/dashboard/dashboard-client";
 import { getDashboardSummary } from "@/server/services/dashboard-service";
 
 export default async function DashboardPage() {
-  const summary = await getDashboardSummary();
+  const summary = await getDashboardSummary().catch(() => undefined);
 
   return <DashboardClient initialSummary={summary} />;
 }
