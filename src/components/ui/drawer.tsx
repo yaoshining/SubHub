@@ -41,7 +41,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "group/drawer fixed z-50 flex flex-col border bg-popover text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[90vh] data-[vaul-drawer-direction=bottom]:rounded-t-[10px] data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-[100dvh] data-[vaul-drawer-direction=left]:max-h-[100dvh] data-[vaul-drawer-direction=left]:rounded-none data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-[100dvh] data-[vaul-drawer-direction=right]:max-h-[100dvh] data-[vaul-drawer-direction=right]:rounded-none",
+        "group/drawer fixed z-50 flex flex-col border bg-popover text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=left]:h-[100dvh] data-[vaul-drawer-direction=right]:h-[100dvh] data-[vaul-drawer-direction=bottom]:max-h-[90vh] data-[vaul-drawer-direction=left]:max-h-[100dvh] data-[vaul-drawer-direction=right]:max-h-[100dvh] data-[vaul-drawer-direction=left]:rounded-none data-[vaul-drawer-direction=right]:rounded-none data-[vaul-drawer-direction=bottom]:rounded-t-[10px]",
         className,
       )}
       {...props}
