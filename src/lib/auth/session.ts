@@ -2,7 +2,6 @@ import { createHmac, randomBytes } from "node:crypto";
 
 import { and, eq } from "drizzle-orm";
 
-import { adminSessionCookieName } from "@/lib/auth/constants";
 import { readEnv } from "@/lib/env";
 import { AppError } from "@/lib/errors";
 import {
