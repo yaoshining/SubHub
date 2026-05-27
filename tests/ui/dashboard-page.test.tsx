@@ -100,9 +100,13 @@ describe("Dashboard 页面体验", () => {
     expect(screen.getByText("队列状态：空闲")).toBeInTheDocument();
     expect(screen.queryByText(/队列状态：idle/)).not.toBeInTheDocument();
     expect(screen.getByText("缓存状态：未配置")).toBeInTheDocument();
-    expect(screen.queryByText(/缓存状态：not_configured/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/缓存状态：not_configured/),
+    ).not.toBeInTheDocument();
     expect(screen.getByText(/覆盖状态：暂无信号/)).toBeInTheDocument();
-    expect(screen.queryByText(/覆盖状态：not_available/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/覆盖状态：not_available/),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId("provider-snapshot-table-scroll")).toHaveClass(
       "overflow-x-auto",
     );
