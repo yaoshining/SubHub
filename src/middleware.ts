@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { adminSessionCookieName } from "@/lib/auth/session";
 import { AppError, toApiErrorResponse } from "@/lib/errors";
+
+const adminSessionCookieName = "subhub_admin_session";
 
 const protectedAdminPages = [
   "/dashboard",
