@@ -98,6 +98,14 @@ export async function verifyPassword(
     return false;
   }
 
+  if (
+    Number(n) !== scryptParameters.N ||
+    Number(r) !== scryptParameters.r ||
+    Number(p) !== scryptParameters.p
+  ) {
+    return false;
+  }
+
   const expected = Buffer.from(hash, "base64url");
   const actual = await scrypt(
     password,

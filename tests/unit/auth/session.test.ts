@@ -10,6 +10,7 @@ import {
   getAdminSessionByToken,
   revokeAdminSession,
 } from "@/lib/auth/session";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
   createStorageClient,
   type StorageClient,
@@ -134,5 +135,22 @@ describe("后台会话访问控制", () => {
     expect(decision.allowed).toBe(false);
     expect(decision.error?.code).toBe("FORBIDDEN");
     expect(decision.error?.target).toBe("admin_session");
+  });
+});
+
+describe("后台密码工具", () => {
+  it("校验密码时拒绝被篡改成本因子的哈希", async () => {
+    const passwordHash = await hashPassword("CorrectHorse42!");
+    const weakenedHash = passwordHash.replace(
+      "scrypt$16384$8$1$",
+      "scrypt$0$0$0$",
+    );
+
+    await expect(verifyPassword("CorrectHorse42!", passwordHash)).resolves.toBe(
+      true,
+    );
+    await expect(verifyPassword("CorrectHorse42!", weakenedHash)).resolves.toBe(
+      false,
+    );
   });
 });
