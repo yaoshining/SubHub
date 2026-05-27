@@ -1,4 +1,13 @@
-import { and, count, desc, eq, inArray, isNotNull, or } from "drizzle-orm";
+import {
+  and,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  or,
+} from "drizzle-orm";
 
 import {
   getStorageClient,
@@ -100,7 +109,7 @@ export async function getDashboardSummary({
   const credentialRows =
     providerIds.length > 0
       ? await db
-          .select()
+          .select({ providerId: providerCredentials.providerId })
           .from(providerCredentials)
           .where(
             and(
@@ -112,21 +121,21 @@ export async function getDashboardSummary({
   const providerTotalCount = await countRows(
     db.select({ value: count() }).from(providers),
   );
-  const activeProviderRows = await db
-    .select({ id: providers.id })
-    .from(providers)
-    .innerJoin(
-      providerCredentials,
-      eq(providerCredentials.providerId, providers.id),
-    )
-    .where(
-      and(
-        eq(providers.status, "enabled"),
-        eq(providerCredentials.status, "active"),
+  const activeProviderCount = await countRows(
+    db
+      .select({ value: countDistinct(providerCredentials.providerId) })
+      .from(providerCredentials)
+      .innerJoin(
+        providers,
+        eq(providerCredentials.providerId, providers.id),
+      )
+      .where(
+        and(
+          eq(providers.status, "enabled"),
+          eq(providerCredentials.status, "active"),
+        ),
       ),
-    )
-    .groupBy(providers.id);
-  const activeProviderCount = activeProviderRows.length;
+  );
   const needsAttentionProviderCount = await countRows(
     db
       .select({ value: count() })

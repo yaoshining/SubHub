@@ -159,31 +159,16 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
 
   React.useEffect(() => {
     if (!initialSummary) {
-      let mounted = true;
-
-      fetchDashboardSummary()
-        .then((nextSummary) => {
-          if (mounted) {
-            setSummary(nextSummary);
-          }
-        })
-        .catch((error: unknown) => {
-          if (mounted) {
-            setFailedObject(`Dashboard 摘要：${getErrorMessage(error)}`);
-          }
-        })
-        .finally(() => {
-          if (mounted) {
-            setLoading(false);
-          }
-        });
+      const timeoutId = window.setTimeout(() => {
+        void fetchAndSetSummary();
+      }, 0);
 
       return () => {
-        mounted = false;
+        window.clearTimeout(timeoutId);
       };
     }
     return undefined;
-  }, [initialSummary]);
+  }, [fetchAndSetSummary, initialSummary]);
 
   React.useEffect(() => {
     return () => {

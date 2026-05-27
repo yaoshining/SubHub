@@ -58,13 +58,11 @@ export function LoginClient({ returnTo }: LoginClientProps) {
   const [bootstrapPasswordConfirm, setBootstrapPasswordConfirm] =
     React.useState("");
 
-  React.useEffect(() => {
-    let mounted = true;
-
-    async function loadStatus() {
+  const loadStatus = React.useCallback(
+    async (isMounted: () => boolean) => {
       try {
         await fetchCurrentAdmin();
-        if (mounted) {
+        if (isMounted()) {
           router.replace(returnTo);
         }
         return;
@@ -74,11 +72,11 @@ export function LoginClient({ returnTo }: LoginClientProps) {
 
       try {
         const status = await fetchBootstrapStatus();
-        if (mounted) {
+        if (isMounted()) {
           setMode(status.initialized ? "login" : "bootstrap");
         }
       } catch (error) {
-        if (mounted) {
+        if (isMounted()) {
           setMessage({
             tone: "error",
             title: "无法确认初始化状态",
@@ -86,18 +84,25 @@ export function LoginClient({ returnTo }: LoginClientProps) {
           });
         }
       } finally {
-        if (mounted) {
+        if (isMounted()) {
           setStatusLoading(false);
         }
       }
-    }
+    },
+    [returnTo, router],
+  );
 
-    void loadStatus();
+  React.useEffect(() => {
+    let mounted = true;
+    const timeoutId = window.setTimeout(() => {
+      void loadStatus(() => mounted);
+    }, 0);
 
     return () => {
+      window.clearTimeout(timeoutId);
       mounted = false;
     };
-  }, [returnTo, router]);
+  }, [loadStatus]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
