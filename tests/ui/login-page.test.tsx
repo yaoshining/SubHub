@@ -21,6 +21,17 @@ const mockedFetchBootstrapStatus = vi.mocked(fetchBootstrapStatus);
 const mockedLoginAdminUser = vi.mocked(loginAdminUser);
 const mockedBootstrapInitialAdmin = vi.mocked(bootstrapInitialAdmin);
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+};
+
 describe("Login 页面体验", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -57,13 +68,55 @@ describe("Login 页面体验", () => {
     expect(passwordInput).toHaveValue("");
   });
 
+  it("登录提交中禁用重复提交，成功后返回原受保护目标", async () => {
+    const user = userEvent.setup();
+    const router = setMockRouter();
+    const deferred = createDeferred<{
+      id: string;
+      identifier: string;
+      displayName: string;
+      role: "admin";
+    }>();
+    mockedLoginAdminUser.mockReturnValue(deferred.promise);
+
+    renderWithTheme(<LoginClient returnTo="/providers" />);
+
+    await user.type(
+      await screen.findByLabelText("邮箱或用户名"),
+      "admin@subhub.local",
+    );
+    await user.type(screen.getByLabelText("密码"), "CorrectHorse42!");
+    await user.click(screen.getByRole("button", { name: "登录" }));
+
+    expect(
+      await screen.findByRole("button", { name: "正在登录..." }),
+    ).toBeDisabled();
+    expect(mockedLoginAdminUser).toHaveBeenCalledWith({
+      identifier: "admin@subhub.local",
+      password: "CorrectHorse42!",
+      deviceLabel: "SubHub Admin Console",
+    });
+
+    deferred.resolve({
+      id: "admin_1",
+      identifier: "admin@subhub.local",
+      displayName: "Admin",
+      role: "admin",
+    });
+
+    await waitFor(() => {
+      expect(router.replace).toHaveBeenCalledWith("/providers");
+    });
+  });
+
   it("未初始化时在同一路由切换为首个管理员创建表单", async () => {
     const user = userEvent.setup();
+    const deferred = createDeferred<{
+      adminUserId: string;
+      status: "active";
+    }>();
     mockedFetchBootstrapStatus.mockResolvedValue({ initialized: false });
-    mockedBootstrapInitialAdmin.mockResolvedValue({
-      adminUserId: "admin_1",
-      status: "active",
-    });
+    mockedBootstrapInitialAdmin.mockReturnValue(deferred.promise);
 
     renderWithTheme(<LoginClient returnTo="/dashboard" />);
 
@@ -77,6 +130,14 @@ describe("Login 页面体验", () => {
     await user.type(passwordInputs[0]!, "safe-password");
     await user.type(passwordInputs[1]!, "safe-password");
     await user.click(screen.getByRole("button", { name: "创建首个管理员" }));
+
+    expect(
+      await screen.findByRole("button", { name: "正在创建..." }),
+    ).toBeDisabled();
+    deferred.resolve({
+      adminUserId: "admin_1",
+      status: "active",
+    });
 
     expect(await screen.findByText("首个管理员已创建")).toBeInTheDocument();
     expect(screen.getByLabelText("邮箱或用户名")).toHaveValue(
