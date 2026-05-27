@@ -46,9 +46,10 @@ describe("Admin Shell 响应式骨架", () => {
     renderWithTheme(<ResponsiveDrawer />);
 
     await user.click(screen.getByRole("button", { name: "打开后台导航" }));
-    expect(
-      screen.getByRole("dialog", { name: "后台导航" }),
-    ).toBeInTheDocument();
+    const dialog = screen.getByRole("dialog", { name: "后台导航" });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("data-vaul-drawer-direction", "left");
+    expect(screen.getByTestId("admin-sidebar")).toHaveClass("w-sidebar");
     expect(screen.getByRole("link", { name: "服务商" })).toHaveAttribute(
       "aria-current",
       "page",

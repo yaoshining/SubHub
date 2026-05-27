@@ -41,12 +41,12 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[90vh] flex-col rounded-t-[10px] border bg-popover text-popover-foreground",
+        "group/drawer fixed z-50 flex flex-col border bg-popover text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[90vh] data-[vaul-drawer-direction=bottom]:rounded-t-[10px] data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:h-[100dvh] data-[vaul-drawer-direction=left]:max-h-[100dvh] data-[vaul-drawer-direction=left]:rounded-none data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:h-[100dvh] data-[vaul-drawer-direction=right]:max-h-[100dvh] data-[vaul-drawer-direction=right]:rounded-none",
         className,
       )}
       {...props}
     >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      <div className="mx-auto mt-4 hidden h-2 w-[100px] rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer:block" />
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
