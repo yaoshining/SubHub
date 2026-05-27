@@ -15,7 +15,10 @@ import {
   type AdminUser,
 } from "@/server/storage/schema";
 
-export { adminSessionCookieName } from "@/lib/auth/constants";
+export {
+  adminRequestPathHeader,
+  adminSessionCookieName,
+} from "@/lib/auth/constants";
 export const defaultAdminSessionTtlSeconds = 60 * 60 * 8;
 
 export type AdminSessionWithUser = AdminSession & {

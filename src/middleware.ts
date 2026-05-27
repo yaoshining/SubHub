@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { adminSessionCookieName } from "@/lib/auth/constants";
+import {
+  adminRequestPathHeader,
+  adminSessionCookieName,
+} from "@/lib/auth/constants";
 import { AppError, toApiErrorResponse } from "@/lib/errors";
 
 const protectedAdminPages = [
@@ -28,6 +31,8 @@ const isPublicAdminApiPath = (pathname: string) =>
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(adminRequestPathHeader, pathname);
   const hasAdminSessionCookie = Boolean(
     request.cookies.get(adminSessionCookieName)?.value,
   );
@@ -55,7 +60,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

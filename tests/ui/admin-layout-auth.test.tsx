@@ -3,17 +3,26 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import AdminLayout from "@/app/(admin)/layout";
+import { AppError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
+  headers: vi.fn(),
+  redirect: vi.fn(),
   requireActiveAdminSession: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({
   cookies: mocks.cookies,
+  headers: mocks.headers,
+}));
+
+vi.mock("next/navigation", () => ({
+  redirect: mocks.redirect,
 }));
 
 vi.mock("@/lib/auth/session", () => ({
+  adminRequestPathHeader: "x-subhub-admin-pathname",
   adminSessionCookieName: "subhub_admin_session",
   requireActiveAdminSession: mocks.requireActiveAdminSession,
 }));
@@ -39,6 +48,12 @@ vi.mock("@/components/admin/protected-layout", () => ({
 describe("AdminLayout 认证上下文注入", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.headers.mockResolvedValue({
+      get: vi.fn(() => null),
+    });
+    mocks.redirect.mockImplementation((url: string) => {
+      throw new Error(`NEXT_REDIRECT:${url}`);
+    });
   });
 
   it("读取有效管理员会话并将当前用户摘要传入受保护后台布局", async () => {
@@ -73,5 +88,32 @@ describe("AdminLayout 认证上下文注入", () => {
       "admin@subhub.local",
     );
     expect(screen.getByText("受保护内容")).toBeInTheDocument();
+  });
+
+  it("失效管理员会话会回到登录页并保留原后台路径", async () => {
+    const cookieStore = {
+      get: vi.fn(() => ({ value: "expired-admin-session-token" })),
+    };
+    mocks.cookies.mockResolvedValue(cookieStore);
+    mocks.headers.mockResolvedValue({
+      get: vi.fn((name: string) =>
+        name === "x-subhub-admin-pathname" ? "/dashboard" : null,
+      ),
+    });
+    mocks.requireActiveAdminSession.mockRejectedValue(
+      new AppError(
+        "AUTHENTICATION_REQUIRED",
+        "管理员会话已过期。",
+        "admin_session",
+      ),
+    );
+
+    await expect(
+      AdminLayout({
+        children: <div>受保护内容</div>,
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:/login?next=%2Fdashboard");
+
+    expect(mocks.redirect).toHaveBeenCalledWith("/login?next=%2Fdashboard");
   });
 });
