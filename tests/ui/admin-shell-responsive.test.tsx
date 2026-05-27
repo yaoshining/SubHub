@@ -21,6 +21,16 @@ describe("Admin Shell 响应式骨架", () => {
     expect(screen.getByTestId("admin-sidebar")).toHaveClass(
       "hidden",
       "desktop:flex",
+      "desktop:fixed",
+    );
+    expect(screen.getByTestId("admin-shell")).toHaveClass(
+      "desktop:h-screen",
+      "desktop:overflow-hidden",
+    );
+    expect(screen.getByTestId("admin-content-region")).toHaveClass(
+      "desktop:pl-[var(--sidebar-width)]",
+      "desktop:h-screen",
+      "desktop:overflow-y-auto",
     );
     expect(screen.getByRole("link", { name: "仪表盘" })).toHaveAttribute(
       "aria-current",
