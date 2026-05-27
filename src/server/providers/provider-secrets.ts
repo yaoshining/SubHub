@@ -7,6 +7,7 @@ import {
 } from "node:crypto";
 
 import { readEnv } from "@/lib/env";
+import { AppError } from "@/lib/errors";
 
 const algorithm = "aes-256-gcm";
 const developmentSecret = "subhub-development-provider-credential-key";
@@ -40,23 +41,31 @@ export const encryptProviderCredentialSecret = (secret: string) => {
 };
 
 export const decryptProviderCredentialSecret = (encryptedSecret: string) => {
-  const [iv, tag, encrypted] = encryptedSecret.split(".");
+  try {
+    const [iv, tag, encrypted] = encryptedSecret.split(".");
 
-  if (!iv || !tag || !encrypted) {
-    throw new Error("Provider 凭据密文格式无效。");
+    if (!iv || !tag || !encrypted) {
+      throw new Error("Provider 凭据密文格式无效。");
+    }
+
+    const decipher = createDecipheriv(
+      algorithm,
+      getEncryptionKey(),
+      Buffer.from(iv, "base64url"),
+    );
+    decipher.setAuthTag(Buffer.from(tag, "base64url"));
+
+    return Buffer.concat([
+      decipher.update(Buffer.from(encrypted, "base64url")),
+      decipher.final(),
+    ]).toString("utf8");
+  } catch {
+    throw new AppError(
+      "UPSTREAM_FAILED",
+      "Provider 凭据解密失败。",
+      "provider_credential",
+    );
   }
-
-  const decipher = createDecipheriv(
-    algorithm,
-    getEncryptionKey(),
-    Buffer.from(iv, "base64url"),
-  );
-  decipher.setAuthTag(Buffer.from(tag, "base64url"));
-
-  return Buffer.concat([
-    decipher.update(Buffer.from(encrypted, "base64url")),
-    decipher.final(),
-  ]).toString("utf8");
 };
 
 export const createCredentialDisplayParts = (secret: string) => ({
