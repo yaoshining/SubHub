@@ -1,7 +1,5 @@
 import { randomBytes } from "node:crypto";
 
-import { eq } from "drizzle-orm";
-
 import { hashPassword } from "@/lib/auth/password";
 import { AppError } from "@/lib/errors";
 import { recordAdminActionResult } from "@/server/audit/action-results";
@@ -31,33 +29,11 @@ export type BootstrapServiceOptions = {
   now?: Date;
 };
 
-let bootstrapCreationQueue = Promise.resolve();
-
 const createAdminUserId = () =>
   `admin_${randomBytes(16).toString("base64url")}`;
 
 export const normalizeAdminIdentifier = (identifier: string) =>
   identifier.trim().toLowerCase();
-
-const serializeBootstrapCreation = async <T>(callback: () => Promise<T>) => {
-  const previous = bootstrapCreationQueue;
-  let releaseCurrent = () => {};
-  const current = new Promise<void>((resolve) => {
-    releaseCurrent = resolve;
-  });
-  bootstrapCreationQueue = previous.then(
-    () => current,
-    () => current,
-  );
-
-  await previous;
-
-  try {
-    return await callback();
-  } finally {
-    releaseCurrent();
-  }
-};
 
 const isSqliteConstraintError = (error: unknown) =>
   typeof error === "object" &&
@@ -83,33 +59,6 @@ export async function createInitialAdmin(
     now = new Date(),
   }: BootstrapServiceOptions = {},
 ): Promise<CreateInitialAdminResult> {
-  return serializeBootstrapCreation(() =>
-    createInitialAdminUnsafe(input, { db, now }),
-  );
-}
-
-async function createInitialAdminUnsafe(
-  input: CreateInitialAdminInput,
-  { db, now }: Required<BootstrapServiceOptions>,
-): Promise<CreateInitialAdminResult> {
-  const existingStatus = await getBootstrapStatus({ db });
-
-  if (existingStatus.initialized) {
-    await recordAdminActionResult({
-      db,
-      actionType: "bootstrap_admin_created",
-      targetType: "bootstrap",
-      result: "failed",
-      message: "系统已完成首轮管理员初始化。",
-      createdAt: now.toISOString(),
-    });
-    throw new AppError(
-      "FORBIDDEN",
-      "系统已完成首轮管理员初始化。",
-      "bootstrap",
-    );
-  }
-
   const identifier = normalizeAdminIdentifier(input.identifier);
   const displayName = input.displayName.trim();
 
@@ -141,39 +90,75 @@ async function createInitialAdminUnsafe(
   }
 
   const createdAt = now.toISOString();
-  let adminUser: AdminUser;
-  try {
-    [adminUser] = await db
-      .insert(adminUsers)
-      .values({
-        id: createAdminUserId(),
-        identifier,
-        displayName,
-        passwordHash,
-        status: "active",
-        role: "admin",
-        createdAt,
-        updatedAt: createdAt,
-      })
-      .returning();
-  } catch (error) {
-    if (isSqliteConstraintError(error)) {
-      await recordAdminActionResult({
-        db,
-        actionType: "bootstrap_admin_created",
-        targetType: "bootstrap",
-        result: "failed",
-        message: "系统已完成首轮管理员初始化。",
-        createdAt,
-      });
-      throw new AppError(
-        "FORBIDDEN",
-        "系统已完成首轮管理员初始化。",
-        "bootstrap",
-      );
-    }
 
-    throw error;
+  let adminUser: AdminUser | undefined;
+  let alreadyInitialized = false;
+
+  try {
+    adminUser = db.transaction(
+      (tx) => {
+        const [existing] = tx
+          .select({ id: adminUsers.id })
+          .from(adminUsers)
+          .limit(1)
+          .all();
+
+        if (existing) {
+          throw new AppError(
+            "FORBIDDEN",
+            "系统已完成首轮管理员初始化。",
+            "bootstrap",
+          );
+        }
+
+        const [inserted] = tx
+          .insert(adminUsers)
+          .values({
+            id: createAdminUserId(),
+            identifier,
+            displayName,
+            passwordHash,
+            status: "active",
+            role: "admin",
+            createdAt,
+            updatedAt: createdAt,
+          })
+          .returning()
+          .all();
+
+        return inserted;
+      },
+      { behavior: "immediate" },
+    );
+  } catch (error) {
+    if (
+      (error instanceof AppError && error.code === "FORBIDDEN") ||
+      isSqliteConstraintError(error)
+    ) {
+      alreadyInitialized = true;
+    } else {
+      throw error;
+    }
+  }
+
+  if (alreadyInitialized) {
+    await recordAdminActionResult({
+      db,
+      actionType: "bootstrap_admin_created",
+      targetType: "bootstrap",
+      result: "failed",
+      message: "系统已完成首轮管理员初始化。",
+      createdAt,
+    });
+    throw new AppError(
+      "FORBIDDEN",
+      "系统已完成首轮管理员初始化。",
+      "bootstrap",
+    );
+  }
+
+  if (!adminUser) {
+    throw new AppError("UPSTREAM_FAILED", "创建管理员失败。");
   }
 
   await recordAdminActionResult({
@@ -187,14 +172,8 @@ async function createInitialAdminUnsafe(
     createdAt,
   });
 
-  const [createdAdminUser] = await db
-    .select()
-    .from(adminUsers)
-    .where(eq(adminUsers.id, adminUser.id))
-    .limit(1);
-
   return {
-    adminUserId: createdAdminUser?.id ?? adminUser.id,
-    status: createdAdminUser?.status ?? "active",
+    adminUserId: adminUser.id,
+    status: adminUser.status,
   };
 }

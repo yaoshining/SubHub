@@ -1,9 +1,9 @@
 import {
-  createInitialAdmin,
-  getAdminBootstrapStatus,
-  getCurrentAdmin,
-  loginAdmin,
-  logoutAdmin,
+  getGetAdminBootstrapStatusUrl,
+  getCreateInitialAdminUrl,
+  getLoginAdminUrl,
+  getLogoutAdminUrl,
+  getGetCurrentAdminUrl,
 } from "./generated/admin-auth/admin-auth";
 import type {
   AdminLoginRequest,
@@ -16,6 +16,7 @@ import type {
   CreateInitialAdminResponse,
   CurrentAdminResponse,
 } from "./generated/model";
+import { subhubApiClient } from "./client";
 
 export type {
   AdminLoginRequest,
@@ -28,9 +29,10 @@ export type {
 export async function fetchBootstrapStatus(
   options?: RequestInit,
 ): Promise<BootstrapStatus> {
-  const response = (await getAdminBootstrapStatus(
-    options,
-  )) as unknown as BootstrapStatusResponse;
+  const response = await subhubApiClient<BootstrapStatusResponse>(
+    getGetAdminBootstrapStatusUrl(),
+    { ...options, method: "GET" },
+  );
 
   return response.data;
 }
@@ -39,10 +41,15 @@ export async function bootstrapInitialAdmin(
   input: CreateInitialAdminRequest,
   options?: RequestInit,
 ): Promise<CreateInitialAdminResult> {
-  const response = (await createInitialAdmin(
-    input,
-    options,
-  )) as unknown as CreateInitialAdminResponse;
+  const response = await subhubApiClient<CreateInitialAdminResponse>(
+    getCreateInitialAdminUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(input),
+    },
+  );
 
   return response.data;
 }
@@ -51,24 +58,33 @@ export async function loginAdminUser(
   input: AdminLoginRequest,
   options?: RequestInit,
 ): Promise<AdminPrincipal> {
-  const response = (await loginAdmin(
-    input,
-    options,
-  )) as unknown as AdminLoginResponse;
+  const response = await subhubApiClient<AdminLoginResponse>(
+    getLoginAdminUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(input),
+    },
+  );
 
   return response.data.admin;
 }
 
 export async function logoutAdminUser(options?: RequestInit): Promise<void> {
-  await logoutAdmin(options);
+  await subhubApiClient<void>(getLogoutAdminUrl(), {
+    ...options,
+    method: "POST",
+  });
 }
 
 export async function fetchCurrentAdmin(
   options?: RequestInit,
 ): Promise<AdminPrincipal> {
-  const response = (await getCurrentAdmin(
-    options,
-  )) as unknown as CurrentAdminResponse;
+  const response = await subhubApiClient<CurrentAdminResponse>(
+    getGetCurrentAdminUrl(),
+    { ...options, method: "GET" },
+  );
 
   return response.data.admin;
 }
