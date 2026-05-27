@@ -18,7 +18,7 @@ export type DashboardSummary = {
     activeProviderCount: number;
     activeCallerKeyCount: number;
     gatewayReady: boolean;
-    missingConditions: string[];
+    missingConditions: Array<"admin" | "provider" | "caller_key">;
     lastCheckedAt: string;
   };
   northStar: {
@@ -130,11 +130,17 @@ export async function getDashboardSummary({
   const rotatedCallerKeyCount = callerKeyRows.filter(
     (callerKey) => callerKey.status === "rotated",
   ).length;
-  const missingConditions = [
-    ...(adminUser ? [] : ["admin"]),
-    ...(activeProviderCount > 0 ? [] : ["provider"]),
-    ...(activeCallerKeyCount > 0 ? [] : ["caller_key"]),
-  ];
+  const missingConditions: DashboardSummary["readiness"]["missingConditions"] =
+    [];
+  if (!adminUser) {
+    missingConditions.push("admin");
+  }
+  if (activeProviderCount === 0) {
+    missingConditions.push("provider");
+  }
+  if (activeCallerKeyCount === 0) {
+    missingConditions.push("caller_key");
+  }
   const gatewayReady = missingConditions.length === 0;
   const nextActions = [
     ...(adminUser
