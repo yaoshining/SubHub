@@ -9,6 +9,30 @@ let testDatabaseDirectory: string | undefined;
 
 beforeAll(() => {
   testDatabaseDirectory = mkdtempSync(join(tmpdir(), "subhub-test-db-"));
+
+
+  if (!HTMLElement.prototype.setPointerCapture) {
+    HTMLElement.prototype.setPointerCapture = vi.fn();
+  }
+  if (!HTMLElement.prototype.releasePointerCapture) {
+    HTMLElement.prototype.releasePointerCapture = vi.fn();
+  }
+
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
+  });
+
   Object.assign(process.env, {
     NODE_ENV: process.env.NODE_ENV ?? "test",
     APP_URL: process.env.APP_URL ?? "http://localhost:3000",
