@@ -14,15 +14,18 @@ import type {
   CreateProviderCredentialRequest,
   CreateProviderRequest,
   IsolateProviderCredentialRequest,
+  Provider,
   ProviderCredential,
   ProviderCredentialActionResponse,
   ProviderCredentialList,
   ProviderCredentialListResponse,
   ProviderCredentialResponse,
+  ProviderCredentialStatus,
   ProviderDetail,
   ProviderDetailResponse,
   ProviderList,
   ProviderListResponse,
+  ProviderStatus,
   UpdateProviderRequest,
 } from "./generated/model";
 import { subhubApiClient } from "./client";
@@ -31,10 +34,13 @@ export type {
   CreateProviderCredentialRequest,
   CreateProviderRequest,
   IsolateProviderCredentialRequest,
+  Provider,
   ProviderCredential,
   ProviderCredentialList,
+  ProviderCredentialStatus,
   ProviderDetail,
   ProviderList,
+  ProviderStatus,
   UpdateProviderRequest,
 };
 
