@@ -42,6 +42,14 @@ const missingConditionLabels = {
   caller_key: "调用方 Key",
 } as const;
 
+const providerStatusMeta = {
+  enabled: { tone: "success", label: "已启用" },
+  healthy: { tone: "success", label: "健康" },
+  degraded: { tone: "warning", label: "已降级" },
+  needs_config: { tone: "warning", label: "待配置" },
+  disabled: { tone: "destructive", label: "已停用" },
+} as const;
+
 const getErrorMessage = (error: unknown) => {
   if (error instanceof AppError) {
     return error.message;
@@ -59,14 +67,13 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
-function statusTone(status: string) {
-  if (["enabled", "healthy", "ready", "idle"].includes(status)) {
-    return "success";
-  }
-  if (["degraded", "needs_config", "not_ready"].includes(status)) {
-    return "warning";
-  }
-  return "secondary";
+function getProviderStatusPresentation(status: string) {
+  return (
+    providerStatusMeta[status as keyof typeof providerStatusMeta] ?? {
+      tone: "secondary" as const,
+      label: status,
+    }
+  );
 }
 
 function MetricCard({
@@ -309,51 +316,58 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
               }
             >
               {summary.providerSnapshot.items.length > 0 ? (
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="text-xs">Provider</TableHead>
-                      <TableHead className="text-xs">状态</TableHead>
-                      <TableHead className="text-xs">活跃凭据</TableHead>
-                      <TableHead className="text-xs">最近异常</TableHead>
-                      <TableHead className="text-right text-xs">操作</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {summary.providerSnapshot.items.map((provider) => (
-                      <TableRow key={provider.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            <p>{provider.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {provider.type}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="rounded-full"
-                            data-status-tone={statusTone(provider.status)}
-                          >
-                            {provider.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{provider.activeCredentialCount}</TableCell>
-                        <TableCell className="max-w-[16rem] text-muted-foreground">
-                          {provider.lastErrorSummary ?? "无"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/providers/${provider.id}`}>
-                              查看详情
-                            </Link>
-                          </Button>
-                        </TableCell>
+                <div
+                  className="overflow-x-auto"
+                  data-testid="provider-snapshot-table-scroll"
+                >
+                  <Table className="min-w-[42rem]">
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="text-xs">Provider</TableHead>
+                        <TableHead className="text-xs">状态</TableHead>
+                        <TableHead className="text-xs">活跃凭据</TableHead>
+                        <TableHead className="text-xs">最近异常</TableHead>
+                        <TableHead className="text-right text-xs">操作</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {summary.providerSnapshot.items.map((provider) => {
+                        const providerStatus = getProviderStatusPresentation(
+                          provider.status,
+                        );
+
+                        return (
+                          <TableRow key={provider.id}>
+                            <TableCell className="font-medium">
+                              <div>
+                                <p>{provider.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {provider.type}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge tone={providerStatus.tone}>
+                                {providerStatus.label}
+                              </StatusBadge>
+                            </TableCell>
+                            <TableCell>{provider.activeCredentialCount}</TableCell>
+                            <TableCell className="max-w-[16rem] text-muted-foreground">
+                              {provider.lastErrorSummary ?? "无"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button asChild variant="outline" size="sm">
+                                <Link href={`/providers/${provider.id}`}>
+                                  查看详情
+                                </Link>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : (
                 <div className="rounded-lg border bg-muted/30 p-5">
                   <p className="font-medium">还没有 Provider</p>

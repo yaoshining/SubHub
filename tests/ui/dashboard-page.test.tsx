@@ -95,6 +95,11 @@ describe("Dashboard 页面体验", () => {
     expect(screen.getByText("未完成首轮开通")).toBeInTheDocument();
     expect(screen.getAllByText("可用 Provider").length).toBeGreaterThan(0);
     expect(screen.getByText("调用方 Key")).toBeInTheDocument();
+    expect(screen.getByText("待配置")).toBeInTheDocument();
+    expect(screen.queryByText("needs_config")).not.toBeInTheDocument();
+    expect(screen.getByTestId("provider-snapshot-table-scroll")).toHaveClass(
+      "overflow-x-auto",
+    );
     expect(
       screen.getByRole("link", { name: /配置可用 Provider/ }),
     ).toHaveAttribute("href", "/providers");
