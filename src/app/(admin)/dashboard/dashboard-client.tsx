@@ -192,6 +192,9 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
   }, []);
 
   async function refreshSummary() {
+    if (!mountedRef.current) {
+      return;
+    }
     setLoading(true);
     await fetchAndSetSummary();
   }
