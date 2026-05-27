@@ -42,6 +42,9 @@ export type AuthServiceOptions = {
   now?: Date;
 };
 
+const dummyPasswordHash =
+  "scrypt$16384$8$1$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 const toAdminPrincipal = (adminUser: AdminUser): AdminPrincipal => ({
   id: adminUser.id,
   identifier: adminUser.identifier,
@@ -63,9 +66,10 @@ export async function loginAdmin(
     .where(eq(adminUsers.identifier, identifier))
     .limit(1);
 
-  const passwordValid = adminUser
-    ? await verifyPassword(input.password, adminUser.passwordHash)
-    : false;
+  const passwordValid = await verifyPassword(
+    input.password,
+    adminUser?.passwordHash ?? dummyPasswordHash,
+  );
 
   if (!adminUser || !passwordValid) {
     await recordAdminActionResult({

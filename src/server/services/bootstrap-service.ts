@@ -31,11 +31,39 @@ export type BootstrapServiceOptions = {
   now?: Date;
 };
 
+let bootstrapCreationQueue = Promise.resolve();
+
 const createAdminUserId = () =>
   `admin_${randomBytes(16).toString("base64url")}`;
 
 export const normalizeAdminIdentifier = (identifier: string) =>
   identifier.trim().toLowerCase();
+
+const serializeBootstrapCreation = async <T>(callback: () => Promise<T>) => {
+  const previous = bootstrapCreationQueue;
+  let releaseCurrent = () => {};
+  const current = new Promise<void>((resolve) => {
+    releaseCurrent = resolve;
+  });
+  bootstrapCreationQueue = previous.then(
+    () => current,
+    () => current,
+  );
+
+  await previous;
+
+  try {
+    return await callback();
+  } finally {
+    releaseCurrent();
+  }
+};
+
+const isSqliteConstraintError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  String(error.code).startsWith("SQLITE_CONSTRAINT");
 
 export async function getBootstrapStatus({
   db = getStorageClient().db,
@@ -54,6 +82,15 @@ export async function createInitialAdmin(
     db = getStorageClient().db,
     now = new Date(),
   }: BootstrapServiceOptions = {},
+): Promise<CreateInitialAdminResult> {
+  return serializeBootstrapCreation(() =>
+    createInitialAdminUnsafe(input, { db, now }),
+  );
+}
+
+async function createInitialAdminUnsafe(
+  input: CreateInitialAdminInput,
+  { db, now }: Required<BootstrapServiceOptions>,
 ): Promise<CreateInitialAdminResult> {
   const existingStatus = await getBootstrapStatus({ db });
 
@@ -104,19 +141,40 @@ export async function createInitialAdmin(
   }
 
   const createdAt = now.toISOString();
-  const [adminUser] = await db
-    .insert(adminUsers)
-    .values({
-      id: createAdminUserId(),
-      identifier,
-      displayName,
-      passwordHash,
-      status: "active",
-      role: "admin",
-      createdAt,
-      updatedAt: createdAt,
-    })
-    .returning();
+  let adminUser: AdminUser;
+  try {
+    [adminUser] = await db
+      .insert(adminUsers)
+      .values({
+        id: createAdminUserId(),
+        identifier,
+        displayName,
+        passwordHash,
+        status: "active",
+        role: "admin",
+        createdAt,
+        updatedAt: createdAt,
+      })
+      .returning();
+  } catch (error) {
+    if (isSqliteConstraintError(error)) {
+      await recordAdminActionResult({
+        db,
+        actionType: "bootstrap_admin_created",
+        targetType: "bootstrap",
+        result: "failed",
+        message: "系统已完成首轮管理员初始化。",
+        createdAt,
+      });
+      throw new AppError(
+        "FORBIDDEN",
+        "系统已完成首轮管理员初始化。",
+        "bootstrap",
+      );
+    }
+
+    throw error;
+  }
 
   await recordAdminActionResult({
     db,

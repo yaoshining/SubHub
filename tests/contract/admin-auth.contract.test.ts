@@ -89,6 +89,31 @@ describe("管理员初始化与认证 API 契约", () => {
     await expectApiError(duplicated, "FORBIDDEN");
   });
 
+  it("并发初始化时只创建一个管理员，其他请求返回重复初始化错误", async () => {
+    const responses = await Promise.all([
+      bootstrapRoute.POST(
+        jsonRequest("http://localhost/api/admin/bootstrap", {
+          identifier: "first@example.com",
+          displayName: "First",
+          password: "CorrectHorse42!",
+        }),
+      ),
+      bootstrapRoute.POST(
+        jsonRequest("http://localhost/api/admin/bootstrap", {
+          identifier: "second@example.com",
+          displayName: "Second",
+          password: "CorrectHorse42!",
+        }),
+      ),
+    ]);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([
+      201, 403,
+    ]);
+    const users = await getStorageClient().db.query.adminUsers.findMany();
+    expect(users).toHaveLength(1);
+  });
+
   it("完成登录、当前用户查询、Dashboard summary 与登出契约", async () => {
     await bootstrapRoute.POST(
       jsonRequest("http://localhost/api/admin/bootstrap", {
