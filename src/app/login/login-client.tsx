@@ -66,8 +66,21 @@ export function LoginClient({ returnTo }: LoginClientProps) {
           router.replace(returnTo);
         }
         return;
-      } catch {
-        // 未登录时继续展示认证入口。
+      } catch (error) {
+        if (
+          !(error instanceof AppError) ||
+          error.code !== "AUTHENTICATION_REQUIRED"
+        ) {
+          if (isMounted()) {
+            setMessage({
+              tone: "error",
+              title: "无法确认登录状态",
+              body: getErrorMessage(error),
+            });
+            setStatusLoading(false);
+          }
+          return;
+        }
       }
 
       try {
