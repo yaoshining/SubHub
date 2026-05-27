@@ -129,10 +129,7 @@ export async function getDashboardSummary({
     db
       .select({ value: countDistinct(providerCredentials.providerId) })
       .from(providerCredentials)
-      .innerJoin(
-        providers,
-        eq(providerCredentials.providerId, providers.id),
-      )
+      .innerJoin(providers, eq(providerCredentials.providerId, providers.id))
       .where(
         and(
           eq(providers.status, "enabled"),

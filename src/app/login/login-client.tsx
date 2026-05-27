@@ -57,29 +57,26 @@ export function LoginClient({ returnTo }: LoginClientProps) {
   const [bootstrapPasswordConfirm, setBootstrapPasswordConfirm] =
     React.useState("");
 
-  const loadStatus = React.useCallback(
-    async (isMounted: () => boolean) => {
-      try {
-        const status = await fetchBootstrapStatus();
-        if (isMounted()) {
-          setMode(status.initialized ? "login" : "bootstrap");
-        }
-      } catch (error) {
-        if (isMounted()) {
-          setMessage({
-            tone: "error",
-            title: "无法确认初始化状态",
-            body: getErrorMessage(error),
-          });
-        }
-      } finally {
-        if (isMounted()) {
-          setStatusLoading(false);
-        }
+  const loadStatus = React.useCallback(async (isMounted: () => boolean) => {
+    try {
+      const status = await fetchBootstrapStatus();
+      if (isMounted()) {
+        setMode(status.initialized ? "login" : "bootstrap");
       }
-    },
-    [],
-  );
+    } catch (error) {
+      if (isMounted()) {
+        setMessage({
+          tone: "error",
+          title: "无法确认初始化状态",
+          body: getErrorMessage(error),
+        });
+      }
+    } finally {
+      if (isMounted()) {
+        setStatusLoading(false);
+      }
+    }
+  }, []);
 
   React.useEffect(() => {
     let mounted = true;
