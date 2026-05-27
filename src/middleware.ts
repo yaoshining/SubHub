@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { adminSessionCookieName } from "@/lib/auth/constants";
 import { AppError, toApiErrorResponse } from "@/lib/errors";
-
-const adminSessionCookieName = "subhub_admin_session";
 
 const protectedAdminPages = [
   "/dashboard",
@@ -24,7 +23,10 @@ export function middleware(request: NextRequest) {
     request.cookies.get(adminSessionCookieName)?.value,
   );
 
-  if (pathname.startsWith("/api/admin/") && !hasAdminSessionCookie) {
+  if (
+    (pathname === "/api/admin" || pathname.startsWith("/api/admin/")) &&
+    !hasAdminSessionCookie
+  ) {
     return NextResponse.json(
       toApiErrorResponse(
         new AppError(
@@ -53,6 +55,7 @@ export const config = {
     "/api-keys/:path*",
     "/users/:path*",
     "/settings/:path*",
+    "/api/admin",
     "/api/admin/:path*",
   ],
 };

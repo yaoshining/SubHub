@@ -106,11 +106,20 @@ export async function verifyPassword(
     return false;
   }
 
+  const saltBytes = Buffer.from(salt, "base64url");
   const expected = Buffer.from(hash, "base64url");
+
+  if (
+    saltBytes.length !== 16 ||
+    expected.length !== scryptParameters.keyLength
+  ) {
+    return false;
+  }
+
   const actual = await scrypt(
     password,
-    Buffer.from(salt, "base64url"),
-    expected.length,
+    saltBytes,
+    scryptParameters.keyLength,
     {
       N: Number(n),
       r: Number(r),

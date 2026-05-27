@@ -2,6 +2,7 @@ import { createHmac, randomBytes } from "node:crypto";
 
 import { and, eq } from "drizzle-orm";
 
+import { adminSessionCookieName } from "@/lib/auth/constants";
 import { readEnv } from "@/lib/env";
 import { AppError } from "@/lib/errors";
 import {
@@ -15,7 +16,7 @@ import {
   type AdminUser,
 } from "@/server/storage/schema";
 
-export const adminSessionCookieName = "subhub_admin_session";
+export { adminSessionCookieName } from "@/lib/auth/constants";
 export const defaultAdminSessionTtlSeconds = 60 * 60 * 8;
 
 export type AdminSessionWithUser = AdminSession & {
