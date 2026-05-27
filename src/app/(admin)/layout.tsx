@@ -43,10 +43,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       { touchLastSeen: true },
     );
   } catch (error) {
-    if (
-      error instanceof AppError &&
-      error.code === "AUTHENTICATION_REQUIRED"
-    ) {
+    if (error instanceof AppError && error.code === "AUTHENTICATION_REQUIRED") {
       redirect(getLoginRedirectPath(headerStore.get(adminRequestPathHeader)));
     }
 
