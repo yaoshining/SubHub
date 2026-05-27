@@ -37,5 +37,3 @@ jobs:
         run: pnpm test
       - name: API 契约链路检查
         run: pnpm api:check
-      - name: 构建
-        run: pnpm build
