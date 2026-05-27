@@ -17,6 +17,15 @@ const isProtectedAdminPage = (pathname: string) =>
       pathname === protectedPath || pathname.startsWith(`${protectedPath}/`),
   );
 
+const publicAdminApiPaths = [
+  "/api/admin/bootstrap/status",
+  "/api/admin/bootstrap",
+  "/api/admin/auth/login",
+];
+
+const isPublicAdminApiPath = (pathname: string) =>
+  publicAdminApiPaths.includes(pathname);
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasAdminSessionCookie = Boolean(
@@ -25,6 +34,7 @@ export function middleware(request: NextRequest) {
 
   if (
     (pathname === "/api/admin" || pathname.startsWith("/api/admin/")) &&
+    !isPublicAdminApiPath(pathname) &&
     !hasAdminSessionCookie
   ) {
     return NextResponse.json(
