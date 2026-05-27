@@ -2,7 +2,10 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AdminShell } from "@/components/admin/admin-shell";
-import { EmptyStateActionButton, EmptyStateCard } from "@/components/admin/empty-state-card";
+import {
+  EmptyStateActionButton,
+  EmptyStateCard,
+} from "@/components/admin/empty-state-card";
 import { renderWithTheme } from "../helpers/ui";
 
 describe("后台共享布局响应式回归", () => {
@@ -18,7 +21,10 @@ describe("后台共享布局响应式回归", () => {
     );
 
     expect(screen.getByTestId("admin-shell")).toHaveClass("overflow-x-hidden");
-    expect(screen.getByRole("main")).toHaveClass("max-w-[1400px]", "desktop:grid-cols-[minmax(0,1fr)_20rem]");
+    expect(screen.getByRole("main")).toHaveClass(
+      "max-w-[1400px]",
+      "desktop:grid-cols-[minmax(0,1fr)_20rem]",
+    );
   });
 
   it("空状态 CTA 在移动端保持可达且不依赖横向布局", () => {

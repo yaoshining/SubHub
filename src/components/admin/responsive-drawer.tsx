@@ -40,9 +40,15 @@ export function ResponsiveDrawer({ user, className }: ResponsiveDrawerProps) {
       <DrawerContent className="inset-y-0 left-0 right-auto mt-0 h-[100dvh] max-h-[100dvh] w-[min(21rem,calc(100vw-2rem))] rounded-none border-r bg-surface p-0">
         <DrawerHeader className="sr-only">
           <DrawerTitle>后台导航</DrawerTitle>
-          <DrawerDescription>打开后可访问仪表盘、服务商、API 密钥、用户和设置。</DrawerDescription>
+          <DrawerDescription>
+            打开后可访问仪表盘、服务商、API 密钥、用户和设置。
+          </DrawerDescription>
         </DrawerHeader>
-        <Sidebar className="min-h-[100dvh] border-r-0" user={user} onNavigate={() => setOpen(false)} />
+        <Sidebar
+          className="min-h-[100dvh] border-r-0"
+          user={user}
+          onNavigate={() => setOpen(false)}
+        />
       </DrawerContent>
     </Drawer>
   );

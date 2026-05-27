@@ -10,7 +10,6 @@ let testDatabaseDirectory: string | undefined;
 beforeAll(() => {
   testDatabaseDirectory = mkdtempSync(join(tmpdir(), "subhub-test-db-"));
 
-
   if (!HTMLElement.prototype.setPointerCapture) {
     HTMLElement.prototype.setPointerCapture = vi.fn();
   }

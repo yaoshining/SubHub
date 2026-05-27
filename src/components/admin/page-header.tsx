@@ -24,7 +24,7 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 border-b bg-background/95 px-4 py-4 sm:px-6 desktop:flex-row desktop:items-start desktop:justify-between desktop:px-8",
+        "flex flex-col gap-4 border-b bg-background/95 px-4 py-4 desktop:flex-row desktop:items-start desktop:justify-between desktop:px-8 sm:px-6",
         className,
       )}
       data-testid="page-header"
@@ -49,7 +49,7 @@ export function PageHeader({
         {children}
       </div>
       {actions ? (
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center desktop:justify-end">
+        <div className="flex w-full flex-col gap-2 desktop:justify-end sm:w-auto sm:flex-row sm:items-center">
           {actions}
         </div>
       ) : null}

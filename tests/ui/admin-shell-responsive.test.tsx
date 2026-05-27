@@ -18,7 +18,10 @@ describe("Admin Shell 响应式骨架", () => {
     );
 
     expect(screen.getByTestId("admin-shell")).toHaveClass("overflow-x-hidden");
-    expect(screen.getByTestId("admin-sidebar")).toHaveClass("hidden", "desktop:flex");
+    expect(screen.getByTestId("admin-sidebar")).toHaveClass(
+      "hidden",
+      "desktop:flex",
+    );
     expect(screen.getByRole("link", { name: "仪表盘" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -33,14 +36,19 @@ describe("Admin Shell 响应式骨架", () => {
     renderWithTheme(<ResponsiveDrawer />);
 
     await user.click(screen.getByRole("button", { name: "打开后台导航" }));
-    expect(screen.getByRole("dialog", { name: "后台导航" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "后台导航" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "服务商" })).toHaveAttribute(
       "aria-current",
       "page",
     );
 
     await user.click(screen.getByRole("link", { name: "API 密钥" }));
-    expect(screen.getByRole("dialog", { name: "后台导航" })).toHaveAttribute("data-state", "closed");
+    expect(screen.getByRole("dialog", { name: "后台导航" })).toHaveAttribute(
+      "data-state",
+      "closed",
+    );
   });
 
   it("Page Header 在小屏保持单列，在桌面允许标题与操作并排", () => {
@@ -54,6 +62,8 @@ describe("Admin Shell 响应式骨架", () => {
 
     const header = screen.getByTestId("page-header");
     expect(header).toHaveClass("flex-col", "desktop:flex-row");
-    expect(screen.getByRole("button", { name: "新增 OpenSubtitles" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "新增 OpenSubtitles" }),
+    ).toBeVisible();
   });
 });

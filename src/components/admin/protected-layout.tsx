@@ -13,6 +13,9 @@ const fallbackUser: AdminUserSummary = {
   identifier: "admin@subhub.local",
 };
 
-export function ProtectedLayout({ children, user = fallbackUser }: ProtectedLayoutProps) {
+export function ProtectedLayout({
+  children,
+  user = fallbackUser,
+}: ProtectedLayoutProps) {
   return <AdminShell user={user}>{children}</AdminShell>;
 }

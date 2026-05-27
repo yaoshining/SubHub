@@ -32,10 +32,7 @@ export function EmptyStateCard({
 
   return (
     <Card
-      className={cn(
-        "border-border bg-surface shadow-none",
-        className,
-      )}
+      className={cn("border-border bg-surface shadow-none", className)}
       data-empty-icon={icon}
       data-testid="empty-state-card"
     >
@@ -45,14 +42,20 @@ export function EmptyStateCard({
         </div>
         <div className="max-w-md space-y-2">
           <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
-          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
         </div>
-        {action ? <div className="flex min-h-9 items-center">{action}</div> : null}
+        {action ? (
+          <div className="flex min-h-9 items-center">{action}</div>
+        ) : null}
       </CardContent>
     </Card>
   );
 }
 
-export function EmptyStateActionButton(props: React.ComponentProps<typeof Button>) {
+export function EmptyStateActionButton(
+  props: React.ComponentProps<typeof Button>,
+) {
   return <Button size="sm" {...props} />;
 }

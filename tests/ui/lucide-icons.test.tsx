@@ -45,7 +45,10 @@ describe("Lucide 图标基线", () => {
         description="新增 OpenSubtitles 后才能对外提供字幕服务。"
       />,
     );
-    expect(screen.getByTestId("empty-state-card")).toHaveAttribute("data-empty-icon", "cloud-off");
+    expect(screen.getByTestId("empty-state-card")).toHaveAttribute(
+      "data-empty-icon",
+      "cloud-off",
+    );
 
     rerender(
       <EmptyStateCard
@@ -54,7 +57,10 @@ describe("Lucide 图标基线", () => {
         description="创建调用方 Key 后，外部应用才能访问统一字幕出口。"
       />,
     );
-    expect(screen.getByTestId("empty-state-card")).toHaveAttribute("data-empty-icon", "key-round");
+    expect(screen.getByTestId("empty-state-card")).toHaveAttribute(
+      "data-empty-icon",
+      "key-round",
+    );
 
     rerender(
       <EmptyStateCard
@@ -63,6 +69,9 @@ describe("Lucide 图标基线", () => {
         description="邀请维护成员后，可在这里查看访问状态。"
       />,
     );
-    expect(screen.getByTestId("empty-state-card")).toHaveAttribute("data-empty-icon", "users");
+    expect(screen.getByTestId("empty-state-card")).toHaveAttribute(
+      "data-empty-icon",
+      "users",
+    );
   });
 });

@@ -37,14 +37,24 @@ export function AdminShell({
           <div className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur desktop:hidden">
             <ResponsiveDrawer user={user} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">SubHub</p>
-              <p className="truncate text-xs text-muted-foreground">后台控制台</p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                SubHub
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                后台控制台
+              </p>
             </div>
           </div>
-          {header ?? <PageHeader title={title} description={description} actions={actions} />}
+          {header ?? (
+            <PageHeader
+              title={title}
+              description={description}
+              actions={actions}
+            />
+          )}
           <main
             className={cn(
-              "mx-auto grid w-full max-w-[1400px] gap-6 px-4 py-6 sm:px-6 desktop:px-8",
+              "mx-auto grid w-full max-w-[1400px] gap-6 px-4 py-6 desktop:px-8 sm:px-6",
               secondaryPanel && "desktop:grid-cols-[minmax(0,1fr)_20rem]",
               className,
             )}

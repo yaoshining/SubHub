@@ -1,7 +1,11 @@
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export type AdminStatusTone = "success" | "warning" | "destructive" | "secondary";
+export type AdminStatusTone =
+  | "success"
+  | "warning"
+  | "destructive"
+  | "secondary";
 
 type StatusBadgeProps = Omit<BadgeProps, "variant"> & {
   tone: AdminStatusTone;

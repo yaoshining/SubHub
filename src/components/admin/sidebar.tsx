@@ -53,7 +53,9 @@ export function Sidebar({ user, onNavigate, className }: SidebarProps) {
     if (typeof window === "undefined") {
       return "dark";
     }
-    return window.localStorage.getItem("subhub-theme") === "light" ? "light" : "dark";
+    return window.localStorage.getItem("subhub-theme") === "light"
+      ? "light"
+      : "dark";
   });
 
   React.useEffect(() => {
@@ -114,12 +116,17 @@ export function Sidebar({ user, onNavigate, className }: SidebarProps) {
               asChild
               className={cn(
                 "h-10 w-full justify-start rounded-md px-3 text-sm text-muted-foreground transition-[background-color,color,transform] active:scale-[0.99]",
-                active && "bg-surface-elevated text-foreground ring-1 ring-border",
+                active &&
+                  "bg-surface-elevated text-foreground ring-1 ring-border",
               )}
               data-icon={iconName}
               variant="ghost"
             >
-              <Link aria-current={active ? "page" : undefined} href={href} onClick={onNavigate}>
+              <Link
+                aria-current={active ? "page" : undefined}
+                href={href}
+                onClick={onNavigate}
+              >
                 <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
                 <span>{label}</span>
               </Link>
@@ -154,7 +161,9 @@ export function Sidebar({ user, onNavigate, className }: SidebarProps) {
           </Button>
         </div>
         <Separator className="mt-3 bg-border/80" />
-        <p className="mt-3 text-xs text-muted-foreground">自托管字幕网关控制台</p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          自托管字幕网关控制台
+        </p>
       </div>
     </aside>
   );

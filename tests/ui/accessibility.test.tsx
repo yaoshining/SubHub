@@ -11,7 +11,9 @@ describe("后台共享组件可访问性", () => {
     setMockPathname("/settings");
     renderWithTheme(<Sidebar />);
 
-    expect(screen.getByRole("navigation", { name: "后台主导航" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "后台主导航" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "设置" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -29,6 +31,9 @@ describe("后台共享组件可访问性", () => {
     );
 
     expect(screen.getByRole("main")).toBeInTheDocument();
-    expect(screen.getByText("已启用")).toHaveAttribute("data-status-tone", "success");
+    expect(screen.getByText("已启用")).toHaveAttribute(
+      "data-status-tone",
+      "success",
+    );
   });
 });
