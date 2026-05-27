@@ -54,7 +54,7 @@ export function AdminShell({
           )}
           <main
             className={cn(
-              "mx-auto grid w-full max-w-[1400px] gap-6 px-4 py-6 desktop:px-8 sm:px-6",
+              "mx-auto grid w-full max-w-[1400px] gap-6 px-4 py-6 sm:px-6 xl:px-8",
               secondaryPanel && "desktop:grid-cols-[minmax(0,1fr)_20rem]",
               className,
             )}

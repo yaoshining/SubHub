@@ -44,7 +44,37 @@ describe("Admin Shell 响应式骨架", () => {
       "page",
     );
 
-    await user.click(screen.getByRole("link", { name: "API 密钥" }));
+    const apiKeysLink = screen.getByRole("link", { name: "API 密钥" });
+    apiKeysLink.addEventListener("click", (event) => event.preventDefault(), {
+      once: true,
+    });
+    await user.click(apiKeysLink);
+    expect(screen.getByRole("dialog", { name: "后台导航" })).toHaveAttribute(
+      "data-state",
+      "closed",
+    );
+  });
+
+  it("Drawer 支持 Esc 关闭路径", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<ResponsiveDrawer />);
+
+    await user.click(screen.getByRole("button", { name: "打开后台导航" }));
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "后台导航" })).toHaveAttribute(
+      "data-state",
+      "closed",
+    );
+  });
+
+  it("Drawer 支持遮罩关闭路径", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<ResponsiveDrawer />);
+
+    await user.click(screen.getByRole("button", { name: "打开后台导航" }));
+    const overlay = document.querySelector("[data-vaul-overlay]");
+    expect(overlay).toBeTruthy();
+    await user.click(overlay as Element);
     expect(screen.getByRole("dialog", { name: "后台导航" })).toHaveAttribute(
       "data-state",
       "closed",

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import type * as React from "react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
@@ -8,14 +9,10 @@ type ProtectedLayoutProps = {
   user?: AdminUserSummary;
 };
 
-const fallbackUser: AdminUserSummary = {
-  displayName: "维护者",
-  identifier: "admin@subhub.local",
-};
+export function ProtectedLayout({ children, user }: ProtectedLayoutProps) {
+  if (!user) {
+    redirect("/login");
+  }
 
-export function ProtectedLayout({
-  children,
-  user = fallbackUser,
-}: ProtectedLayoutProps) {
   return <AdminShell user={user}>{children}</AdminShell>;
 }

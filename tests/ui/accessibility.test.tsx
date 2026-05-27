@@ -27,6 +27,7 @@ describe("后台共享组件可访问性", () => {
     renderWithTheme(
       <AdminShell title="用户" description="管理后台成员。">
         <StatusBadge tone="success">已启用</StatusBadge>
+        <StatusBadge tone="destructive">已停用</StatusBadge>
       </AdminShell>,
     );
 

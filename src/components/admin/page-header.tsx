@@ -24,7 +24,7 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 border-b bg-background/95 px-4 py-4 desktop:flex-row desktop:items-start desktop:justify-between desktop:px-8 sm:px-6",
+        "flex flex-col gap-4 border-b bg-background/95 px-4 py-4 desktop:flex-row desktop:items-start desktop:justify-between sm:px-6 xl:px-8",
         className,
       )}
       data-testid="page-header"
