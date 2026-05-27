@@ -7,7 +7,6 @@ import { AlertCircle, CheckCircle2, LockKeyhole } from "lucide-react";
 import {
   bootstrapInitialAdmin,
   fetchBootstrapStatus,
-  fetchCurrentAdmin,
   loginAdminUser,
 } from "@/lib/api/admin-auth";
 import { AppError } from "@/lib/errors";
@@ -61,29 +60,6 @@ export function LoginClient({ returnTo }: LoginClientProps) {
   const loadStatus = React.useCallback(
     async (isMounted: () => boolean) => {
       try {
-        await fetchCurrentAdmin();
-        if (isMounted()) {
-          router.replace(returnTo);
-        }
-        return;
-      } catch (error) {
-        if (
-          !(error instanceof AppError) ||
-          error.code !== "AUTHENTICATION_REQUIRED"
-        ) {
-          if (isMounted()) {
-            setMessage({
-              tone: "error",
-              title: "无法确认登录状态",
-              body: getErrorMessage(error),
-            });
-            setStatusLoading(false);
-          }
-          return;
-        }
-      }
-
-      try {
         const status = await fetchBootstrapStatus();
         if (isMounted()) {
           setMode(status.initialized ? "login" : "bootstrap");
@@ -102,7 +78,7 @@ export function LoginClient({ returnTo }: LoginClientProps) {
         }
       }
     },
-    [returnTo, router],
+    [],
   );
 
   React.useEffect(() => {

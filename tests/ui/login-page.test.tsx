@@ -7,7 +7,6 @@ import { LoginClient } from "@/app/login/login-client";
 import {
   bootstrapInitialAdmin,
   fetchBootstrapStatus,
-  fetchCurrentAdmin,
   loginAdminUser,
 } from "@/lib/api/admin-auth";
 import { AppError } from "@/lib/errors";
@@ -15,11 +14,9 @@ import { AppError } from "@/lib/errors";
 vi.mock("@/lib/api/admin-auth", () => ({
   bootstrapInitialAdmin: vi.fn(),
   fetchBootstrapStatus: vi.fn(),
-  fetchCurrentAdmin: vi.fn(),
   loginAdminUser: vi.fn(),
 }));
 
-const mockedFetchCurrentAdmin = vi.mocked(fetchCurrentAdmin);
 const mockedFetchBootstrapStatus = vi.mocked(fetchBootstrapStatus);
 const mockedLoginAdminUser = vi.mocked(loginAdminUser);
 const mockedBootstrapInitialAdmin = vi.mocked(bootstrapInitialAdmin);
@@ -28,9 +25,6 @@ describe("Login 页面体验", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setMockRouter();
-    mockedFetchCurrentAdmin.mockRejectedValue(
-      new AppError("AUTHENTICATION_REQUIRED", "未登录。"),
-    );
     mockedFetchBootstrapStatus.mockResolvedValue({ initialized: true });
   });
 
@@ -41,6 +35,7 @@ describe("Login 页面体验", () => {
     expect(screen.queryByTestId("admin-sidebar")).not.toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "登录" })).toBeEnabled();
     expect(screen.getByText(/SSO 与 2FA 当前未启用/)).toBeInTheDocument();
+    expect(mockedFetchBootstrapStatus).toHaveBeenCalledTimes(1);
   });
 
   it("登录失败保留非敏感字段并清空密码", async () => {
@@ -89,19 +84,15 @@ describe("Login 页面体验", () => {
     );
   });
 
-  it("已登录访问时返回原目标页", async () => {
-    const router = setMockRouter();
-    mockedFetchCurrentAdmin.mockResolvedValue({
-      id: "admin_1",
-      identifier: "admin@subhub.local",
-      displayName: "Admin",
-      role: "admin",
-    });
+  it("初始化状态请求失败时展示错误提示", async () => {
+    mockedFetchBootstrapStatus.mockRejectedValue(
+      new AppError("UPSTREAM_FAILED", "请求处理失败。"),
+    );
 
-    renderWithTheme(<LoginClient returnTo="/api-keys" />);
+    renderWithTheme(<LoginClient returnTo="/dashboard" />);
 
     await waitFor(() => {
-      expect(router.replace).toHaveBeenCalledWith("/api-keys");
+      expect(screen.getByText("无法确认初始化状态")).toBeInTheDocument();
     });
   });
 });
