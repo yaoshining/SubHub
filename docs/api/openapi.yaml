@@ -138,7 +138,284 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
         "500":
           $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers:
+    get:
+      tags:
+        - Providers
+      operationId: listAdminProviders
+      summary: 查询 Provider 列表
+      description: 返回上游 Provider 与凭据池摘要；不会返回上游凭据明文或密文。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Provider 列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags:
+        - Providers
+      operationId: createAdminProvider
+      summary: 创建 OpenSubtitles Provider
+      description: MVP 仅允许创建 OpenSubtitles Provider；可随请求写入首个上游凭据。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderRequest"
+      responses:
+        "201":
+          description: Provider 已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}:
+    get:
+      tags:
+        - Providers
+      operationId: getAdminProvider
+      summary: 查询 Provider 详情
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 详情与凭据池
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+    patch:
+      tags:
+        - Providers
+      operationId: updateAdminProvider
+      summary: 更新 Provider 运行策略
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderRequest"
+      responses:
+        "200":
+          description: Provider 已更新
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/enable:
+    post:
+      tags:
+        - Providers
+      operationId: enableAdminProvider
+      summary: 启用 Provider
+      description: 只有存在可参与调度的 active 凭据时才允许启用。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 已启用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/disable:
+    post:
+      tags:
+        - Providers
+      operationId: disableAdminProvider
+      summary: 停用 Provider
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 已停用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/credentials:
+    get:
+      tags:
+        - Providers
+      operationId: listAdminProviderCredentials
+      summary: 查询 Provider 凭据池
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 凭据列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags:
+        - Providers
+      operationId: createAdminProviderCredential
+      summary: 新增 Provider 上游凭据
+      description: 明文 secret 只允许在写入请求中出现；响应只返回受控展示片段。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderCredentialRequest"
+      responses:
+        "201":
+          description: Provider 凭据已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/credentials/{credentialId}/isolate:
+    post:
+      tags:
+        - Providers
+      operationId: isolateAdminProviderCredential
+      summary: 隔离异常 Provider 凭据
+      description: 隔离后该凭据立即退出调度池，不影响同 Provider 下其他 active 凭据。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+        - $ref: "#/components/parameters/CredentialId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IsolateProviderCredentialRequest"
+      responses:
+        "200":
+          description: Provider 凭据已隔离
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialActionResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/credentials/{credentialId}/restore:
+    post:
+      tags:
+        - Providers
+      operationId: restoreAdminProviderCredential
+      summary: 恢复 Provider 凭据
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+        - $ref: "#/components/parameters/CredentialId"
+      responses:
+        "200":
+          description: Provider 凭据已恢复为 active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialActionResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
 components:
+  parameters:
+    ProviderId:
+      name: providerId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Provider 稳定标识。
+    CredentialId:
+      name: credentialId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: ProviderCredential 稳定标识。
   responses:
     ErrorResponse:
       description: 统一错误响应
@@ -305,6 +582,284 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/AdminLoginData"
+    ProviderType:
+      type: string
+      enum:
+        - opensubtitles
+    ProviderStatus:
+      type: string
+      enum:
+        - enabled
+        - disabled
+        - needs_config
+        - degraded
+    ProviderCredentialStatus:
+      type: string
+      enum:
+        - active
+        - cooldown
+        - isolated
+        - disabled
+        - exhausted
+    Provider:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - priority
+        - weight
+        - concurrencyLimit
+        - rotationEnabled
+        - cooldownSeconds
+        - fallbackProviderId
+        - lastHealthStatus
+        - lastErrorSummary
+        - createdAt
+        - updatedAt
+        - credentialCount
+        - activeCredentialCount
+        - availableCredentialCount
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/ProviderType"
+        status:
+          $ref: "#/components/schemas/ProviderStatus"
+        priority:
+          type: integer
+          minimum: 0
+        weight:
+          type: integer
+          minimum: 0
+        concurrencyLimit:
+          type: integer
+          minimum: 1
+        rotationEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+          minimum: 0
+        fallbackProviderId:
+          type: string
+          nullable: true
+        lastHealthStatus:
+          type: string
+          nullable: true
+        lastErrorSummary:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        credentialCount:
+          type: integer
+          minimum: 0
+        activeCredentialCount:
+          type: integer
+          minimum: 0
+        availableCredentialCount:
+          type: integer
+          minimum: 0
+    ProviderCredential:
+      type: object
+      required:
+        - id
+        - providerId
+        - label
+        - displayPrefix
+        - displaySuffix
+        - status
+        - remainingQuota
+        - lastUsedAt
+        - lastErrorAt
+        - lastErrorSummary
+        - cooldownUntil
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        providerId:
+          type: string
+        label:
+          type: string
+        displayPrefix:
+          type: string
+          nullable: true
+        displaySuffix:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ProviderCredentialStatus"
+        remainingQuota:
+          type: integer
+          nullable: true
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastErrorAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastErrorSummary:
+          type: string
+          nullable: true
+        cooldownUntil:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProviderDetail:
+      allOf:
+        - $ref: "#/components/schemas/Provider"
+        - type: object
+          required:
+            - credentials
+          properties:
+            credentials:
+              type: array
+              items:
+                $ref: "#/components/schemas/ProviderCredential"
+    ProviderList:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Provider"
+        total:
+          type: integer
+          minimum: 0
+    ProviderListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderList"
+    ProviderDetailResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderDetail"
+    ProviderCredentialList:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderCredential"
+        total:
+          type: integer
+          minimum: 0
+    ProviderCredentialListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderCredentialList"
+    ProviderCredentialResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderCredential"
+    ProviderCredentialAction:
+      type: object
+      required:
+        - credential
+        - provider
+      properties:
+        credential:
+          $ref: "#/components/schemas/ProviderCredential"
+        provider:
+          $ref: "#/components/schemas/ProviderDetail"
+    ProviderCredentialActionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderCredentialAction"
+    CreateProviderCredentialRequest:
+      type: object
+      required:
+        - label
+        - secret
+      properties:
+        label:
+          type: string
+          minLength: 1
+        secret:
+          type: string
+          minLength: 1
+          format: password
+    CreateProviderRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          $ref: "#/components/schemas/ProviderType"
+        initialCredential:
+          $ref: "#/components/schemas/CreateProviderCredentialRequest"
+    UpdateProviderRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        priority:
+          type: integer
+          minimum: 0
+        weight:
+          type: integer
+          minimum: 0
+        concurrencyLimit:
+          type: integer
+          minimum: 1
+        rotationEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+          minimum: 0
+        fallbackProviderId:
+          type: string
+          nullable: true
+    IsolateProviderCredentialRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
     ReadinessSummary:
       type: object
       required:
