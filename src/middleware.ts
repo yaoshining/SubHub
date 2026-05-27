@@ -30,9 +30,10 @@ const isPublicAdminApiPath = (pathname: string) =>
   publicAdminApiPaths.includes(pathname);
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  const protectedTarget = `${pathname}${search}`;
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(adminRequestPathHeader, pathname);
+  requestHeaders.set(adminRequestPathHeader, protectedTarget);
   const hasAdminSessionCookie = Boolean(
     request.cookies.get(adminSessionCookieName)?.value,
   );
@@ -56,7 +57,7 @@ export function middleware(request: NextRequest) {
 
   if (isProtectedAdminPage(pathname) && !hasAdminSessionCookie) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
+    loginUrl.searchParams.set("next", protectedTarget);
     return NextResponse.redirect(loginUrl);
   }
 

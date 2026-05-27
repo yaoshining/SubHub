@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 
 type LoginClientProps = {
   returnTo: string;
+  sessionNotice?: string | null;
 };
 
 type AuthMode = "login" | "bootstrap";
@@ -39,7 +40,7 @@ const getErrorMessage = (error: unknown) => {
   return "请求失败，请稍后重试。";
 };
 
-export function LoginClient({ returnTo }: LoginClientProps) {
+export function LoginClient({ returnTo, sessionNotice }: LoginClientProps) {
   const router = useRouter();
   const [mode, setMode] = React.useState<AuthMode>("login");
   const [statusLoading, setStatusLoading] = React.useState(true);
@@ -48,7 +49,15 @@ export function LoginClient({ returnTo }: LoginClientProps) {
     tone: "success" | "error";
     title: string;
     body: string;
-  } | null>(null);
+  } | null>(
+    sessionNotice
+      ? {
+          tone: "error",
+          title: "会话需要重新登录",
+          body: sessionNotice,
+        }
+      : null,
+  );
   const [loginIdentifier, setLoginIdentifier] = React.useState("");
   const [loginPassword, setLoginPassword] = React.useState("");
   const [bootstrapIdentifier, setBootstrapIdentifier] = React.useState("");

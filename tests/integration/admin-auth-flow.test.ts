@@ -118,6 +118,30 @@ describe("首个管理员认证流程", () => {
     }
   });
 
+  it("拦截未登录后台页面时保留原目标查询参数", () => {
+    const protectedPage = middleware(
+      new NextRequest("http://localhost/providers?status=degraded"),
+    );
+
+    expect(protectedPage?.status).toBe(307);
+    expect(protectedPage?.headers.get("location")).toBe(
+      "http://localhost/login?next=%2Fproviders%3Fstatus%3Ddegraded",
+    );
+  });
+
+  it("已有脏会话 cookie 时向后续后台布局传递完整原目标", () => {
+    const response = middleware(
+      new NextRequest("http://localhost/users?page=2", {
+        headers: { cookie: "subhub_admin_session=stale-session-token" },
+      }),
+    );
+
+    expect(response?.status).toBe(200);
+    expect(
+      response?.headers.get("x-middleware-request-x-subhub-admin-pathname"),
+    ).toBe("/users?page=2");
+  });
+
   it("未登录访问受保护管理端 API 时返回认证错误", async () => {
     const response = middleware(
       new NextRequest("http://localhost/api/admin/auth/me"),

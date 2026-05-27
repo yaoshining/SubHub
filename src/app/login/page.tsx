@@ -9,6 +9,7 @@ import {
 
 type LoginPageProps = {
   searchParams?: Promise<{
+    auth?: string | string[];
     next?: string | string[];
   }>;
 };
@@ -32,9 +33,20 @@ const getSafeReturnTo = (value: string | string[] | undefined) => {
   return target;
 };
 
+const getSessionNotice = (value: string | string[] | undefined) => {
+  const authReason = Array.isArray(value) ? value[0] : value;
+
+  if (authReason === "session-expired") {
+    return "管理员会话已失效，请重新登录。";
+  }
+
+  return null;
+};
+
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = searchParams ? await searchParams : {};
   const returnTo = getSafeReturnTo(params.next);
+  const sessionNotice = getSessionNotice(params.auth);
   const cookieStore = await cookies();
   let hasActiveSession = false;
 
@@ -52,5 +64,5 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect(returnTo);
   }
 
-  return <LoginClient returnTo={returnTo} />;
+  return <LoginClient returnTo={returnTo} sessionNotice={sessionNotice} />;
 }

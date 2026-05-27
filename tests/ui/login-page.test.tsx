@@ -20,6 +20,10 @@ vi.mock("@/lib/api/admin-auth", () => ({
 const mockedFetchBootstrapStatus = vi.mocked(fetchBootstrapStatus);
 const mockedLoginAdminUser = vi.mocked(loginAdminUser);
 const mockedBootstrapInitialAdmin = vi.mocked(bootstrapInitialAdmin);
+const LoginClientWithSessionNotice = LoginClient as React.ComponentType<{
+  returnTo: string;
+  sessionNotice?: string | null;
+}>;
 
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -66,6 +70,20 @@ describe("Login 页面体验", () => {
     expect(await screen.findByText("登录失败")).toBeInTheDocument();
     expect(identifierInput).toHaveValue("admin@subhub.local");
     expect(passwordInput).toHaveValue("");
+  });
+
+  it("从失效会话返回登录页时展示明确提示", async () => {
+    renderWithTheme(
+      <LoginClientWithSessionNotice
+        returnTo="/dashboard"
+        sessionNotice="管理员会话已失效，请重新登录。"
+      />,
+    );
+
+    expect(await screen.findByText("会话需要重新登录")).toBeInTheDocument();
+    expect(
+      screen.getByText("管理员会话已失效，请重新登录。"),
+    ).toBeInTheDocument();
   });
 
   it("登录提交中禁用重复提交，成功后返回原受保护目标", async () => {

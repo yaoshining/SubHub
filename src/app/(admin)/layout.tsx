@@ -26,7 +26,10 @@ function getLoginRedirectPath(pathname: string | null) {
     return "/login";
   }
 
-  return `/login?${new URLSearchParams({ next: pathname }).toString()}`;
+  return `/login?${new URLSearchParams({
+    next: pathname,
+    auth: "session-expired",
+  }).toString()}`;
 }
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {

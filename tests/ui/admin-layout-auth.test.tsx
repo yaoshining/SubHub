@@ -97,7 +97,7 @@ describe("AdminLayout 认证上下文注入", () => {
     mocks.cookies.mockResolvedValue(cookieStore);
     mocks.headers.mockResolvedValue({
       get: vi.fn((name: string) =>
-        name === "x-subhub-admin-pathname" ? "/dashboard" : null,
+        name === "x-subhub-admin-pathname" ? "/dashboard?tab=health" : null,
       ),
     });
     mocks.requireActiveAdminSession.mockRejectedValue(
@@ -112,8 +112,12 @@ describe("AdminLayout 认证上下文注入", () => {
       AdminLayout({
         children: <div>受保护内容</div>,
       }),
-    ).rejects.toThrow("NEXT_REDIRECT:/login?next=%2Fdashboard");
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:/login?next=%2Fdashboard%3Ftab%3Dhealth&auth=session-expired",
+    );
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/login?next=%2Fdashboard");
+    expect(mocks.redirect).toHaveBeenCalledWith(
+      "/login?next=%2Fdashboard%3Ftab%3Dhealth&auth=session-expired",
+    );
   });
 });
