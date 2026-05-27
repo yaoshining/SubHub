@@ -96,7 +96,10 @@ export const createStorageClient = (
     close: () => sqlite.close(),
   };
 
-  if (options.runMigrations ?? false) {
+  const shouldRunMigrations =
+    options.runMigrations ?? !(options.readonly ?? false);
+
+  if (shouldRunMigrations) {
     client.migrate();
   }
 
