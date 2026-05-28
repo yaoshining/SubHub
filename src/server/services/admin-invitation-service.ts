@@ -9,10 +9,9 @@ import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
-import type { AdminInvitation } from "@/server/storage/schema";
 
 export type CreateAdminInvitationInput = Pick<
-  AdminInvitation,
+  AdminInvitationSummary,
   "identifier" | "rolePreset" | "accessPreset"
 >;
 
@@ -65,7 +64,7 @@ const validateInvitationInput = (input: CreateAdminInvitationInput) => {
 export async function createAdminInvitation(
   input: CreateAdminInvitationInput,
   options: AdminInvitationServiceOptions = {},
-): Promise<AdminInvitation> {
+): Promise<AdminInvitationSummary> {
   const actorAdminUserId = options.actorAdminUserId ?? null;
 
   if (!actorAdminUserId) {

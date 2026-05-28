@@ -74,7 +74,7 @@ const toMember = (user: AdminUser): AdminMember => ({
   lastActiveAt: user.lastLoginAt,
 });
 
-const toInvitationSummary = (
+export const toAdminInvitationSummary = (
   invitation: AdminInvitation,
 ): AdminInvitationSummary => ({
   id: invitation.id,
@@ -112,7 +112,7 @@ export class AdminUserRepository {
         .select()
         .from(adminInvitations)
         .orderBy(desc(adminInvitations.createdAt))
-        .then((rows) => rows.map(toInvitationSummary)),
+        .then((rows) => rows.map(toAdminInvitationSummary)),
       this.db
         .select()
         .from(adminSessions)
@@ -218,7 +218,7 @@ export class AdminUserRepository {
       throw new AppError("UPSTREAM_FAILED", "创建成员邀请失败。");
     }
 
-    return invitation;
+    return toAdminInvitationSummary(invitation);
   }
 
   async revokeInvitation(invitationId: string, now = new Date()) {
@@ -246,7 +246,7 @@ export class AdminUserRepository {
       );
     }
 
-    return invitation;
+    return toAdminInvitationSummary(invitation);
   }
 
   async suspendUser(userId: string, now = new Date()) {

@@ -67,9 +67,12 @@ describe("Admin invitation service", () => {
       status: "pending",
       rolePreset: "operator",
       accessPreset: "admin_console",
-      invitedByAdminUserId: admin.id,
       expiresAt: "2026-06-04T12:00:00.000Z",
     });
+    expect(invitation).not.toHaveProperty("invitedByAdminUserId");
+    expect(invitation).not.toHaveProperty("acceptedAdminUserId");
+    expect(invitation).not.toHaveProperty("acceptedAt");
+    expect(invitation).not.toHaveProperty("revokedAt");
 
     const actions = await getStorageClient()
       .db.select()
@@ -154,7 +157,7 @@ describe("Admin invitation service", () => {
     ).resolves.toMatchObject({
       id: invitation.id,
       status: "revoked",
-      revokedAt: "2026-05-28T13:00:00.000Z",
+      updatedAt: "2026-05-28T13:00:00.000Z",
     });
   });
 });

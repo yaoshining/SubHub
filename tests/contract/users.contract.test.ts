@@ -124,16 +124,19 @@ describe("Users 管理 API 契约", () => {
       ),
     );
     expect(createdInvitation.status).toBe(201);
-    await expect(
-      readJson<{
-        data: {
-          identifier: string;
-          status: string;
-          rolePreset: string;
-          accessPreset: string;
-        };
-      }>(createdInvitation),
-    ).resolves.toEqual({
+    const createdInvitationPayload = await readJson<{
+      data: {
+        identifier: string;
+        status: string;
+        rolePreset: string;
+        accessPreset: string;
+        invitedByAdminUserId?: string;
+        acceptedAdminUserId?: string | null;
+        acceptedAt?: string | null;
+        revokedAt?: string | null;
+      };
+    }>(createdInvitation);
+    expect(createdInvitationPayload).toEqual({
       data: expect.objectContaining({
         identifier: "invited@example.com",
         status: "pending",
@@ -141,6 +144,14 @@ describe("Users 管理 API 契约", () => {
         accessPreset: "admin_console",
       }),
     });
+    expect(createdInvitationPayload.data).not.toHaveProperty(
+      "invitedByAdminUserId",
+    );
+    expect(createdInvitationPayload.data).not.toHaveProperty(
+      "acceptedAdminUserId",
+    );
+    expect(createdInvitationPayload.data).not.toHaveProperty("acceptedAt");
+    expect(createdInvitationPayload.data).not.toHaveProperty("revokedAt");
 
     const duplicateInvitation = await invitationsRoute.POST(
       jsonRequest(
