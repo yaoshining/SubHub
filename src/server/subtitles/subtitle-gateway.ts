@@ -8,7 +8,10 @@ import {
 } from "@/server/providers/credential-pool";
 import { OpenSubtitlesAdapter } from "@/server/providers/opensubtitles-adapter";
 import { ProviderRepository } from "@/server/providers/provider-repository";
-import { getStorageClient, type StorageDatabase } from "@/server/storage/client";
+import {
+  getStorageClient,
+  type StorageDatabase,
+} from "@/server/storage/client";
 import type { CallerKey, Provider } from "@/server/storage/schema";
 
 export type SubtitleSearchInput = {

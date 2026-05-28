@@ -3,7 +3,10 @@ import {
   createCallerKeyRepository,
   type CreateCallerKeyInput,
 } from "@/server/caller-keys/caller-key-repository";
-import { getStorageClient, type StorageDatabase } from "@/server/storage/client";
+import {
+  getStorageClient,
+  type StorageDatabase,
+} from "@/server/storage/client";
 
 export type CallerKeyServiceOptions = {
   db?: StorageDatabase;

@@ -11,7 +11,10 @@ import {
   type OpenSubtitlesDownloadResult,
 } from "@/server/providers/opensubtitles-adapter";
 import { ProviderRepository } from "@/server/providers/provider-repository";
-import { getStorageClient, type StorageDatabase } from "@/server/storage/client";
+import {
+  getStorageClient,
+  type StorageDatabase,
+} from "@/server/storage/client";
 import type { CallerKey, Provider } from "@/server/storage/schema";
 
 export type SubtitleDownloadResult = OpenSubtitlesDownloadResult & {
@@ -48,10 +51,7 @@ const requireDownloadProvider = async (
     now,
   );
 
-  if (
-    provider.status !== "enabled" &&
-    provider.status !== "degraded"
-  ) {
+  if (provider.status !== "enabled" && provider.status !== "degraded") {
     throw new AppError(
       "SERVICE_NOT_READY",
       "字幕所属 Provider 当前不可用于下载。",
@@ -155,12 +155,7 @@ export async function downloadSubtitle(
     const result = await adapter.download(credential.secret, parsed.subtitleId);
 
     await markCredentialUsed(provider.id, credential.id, { db, now });
-    await record(
-      "success",
-      result.contentType,
-      provider.id,
-      credential.id,
-    );
+    await record("success", result.contentType, provider.id, credential.id);
 
     return { ...result, subtitleRef };
   } catch (error) {

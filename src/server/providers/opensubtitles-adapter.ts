@@ -85,7 +85,8 @@ export class OpenSubtitlesAdapter {
       body: JSON.stringify({ file_id: subtitleId }),
     });
 
-    const fileName = payload.file_name ?? payload.fileName ?? `${subtitleId}.srt`;
+    const fileName =
+      payload.file_name ?? payload.fileName ?? `${subtitleId}.srt`;
 
     if (payload.content) {
       return {

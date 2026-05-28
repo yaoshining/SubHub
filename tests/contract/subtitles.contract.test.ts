@@ -178,7 +178,10 @@ describe("对外字幕 API 契约", () => {
       ),
     );
     const searchPayload = await readJson<{
-      data: { status: string; results: Array<{ id: string; downloadUrl: string }> };
+      data: {
+        status: string;
+        results: Array<{ id: string; downloadUrl: string }>;
+      };
     }>(search);
 
     expect(searchPayload.data).toMatchObject({

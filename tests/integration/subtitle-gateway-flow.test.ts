@@ -102,9 +102,8 @@ describe("字幕出口端到端 API 流程", () => {
     expect(download.status).toBe(200);
     await expect(download.text()).resolves.toContain("你好");
 
-    const { suspendCallerKey } = await import(
-      "@/server/services/caller-key-service"
-    );
+    const { suspendCallerKey } =
+      await import("@/server/services/caller-key-service");
     await suspendCallerKey(callerKey.callerKey.id);
 
     await expectApiError(

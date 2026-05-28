@@ -53,11 +53,9 @@ export type CallerKeyUsageSummary = {
 
 const revealWindowMs = 10 * 60 * 1000;
 
-const createCallerKeyId = () =>
-  `ck_${randomBytes(16).toString("base64url")}`;
+const createCallerKeyId = () => `ck_${randomBytes(16).toString("base64url")}`;
 
-const createRotationId = () =>
-  `ckr_${randomBytes(16).toString("base64url")}`;
+const createRotationId = () => `ckr_${randomBytes(16).toString("base64url")}`;
 
 const createSubtitleSearchRequestId = () =>
   `search_${randomBytes(16).toString("base64url")}`;
@@ -123,11 +121,7 @@ export class CallerKeyRepository {
       .limit(1);
 
     if (!callerKey) {
-      throw new AppError(
-        "CALLER_KEY_INVALID",
-        "Caller Key 不存在。",
-        "keyId",
-      );
+      throw new AppError("CALLER_KEY_INVALID", "Caller Key 不存在。", "keyId");
     }
 
     return callerKey;
@@ -316,7 +310,10 @@ export class CallerKeyRepository {
     return request;
   }
 
-  async getUsageSummary(keyId: string, limit = 20): Promise<CallerKeyUsageSummary> {
+  async getUsageSummary(
+    keyId: string,
+    limit = 20,
+  ): Promise<CallerKeyUsageSummary> {
     const callerKey = await this.requireCallerKey(keyId);
     const [searches, downloads, rotations] = await Promise.all([
       this.db

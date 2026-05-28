@@ -400,6 +400,235 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
         "503":
           $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys:
+    get:
+      tags:
+        - Caller Keys
+      operationId: listAdminCallerKeys
+      summary: 查询 Caller Key 列表
+      description: 返回下游调用方 Key inventory；不会返回 keyHash、revealTokenHash 或完整明文。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Caller Key 列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags:
+        - Caller Keys
+      operationId: createAdminCallerKey
+      summary: 创建 Caller Key
+      description: 完整明文 Key 仅在创建响应的受控 reveal window 中返回一次；服务端只持久化 hash 与展示片段。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCallerKeyRequest"
+      responses:
+        "201":
+          description: Caller Key 已创建，完整明文仅本次响应可见。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyRevealResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys/{keyId}/rotate:
+    post:
+      tags:
+        - Caller Keys
+      operationId: rotateAdminCallerKey
+      summary: 轮换 Caller Key
+      description: 轮换后旧 Key 立即失效，新完整明文仅在本次响应中返回。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/CallerKeyId"
+      responses:
+        "200":
+          description: Caller Key 已轮换
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyRotationResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys/{keyId}/suspend:
+    post:
+      tags:
+        - Caller Keys
+      operationId: suspendAdminCallerKey
+      summary: 停用 Caller Key
+      description: 停用后该 Key 的新字幕查询与下载请求立即被拒绝。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/CallerKeyId"
+      responses:
+        "200":
+          description: Caller Key 已停用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys/{keyId}/usage:
+    get:
+      tags:
+        - Caller Keys
+      operationId: getAdminCallerKeyUsage
+      summary: 查询 Caller Key 使用摘要
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/CallerKeyId"
+      responses:
+        "200":
+          description: Caller Key 最近查询、下载与轮换摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyUsageResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/subtitles/search:
+    get:
+      tags:
+        - Subtitles
+      operationId: searchSubtitles
+      summary: 统一字幕查询
+      description: 外部调用方使用 active Caller Key 查询字幕；无 Provider、无活跃凭据、无结果与上游失败均使用统一错误结构。
+      security:
+        - CallerKeyBearer: []
+      parameters:
+        - name: title
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1800
+            maximum: 3000
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: episode
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: 字幕查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubtitleSearchResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/subtitles/download:
+    get:
+      tags:
+        - Subtitles
+      operationId: downloadSubtitle
+      summary: 统一字幕下载
+      description: 基于查询结果中的 subtitleId 下载字幕文件；下载失败使用统一错误结构。
+      security:
+        - CallerKeyBearer: []
+      parameters:
+        - name: subtitleId
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: 字幕文件内容
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              description: 字幕文件 MIME 类型，例如 application/x-subrip。
+            Content-Disposition:
+              schema:
+                type: string
+              description: attachment 文件下载头，包含安全文件名。
+          content:
+            application/x-subrip:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
 components:
   parameters:
     ProviderId:
@@ -409,6 +638,13 @@ components:
       schema:
         type: string
       description: Provider 稳定标识。
+    CallerKeyId:
+      name: keyId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: CallerKey 稳定标识。
     CredentialId:
       name: credentialId
       in: path
@@ -860,6 +1096,292 @@ components:
         reason:
           type: string
           minLength: 1
+    CallerKeyEnvironment:
+      type: string
+      enum:
+        - production
+        - staging
+        - development
+    CallerKeyStatus:
+      type: string
+      enum:
+        - active
+        - suspended
+        - rotated
+    CallerKey:
+      type: object
+      required:
+        - id
+        - callerName
+        - environment
+        - scope
+        - quotaPolicy
+        - keyPrefix
+        - keySuffix
+        - status
+        - createdAt
+        - updatedAt
+        - lastUsedAt
+        - lastRotatedAt
+        - revealUntil
+      properties:
+        id:
+          type: string
+        callerName:
+          type: string
+        environment:
+          $ref: "#/components/schemas/CallerKeyEnvironment"
+        scope:
+          type: string
+          enum:
+            - subtitles:read
+        quotaPolicy:
+          type: string
+        keyPrefix:
+          type: string
+          nullable: true
+        keySuffix:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/CallerKeyStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastRotatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        revealUntil:
+          type: string
+          format: date-time
+          nullable: true
+    CallerKeyList:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CallerKey"
+        total:
+          type: integer
+          minimum: 0
+    CallerKeyListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyList"
+    CreateCallerKeyRequest:
+      type: object
+      required:
+        - callerName
+        - environment
+        - scope
+        - quotaPolicy
+      properties:
+        callerName:
+          type: string
+          minLength: 1
+        environment:
+          $ref: "#/components/schemas/CallerKeyEnvironment"
+        scope:
+          type: string
+          enum:
+            - subtitles:read
+        quotaPolicy:
+          type: string
+          minLength: 1
+    CallerKeyReveal:
+      type: object
+      required:
+        - callerKey
+        - key
+      properties:
+        callerKey:
+          $ref: "#/components/schemas/CallerKey"
+        key:
+          type: string
+          description: 完整 Caller Key 明文，仅创建或轮换响应中返回一次。
+          format: password
+    CallerKeyRevealResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyReveal"
+    CallerKeyResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKey"
+    CallerKeyRotation:
+      type: object
+      required:
+        - id
+        - callerKeyId
+        - oldKeySuffix
+        - newKeySuffix
+        - result
+        - reason
+        - createdAt
+        - performedByAdminUserId
+      properties:
+        id:
+          type: string
+        callerKeyId:
+          type: string
+        oldKeySuffix:
+          type: string
+          nullable: true
+        newKeySuffix:
+          type: string
+          nullable: true
+        result:
+          type: string
+          enum:
+            - success
+            - failed
+        reason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        performedByAdminUserId:
+          type: string
+          nullable: true
+    CallerKeyRotationResult:
+      type: object
+      required:
+        - callerKey
+        - rotation
+        - key
+      properties:
+        callerKey:
+          $ref: "#/components/schemas/CallerKey"
+        rotation:
+          $ref: "#/components/schemas/CallerKeyRotation"
+        key:
+          type: string
+          format: password
+    CallerKeyRotationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyRotationResult"
+    SubtitleSearchRequestRecord:
+      type: object
+      additionalProperties: true
+    SubtitleDownloadRequestRecord:
+      type: object
+      additionalProperties: true
+    CallerKeyUsage:
+      type: object
+      required:
+        - callerKeyId
+        - lastUsedAt
+        - searchCount
+        - downloadCount
+        - recentSearches
+        - recentDownloads
+        - recentRotations
+      properties:
+        callerKeyId:
+          type: string
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        searchCount:
+          type: integer
+          minimum: 0
+        downloadCount:
+          type: integer
+          minimum: 0
+        recentSearches:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleSearchRequestRecord"
+        recentDownloads:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleDownloadRequestRecord"
+        recentRotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CallerKeyRotation"
+    CallerKeyUsageResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyUsage"
+    SubtitleSearchResult:
+      type: object
+      required:
+        - id
+        - provider
+        - language
+        - releaseName
+        - format
+        - downloadUrl
+      properties:
+        id:
+          type: string
+          description: 网关生成的字幕引用，可直接用于下载接口 subtitleId。
+        provider:
+          type: string
+          enum:
+            - opensubtitles
+        language:
+          type: string
+          nullable: true
+        releaseName:
+          type: string
+          nullable: true
+        format:
+          type: string
+        downloadUrl:
+          type: string
+    SubtitleSearchData:
+      type: object
+      required:
+        - status
+        - results
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleSearchResult"
+    SubtitleSearchResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/SubtitleSearchData"
     ReadinessSummary:
       type: object
       required:
