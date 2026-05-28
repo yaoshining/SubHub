@@ -3,7 +3,10 @@
 import * as React from "react";
 import { KeyRound, Plus } from "lucide-react";
 
-import type { CallerKeyReveal, CreateCallerKeyRequest } from "@/lib/api/caller-keys";
+import type {
+  CallerKeyReveal,
+  CreateCallerKeyRequest,
+} from "@/lib/api/caller-keys";
 import { createCallerKey } from "@/lib/api/caller-keys";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -67,7 +70,10 @@ export function CallerKeyForm({ disabled, onCreated }: CallerKeyFormProps) {
   }
 
   return (
-    <Card className="border-border bg-surface shadow-none" data-testid="caller-key-form">
+    <Card
+      className="border-border bg-surface shadow-none"
+      data-testid="caller-key-form"
+    >
       <CardHeader className="p-4 sm:p-6">
         <div className="flex items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-muted/30 text-primary">
@@ -108,7 +114,10 @@ export function CallerKeyForm({ disabled, onCreated }: CallerKeyFormProps) {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="grid gap-2">
-              <label className="text-sm font-medium" htmlFor="caller-environment">
+              <label
+                className="text-sm font-medium"
+                htmlFor="caller-environment"
+              >
                 环境
               </label>
               <Select
@@ -174,7 +183,8 @@ export function CallerKeyForm({ disabled, onCreated }: CallerKeyFormProps) {
             <KeyRound aria-hidden="true" className="size-4" />
             <AlertTitle>一次性明文提醒</AlertTitle>
             <AlertDescription>
-              创建成功后请在受控窗口内复制给下游系统；页面不会在默认态或 inventory 中暴露完整 Key。
+              创建成功后请在受控窗口内复制给下游系统；页面不会在默认态或
+              inventory 中暴露完整 Key。
             </AlertDescription>
           </Alert>
 

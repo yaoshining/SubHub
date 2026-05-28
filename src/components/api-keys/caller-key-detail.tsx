@@ -95,7 +95,15 @@ function UsageSkeleton() {
   );
 }
 
-function Metric({ label, value, helper }: { label: string; value: string | number; helper: string }) {
+function Metric({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: string | number;
+  helper: string;
+}) {
   return (
     <div className="rounded-lg border bg-background p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -107,7 +115,10 @@ function Metric({ label, value, helper }: { label: string; value: string | numbe
 
 function EmptySelection() {
   return (
-    <Card className="border-border bg-surface shadow-none" data-testid="caller-key-no-selection">
+    <Card
+      className="border-border bg-surface shadow-none"
+      data-testid="caller-key-no-selection"
+    >
       <CardHeader className="p-4 sm:p-6">
         <CardTitle className="text-base">未选择 Key</CardTitle>
       </CardHeader>
@@ -116,7 +127,9 @@ function EmptySelection() {
           <KeyRound aria-hidden="true" className="size-5" />
         </div>
         <p className="text-sm leading-6 text-muted-foreground">
-          从左侧 inventory 选择一个调用方，查看完整业务信息、最近使用与高风险动作。该状态不会残留上一条 Key 的旧数据。
+          从左侧 inventory
+          选择一个调用方，查看完整业务信息、最近使用与高风险动作。该状态不会残留上一条
+          Key 的旧数据。
         </p>
       </CardContent>
     </Card>
@@ -178,7 +191,9 @@ export function CallerKeyDetail({
   const [usage, setUsage] = React.useState<CallerKeyUsage | null>(null);
   const [loadingUsage, setLoadingUsage] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [actionPending, setActionPending] = React.useState<"rotate" | "suspend" | null>(null);
+  const [actionPending, setActionPending] = React.useState<
+    "rotate" | "suspend" | null
+  >(null);
   const mountedRef = React.useRef(true);
 
   React.useEffect(() => {
@@ -257,19 +272,25 @@ export function CallerKeyDetail({
   }
 
   return (
-    <Card className="border-border bg-surface shadow-none" data-testid="caller-key-detail">
+    <Card
+      className="border-border bg-surface shadow-none"
+      data-testid="caller-key-detail"
+    >
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="line-clamp-2 text-base">{callerKey.callerName}</CardTitle>
+              <CardTitle className="line-clamp-2 text-base">
+                {callerKey.callerName}
+              </CardTitle>
               <CallerKeyStatusBadge status={callerKey.status} />
             </div>
             <p className="mt-2 font-mono text-xs text-muted-foreground">
-              {callerKey.keyPrefix ?? "subhub_••••"}…{callerKey.keySuffix ?? "••••••"}
+              {callerKey.keyPrefix ?? "subhub_••••"}…
+              {callerKey.keySuffix ?? "••••••"}
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:shrink-0">
+          <div className="flex flex-col gap-2 sm:shrink-0 sm:flex-row">
             <ActionConfirm
               title="确认轮换当前 Caller Key"
               description="轮换会创建新版本并让当前 Key 进入已轮换状态。新明文只会在受控窗口内显示，请确认下游具备更新窗口。"
@@ -312,7 +333,8 @@ export function CallerKeyDetail({
             <AlertTriangle aria-hidden="true" className="size-4" />
             <AlertTitle>当前对象不在筛选结果中</AlertTitle>
             <AlertDescription>
-              详情仍保留当前选中上下文；切换筛选或从 inventory 选择其他 Key 可更新详情。
+              详情仍保留当前选中上下文；切换筛选或从 inventory 选择其他 Key
+              可更新详情。
             </AlertDescription>
           </Alert>
         ) : null}
@@ -322,7 +344,8 @@ export function CallerKeyDetail({
             <ShieldAlert aria-hidden="true" className="size-4" />
             <AlertTitle>只读访问</AlertTitle>
             <AlertDescription>
-              当前权限仅允许查看摘要和业务状态，不能 reveal、copy、轮换或停用完整 Key。
+              当前权限仅允许查看摘要和业务状态，不能
+              reveal、copy、轮换或停用完整 Key。
             </AlertDescription>
           </Alert>
         ) : null}
@@ -336,10 +359,14 @@ export function CallerKeyDetail({
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary">{getCallerKeyEnvironmentLabel(callerKey.environment)}</Badge>
+          <Badge variant="secondary">
+            {getCallerKeyEnvironmentLabel(callerKey.environment)}
+          </Badge>
           <Badge variant="outline">{callerKey.scope}</Badge>
           <Badge variant="outline">{callerKey.quotaPolicy}</Badge>
-          <Badge variant="outline">创建 {formatDateTime(callerKey.createdAt)}</Badge>
+          <Badge variant="outline">
+            创建 {formatDateTime(callerKey.createdAt)}
+          </Badge>
         </div>
 
         {currentReveal && !readOnly ? (
@@ -356,7 +383,8 @@ export function CallerKeyDetail({
             <KeyRound aria-hidden="true" className="size-4" />
             <AlertTitle>默认态不展示完整明文</AlertTitle>
             <AlertDescription>
-              当前只保留受控片段。完整明文仅在新建或轮换后的 reveal window 内可显示与复制。
+              当前只保留受控片段。完整明文仅在新建或轮换后的 reveal window
+              内可显示与复制。
             </AlertDescription>
           </Alert>
         ) : null}
@@ -366,7 +394,9 @@ export function CallerKeyDetail({
         <section className="grid gap-3" aria-label="最近 24 小时使用摘要">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-medium">最近使用与轮换</h3>
-            <StatusBadge tone={callerKey.status === "active" ? "success" : "secondary"}>
+            <StatusBadge
+              tone={callerKey.status === "active" ? "success" : "secondary"}
+            >
               {getCallerKeyStatusLabel(callerKey.status)}
             </StatusBadge>
           </div>
@@ -374,23 +404,44 @@ export function CallerKeyDetail({
           {usage ? (
             <div className="grid gap-3">
               <div className="grid gap-3 sm:grid-cols-3">
-                <Metric label="Search" value={usage.searchCount} helper="最近记录中的查询次数" />
-                <Metric label="Download" value={usage.downloadCount} helper="最近记录中的下载次数" />
-                <Metric label="Last used" value={formatDateTime(usage.lastUsedAt)} helper="最近一次外部调用" />
+                <Metric
+                  label="Search"
+                  value={usage.searchCount}
+                  helper="最近记录中的查询次数"
+                />
+                <Metric
+                  label="Download"
+                  value={usage.downloadCount}
+                  helper="最近记录中的下载次数"
+                />
+                <Metric
+                  label="Last used"
+                  value={formatDateTime(usage.lastUsedAt)}
+                  helper="最近一次外部调用"
+                />
               </div>
               <div className="rounded-lg border bg-background p-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <Clock3 aria-hidden="true" className="size-4 text-muted-foreground" />
+                  <Clock3
+                    aria-hidden="true"
+                    className="size-4 text-muted-foreground"
+                  />
                   最近轮换结果
                 </div>
                 {usage.recentRotations.length > 0 ? (
                   <div className="mt-3 grid gap-2">
                     {usage.recentRotations.slice(0, 3).map((rotation) => (
-                      <div key={rotation.id} className="flex flex-col gap-1 rounded-md bg-muted/30 p-2 text-xs sm:flex-row sm:items-center sm:justify-between">
+                      <div
+                        key={rotation.id}
+                        className="flex flex-col gap-1 rounded-md bg-muted/30 p-2 text-xs sm:flex-row sm:items-center sm:justify-between"
+                      >
                         <span>
-                          {rotation.oldKeySuffix ?? "旧片段"} → {rotation.newKeySuffix ?? "新片段"}
+                          {rotation.oldKeySuffix ?? "旧片段"} →{" "}
+                          {rotation.newKeySuffix ?? "新片段"}
                         </span>
-                        <span className="text-muted-foreground">{formatDateTime(rotation.createdAt)}</span>
+                        <span className="text-muted-foreground">
+                          {formatDateTime(rotation.createdAt)}
+                        </span>
                       </div>
                     ))}
                   </div>

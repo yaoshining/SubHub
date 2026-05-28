@@ -3,7 +3,10 @@
 import { KeyRound } from "lucide-react";
 
 import type { CallerKey } from "@/lib/api/caller-keys";
-import { StatusBadge, type AdminStatusTone } from "@/components/admin/status-badge";
+import {
+  StatusBadge,
+  type AdminStatusTone,
+} from "@/components/admin/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,7 +20,10 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
-export type CallerKeyFilter = "all" | CallerKey["environment"] | CallerKey["status"];
+export type CallerKeyFilter =
+  | "all"
+  | CallerKey["environment"]
+  | CallerKey["status"];
 
 export const callerKeyFilterOptions = [
   { value: "all", label: "全部" },
@@ -47,14 +53,21 @@ const statusTones = {
   rotated: "secondary",
 } as const satisfies Record<CallerKey["status"], AdminStatusTone>;
 
-export const getCallerKeyEnvironmentLabel = (environment: CallerKey["environment"]) =>
-  environmentLabels[environment];
+export const getCallerKeyEnvironmentLabel = (
+  environment: CallerKey["environment"],
+) => environmentLabels[environment];
 
 export const getCallerKeyStatusLabel = (status: CallerKey["status"]) =>
   statusLabels[status];
 
-export function CallerKeyStatusBadge({ status }: { status: CallerKey["status"] }) {
-  return <StatusBadge tone={statusTones[status]}>{statusLabels[status]}</StatusBadge>;
+export function CallerKeyStatusBadge({
+  status,
+}: {
+  status: CallerKey["status"];
+}) {
+  return (
+    <StatusBadge tone={statusTones[status]}>{statusLabels[status]}</StatusBadge>
+  );
 }
 
 const formatKeyFragment = (callerKey: CallerKey) => {
@@ -103,7 +116,9 @@ function CallerKeyMobileCard({
             <CallerKeyStatusBadge status={callerKey.status} />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{environmentLabels[callerKey.environment]}</Badge>
+            <Badge variant="secondary">
+              {environmentLabels[callerKey.environment]}
+            </Badge>
             <Badge variant="outline">{callerKey.scope}</Badge>
             <Badge variant="outline">{callerKey.quotaPolicy}</Badge>
           </div>
@@ -131,7 +146,10 @@ export function CallerKeyInventory({
   onSelectCallerKey,
 }: CallerKeyInventoryProps) {
   return (
-    <Card className="border-border bg-surface shadow-none" data-testid="caller-key-inventory">
+    <Card
+      className="border-border bg-surface shadow-none"
+      data-testid="caller-key-inventory"
+    >
       <CardHeader className="gap-4 p-4 sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -150,7 +168,11 @@ export function CallerKeyInventory({
         >
           <TabsList className="h-auto w-full flex-wrap justify-start gap-1 bg-muted/60 p-1 sm:w-auto">
             {callerKeyFilterOptions.map((option) => (
-              <TabsTrigger key={option.value} value={option.value} className="text-xs">
+              <TabsTrigger
+                key={option.value}
+                value={option.value}
+                className="text-xs"
+              >
                 {option.label}
               </TabsTrigger>
             ))}
@@ -160,7 +182,10 @@ export function CallerKeyInventory({
       <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
         {filteredCallerKeys.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border bg-muted/20 p-8 text-center">
-            <KeyRound aria-hidden="true" className="size-6 text-muted-foreground" />
+            <KeyRound
+              aria-hidden="true"
+              className="size-6 text-muted-foreground"
+            />
             <p className="text-sm font-medium">当前筛选下没有 Caller Key</p>
             <p className="max-w-sm text-xs leading-5 text-muted-foreground">
               可切换环境或状态筛选；若当前选中对象被筛选隐藏，详情区仍会保留上下文。
@@ -201,7 +226,9 @@ export function CallerKeyInventory({
                       >
                         <TableCell>
                           <div className="max-w-[18rem]">
-                            <p className="line-clamp-2 font-medium">{callerKey.callerName}</p>
+                            <p className="line-clamp-2 font-medium">
+                              {callerKey.callerName}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               {callerKey.scope} · {callerKey.quotaPolicy}
                             </p>

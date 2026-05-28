@@ -32,7 +32,10 @@ const api = await import("@/lib/api/caller-keys");
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(api.fetchCallerKeys).mockResolvedValue({ items: [callerKey], total: 1 });
+  vi.mocked(api.fetchCallerKeys).mockResolvedValue({
+    items: [callerKey],
+    total: 1,
+  });
   vi.mocked(api.fetchCallerKeyUsage).mockResolvedValue({
     callerKeyId: callerKey.id,
     lastUsedAt: null,
@@ -54,8 +57,12 @@ describe("API Keys 响应式行为", () => {
       "gap-6",
       "desktop:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]",
     );
-    expect((await screen.findAllByText("Jellyfin Living Room")).length).toBeGreaterThan(0);
-    expect(screen.getByTestId("api-keys-responsive-grid").className).not.toContain("tablet:grid-cols");
+    expect(
+      (await screen.findAllByText("Jellyfin Living Room")).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByTestId("api-keys-responsive-grid").className,
+    ).not.toContain("tablet:grid-cols");
     expect(screen.getByTestId("caller-key-inventory")).toBeInTheDocument();
     expect(screen.getByTestId("caller-key-detail")).toBeInTheDocument();
   });
@@ -64,9 +71,17 @@ describe("API Keys 响应式行为", () => {
     mockViewport(390);
     renderWithTheme(<ApiKeysClient />);
 
-    expect((await screen.findAllByText("Jellyfin Living Room")).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("button", { name: "生成新 Key" }).length).toBeGreaterThan(0);
-    expect(screen.getByTestId("caller-key-inventory")).toHaveTextContent("subhub_live_…a8f42c");
-    expect(screen.getByTestId("caller-key-detail")).toHaveTextContent("默认态不展示完整明文");
+    expect(
+      (await screen.findAllByText("Jellyfin Living Room")).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("button", { name: "生成新 Key" }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByTestId("caller-key-inventory")).toHaveTextContent(
+      "subhub_live_…a8f42c",
+    );
+    expect(screen.getByTestId("caller-key-detail")).toHaveTextContent(
+      "默认态不展示完整明文",
+    );
   });
 });

@@ -86,7 +86,8 @@ export function RevealSecret({
         <EyeOff aria-hidden="true" className="size-4" />
         <AlertTitle>明文窗口已结束</AlertTitle>
         <AlertDescription>
-          完整 Caller Key 已从界面移除。后续只能查看受控片段，如需新明文请执行轮换或创建新 Key。
+          完整 Caller Key
+          已从界面移除。后续只能查看受控片段，如需新明文请执行轮换或创建新 Key。
         </AlertDescription>
       </Alert>
     );
@@ -98,7 +99,8 @@ export function RevealSecret({
         <div className="flex items-start gap-2 text-sm text-muted-foreground">
           <Timer aria-hidden="true" className="mt-0.5 size-4 text-warning" />
           <span>
-            明文仅在本次受控窗口内可见，约 {formatRemainingSeconds(remainingMs)} 秒后自动隐藏。
+            明文仅在本次受控窗口内可见，约 {formatRemainingSeconds(remainingMs)}{" "}
+            秒后自动隐藏。
           </span>
         </div>
         <div className="flex gap-2 sm:shrink-0">

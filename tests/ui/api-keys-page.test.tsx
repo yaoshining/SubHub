@@ -1,5 +1,11 @@
 import * as React from "react";
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -121,21 +127,40 @@ describe("API Keys 页面", () => {
     );
 
     expect(await screen.findByTestId("api-keys-page")).toBeInTheDocument();
-    expect((await screen.findAllByText("Jellyfin Living Room")).length).toBeGreaterThan(0);
-    expect(screen.getByRole("region", { name: "Caller Key 摘要" })).toBeInTheDocument();
-    expect(screen.getByTestId("caller-key-inventory")).toHaveTextContent("Jellyfin Living Room");
-    expect(screen.getByTestId("caller-key-form")).toHaveTextContent("生成与授权");
-    expect(screen.getByTestId("caller-key-detail")).toHaveTextContent("Jellyfin Living Room");
+    expect(
+      (await screen.findAllByText("Jellyfin Living Room")).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("region", { name: "Caller Key 摘要" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("caller-key-inventory")).toHaveTextContent(
+      "Jellyfin Living Room",
+    );
+    expect(screen.getByTestId("caller-key-form")).toHaveTextContent(
+      "生成与授权",
+    );
+    expect(screen.getByTestId("caller-key-detail")).toHaveTextContent(
+      "Jellyfin Living Room",
+    );
     expect(await screen.findByText("默认态不展示完整明文")).toBeInTheDocument();
-    await waitFor(() => expect(vi.mocked(api.fetchCallerKeys)).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(vi.mocked(api.fetchCallerKeyUsage)).toHaveBeenCalledWith("ck_001", expect.any(Object)));
+    await waitFor(() =>
+      expect(vi.mocked(api.fetchCallerKeys)).toHaveBeenCalledTimes(1),
+    );
+    await waitFor(() =>
+      expect(vi.mocked(api.fetchCallerKeyUsage)).toHaveBeenCalledWith(
+        "ck_001",
+        expect.any(Object),
+      ),
+    );
   });
 
   it("创建后进入受控 reveal window，copy 反馈不复述密钥", async () => {
     const user = userEvent.setup();
     renderWithTheme(<ApiKeysClient />);
 
-    expect((await screen.findAllByText("Jellyfin Living Room")).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText("Jellyfin Living Room")).length,
+    ).toBeGreaterThan(0);
     await user.clear(screen.getByLabelText("调用方名称"));
     await user.type(screen.getByLabelText("调用方名称"), "Plex Study");
     await user.click(
@@ -152,40 +177,62 @@ describe("API Keys 页面", () => {
     await user.click(
       within(reveal).getByRole("button", { name: "显示完整 Caller Key" }),
     );
-    expect(screen.getByLabelText("完整 Caller Key 明文")).toHaveValue("subhub_live_created_secret_once");
-    expect(within(reveal).getByRole("button", { name: "复制" })).toBeInTheDocument();
+    expect(screen.getByLabelText("完整 Caller Key 明文")).toHaveValue(
+      "subhub_live_created_secret_once",
+    );
+    expect(
+      within(reveal).getByRole("button", { name: "复制" }),
+    ).toBeInTheDocument();
   });
 
   it("轮换与停用使用不同高风险确认并保留成功反馈", async () => {
     const user = userEvent.setup();
     renderWithTheme(<ApiKeysClient />);
 
-    expect((await screen.findAllByText("Jellyfin Living Room")).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText("Jellyfin Living Room")).length,
+    ).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "轮换当前 Key" }));
-    expect(await screen.findByText("确认轮换当前 Caller Key")).toBeInTheDocument();
+    expect(
+      await screen.findByText("确认轮换当前 Caller Key"),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "确认轮换" }));
 
-    expect(await screen.findByTestId("caller-key-success")).toHaveTextContent("已轮换");
+    expect(await screen.findByTestId("caller-key-success")).toHaveTextContent(
+      "已轮换",
+    );
     expect(vi.mocked(api.rotateCallerKey)).toHaveBeenCalledWith("ck_001");
     expect(await screen.findByTestId("reveal-secret")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "停用" }));
-    expect(await screen.findByText("确认停用当前 Caller Key")).toBeInTheDocument();
+    expect(
+      await screen.findByText("确认停用当前 Caller Key"),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "确认停用" }));
 
-    expect(await screen.findByTestId("caller-key-success")).toHaveTextContent("已停用");
-    expect(vi.mocked(api.suspendCallerKey)).toHaveBeenCalledWith("ck_rotated_new");
+    expect(await screen.findByTestId("caller-key-success")).toHaveTextContent(
+      "已停用",
+    );
+    expect(vi.mocked(api.suspendCallerKey)).toHaveBeenCalledWith(
+      "ck_rotated_new",
+    );
   });
 
   it("筛选隐藏选中项时详情不清空，并提示当前对象不在筛选结果中", async () => {
     const user = userEvent.setup();
     renderWithTheme(<ApiKeysClient />);
 
-    expect((await screen.findAllByText("Jellyfin Living Room")).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText("Jellyfin Living Room")).length,
+    ).toBeGreaterThan(0);
     await user.click(screen.getByRole("tab", { name: "预发" }));
 
-    expect(screen.getByTestId("caller-key-detail")).toHaveTextContent("Jellyfin Living Room");
-    expect(screen.getByTestId("caller-key-hidden-by-filter")).toHaveTextContent("当前对象不在筛选结果中");
+    expect(screen.getByTestId("caller-key-detail")).toHaveTextContent(
+      "Jellyfin Living Room",
+    );
+    expect(screen.getByTestId("caller-key-hidden-by-filter")).toHaveTextContent(
+      "当前对象不在筛选结果中",
+    );
   });
 });
 
@@ -203,8 +250,12 @@ describe("RevealSecret", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "显示完整 Caller Key" }));
-    expect(screen.getByLabelText("完整 Caller Key 明文")).toHaveValue("subhub_live_window_secret_once");
+    fireEvent.click(
+      screen.getByRole("button", { name: "显示完整 Caller Key" }),
+    );
+    expect(screen.getByLabelText("完整 Caller Key 明文")).toHaveValue(
+      "subhub_live_window_secret_once",
+    );
     fireEvent.click(screen.getByRole("button", { name: "复制" }));
     expect(clipboardWriteText).toHaveBeenCalledWith(
       "subhub_live_window_secret_once",
@@ -220,8 +271,12 @@ describe("RevealSecret", () => {
     });
 
     expect(screen.getByTestId("reveal-secret-expired")).toBeInTheDocument();
-    expect(screen.queryByText("subhub_live_window_secret_once")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "复制" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("subhub_live_window_secret_once"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "复制" }),
+    ).not.toBeInTheDocument();
     expect(onExpired).toHaveBeenCalledTimes(1);
   });
 });
