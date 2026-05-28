@@ -5,7 +5,11 @@ import Link from "next/link";
 import { ChevronLeft, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { Provider, ProviderCredential, ProviderDetail } from "@/lib/api/providers";
+import type {
+  Provider,
+  ProviderCredential,
+  ProviderDetail,
+} from "@/lib/api/providers";
 import {
   fetchProviderDetail,
   fetchProviders,

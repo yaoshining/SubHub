@@ -137,7 +137,7 @@ export function ProviderList({
                 <TableRow
                   key={provider.id}
                   className={cn(
-                    "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                    "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                     selected && "bg-primary/5",
                   )}
                   data-state={selected ? "selected" : undefined}
