@@ -8,6 +8,7 @@ import {
   selectProviderCredential,
   isolateCredential,
   markCredentialFailure,
+  markCredentialUsed,
   restoreCredential,
 } from "@/server/providers/credential-pool";
 import { ProviderRepository } from "@/server/providers/provider-repository";
@@ -258,5 +259,48 @@ describe("Provider 凭据池", () => {
 
     const after = await repository.requireCredential(provider.id, disabled.id);
     expect(after.status).toBe("disabled");
+  });
+
+  it("cooldown 到期后可重新参与调度，成功使用后恢复 active", async () => {
+    const now = new Date("2026-05-28T00:00:00.000Z");
+    const later = new Date("2026-05-28T00:02:00.000Z");
+    const repository = new ProviderRepository(getStorageClient().db);
+    const provider = await repository.createProvider(
+      {
+        name: "OpenSubtitles",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "secret-primary-token",
+        },
+      },
+      now,
+    );
+    const credentialId = provider.credentials[0]!.id;
+
+    await markCredentialFailure(
+      provider,
+      credentialId,
+      "rate_limited",
+      "429 limited",
+      { now },
+    );
+    await expect(
+      selectProviderCredential(provider.id, { now }),
+    ).rejects.toMatchObject({
+      code: "PROVIDER_CREDENTIAL_EXHAUSTED",
+    });
+
+    const selected = await selectProviderCredential(provider.id, {
+      now: later,
+    });
+    await markCredentialUsed(provider.id, credentialId, { now: later });
+    const detail = await repository.requireProvider(provider.id, later);
+
+    expect(selected.id).toBe(credentialId);
+    expect(detail.availableCredentialCount).toBe(1);
+    expect(
+      detail.credentials.find((credential) => credential.id === credentialId),
+    ).toMatchObject({ status: "active", cooldownUntil: null });
   });
 });

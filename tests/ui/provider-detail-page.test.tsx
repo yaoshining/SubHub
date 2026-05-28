@@ -228,14 +228,14 @@ describe("Provider Detail 页面", () => {
     );
 
     expect(await screen.findByText("已降级")).toBeInTheDocument();
-    expect(screen.getByText("可用凭据 0 个。", { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText("可用凭据 0 个。", { exact: false }),
+    ).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: "恢复隔离" })[0],
     ).toBeInTheDocument();
 
-    await user.click(
-      screen.getAllByRole("button", { name: "恢复隔离" })[0]!,
-    );
+    await user.click(screen.getAllByRole("button", { name: "恢复隔离" })[0]!);
 
     await waitFor(() =>
       expect(vi.mocked(api.restoreProviderCredential)).toHaveBeenCalledWith(
@@ -245,6 +245,8 @@ describe("Provider Detail 页面", () => {
     );
 
     expect(await screen.findByText("已启用")).toBeInTheDocument();
-    expect(screen.getByText("可用凭据 1 个。", { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText("可用凭据 1 个。", { exact: false }),
+    ).toBeInTheDocument();
   });
 });

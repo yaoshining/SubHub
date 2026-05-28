@@ -114,8 +114,11 @@ const isCredentialCurrentlyAvailable = (
   credential: ProviderCredential,
   now: Date,
 ) =>
-  credential.status === "active" &&
-  (!credential.cooldownUntil || new Date(credential.cooldownUntil) <= now);
+  (credential.status === "active" &&
+    (!credential.cooldownUntil || new Date(credential.cooldownUntil) <= now)) ||
+  (credential.status === "cooldown" &&
+    !!credential.cooldownUntil &&
+    new Date(credential.cooldownUntil) <= now);
 
 const addCredentialSummary = (
   provider: Provider,

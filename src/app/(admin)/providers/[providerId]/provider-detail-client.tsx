@@ -178,7 +178,10 @@ export function ProviderDetailClient({
     toast.success(`凭据操作已即时应用：${dirtyLabel}`);
   }
 
-  function updateProviderSummary(dirtyLabel: string, nextProvider: ProviderDetail) {
+  function updateProviderSummary(
+    dirtyLabel: string,
+    nextProvider: ProviderDetail,
+  ) {
     setProvider(nextProvider);
     setDraft(toDraft(nextProvider));
     setSuccessMessage(null);
