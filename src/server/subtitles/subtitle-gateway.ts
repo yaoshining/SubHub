@@ -154,29 +154,33 @@ export async function searchSubtitles(
       language: input.language,
     });
 
-    if (subtitles.length === 0) {
+    const downloadableSubtitles = subtitles.filter((subtitle) => subtitle.id);
+
+    if (downloadableSubtitles.length === 0) {
       await record("no_results", 0, provider.id, credential.id);
       throw new AppError("NO_RESULTS", "未找到匹配字幕。", "query");
     }
 
     await markCredentialUsed(provider.id, credential.id, { db, now });
 
-    const results = subtitles.map<SubtitleSearchResult>((subtitle) => {
-      const subtitleRef = `opensubtitles:${provider.id}:${subtitle.id}`;
-      const fileName = subtitle.fileName ?? subtitle.id;
-      const extension = fileName.includes(".")
-        ? fileName.split(".").pop()?.toLowerCase()
-        : undefined;
+    const results = downloadableSubtitles.map<SubtitleSearchResult>(
+      (subtitle) => {
+        const subtitleRef = `opensubtitles:${provider.id}:${subtitle.id}`;
+        const fileName = subtitle.fileName ?? subtitle.id;
+        const extension = fileName.includes(".")
+          ? fileName.split(".").pop()?.toLowerCase()
+          : undefined;
 
-      return {
-        id: subtitleRef,
-        provider: "opensubtitles",
-        language: subtitle.language,
-        releaseName: subtitle.fileName,
-        format: extension || "srt",
-        downloadUrl: `/api/subtitles/download?subtitleId=${encodeURIComponent(subtitleRef)}`,
-      };
-    });
+        return {
+          id: subtitleRef,
+          provider: "opensubtitles",
+          language: subtitle.language,
+          releaseName: subtitle.fileName,
+          format: extension || "srt",
+          downloadUrl: `/api/subtitles/download?subtitleId=${encodeURIComponent(subtitleRef)}`,
+        };
+      },
+    );
 
     await record("success", results.length, provider.id, credential.id);
 

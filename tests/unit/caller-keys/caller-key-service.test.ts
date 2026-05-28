@@ -97,6 +97,9 @@ describe("Caller Key service", () => {
       ]),
       total: 2,
     });
+    await expect(
+      rotateCallerKey(created.callerKey.id, { actorAdminUserId: null }),
+    ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
   });
 
   it("停用 Key 后立即拒绝新请求", async () => {

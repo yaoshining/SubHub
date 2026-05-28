@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { AppError } from "@/lib/errors";
 import { hashCallerKey } from "@/server/api/caller-key-auth";
@@ -236,14 +236,14 @@ export class CallerKeyRepository {
           revealUntil: null,
           revealTokenHash: null,
         })
-        .where(eq(callerKeys.id, keyId))
+        .where(and(eq(callerKeys.id, keyId), eq(callerKeys.status, "active")))
         .returning()
         .all();
 
       if (!rotated) {
         throw new AppError(
           "CALLER_KEY_INVALID",
-          "Caller Key 不存在。",
+          "Caller Key 不存在或已轮换。",
           "keyId",
         );
       }

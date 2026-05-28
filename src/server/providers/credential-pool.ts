@@ -46,10 +46,18 @@ export async function selectProviderCredential(
     .where(
       and(
         eq(providerCredentials.providerId, providerId),
-        eq(providerCredentials.status, "active"),
         or(
-          isNull(providerCredentials.cooldownUntil),
-          lte(providerCredentials.cooldownUntil, nowIso),
+          and(
+            eq(providerCredentials.status, "active"),
+            or(
+              isNull(providerCredentials.cooldownUntil),
+              lte(providerCredentials.cooldownUntil, nowIso),
+            ),
+          ),
+          and(
+            eq(providerCredentials.status, "cooldown"),
+            lte(providerCredentials.cooldownUntil, nowIso),
+          ),
         ),
       ),
     )
@@ -81,6 +89,8 @@ export async function markCredentialUsed(
   await db
     .update(providerCredentials)
     .set({
+      status: "active",
+      cooldownUntil: null,
       lastUsedAt: now.toISOString(),
       lastErrorAt: null,
       lastErrorSummary: null,

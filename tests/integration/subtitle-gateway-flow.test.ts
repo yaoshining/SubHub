@@ -63,10 +63,12 @@ describe("字幕出口端到端 API 流程", () => {
           Response.json({
             data: [
               {
-                id: "subtitle_001",
+                id: "file_001",
                 attributes: {
                   language: "zh-CN",
-                  files: [{ file_name: "Example.zh-CN.srt" }],
+                  files: [
+                    { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                  ],
                 },
               },
             ],

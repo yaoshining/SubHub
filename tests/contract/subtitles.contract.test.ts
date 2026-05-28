@@ -147,10 +147,12 @@ describe("对外字幕 API 契约", () => {
           Response.json({
             data: [
               {
-                id: "subtitle_001",
+                id: "file_001",
                 attributes: {
                   language: "zh-CN",
-                  files: [{ file_name: "Example.zh-CN.srt" }],
+                  files: [
+                    { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                  ],
                   download_count: 3,
                 },
               },
@@ -188,7 +190,7 @@ describe("对外字幕 API 契约", () => {
       status: "success",
       results: [
         expect.objectContaining({
-          id: `opensubtitles:${provider.id}:subtitle_001`,
+          id: `opensubtitles:${provider.id}:file_001`,
           downloadUrl: expect.stringContaining("/api/subtitles/download"),
         }),
       ],

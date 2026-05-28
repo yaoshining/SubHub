@@ -56,15 +56,19 @@ export class OpenSubtitlesAdapter {
         id?: string | number;
         attributes?: {
           language?: string | null;
-          files?: Array<{ file_name?: string | null }>;
+          files?: Array<{
+            file_id?: string | number;
+            file_name?: string | null;
+          }>;
           download_count?: number | null;
         };
       };
+      const file = record.attributes?.files?.[0];
 
       return {
-        id: String(record.id ?? ""),
+        id: String(file?.file_id ?? ""),
         language: record.attributes?.language ?? null,
-        fileName: record.attributes?.files?.[0]?.file_name ?? null,
+        fileName: file?.file_name ?? null,
         downloadCount: record.attributes?.download_count ?? null,
       };
     });
