@@ -344,10 +344,10 @@ export function ApiKeysClient() {
       ) : null}
 
       <div
-        className="grid gap-6 desktop:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]"
+        className="grid min-w-0 gap-6 desktop:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]"
         data-testid="api-keys-responsive-grid"
       >
-        <div className="grid gap-6">
+        <div className="grid min-w-0 gap-6" data-testid="api-keys-primary-column">
           {callerKeys.length > 0 ? (
             <CallerKeyInventory
               callerKeys={callerKeys}
@@ -360,14 +360,16 @@ export function ApiKeysClient() {
           ) : null}
           <CallerKeyForm onCreated={handleCreated} />
         </div>
-        <CallerKeyDetail
-          callerKey={selectedCallerKey}
-          hiddenByFilter={selectedHiddenByFilter}
-          revealWindow={revealWindow}
-          onRevealExpired={handleRevealExpired}
-          onRotated={handleRotated}
-          onSuspended={handleSuspended}
-        />
+        <div className="min-w-0" data-testid="api-keys-detail-column">
+          <CallerKeyDetail
+            callerKey={selectedCallerKey}
+            hiddenByFilter={selectedHiddenByFilter}
+            revealWindow={revealWindow}
+            onRevealExpired={handleRevealExpired}
+            onRotated={handleRotated}
+            onSuspended={handleSuspended}
+          />
+        </div>
       </div>
 
       <Card className="border-border bg-surface shadow-none">

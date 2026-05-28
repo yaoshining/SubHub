@@ -67,6 +67,34 @@ describe("API Keys 响应式行为", () => {
     expect(screen.getByTestId("caller-key-detail")).toBeInTheDocument();
   });
 
+  it("Desktop 双栏容器允许 inventory 列收缩，避免详情区被表格最小宽度挤乱", async () => {
+    mockViewport(1440);
+    renderWithTheme(<ApiKeysClient />);
+
+    expect(await screen.findByTestId("api-keys-responsive-grid")).toHaveClass(
+      "min-w-0",
+      "desktop:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]",
+    );
+    expect(screen.getByTestId("api-keys-primary-column")).toHaveClass(
+      "min-w-0",
+    );
+    expect(screen.getByTestId("api-keys-detail-column")).toHaveClass(
+      "min-w-0",
+    );
+    expect(await screen.findByTestId("caller-key-inventory")).toHaveClass(
+      "min-w-0",
+      "overflow-hidden",
+    );
+    expect(screen.getByTestId("caller-key-inventory-content")).toHaveClass(
+      "min-w-0",
+    );
+    expect(screen.getByTestId("caller-key-inventory-table-shell")).toHaveClass(
+      "min-w-0",
+      "max-w-full",
+      "overflow-x-auto",
+    );
+  });
+
   it("Mobile 下提供卡片化 inventory、详情与主操作可达", async () => {
     mockViewport(390);
     renderWithTheme(<ApiKeysClient />);

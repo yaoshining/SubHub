@@ -147,7 +147,7 @@ export function CallerKeyInventory({
 }: CallerKeyInventoryProps) {
   return (
     <Card
-      className="border-border bg-surface shadow-none"
+      className="min-w-0 overflow-hidden border-border bg-surface shadow-none"
       data-testid="caller-key-inventory"
     >
       <CardHeader className="gap-4 p-4 sm:p-6">
@@ -179,7 +179,10 @@ export function CallerKeyInventory({
           </TabsList>
         </Tabs>
       </CardHeader>
-      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+      <CardContent
+        className="min-w-0 p-4 pt-0 sm:p-6 sm:pt-0"
+        data-testid="caller-key-inventory-content"
+      >
         {filteredCallerKeys.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border bg-muted/20 p-8 text-center">
             <KeyRound
@@ -193,7 +196,10 @@ export function CallerKeyInventory({
           </div>
         ) : (
           <>
-            <div className="hidden overflow-x-auto rounded-lg border bg-background desktop:block">
+            <div
+              className="hidden min-w-0 max-w-full overflow-x-auto rounded-lg border bg-background desktop:block"
+              data-testid="caller-key-inventory-table-shell"
+            >
               <Table className="min-w-[54rem]">
                 <TableHeader className="bg-muted/50">
                   <TableRow>
