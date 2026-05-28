@@ -118,6 +118,19 @@ describe("Dashboard 页面体验", () => {
     ).toHaveAttribute("href", "/api-keys");
   });
 
+  it("没有下一步动作时不显示该栏目", () => {
+    renderWithTheme(
+      <DashboardClient
+        initialSummary={{
+          ...dashboardSummary,
+          nextActions: [],
+        }}
+      />,
+    );
+
+    expect(screen.queryByText("下一步动作")).not.toBeInTheDocument();
+  });
+
   it("摘要局部失败时保留已知信息并指出失败对象", async () => {
     const user = userEvent.setup();
     mockedFetchDashboardSummary.mockRejectedValue(

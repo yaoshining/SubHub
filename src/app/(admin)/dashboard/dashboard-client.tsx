@@ -481,35 +481,39 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
             </div>
           </div>
 
-          <SectionCard title="下一步动作">
-            <div className="grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
-              {summary.nextActions.map((action) => (
-                <Link
-                  className="group rounded-lg border bg-muted/30 p-4 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  href={action.href}
-                  key={action.id}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <Badge
-                        variant={
-                          action.priority === "high" ? "warning" : "secondary"
-                        }
-                        className="mb-3 rounded-full"
-                      >
-                        {action.priority === "high" ? "优先处理" : "建议处理"}
-                      </Badge>
-                      <p className="font-medium">{action.label}</p>
+          {summary.nextActions.length > 0 ? (
+            <SectionCard title="下一步动作">
+              <div className="grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
+                {summary.nextActions.map((action) => (
+                  <Link
+                    className="group rounded-lg border bg-muted/30 p-4 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    href={action.href}
+                    key={action.id}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <Badge
+                          variant={
+                            action.priority === "high"
+                              ? "warning"
+                              : "secondary"
+                          }
+                          className="mb-3 rounded-full"
+                        >
+                          {action.priority === "high" ? "优先处理" : "建议处理"}
+                        </Badge>
+                        <p className="font-medium">{action.label}</p>
+                      </div>
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                      />
                     </div>
-                    <ArrowRight
-                      aria-hidden="true"
-                      className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                    />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SectionCard>
+                  </Link>
+                ))}
+              </div>
+            </SectionCard>
+          ) : null}
         </div>
       ) : !loading ? (
         <Alert variant="destructive">
