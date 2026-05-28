@@ -44,7 +44,10 @@ export type ProviderCredentialTableProps = {
   providerId: string;
   credentials: ProviderCredential[];
   readOnly?: boolean;
-  onProviderChange?: (dirtyLabel: string, provider: import("@/lib/api/providers").ProviderDetail) => void;
+  onProviderChange?: (
+    dirtyLabel: string,
+    provider: import("@/lib/api/providers").ProviderDetail,
+  ) => void;
   onCredentialsChange: (
     credentials: ProviderCredential[],
     dirtyLabel: string,

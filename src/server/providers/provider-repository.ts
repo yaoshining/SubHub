@@ -115,8 +115,7 @@ const isCredentialCurrentlyAvailable = (
   now: Date,
 ) =>
   (credential.status === "active" &&
-    (!credential.cooldownUntil ||
-      new Date(credential.cooldownUntil) <= now)) ||
+    (!credential.cooldownUntil || new Date(credential.cooldownUntil) <= now)) ||
   (credential.status === "cooldown" &&
     !!credential.cooldownUntil &&
     new Date(credential.cooldownUntil) <= now);
