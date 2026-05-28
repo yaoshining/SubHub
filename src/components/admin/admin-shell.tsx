@@ -1,5 +1,12 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import type * as React from "react";
 
+import {
+  getAdminPageMeta,
+  isKnownAdminPageMeta,
+} from "@/components/admin/admin-page-meta";
 import { PageHeader } from "@/components/admin/page-header";
 import { ResponsiveDrawer } from "@/components/admin/responsive-drawer";
 import { Sidebar, type AdminUserSummary } from "@/components/admin/sidebar";
@@ -26,6 +33,20 @@ export function AdminShell({
   secondaryPanel,
   className,
 }: AdminShellProps) {
+  const pathname = usePathname();
+  const routeMeta = getAdminPageMeta(pathname);
+  const shouldSyncHeader = title
+    ? isKnownAdminPageMeta({
+        title,
+        description:
+          description ?? "查看 SubHub 当前运营状态与下一步配置入口。",
+      })
+    : true;
+  const resolvedTitle = shouldSyncHeader ? routeMeta.title : title;
+  const resolvedDescription = shouldSyncHeader
+    ? routeMeta.description
+    : description;
+
   return (
     <div
       className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground desktop:h-screen desktop:overflow-hidden"
@@ -50,8 +71,8 @@ export function AdminShell({
         </div>
         {header ?? (
           <PageHeader
-            title={title}
-            description={description}
+            title={resolvedTitle}
+            description={resolvedDescription}
             actions={actions}
           />
         )}

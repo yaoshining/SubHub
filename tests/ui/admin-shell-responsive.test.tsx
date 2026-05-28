@@ -39,6 +39,30 @@ describe("Admin Shell 响应式骨架", () => {
     expect(screen.getByTestId("page-header")).toHaveTextContent("仪表盘");
   });
 
+  it("客户端路由切换后，Page Header 会按 pathname 更新而不是停留在首屏标题", () => {
+    setMockPathname("/dashboard");
+
+    const { rerender } = renderWithTheme(
+      <AdminShell title="仪表盘" description="查看 SubHub 当前运营状态与下一步配置入口。">
+        <section>主体内容</section>
+      </AdminShell>,
+    );
+
+    expect(screen.getByTestId("page-header")).toHaveTextContent("仪表盘");
+
+    setMockPathname("/providers");
+    rerender(
+      <AdminShell title="仪表盘" description="查看 SubHub 当前运营状态与下一步配置入口。">
+        <section>主体内容</section>
+      </AdminShell>,
+    );
+
+    expect(screen.getByTestId("page-header")).toHaveTextContent("服务商");
+    expect(screen.getByTestId("page-header")).toHaveTextContent(
+      "比较 Provider 状态、创建 OpenSubtitles 实例并检查凭据池。",
+    );
+  });
+
   it("Tablet/Mobile 使用菜单按钮打开 Drawer，导航后自动关闭", async () => {
     const user = userEvent.setup();
     setMockPathname("/providers");
