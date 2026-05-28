@@ -1,3 +1,4 @@
+import * as React from "react";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -74,6 +75,18 @@ beforeEach(() => {
 });
 
 describe("Provider Detail 页面", () => {
+  it("在 Strict Mode 下通过客户端挂载仍会读取 Provider 详情", async () => {
+    renderWithTheme(
+      <React.StrictMode>
+        <ProviderDetailClient providerId="provider_001" />
+      </React.StrictMode>,
+    );
+
+    expect(
+      await screen.findByText("OpenSubtitles Primary"),
+    ).toBeInTheDocument();
+  });
+
   it("展示 post-create 引导、未保存变更提示并可保存策略", async () => {
     const user = userEvent.setup();
     renderWithTheme(

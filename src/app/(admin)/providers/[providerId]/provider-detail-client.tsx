@@ -143,6 +143,7 @@ export function ProviderDetailClient({
   }, [providerId]);
 
   React.useEffect(() => {
+    mountedRef.current = true;
     const timeoutId = window.setTimeout(() => {
       void loadDetail();
     }, 0);
