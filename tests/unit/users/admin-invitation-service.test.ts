@@ -71,7 +71,9 @@ describe("Admin invitation service", () => {
       expiresAt: "2026-06-04T12:00:00.000Z",
     });
 
-    const actions = await getStorageClient().db.select().from(adminActionResults);
+    const actions = await getStorageClient()
+      .db.select()
+      .from(adminActionResults);
     expect(actions).toEqual([
       expect.objectContaining({
         actorAdminUserId: admin.id,

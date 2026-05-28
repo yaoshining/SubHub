@@ -1,6 +1,7 @@
 import { recordAdminActionResult } from "@/server/audit/action-results";
 import {
   createAdminUserRepository,
+  type AdminMember,
   type AdminUsersOverview,
 } from "@/server/users/admin-user-repository";
 import {
@@ -18,6 +19,20 @@ export type AdminUserServiceOptions = {
 const getRepository = (db?: StorageDatabase) =>
   createAdminUserRepository(db ?? getStorageClient().db);
 
+export type AdminUserActionResult = AdminMember & {
+  updatedAt: string;
+};
+
+const toActionResult = (user: AdminUser): AdminUserActionResult => ({
+  id: user.id,
+  identifier: user.identifier,
+  displayName: user.displayName,
+  status: user.status,
+  rolePreset: user.role,
+  lastActiveAt: user.lastLoginAt,
+  updatedAt: user.updatedAt,
+});
+
 export async function listAdminUsersOverview(
   options: AdminUserServiceOptions = {},
 ): Promise<AdminUsersOverview> {
@@ -27,11 +42,8 @@ export async function listAdminUsersOverview(
 export async function suspendAdminUser(
   userId: string,
   options: AdminUserServiceOptions = {},
-): Promise<AdminUser> {
-  const user = await getRepository(options.db).suspendUser(
-    userId,
-    options.now,
-  );
+): Promise<AdminUserActionResult> {
+  const user = await getRepository(options.db).suspendUser(userId, options.now);
 
   await recordAdminActionResult({
     db: options.db,
@@ -44,13 +56,13 @@ export async function suspendAdminUser(
     createdAt: (options.now ?? new Date()).toISOString(),
   });
 
-  return user;
+  return toActionResult(user);
 }
 
 export async function restoreAdminUser(
   userId: string,
   options: AdminUserServiceOptions = {},
-): Promise<AdminUser> {
+): Promise<AdminUserActionResult> {
   const user = await getRepository(options.db).restoreUser(userId, options.now);
 
   await recordAdminActionResult({
@@ -64,5 +76,5 @@ export async function restoreAdminUser(
     createdAt: (options.now ?? new Date()).toISOString(),
   });
 
-  return user;
+  return toActionResult(user);
 }

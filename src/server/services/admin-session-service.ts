@@ -36,11 +36,7 @@ export async function remediateAdminSession(
   const reason = input.reason.trim();
 
   if (!reason) {
-    throw new AppError(
-      "VALIDATION_FAILED",
-      "会话处置原因不能为空。",
-      "reason",
-    );
+    throw new AppError("VALIDATION_FAILED", "会话处置原因不能为空。", "reason");
   }
 
   if (input.action !== "revoke" && input.action !== "mark_resolved") {

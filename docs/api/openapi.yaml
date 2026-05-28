@@ -523,6 +523,138 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
         "500":
           $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users:
+    get:
+      tags:
+        - Users
+      operationId: listAdminUsers
+      summary: 查询后台成员、邀请与基础会话摘要
+      description: 返回 Users 页所需的成员列表、邀请状态和需要管理员关注的后台会话摘要；不包含权限矩阵、审批流或高级风控信息。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Users 管理摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUsersOverviewResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users/invitations:
+    post:
+      tags:
+        - Users
+      operationId: createAdminUserInvitation
+      summary: 创建后台成员邀请
+      description: MVP 仅允许预设角色和 admin_console 接入范围；同一 identifier 不允许同时存在多个 pending 邀请。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminInvitationRequest"
+      responses:
+        "201":
+          description: 成员邀请已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminInvitationResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users/{userId}/suspend:
+    post:
+      tags:
+        - Users
+      operationId: suspendAdminUser
+      summary: 暂停后台成员
+      description: 暂停成员后，该成员既有 active 与 needs_attention 后台会话会失效，不得继续执行受保护后台动作。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/AdminUserId"
+      responses:
+        "200":
+          description: 后台成员已暂停
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserActionResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users/{userId}/restore:
+    post:
+      tags:
+        - Users
+      operationId: restoreAdminUser
+      summary: 恢复后台成员
+      description: 将已暂停成员恢复为 active；不会恢复已撤销或已处置的旧会话。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/AdminUserId"
+      responses:
+        "200":
+          description: 后台成员已恢复
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserActionResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/sessions/{sessionId}/remediate:
+    post:
+      tags:
+        - Users
+      operationId: remediateAdminSession
+      summary: 执行基础后台会话处置
+      description: 仅处理 needs_attention 后台会话，支持 revoke 或 mark_resolved 两种 MVP 基础动作；不包含风险评分、设备指纹、自动策略或完整审计调查流。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/AdminSessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSessionRemediationRequest"
+      responses:
+        "200":
+          description: 后台会话已完成基础处置
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSessionRemediationResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
   /api/subtitles/search:
     get:
       tags:
@@ -647,6 +779,20 @@ components:
       schema:
         type: string
       description: CallerKey 稳定标识。
+    AdminUserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: AdminUser 稳定标识。
+    AdminSessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: AdminSession 稳定标识。
     CredentialId:
       name: credentialId
       in: path
@@ -1466,6 +1612,220 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/CallerKeyUsage"
+    AdminUserStatus:
+      type: string
+      enum:
+        - active
+        - suspended
+    AdminRolePreset:
+      type: string
+      enum:
+        - admin
+        - operator
+    AdminInvitationStatus:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - expired
+        - revoked
+    AdminSessionStatus:
+      type: string
+      enum:
+        - active
+        - revoked
+        - expired
+        - needs_attention
+        - remediated
+    AdminMember:
+      type: object
+      required:
+        - id
+        - identifier
+        - displayName
+        - status
+        - rolePreset
+        - lastActiveAt
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        displayName:
+          type: string
+        status:
+          $ref: "#/components/schemas/AdminUserStatus"
+        rolePreset:
+          $ref: "#/components/schemas/AdminRolePreset"
+        lastActiveAt:
+          type: string
+          format: date-time
+          nullable: true
+    AdminUserActionResult:
+      allOf:
+        - $ref: "#/components/schemas/AdminMember"
+        - type: object
+          required:
+            - updatedAt
+          properties:
+            updatedAt:
+              type: string
+              format: date-time
+    AdminInvitation:
+      type: object
+      required:
+        - id
+        - identifier
+        - status
+        - rolePreset
+        - accessPreset
+        - expiresAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        status:
+          $ref: "#/components/schemas/AdminInvitationStatus"
+        rolePreset:
+          $ref: "#/components/schemas/AdminRolePreset"
+        accessPreset:
+          type: string
+          enum:
+            - admin_console
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AdminSessionAttentionSummary:
+      type: object
+      required:
+        - id
+        - memberId
+        - status
+        - reason
+        - lastSeenAt
+        - deviceLabel
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        status:
+          type: string
+          enum:
+            - needs_attention
+        reason:
+          type: string
+          nullable: true
+        lastSeenAt:
+          type: string
+          format: date-time
+          nullable: true
+        deviceLabel:
+          type: string
+          nullable: true
+    AdminUsersOverview:
+      type: object
+      required:
+        - members
+        - invitations
+        - sessionsNeedingAttention
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminMember"
+        invitations:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminInvitation"
+        sessionsNeedingAttention:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminSessionAttentionSummary"
+    AdminUsersOverviewResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminUsersOverview"
+    CreateAdminInvitationRequest:
+      type: object
+      required:
+        - identifier
+        - rolePreset
+        - accessPreset
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+        rolePreset:
+          $ref: "#/components/schemas/AdminRolePreset"
+        accessPreset:
+          type: string
+          enum:
+            - admin_console
+    AdminInvitationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminInvitation"
+    AdminUserActionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminUserActionResult"
+    AdminSessionRemediationAction:
+      type: string
+      enum:
+        - revoke
+        - mark_resolved
+    AdminSessionRemediationRequest:
+      type: object
+      required:
+        - action
+        - reason
+      properties:
+        action:
+          $ref: "#/components/schemas/AdminSessionRemediationAction"
+        reason:
+          type: string
+          minLength: 1
+    AdminSessionRemediationResult:
+      type: object
+      required:
+        - sessionId
+        - status
+        - action
+      properties:
+        sessionId:
+          type: string
+        status:
+          type: string
+          enum:
+            - remediated
+        action:
+          $ref: "#/components/schemas/AdminSessionRemediationAction"
+    AdminSessionRemediationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminSessionRemediationResult"
     SubtitleSearchResult:
       type: object
       required:

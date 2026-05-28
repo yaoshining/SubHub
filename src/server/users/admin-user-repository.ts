@@ -146,11 +146,7 @@ export class AdminUserRepository {
       .limit(1);
 
     if (!session) {
-      throw new AppError(
-        "VALIDATION_FAILED",
-        "后台会话不存在。",
-        "sessionId",
-      );
+      throw new AppError("VALIDATION_FAILED", "后台会话不存在。", "sessionId");
     }
 
     return session;
@@ -158,7 +154,9 @@ export class AdminUserRepository {
 
   async createInvitation(input: CreateInvitationInput) {
     const nowIso = input.now.toISOString();
-    const expiresAt = new Date(input.now.getTime() + invitationTtlMs).toISOString();
+    const expiresAt = new Date(
+      input.now.getTime() + invitationTtlMs,
+    ).toISOString();
 
     const invitation = this.db.transaction(
       (tx) => {

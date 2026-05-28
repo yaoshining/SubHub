@@ -11,7 +11,11 @@ import {
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
 } from "@/server/storage/client";
-import { adminActionResults, adminSessions, adminUsers } from "@/server/storage/schema";
+import {
+  adminActionResults,
+  adminSessions,
+  adminUsers,
+} from "@/server/storage/schema";
 
 let tempDir: string;
 
@@ -91,7 +95,9 @@ describe("Admin session remediation service", () => {
       remediatedByAdminUserId: "admin_owner",
     });
 
-    const actions = await getStorageClient().db.select().from(adminActionResults);
+    const actions = await getStorageClient()
+      .db.select()
+      .from(adminActionResults);
     expect(actions).toEqual([
       expect.objectContaining({
         actionType: "admin_session_remediated",

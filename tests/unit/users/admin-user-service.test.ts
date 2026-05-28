@@ -154,7 +154,9 @@ describe("Admin user service", () => {
         expect.objectContaining({ id: "session_attention", status: "revoked" }),
       ]),
     );
-    const actions = await getStorageClient().db.select().from(adminActionResults);
+    const actions = await getStorageClient()
+      .db.select()
+      .from(adminActionResults);
     expect(actions).toEqual([
       expect.objectContaining({
         actionType: "admin_user_suspended",
