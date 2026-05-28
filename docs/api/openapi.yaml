@@ -505,6 +505,7 @@ paths:
         - Caller Keys
       operationId: getAdminCallerKeyUsage
       summary: 查询 Caller Key 使用摘要
+      description: 返回最近 24 小时内的查询/下载计数与最近记录列表，以及最近轮换结果。
       security:
         - AdminSession: []
       parameters:
@@ -1168,13 +1169,36 @@ components:
       type: object
       required:
         - items
+        - summary
         - total
       properties:
         items:
           type: array
           items:
             $ref: "#/components/schemas/CallerKey"
+        summary:
+          $ref: "#/components/schemas/CallerKeyListSummary"
         total:
+          type: integer
+          minimum: 0
+    CallerKeyListSummary:
+      type: object
+      required:
+        - activeCount
+        - suspendedCount
+        - quotaAlertCount
+        - rotationCount30d
+      properties:
+        activeCount:
+          type: integer
+          minimum: 0
+        suspendedCount:
+          type: integer
+          minimum: 0
+        quotaAlertCount:
+          type: integer
+          minimum: 0
+        rotationCount30d:
           type: integer
           minimum: 0
     CallerKeyListResponse:
@@ -1415,19 +1439,24 @@ components:
         searchCount:
           type: integer
           minimum: 0
+          description: 最近 24 小时内的查询次数。
         downloadCount:
           type: integer
           minimum: 0
+          description: 最近 24 小时内的下载次数。
         recentSearches:
           type: array
+          description: 最近 24 小时内的最近查询记录，最多返回最新 20 条。
           items:
             $ref: "#/components/schemas/SubtitleSearchRequestRecord"
         recentDownloads:
           type: array
+          description: 最近 24 小时内的最近下载记录，最多返回最新 20 条。
           items:
             $ref: "#/components/schemas/SubtitleDownloadRequestRecord"
         recentRotations:
           type: array
+          description: 最近轮换结果，按时间倒序返回，最多 20 条。
           items:
             $ref: "#/components/schemas/CallerKeyRotation"
     CallerKeyUsageResponse:

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, gte } from "drizzle-orm";
 
 import { AppError } from "@/lib/errors";
 import { hashCallerKey } from "@/server/api/caller-key-auth";
@@ -51,7 +51,16 @@ export type CallerKeyUsageSummary = {
   recentRotations: CallerKeyRotation[];
 };
 
+export type CallerKeyListSummary = {
+  activeCount: number;
+  suspendedCount: number;
+  quotaAlertCount: number;
+  rotationCount30d: number;
+};
+
 const revealWindowMs = 10 * 60 * 1000;
+const usageWindowMs = 24 * 60 * 60 * 1000;
+const rotationWindowMs = 30 * 24 * 60 * 60 * 1000;
 
 const createCallerKeyId = () => `ck_${randomBytes(16).toString("base64url")}`;
 
@@ -104,6 +113,13 @@ const isSqliteConstraintError = (error: unknown) =>
 export class CallerKeyRepository {
   constructor(private readonly db = getStorageClient().db) {}
 
+  private async countRows(
+    query: Promise<Array<{ value: number }>>,
+  ): Promise<number> {
+    const [row] = await query;
+    return row?.value ?? 0;
+  }
+
   async listCallerKeys(): Promise<SanitizedCallerKey[]> {
     const rows = await this.db
       .select()
@@ -111,6 +127,44 @@ export class CallerKeyRepository {
       .orderBy(desc(callerKeys.createdAt));
 
     return rows.map(sanitizeCallerKey);
+  }
+
+  async getListSummary(now = new Date()): Promise<CallerKeyListSummary> {
+    const cutoff = new Date(now.getTime() - rotationWindowMs).toISOString();
+    const [activeCount, suspendedCount, quotaAlertCount, rotationCount30d] =
+      await Promise.all([
+        this.countRows(
+          this.db
+            .select({ value: count() })
+            .from(callerKeys)
+            .where(eq(callerKeys.status, "active")),
+        ),
+        this.countRows(
+          this.db
+            .select({ value: count() })
+            .from(callerKeys)
+            .where(eq(callerKeys.status, "suspended")),
+        ),
+        this.countRows(
+          this.db
+            .select({ value: count() })
+            .from(callerKeys)
+            .where(eq(callerKeys.quotaPolicy, "limited")),
+        ),
+        this.countRows(
+          this.db
+            .select({ value: count() })
+            .from(callerKeyRotations)
+            .where(gte(callerKeyRotations.createdAt, cutoff)),
+        ),
+      ]);
+
+    return {
+      activeCount,
+      suspendedCount,
+      quotaAlertCount,
+      rotationCount30d,
+    };
   }
 
   async requireCallerKey(keyId: string): Promise<CallerKey> {
@@ -355,20 +409,32 @@ export class CallerKeyRepository {
 
   async getUsageSummary(
     keyId: string,
+    now = new Date(),
     limit = 20,
   ): Promise<CallerKeyUsageSummary> {
     const callerKey = await this.requireCallerKey(keyId);
+    const cutoff = new Date(now.getTime() - usageWindowMs).toISOString();
     const [searches, downloads, rotations] = await Promise.all([
       this.db
         .select()
         .from(subtitleSearchRequests)
-        .where(eq(subtitleSearchRequests.callerKeyId, keyId))
+        .where(
+          and(
+            eq(subtitleSearchRequests.callerKeyId, keyId),
+            gte(subtitleSearchRequests.createdAt, cutoff),
+          ),
+        )
         .orderBy(desc(subtitleSearchRequests.createdAt))
         .limit(limit),
       this.db
         .select()
         .from(subtitleDownloadRequests)
-        .where(eq(subtitleDownloadRequests.callerKeyId, keyId))
+        .where(
+          and(
+            eq(subtitleDownloadRequests.callerKeyId, keyId),
+            gte(subtitleDownloadRequests.createdAt, cutoff),
+          ),
+        )
         .orderBy(desc(subtitleDownloadRequests.createdAt))
         .limit(limit),
       this.db
@@ -378,12 +444,36 @@ export class CallerKeyRepository {
         .orderBy(desc(callerKeyRotations.createdAt))
         .limit(limit),
     ]);
+    const [searchCount, downloadCount] = await Promise.all([
+      this.countRows(
+        this.db
+          .select({ value: count() })
+          .from(subtitleSearchRequests)
+          .where(
+            and(
+              eq(subtitleSearchRequests.callerKeyId, keyId),
+              gte(subtitleSearchRequests.createdAt, cutoff),
+            ),
+          ),
+      ),
+      this.countRows(
+        this.db
+          .select({ value: count() })
+          .from(subtitleDownloadRequests)
+          .where(
+            and(
+              eq(subtitleDownloadRequests.callerKeyId, keyId),
+              gte(subtitleDownloadRequests.createdAt, cutoff),
+            ),
+          ),
+      ),
+    ]);
 
     return {
       callerKeyId: keyId,
       lastUsedAt: callerKey.lastUsedAt,
-      searchCount: searches.length,
-      downloadCount: downloads.length,
+      searchCount,
+      downloadCount,
       recentSearches: searches,
       recentDownloads: downloads,
       recentRotations: rotations,

@@ -68,6 +68,12 @@ beforeEach(() => {
   vi.mocked(api.fetchCallerKeys).mockResolvedValue({
     items: [callerKeyA, callerKeyB],
     total: 2,
+    summary: {
+      activeCount: 1,
+      suspendedCount: 1,
+      quotaAlertCount: 1,
+      rotationCount30d: 4,
+    },
   });
   vi.mocked(api.fetchCallerKeyUsage).mockResolvedValue(usage);
   vi.mocked(api.createCallerKey).mockResolvedValue({
@@ -124,6 +130,12 @@ describe("API Keys 页面", () => {
     vi.mocked(api.fetchCallerKeys).mockResolvedValueOnce({
       items: [],
       total: 0,
+      summary: {
+        activeCount: 0,
+        suspendedCount: 0,
+        quotaAlertCount: 0,
+        rotationCount30d: 0,
+      },
     });
 
     renderWithTheme(<ApiKeysClient />);
@@ -154,6 +166,8 @@ describe("API Keys 页面", () => {
     expect(
       screen.getByRole("region", { name: "Caller Key 摘要" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Rotations / 30d")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
     expect(screen.getByTestId("caller-key-inventory")).toHaveTextContent(
       "Jellyfin Living Room",
     );
@@ -173,6 +187,9 @@ describe("API Keys 页面", () => {
         expect.any(Object),
       ),
     );
+    expect(
+      screen.queryByText("当前契约以已轮换版本数近似展示。"),
+    ).not.toBeInTheDocument();
   });
 
   it("创建后进入受控 reveal window，copy 反馈不复述密钥", async () => {

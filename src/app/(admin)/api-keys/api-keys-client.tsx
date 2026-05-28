@@ -5,6 +5,7 @@ import { AlertTriangle, KeyRound, RefreshCw, ShieldCheck } from "lucide-react";
 
 import type {
   CallerKey,
+  CallerKeyList,
   CallerKeyReveal,
   CallerKeyRotationResult,
 } from "@/lib/api/caller-keys";
@@ -80,8 +81,31 @@ const matchesFilter = (callerKey: CallerKey, filter: CallerKeyFilter) =>
   callerKey.environment === filter ||
   callerKey.status === filter;
 
+const emptySummary: CallerKeyList["summary"] = {
+  activeCount: 0,
+  suspendedCount: 0,
+  quotaAlertCount: 0,
+  rotationCount30d: 0,
+};
+
+const buildSummaryFromItems = (
+  items: CallerKey[],
+  rotationCount30d: number,
+): CallerKeyList["summary"] => ({
+  activeCount: items.filter((callerKey) => callerKey.status === "active")
+    .length,
+  suspendedCount: items.filter((callerKey) => callerKey.status === "suspended")
+    .length,
+  quotaAlertCount: items.filter(
+    (callerKey) => callerKey.quotaPolicy === "limited",
+  ).length,
+  rotationCount30d,
+});
+
 export function ApiKeysClient() {
   const [callerKeys, setCallerKeys] = React.useState<CallerKey[]>([]);
+  const [summary, setSummary] =
+    React.useState<CallerKeyList["summary"]>(emptySummary);
   const [selectedCallerKeyId, setSelectedCallerKeyId] =
     React.useState<string>();
   const [filter, setFilter] = React.useState<CallerKeyFilter>("all");
@@ -101,6 +125,9 @@ export function ApiKeysClient() {
         return;
       }
       setCallerKeys(list.items);
+      setSummary(
+        list.summary ?? buildSummaryFromItems(list.items, emptySummary.rotationCount30d),
+      );
       setSelectedCallerKeyId((current) => {
         if (current && list.items.some((item) => item.id === current)) {
           return current;
@@ -142,24 +169,22 @@ export function ApiKeysClient() {
     selectedCallerKey &&
     !filteredCallerKeys.some((item) => item.id === selectedCallerKey.id),
   );
-  const activeCount = callerKeys.filter(
-    (callerKey) => callerKey.status === "active",
-  ).length;
-  const suspendedCount = callerKeys.filter(
-    (callerKey) => callerKey.status === "suspended",
-  ).length;
-  const rotatedCount = callerKeys.filter(
-    (callerKey) => callerKey.status === "rotated",
-  ).length;
-  const quotaAlertCount = callerKeys.filter(
-    (callerKey) => callerKey.quotaPolicy === "limited",
-  ).length;
+  const activeCount = summary.activeCount;
+  const suspendedCount = summary.suspendedCount;
+  const rotationCount30d = summary.rotationCount30d;
+  const quotaAlertCount = summary.quotaAlertCount;
 
   const handleCreated = React.useCallback((result: CallerKeyReveal) => {
-    setCallerKeys((current) => [
-      result.callerKey,
-      ...current.filter((item) => item.id !== result.callerKey.id),
-    ]);
+    setCallerKeys((current) => {
+      const nextItems = [
+        result.callerKey,
+        ...current.filter((item) => item.id !== result.callerKey.id),
+      ];
+      setSummary((currentSummary) =>
+        buildSummaryFromItems(nextItems, currentSummary.rotationCount30d),
+      );
+      return nextItems;
+    });
     setSelectedCallerKeyId(result.callerKey.id);
     setRevealWindow({
       callerKeyId: result.callerKey.id,
@@ -175,21 +200,27 @@ export function ApiKeysClient() {
   }, []);
 
   const handleRotated = React.useCallback((result: CallerKeyRotationResult) => {
-    setCallerKeys((current) => [
-      result.callerKey,
-      ...current
-        .map((item) =>
-          item.id === result.rotation.callerKeyId
-            ? {
-                ...item,
-                status: "rotated" as const,
-                lastRotatedAt: result.rotation.createdAt,
-                revealUntil: null,
-              }
-            : item,
-        )
-        .filter((item) => item.id !== result.callerKey.id),
-    ]);
+    setCallerKeys((current) => {
+      const nextItems = [
+        result.callerKey,
+        ...current
+          .map((item) =>
+            item.id === result.rotation.callerKeyId
+              ? {
+                  ...item,
+                  status: "rotated" as const,
+                  lastRotatedAt: result.rotation.createdAt,
+                  revealUntil: null,
+                }
+              : item,
+          )
+          .filter((item) => item.id !== result.callerKey.id),
+      ];
+      setSummary((currentSummary) =>
+        buildSummaryFromItems(nextItems, currentSummary.rotationCount30d + 1),
+      );
+      return nextItems;
+    });
     setSelectedCallerKeyId(result.callerKey.id);
     setRevealWindow({
       callerKeyId: result.callerKey.id,
@@ -205,9 +236,15 @@ export function ApiKeysClient() {
   }, []);
 
   const handleSuspended = React.useCallback((callerKey: CallerKey) => {
-    setCallerKeys((current) =>
-      current.map((item) => (item.id === callerKey.id ? callerKey : item)),
-    );
+    setCallerKeys((current) => {
+      const nextItems = current.map((item) =>
+        item.id === callerKey.id ? callerKey : item,
+      );
+      setSummary((currentSummary) =>
+        buildSummaryFromItems(nextItems, currentSummary.rotationCount30d),
+      );
+      return nextItems;
+    });
     setSelectedCallerKeyId(callerKey.id);
     setRevealWindow((current) =>
       current?.callerKeyId === callerKey.id ? null : current,
@@ -327,8 +364,8 @@ export function ApiKeysClient() {
           />
           <SummaryCard
             label="Rotations / 30d"
-            value={rotatedCount}
-            description="当前契约以已轮换版本数近似展示。"
+            value={rotationCount30d}
+            description="最近 30 天内发生的 Caller Key 轮换次数。"
           />
           <SummaryCard
             label="Suspended"

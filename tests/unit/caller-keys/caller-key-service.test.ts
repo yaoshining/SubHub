@@ -40,6 +40,39 @@ afterEach(() => {
 });
 
 describe("Caller Key service", () => {
+  it("列表摘要按最近 30 天轮换事件计数，而不是按 rotated 条目近似", async () => {
+    const now = new Date("2026-05-28T12:00:00.000Z");
+    const created = await createCallerKey(
+      {
+        callerName: "Jellyfin Home",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { now },
+    );
+
+    const firstRotation = await rotateCallerKey(created.callerKey.id, {
+      actorAdminUserId: null,
+      now: new Date("2026-05-10T12:00:00.000Z"),
+    });
+
+    await rotateCallerKey(firstRotation.callerKey.id, {
+      actorAdminUserId: null,
+      now: new Date("2026-04-15T12:00:00.000Z"),
+    });
+
+    await expect(listCallerKeys({ now })).resolves.toMatchObject({
+      total: 3,
+      summary: {
+        activeCount: 1,
+        suspendedCount: 0,
+        quotaAlertCount: 0,
+        rotationCount30d: 1,
+      },
+    });
+  });
+
   it("创建 Caller Key 只返回一次明文并在存储层隐藏 hash", async () => {
     const result = await createCallerKey({
       callerName: "Jellyfin Home",
@@ -89,7 +122,7 @@ describe("Caller Key service", () => {
     await expect(
       requireCallerKey({ request: bearerRequest(rotated.key) }),
     ).resolves.toMatchObject({ id: rotated.callerKey.id });
-    await expect(listCallerKeys()).resolves.toEqual({
+    await expect(listCallerKeys()).resolves.toMatchObject({
       items: expect.arrayContaining([
         expect.objectContaining({
           id: created.callerKey.id,
@@ -119,7 +152,7 @@ describe("Caller Key service", () => {
     ).rejects.toMatchObject({ code: "CALLER_KEY_SUSPENDED" });
   });
 
-  it("使用摘要覆盖查询、下载、最近使用和轮换记录", async () => {
+  it("使用摘要按最近 24 小时统计且不被最近记录列表上限截断", async () => {
     const now = new Date("2026-05-28T00:00:00.000Z");
     const created = await createCallerKey(
       {
@@ -136,29 +169,65 @@ describe("Caller Key service", () => {
       request: bearerRequest(created.key),
       now: new Date("2026-05-28T00:01:00.000Z"),
     });
+    await Promise.all(
+      Array.from({ length: 21 }, (_, index) =>
+        repository.recordSearchRequest({
+          callerKeyId: created.callerKey.id,
+          mediaTitle: `Example ${index + 1}`,
+          mediaYear: 2024,
+          season: 1,
+          episode: index + 1,
+          language: "zh-CN",
+          status: "success",
+          resultCount: 1,
+          providerId: null,
+          credentialId: null,
+          durationMs: 120,
+          createdAt: new Date(
+            Date.parse("2026-05-28T00:01:01.000Z") + index * 60_000,
+          ).toISOString(),
+        }),
+      ),
+    );
+    await Promise.all(
+      Array.from({ length: 21 }, (_, index) =>
+        repository.recordDownloadRequest({
+          callerKeyId: created.callerKey.id,
+          subtitleRef: `opensubtitles:provider_001:file_${String(index + 1).padStart(3, "0")}`,
+          providerId: null,
+          credentialId: null,
+          status: "success",
+          contentType: "application/x-subrip",
+          durationMs: 80,
+          createdAt: new Date(
+            Date.parse("2026-05-28T00:01:02.000Z") + index * 60_000,
+          ).toISOString(),
+        }),
+      ),
+    );
     await repository.recordSearchRequest({
       callerKeyId: created.callerKey.id,
-      mediaTitle: "Example",
-      mediaYear: 2024,
+      mediaTitle: "Old request",
+      mediaYear: 2023,
       season: 1,
-      episode: 2,
+      episode: 1,
       language: "zh-CN",
       status: "success",
       resultCount: 1,
       providerId: null,
       credentialId: null,
-      durationMs: 120,
-      createdAt: "2026-05-28T00:01:01.000Z",
+      durationMs: 150,
+      createdAt: "2026-05-26T23:59:59.000Z",
     });
     await repository.recordDownloadRequest({
       callerKeyId: created.callerKey.id,
-      subtitleRef: "opensubtitles:provider_001:file_001",
+      subtitleRef: "opensubtitles:provider_001:file_old",
       providerId: null,
       credentialId: null,
       status: "success",
       contentType: "application/x-subrip",
-      durationMs: 80,
-      createdAt: "2026-05-28T00:01:02.000Z",
+      durationMs: 90,
+      createdAt: "2026-05-26T23:59:59.000Z",
     });
     await rotateCallerKey(created.callerKey.id, {
       actorAdminUserId: null,
@@ -166,26 +235,26 @@ describe("Caller Key service", () => {
     });
 
     await expect(
-      getCallerKeyUsage(created.callerKey.id),
+      getCallerKeyUsage(created.callerKey.id, { now }),
     ).resolves.toMatchObject({
       callerKeyId: created.callerKey.id,
       lastUsedAt: "2026-05-28T00:01:00.000Z",
-      searchCount: 1,
-      downloadCount: 1,
-      recentSearches: [
+      searchCount: 21,
+      downloadCount: 21,
+      recentSearches: expect.arrayContaining([
         expect.objectContaining({
-          mediaTitle: "Example",
+          mediaTitle: "Example 21",
           status: "success",
           resultCount: 1,
         }),
-      ],
-      recentDownloads: [
+      ]),
+      recentDownloads: expect.arrayContaining([
         expect.objectContaining({
-          subtitleRef: "opensubtitles:provider_001:file_001",
+          subtitleRef: "opensubtitles:provider_001:file_021",
           status: "success",
           contentType: "application/x-subrip",
         }),
-      ],
+      ]),
       recentRotations: [
         expect.objectContaining({
           callerKeyId: created.callerKey.id,
@@ -193,5 +262,20 @@ describe("Caller Key service", () => {
         }),
       ],
     });
+
+    const usageSummary = await getCallerKeyUsage(created.callerKey.id, { now });
+    expect(usageSummary.recentSearches).toHaveLength(20);
+    expect(usageSummary.recentDownloads).toHaveLength(20);
+    expect(
+      usageSummary.recentSearches.some(
+        (search) => search.mediaTitle === "Old request",
+      ),
+    ).toBe(false);
+    expect(
+      usageSummary.recentDownloads.some(
+        (download) =>
+          download.subtitleRef === "opensubtitles:provider_001:file_old",
+      ),
+    ).toBe(false);
   });
 });

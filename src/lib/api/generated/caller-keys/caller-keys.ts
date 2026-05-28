@@ -293,6 +293,7 @@ export const getGetAdminCallerKeyUsageUrl = (keyId: string) => {
 };
 
 /**
+ * 返回最近 24 小时内的查询/下载计数与最近记录列表，以及最近轮换结果。
  * @summary 查询 Caller Key 使用摘要
  */
 export const getAdminCallerKeyUsage = async (

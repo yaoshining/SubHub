@@ -408,12 +408,12 @@ export function CallerKeyDetail({
                 <Metric
                   label="Search"
                   value={usage.searchCount}
-                  helper="最近记录中的查询次数"
+                  helper="最近 24 小时内查询次数"
                 />
                 <Metric
                   label="Download"
                   value={usage.downloadCount}
-                  helper="最近记录中的下载次数"
+                  helper="最近 24 小时内下载次数"
                 />
                 <Metric
                   label="Last used"

@@ -36,6 +36,12 @@ beforeEach(() => {
   vi.mocked(api.fetchCallerKeys).mockResolvedValue({
     items: [callerKey],
     total: 1,
+    summary: {
+      activeCount: 1,
+      suspendedCount: 0,
+      quotaAlertCount: 0,
+      rotationCount30d: 0,
+    },
   });
   vi.mocked(api.fetchCallerKeyUsage).mockResolvedValue({
     callerKeyId: callerKey.id,

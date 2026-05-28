@@ -7,6 +7,34 @@ import { cleanup } from "@testing-library/react";
 
 let testDatabaseDirectory: string | undefined;
 
+const createMemoryStorage = () => {
+  const store = new Map<string, string>();
+
+  return {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key: string) {
+      return store.has(key) ? store.get(key)! : null;
+    },
+    key(index: number) {
+      return Array.from(store.keys())[index] ?? null;
+    },
+    removeItem(key: string) {
+      store.delete(key);
+    },
+    setItem(key: string, value: string) {
+      store.set(key, String(value));
+    },
+  } satisfies Storage;
+};
+
+const localStorageMock = createMemoryStorage();
+const sessionStorageMock = createMemoryStorage();
+
 beforeAll(() => {
   testDatabaseDirectory = mkdtempSync(join(tmpdir(), "subhub-test-db-"));
 
@@ -32,6 +60,16 @@ beforeAll(() => {
     }),
   });
 
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageMock,
+  });
+
+  Object.defineProperty(window, "sessionStorage", {
+    configurable: true,
+    value: sessionStorageMock,
+  });
+
   Object.assign(process.env, {
     NODE_ENV: process.env.NODE_ENV ?? "test",
     APP_URL: process.env.APP_URL ?? "http://localhost:3000",
@@ -51,6 +89,8 @@ beforeAll(() => {
 
 afterEach(() => {
   cleanup();
+  localStorageMock.clear();
+  sessionStorageMock.clear();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });

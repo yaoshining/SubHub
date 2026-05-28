@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CallerKey } from "./callerKey";
+import type { CallerKeyListSummary } from "./callerKeyListSummary";
 
 export interface CallerKeyList {
   items: CallerKey[];
+  summary: CallerKeyListSummary;
   /** @minimum 0 */
   total: number;
 }

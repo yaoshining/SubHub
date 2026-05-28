@@ -12,11 +12,20 @@ import type { SubtitleSearchRequestRecord } from "./subtitleSearchRequestRecord"
 export interface CallerKeyUsage {
   callerKeyId: string;
   lastUsedAt: string | null;
-  /** @minimum 0 */
+  /**
+   * 最近 24 小时内的查询次数。
+   * @minimum 0
+   */
   searchCount: number;
-  /** @minimum 0 */
+  /**
+   * 最近 24 小时内的下载次数。
+   * @minimum 0
+   */
   downloadCount: number;
+  /** 最近 24 小时内的最近查询记录，最多返回最新 20 条。 */
   recentSearches: SubtitleSearchRequestRecord[];
+  /** 最近 24 小时内的最近下载记录，最多返回最新 20 条。 */
   recentDownloads: SubtitleDownloadRequestRecord[];
+  /** 最近轮换结果，按时间倒序返回，最多 20 条。 */
   recentRotations: CallerKeyRotation[];
 }

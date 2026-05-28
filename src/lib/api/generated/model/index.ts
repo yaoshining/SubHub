@@ -17,6 +17,7 @@ export * from "./callerKey";
 export * from "./callerKeyEnvironment";
 export * from "./callerKeyList";
 export * from "./callerKeyListResponse";
+export * from "./callerKeyListSummary";
 export * from "./callerKeyResponse";
 export * from "./callerKeyReveal";
 export * from "./callerKeyRevealResponse";

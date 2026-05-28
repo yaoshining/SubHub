@@ -18,9 +18,13 @@ const getRepository = (db?: StorageDatabase) =>
   createCallerKeyRepository(db ?? getStorageClient().db);
 
 export async function listCallerKeys(options: CallerKeyServiceOptions = {}) {
-  const items = await getRepository(options.db).listCallerKeys();
+  const repository = getRepository(options.db);
+  const [items, summary] = await Promise.all([
+    repository.listCallerKeys(),
+    repository.getListSummary(options.now),
+  ]);
 
-  return { items, total: items.length };
+  return { items, total: items.length, summary };
 }
 
 export async function createCallerKey(
@@ -81,5 +85,5 @@ export async function getCallerKeyUsage(
   keyId: string,
   options: CallerKeyServiceOptions = {},
 ) {
-  return getRepository(options.db).getUsageSummary(keyId);
+  return getRepository(options.db).getUsageSummary(keyId, options.now);
 }
