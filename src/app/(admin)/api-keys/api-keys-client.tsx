@@ -347,7 +347,10 @@ export function ApiKeysClient() {
         className="grid min-w-0 gap-6 desktop:grid-cols-[minmax(0,1.25fr)_minmax(22rem,0.75fr)]"
         data-testid="api-keys-responsive-grid"
       >
-        <div className="grid min-w-0 gap-6" data-testid="api-keys-primary-column">
+        <div
+          className="grid min-w-0 gap-6"
+          data-testid="api-keys-primary-column"
+        >
           {callerKeys.length > 0 ? (
             <CallerKeyInventory
               callerKeys={callerKeys}
