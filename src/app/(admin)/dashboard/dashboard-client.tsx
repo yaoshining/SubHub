@@ -494,9 +494,7 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
                       <div>
                         <Badge
                           variant={
-                            action.priority === "high"
-                              ? "warning"
-                              : "secondary"
+                            action.priority === "high" ? "warning" : "secondary"
                           }
                           className="mb-3 rounded-full"
                         >

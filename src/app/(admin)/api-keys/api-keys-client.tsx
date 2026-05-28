@@ -126,7 +126,8 @@ export function ApiKeysClient() {
       }
       setCallerKeys(list.items);
       setSummary(
-        list.summary ?? buildSummaryFromItems(list.items, emptySummary.rotationCount30d),
+        list.summary ??
+          buildSummaryFromItems(list.items, emptySummary.rotationCount30d),
       );
       setSelectedCallerKeyId((current) => {
         if (current && list.items.some((item) => item.id === current)) {
