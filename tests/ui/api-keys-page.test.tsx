@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiKeysClient } from "@/app/(admin)/api-keys/api-keys-client";
+import { CallerKeyDetail } from "@/components/api-keys/caller-key-detail";
 import { RevealSecret } from "@/components/api-keys/reveal-secret";
 import { renderWithTheme } from "../helpers/ui";
 
@@ -119,6 +120,26 @@ afterEach(() => {
 });
 
 describe("API Keys 页面", () => {
+  it("空态突出首个 Key 创建入口并提示对外服务不可用", async () => {
+    vi.mocked(api.fetchCallerKeys).mockResolvedValueOnce({
+      items: [],
+      total: 0,
+    });
+
+    renderWithTheme(<ApiKeysClient />);
+
+    expect(await screen.findByText("还没有调用方 Key")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("api-keys-service-unavailable"),
+    ).toHaveTextContent("对外服务不可用");
+    expect(screen.getByTestId("caller-key-form")).toHaveTextContent(
+      "生成与授权",
+    );
+    expect(screen.getByTestId("caller-key-no-selection")).toHaveTextContent(
+      "未选择 Key",
+    );
+  });
+
   it("展示摘要、inventory、表单、详情与最近使用，并默认选中首个活跃 Key", async () => {
     renderWithTheme(
       <React.StrictMode>
@@ -233,6 +254,24 @@ describe("API Keys 页面", () => {
     expect(screen.getByTestId("caller-key-hidden-by-filter")).toHaveTextContent(
       "当前对象不在筛选结果中",
     );
+  });
+
+  it("no-selection 状态不残留旧 Key 信息或 reveal/copy 动作", () => {
+    renderWithTheme(
+      <CallerKeyDetail
+        onRevealExpired={vi.fn()}
+        onRotated={vi.fn()}
+        onSuspended={vi.fn()}
+      />,
+    );
+
+    const noSelection = screen.getByTestId("caller-key-no-selection");
+    expect(noSelection).toHaveTextContent("未选择 Key");
+    expect(noSelection).toHaveTextContent("不会残留上一条 Key 的旧数据");
+    expect(screen.queryByText("Jellyfin Living Room")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "复制" }),
+    ).not.toBeInTheDocument();
   });
 });
 

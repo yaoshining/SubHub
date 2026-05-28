@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiKeysClient } from "@/app/(admin)/api-keys/api-keys-client";
@@ -45,6 +46,25 @@ beforeEach(() => {
     recentDownloads: [],
     recentRotations: [],
   });
+  vi.mocked(api.rotateCallerKey).mockResolvedValue({
+    callerKey: {
+      ...callerKey,
+      id: "ck_rotated",
+      keySuffix: "d41a65",
+      revealUntil: "2099-05-28T00:10:00.000Z",
+    },
+    rotation: {
+      id: "ckr_001",
+      callerKeyId: callerKey.id,
+      oldKeySuffix: callerKey.keySuffix,
+      newKeySuffix: "d41a65",
+      result: "success",
+      reason: "rotated",
+      createdAt: "2026-05-28T00:01:00.000Z",
+      performedByAdminUserId: "admin_001",
+    },
+    key: "subhub_live_rotated_secret_once",
+  });
 });
 
 describe("API Keys 响应式行为", () => {
@@ -78,9 +98,7 @@ describe("API Keys 响应式行为", () => {
     expect(screen.getByTestId("api-keys-primary-column")).toHaveClass(
       "min-w-0",
     );
-    expect(screen.getByTestId("api-keys-detail-column")).toHaveClass(
-      "min-w-0",
-    );
+    expect(screen.getByTestId("api-keys-detail-column")).toHaveClass("min-w-0");
     expect(await screen.findByTestId("caller-key-inventory")).toHaveClass(
       "min-w-0",
       "overflow-hidden",
@@ -111,5 +129,31 @@ describe("API Keys 响应式行为", () => {
     expect(screen.getByTestId("caller-key-detail")).toHaveTextContent(
       "默认态不展示完整明文",
     );
+  });
+
+  it("Mobile 下 reveal 明文可读，且高风险轮换仍需二次确认", async () => {
+    const user = userEvent.setup();
+    mockViewport(390);
+    renderWithTheme(<ApiKeysClient />);
+
+    expect(await screen.findByTestId("caller-key-detail")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "轮换当前 Key" }));
+    expect(
+      await screen.findByText("确认轮换当前 Caller Key"),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "确认轮换" }));
+
+    const reveal = await screen.findByTestId("reveal-secret");
+    await user.click(
+      screen.getByRole("button", { name: "显示完整 Caller Key" }),
+    );
+
+    expect(screen.getByLabelText("完整 Caller Key 明文")).toHaveClass(
+      "mobile:min-h-32",
+    );
+    expect(screen.getByLabelText("完整 Caller Key 明文")).toHaveValue(
+      "subhub_live_rotated_secret_once",
+    );
+    expect(reveal).toHaveTextContent("复制成功反馈不会复述密钥内容");
   });
 });

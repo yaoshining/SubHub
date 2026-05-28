@@ -7,10 +7,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { requireCallerKey } from "@/server/api/caller-key-auth";
 import {
   createCallerKey,
+  getCallerKeyUsage,
   listCallerKeys,
   rotateCallerKey,
   suspendCallerKey,
 } from "@/server/services/caller-key-service";
+import { createCallerKeyRepository } from "@/server/caller-keys/caller-key-repository";
 import {
   closeStorageClient,
   getStorageClient,
@@ -115,5 +117,81 @@ describe("Caller Key service", () => {
     await expect(
       requireCallerKey({ request: bearerRequest(created.key) }),
     ).rejects.toMatchObject({ code: "CALLER_KEY_SUSPENDED" });
+  });
+
+  it("使用摘要覆盖查询、下载、最近使用和轮换记录", async () => {
+    const now = new Date("2026-05-28T00:00:00.000Z");
+    const created = await createCallerKey(
+      {
+        callerName: "Infuse",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { now },
+    );
+    const repository = createCallerKeyRepository();
+
+    await requireCallerKey({
+      request: bearerRequest(created.key),
+      now: new Date("2026-05-28T00:01:00.000Z"),
+    });
+    await repository.recordSearchRequest({
+      callerKeyId: created.callerKey.id,
+      mediaTitle: "Example",
+      mediaYear: 2024,
+      season: 1,
+      episode: 2,
+      language: "zh-CN",
+      status: "success",
+      resultCount: 1,
+      providerId: null,
+      credentialId: null,
+      durationMs: 120,
+      createdAt: "2026-05-28T00:01:01.000Z",
+    });
+    await repository.recordDownloadRequest({
+      callerKeyId: created.callerKey.id,
+      subtitleRef: "opensubtitles:provider_001:file_001",
+      providerId: null,
+      credentialId: null,
+      status: "success",
+      contentType: "application/x-subrip",
+      durationMs: 80,
+      createdAt: "2026-05-28T00:01:02.000Z",
+    });
+    await rotateCallerKey(created.callerKey.id, {
+      actorAdminUserId: null,
+      now: new Date("2026-05-28T00:02:00.000Z"),
+    });
+
+    await expect(
+      getCallerKeyUsage(created.callerKey.id),
+    ).resolves.toMatchObject({
+      callerKeyId: created.callerKey.id,
+      lastUsedAt: "2026-05-28T00:01:00.000Z",
+      searchCount: 1,
+      downloadCount: 1,
+      recentSearches: [
+        expect.objectContaining({
+          mediaTitle: "Example",
+          status: "success",
+          resultCount: 1,
+        }),
+      ],
+      recentDownloads: [
+        expect.objectContaining({
+          subtitleRef: "opensubtitles:provider_001:file_001",
+          status: "success",
+          contentType: "application/x-subrip",
+        }),
+      ],
+      recentRotations: [
+        expect.objectContaining({
+          callerKeyId: created.callerKey.id,
+          result: "success",
+        }),
+      ],
+    });
   });
 });
