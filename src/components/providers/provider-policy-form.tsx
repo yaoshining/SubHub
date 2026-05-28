@@ -71,14 +71,17 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid h-full content-start gap-2">
       <label className="text-sm font-medium" htmlFor={id}>
         {label}
       </label>
       {children}
-      {helper ? (
-        <p className="text-xs text-muted-foreground">{helper}</p>
-      ) : null}
+      <p
+        className="min-h-5 text-xs text-muted-foreground"
+        data-testid={`${id}-helper`}
+      >
+        {helper ?? "\u00A0"}
+      </p>
     </div>
   );
 }

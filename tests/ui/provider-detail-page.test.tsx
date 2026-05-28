@@ -136,6 +136,18 @@ describe("Provider Detail 页面", () => {
     expect(
       screen.queryByTestId("no-active-credential-alert"),
     ).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("provider-name-helper")).toSatisfy(
+      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+    );
+    expect(screen.getAllByTestId("provider-priority-helper")).toSatisfy(
+      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+    );
+    expect(screen.getAllByTestId("provider-weight-helper")).toSatisfy(
+      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+    );
+    expect(screen.getAllByTestId("provider-concurrency-helper")).toSatisfy(
+      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+    );
   });
 
   it("Desktop 双栏容器允许子区块收缩，避免详情页出现横向滚动", async () => {
