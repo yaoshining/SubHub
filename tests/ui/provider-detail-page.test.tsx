@@ -65,6 +65,7 @@ const allElementsReserveHelperHeight = (elements: HTMLElement[]) =>
   elements.every((element) => element.classList.contains("min-h-5"));
 
 beforeEach(() => {
+  vi.clearAllMocks();
   vi.mocked(api.fetchProviderDetail).mockResolvedValue(provider);
   vi.mocked(api.fetchProviders).mockResolvedValue({
     items: [provider],
@@ -171,5 +172,79 @@ describe("Provider Detail 页面", () => {
     expect(screen.getByTestId("provider-detail-secondary-column")).toHaveClass(
       "min-w-0",
     );
+  });
+
+  it("隔离与恢复凭据后会同步 provider 级摘要，并将配置说明保持为只读说明", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.isolateProviderCredential).mockResolvedValue({
+      credential: {
+        ...provider.credentials[0]!,
+        status: "isolated",
+        lastErrorSummary: "429 限流",
+      },
+      provider: {
+        ...provider,
+        status: "degraded",
+        availableCredentialCount: 0,
+        activeCredentialCount: 0,
+        credentials: [
+          {
+            ...provider.credentials[0]!,
+            status: "isolated",
+            lastErrorSummary: "429 限流",
+          },
+        ],
+      },
+    });
+    vi.mocked(api.restoreProviderCredential).mockResolvedValue({
+      credential: provider.credentials[0]!,
+      provider: {
+        ...provider,
+        status: "enabled",
+        availableCredentialCount: 1,
+        activeCredentialCount: 1,
+        credentials: provider.credentials,
+      },
+    });
+
+    renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+    expect(
+      await screen.findByText("OpenSubtitles Primary"),
+    ).toBeInTheDocument();
+
+    const notes = screen.getByLabelText("Provider 配置说明");
+    expect(notes).toHaveAttribute("readonly");
+
+    await user.click(screen.getAllByRole("button", { name: "隔离" })[0]!);
+    await user.click(screen.getByRole("button", { name: "确认隔离" }));
+
+    await waitFor(() =>
+      expect(vi.mocked(api.isolateProviderCredential)).toHaveBeenCalledWith(
+        "provider_001",
+        "cred_001",
+        expect.any(Object),
+      ),
+    );
+
+    expect(await screen.findByText("已降级")).toBeInTheDocument();
+    expect(screen.getByText("可用凭据 0 个。", { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: "恢复隔离" })[0],
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getAllByRole("button", { name: "恢复隔离" })[0]!,
+    );
+
+    await waitFor(() =>
+      expect(vi.mocked(api.restoreProviderCredential)).toHaveBeenCalledWith(
+        "provider_001",
+        "cred_001",
+      ),
+    );
+
+    expect(await screen.findByText("已启用")).toBeInTheDocument();
+    expect(screen.getByText("可用凭据 1 个。", { exact: false })).toBeInTheDocument();
   });
 });

@@ -173,6 +173,33 @@ export async function restoreCredential(
 ) {
   const now = options.now ?? new Date();
   const db = options.db ?? getStorageClient().db;
+  const [current] = await db
+    .select()
+    .from(providerCredentials)
+    .where(
+      and(
+        eq(providerCredentials.providerId, providerId),
+        eq(providerCredentials.id, credentialId),
+      ),
+    )
+    .limit(1);
+
+  if (!current) {
+    throw new AppError(
+      "PROVIDER_UNAVAILABLE",
+      "Provider 凭据不存在。",
+      "credentialId",
+    );
+  }
+
+  if (current.status !== "isolated") {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "只有已隔离凭据才允许通过恢复入口重新加入调度池。",
+      "credentialId",
+    );
+  }
+
   const [credential] = await db
     .update(providerCredentials)
     .set({

@@ -111,9 +111,6 @@ export function ProviderDetailClient({
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null,
   );
-  const [notes, setNotes] = React.useState(
-    "该说明用于记录此 Provider 的配置意图。MVP 暂不持久化说明文本。",
-  );
   const mountedRef = React.useRef(true);
 
   const loadDetail = React.useCallback(async () => {
@@ -178,6 +175,13 @@ export function ProviderDetailClient({
     dirtyLabel: string,
   ) {
     setProvider((current) => (current ? { ...current, credentials } : current));
+    toast.success(`凭据操作已即时应用：${dirtyLabel}`);
+  }
+
+  function updateProviderSummary(dirtyLabel: string, nextProvider: ProviderDetail) {
+    setProvider(nextProvider);
+    setDraft(toDraft(nextProvider));
+    setSuccessMessage(null);
     toast.success(`凭据操作已即时应用：${dirtyLabel}`);
   }
 
@@ -366,6 +370,7 @@ export function ProviderDetailClient({
           <ProviderCredentialTable
             providerId={provider.id}
             credentials={provider.credentials}
+            onProviderChange={updateProviderSummary}
             onCredentialsChange={updateCredentials}
           />
         </div>
@@ -381,13 +386,13 @@ export function ProviderDetailClient({
             <Separator />
             <CardContent className="pt-6">
               <Textarea
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
+                value="该说明用于解释当前 Provider 的配置意图与维护上下文。MVP 暂不支持在此编辑或持久化说明文本。"
                 className="min-h-32"
                 aria-label="Provider 配置说明"
+                readOnly
               />
               <p className="mt-2 text-xs text-muted-foreground">
-                更新说明不需要单独保存；当前 MVP 暂不向后端持久化该说明。
+                当前为只读说明区，避免与真实可保存策略混淆；如需持久化注释，应单独进入后续能力范围。
               </p>
             </CardContent>
           </Card>

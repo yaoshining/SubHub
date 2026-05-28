@@ -206,14 +206,57 @@ describe("Provider 凭据池", () => {
     expect(detail.availableCredentialCount).toBe(1);
 
     await restoreCredential(provider.id, isolated.id, { now });
-    await restoreCredential(provider.id, disabled.id, { now });
     const restored = await repository.requireProvider(provider.id, now);
 
-    expect(restored.availableCredentialCount).toBe(3);
+    expect(restored.availableCredentialCount).toBe(2);
     expect(
       restored.credentials.filter(
         (credential) => credential.status === "active",
       ),
-    ).toHaveLength(3);
+    ).toHaveLength(2);
+    expect(
+      restored.credentials.find((credential) => credential.id === disabled.id),
+    ).toMatchObject({ status: "disabled" });
+  });
+
+  it("禁止通过 restore 重新激活 disabled 凭据", async () => {
+    const now = new Date("2026-05-28T00:00:00.000Z");
+    const repository = new ProviderRepository(getStorageClient().db);
+    const provider = await repository.createProvider(
+      {
+        name: "OpenSubtitles",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "secret-primary-token",
+        },
+      },
+      now,
+    );
+    const disabled = await repository.addCredential(
+      provider.id,
+      {
+        label: "disabled",
+        secret: "secret-disabled-token",
+      },
+      now,
+    );
+
+    await repository.updateCredential(
+      provider.id,
+      disabled.id,
+      { status: "disabled" },
+      now,
+    );
+
+    await expect(
+      restoreCredential(provider.id, disabled.id, { now }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "credentialId",
+    });
+
+    const after = await repository.requireCredential(provider.id, disabled.id);
+    expect(after.status).toBe("disabled");
   });
 });

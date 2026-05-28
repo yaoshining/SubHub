@@ -44,6 +44,7 @@ export type ProviderCredentialTableProps = {
   providerId: string;
   credentials: ProviderCredential[];
   readOnly?: boolean;
+  onProviderChange?: (dirtyLabel: string, provider: import("@/lib/api/providers").ProviderDetail) => void;
   onCredentialsChange: (
     credentials: ProviderCredential[],
     dirtyLabel: string,
@@ -61,6 +62,7 @@ export function ProviderCredentialTable({
   providerId,
   credentials,
   readOnly,
+  onProviderChange,
   onCredentialsChange,
 }: ProviderCredentialTableProps) {
   const [label, setLabel] = React.useState("secondary token");
@@ -107,12 +109,16 @@ export function ProviderCredentialTable({
           reason: "管理员从 Provider Detail 隔离异常凭据",
         },
       );
-      onCredentialsChange(
-        credentials.map((item) =>
-          item.id === credential.id ? result.credential : item,
-        ),
-        `隔离凭据 ${credential.label}`,
-      );
+      if (onProviderChange) {
+        onProviderChange(`隔离凭据 ${credential.label}`, result.provider);
+      } else {
+        onCredentialsChange(
+          credentials.map((item) =>
+            item.id === credential.id ? result.credential : item,
+          ),
+          `隔离凭据 ${credential.label}`,
+        );
+      }
     } catch (isolateError) {
       setError(getErrorMessage(isolateError));
     } finally {
@@ -125,12 +131,16 @@ export function ProviderCredentialTable({
     setError(null);
     try {
       const result = await restoreProviderCredential(providerId, credential.id);
-      onCredentialsChange(
-        credentials.map((item) =>
-          item.id === credential.id ? result.credential : item,
-        ),
-        `恢复凭据 ${credential.label}`,
-      );
+      if (onProviderChange) {
+        onProviderChange(`恢复隔离凭据 ${credential.label}`, result.provider);
+      } else {
+        onCredentialsChange(
+          credentials.map((item) =>
+            item.id === credential.id ? result.credential : item,
+          ),
+          `恢复隔离凭据 ${credential.label}`,
+        );
+      }
     } catch (restoreError) {
       setError(getErrorMessage(restoreError));
     } finally {
@@ -249,16 +259,19 @@ export function ProviderCredentialTable({
                       `最近使用：${formatDateTime(credential.lastUsedAt)}`}
                   </TableCell>
                   <TableCell className="space-x-2 text-right">
-                    {credential.status === "isolated" ||
-                    credential.status === "disabled" ? (
+                    {credential.status === "isolated" ? (
                       <Button
                         size="sm"
                         variant="outline"
                         disabled={readOnly || pendingId === credential.id}
                         onClick={() => void restoreCredential(credential)}
                       >
-                        恢复
+                        恢复隔离
                       </Button>
+                    ) : credential.status === "disabled" ? (
+                      <span className="text-xs text-muted-foreground">
+                        已手动停用
+                      </span>
                     ) : (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -322,16 +335,19 @@ export function ProviderCredentialTable({
                 ；最近异常：{credential.lastErrorSummary ?? "无"}
               </p>
               <div className="mt-4 flex justify-end gap-2">
-                {credential.status === "isolated" ||
-                credential.status === "disabled" ? (
+                {credential.status === "isolated" ? (
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={readOnly || pendingId === credential.id}
                     onClick={() => void restoreCredential(credential)}
                   >
-                    恢复
+                    恢复隔离
                   </Button>
+                ) : credential.status === "disabled" ? (
+                  <span className="self-center text-xs text-muted-foreground">
+                    已手动停用
+                  </span>
                 ) : (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
