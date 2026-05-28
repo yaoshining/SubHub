@@ -162,7 +162,7 @@ export function ProvidersClient() {
       provider.status === "degraded" || provider.availableCredentialCount === 0,
   ).length;
 
-  function handleCreated(provider: ProviderDetail) {
+  const handleCreated = React.useCallback((provider: ProviderDetail) => {
     setProviders((current) => {
       const withoutDuplicate = current.filter(
         (item) => item.id !== provider.id,
@@ -171,13 +171,13 @@ export function ProvidersClient() {
     });
     setSelectedProviderId(provider.id);
     setCreatedProvider(provider);
-  }
+  }, []);
 
-  function handleDetailLoaded(provider: ProviderDetail) {
+  const handleDetailLoaded = React.useCallback((provider: ProviderDetail) => {
     setProviders((current) =>
       current.map((item) => (item.id === provider.id ? provider : item)),
     );
-  }
+  }, []);
 
   return (
     <div className="grid gap-6" data-testid="providers-page">

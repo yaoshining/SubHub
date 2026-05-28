@@ -63,6 +63,7 @@ vi.mock("@/lib/api/providers", () => ({
 const api = await import("@/lib/api/providers");
 
 beforeEach(() => {
+  vi.clearAllMocks();
   vi.mocked(api.fetchProviders).mockResolvedValue({
     items: [providerA, providerNeedsConfig],
     total: 2,
@@ -105,6 +106,9 @@ describe("Providers 页面", () => {
     expect(
       await screen.findByTestId("provider-pool-inspector"),
     ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledTimes(1),
+    );
     expect(screen.getAllByText("继续配置").length).toBeGreaterThan(0);
   });
 

@@ -58,12 +58,13 @@ export function ProviderPoolInspector({
   provider,
   onDetailLoaded,
 }: ProviderPoolInspectorProps) {
+  const providerId = provider?.id;
   const [detail, setDetail] = React.useState<ProviderDetail | null>(null);
   const [loading, setLoading] = React.useState(Boolean(provider));
   const [error, setError] = React.useState<string | null>(null);
 
   const loadDetail = React.useCallback(async () => {
-    if (!provider) {
+    if (!providerId) {
       setDetail(null);
       setLoading(false);
       return;
@@ -73,7 +74,7 @@ export function ProviderPoolInspector({
     setError(null);
     setDetail(null);
     try {
-      const nextDetail = await fetchProviderDetail(provider.id);
+      const nextDetail = await fetchProviderDetail(providerId);
       setDetail(nextDetail);
       onDetailLoaded?.(nextDetail);
     } catch (loadError) {
@@ -82,7 +83,7 @@ export function ProviderPoolInspector({
     } finally {
       setLoading(false);
     }
-  }, [onDetailLoaded, provider]);
+  }, [onDetailLoaded, providerId]);
 
   React.useEffect(() => {
     const timeoutId = window.setTimeout(() => {
