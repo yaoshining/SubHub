@@ -43,7 +43,10 @@ describe("Admin Shell 响应式骨架", () => {
     setMockPathname("/dashboard");
 
     const { rerender } = renderWithTheme(
-      <AdminShell title="仪表盘" description="查看 SubHub 当前运营状态与下一步配置入口。">
+      <AdminShell
+        title="仪表盘"
+        description="查看 SubHub 当前运营状态与下一步配置入口。"
+      >
         <section>主体内容</section>
       </AdminShell>,
     );
@@ -52,7 +55,10 @@ describe("Admin Shell 响应式骨架", () => {
 
     setMockPathname("/providers");
     rerender(
-      <AdminShell title="仪表盘" description="查看 SubHub 当前运营状态与下一步配置入口。">
+      <AdminShell
+        title="仪表盘"
+        description="查看 SubHub 当前运营状态与下一步配置入口。"
+      >
         <section>主体内容</section>
       </AdminShell>,
     );
