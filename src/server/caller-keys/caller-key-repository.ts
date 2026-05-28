@@ -303,7 +303,20 @@ export class CallerKeyRepository {
   }
 
   async suspendCallerKey(keyId: string, now = new Date()) {
-    await this.requireCallerKey(keyId);
+    const current = await this.requireCallerKey(keyId);
+
+    if (current.status === "suspended") {
+      return sanitizeCallerKey(current);
+    }
+
+    if (current.status === "rotated") {
+      throw new AppError(
+        "CALLER_KEY_INVALID",
+        "已轮换 Caller Key 不允许停用。",
+        "keyId",
+      );
+    }
+
     const [callerKey] = await this.db
       .update(callerKeys)
       .set({
@@ -312,7 +325,7 @@ export class CallerKeyRepository {
         revealUntil: null,
         revealTokenHash: null,
       })
-      .where(eq(callerKeys.id, keyId))
+      .where(and(eq(callerKeys.id, keyId), eq(callerKeys.status, "active")))
       .returning();
 
     if (!callerKey) {

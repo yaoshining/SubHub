@@ -108,9 +108,17 @@ export class OpenSubtitlesAdapter {
       );
     }
 
-    const response = await this.fetchImpl(payload.link, {
-      headers: { "User-Agent": "SubHub/0.1.0" },
-    });
+    const dlController = new AbortController();
+    const dlTimeout = setTimeout(() => dlController.abort(), this.timeoutMs);
+    let response: Response;
+    try {
+      response = await this.fetchImpl(payload.link, {
+        headers: { "User-Agent": "SubHub/0.1.0" },
+        signal: dlController.signal,
+      });
+    } finally {
+      clearTimeout(dlTimeout);
+    }
 
     if (response.status === 404) {
       throw new AppError(
