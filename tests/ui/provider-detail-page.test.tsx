@@ -61,6 +61,9 @@ vi.mock("@/lib/api/providers", () => ({
 
 const api = await import("@/lib/api/providers");
 
+const allElementsReserveHelperHeight = (elements: HTMLElement[]) =>
+  elements.every((element) => element.classList.contains("min-h-5"));
+
 beforeEach(() => {
   vi.mocked(api.fetchProviderDetail).mockResolvedValue(provider);
   vi.mocked(api.fetchProviders).mockResolvedValue({
@@ -137,25 +140,25 @@ describe("Provider Detail 页面", () => {
       screen.queryByTestId("no-active-credential-alert"),
     ).not.toBeInTheDocument();
     expect(screen.getAllByTestId("provider-name-helper")).toSatisfy(
-      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+      allElementsReserveHelperHeight,
     );
     expect(screen.getAllByTestId("provider-priority-helper")).toSatisfy(
-      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+      allElementsReserveHelperHeight,
     );
     expect(screen.getAllByTestId("provider-weight-helper")).toSatisfy(
-      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+      allElementsReserveHelperHeight,
     );
     expect(screen.getAllByTestId("provider-concurrency-helper")).toSatisfy(
-      (elements) => elements.every((element) => element.classList.contains("min-h-5")),
+      allElementsReserveHelperHeight,
     );
   });
 
   it("Desktop 双栏容器允许子区块收缩，避免详情页出现横向滚动", async () => {
     renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
 
-    expect(
-      await screen.findByTestId("provider-detail-page"),
-    ).toHaveClass("min-w-0");
+    expect(await screen.findByTestId("provider-detail-page")).toHaveClass(
+      "min-w-0",
+    );
     expect(screen.getByTestId("provider-detail-layout-grid")).toHaveClass(
       "min-w-0",
       "desktop:items-start",
@@ -165,8 +168,8 @@ describe("Provider Detail 页面", () => {
     expect(
       await screen.findByTestId("provider-detail-primary-column"),
     ).toHaveClass("min-w-0");
-    expect(
-      screen.getByTestId("provider-detail-secondary-column"),
-    ).toHaveClass("min-w-0");
+    expect(screen.getByTestId("provider-detail-secondary-column")).toHaveClass(
+      "min-w-0",
+    );
   });
 });
