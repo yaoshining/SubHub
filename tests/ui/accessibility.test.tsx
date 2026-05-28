@@ -23,6 +23,14 @@ describe("后台共享组件可访问性", () => {
     ).toBeInTheDocument();
   });
 
+  it("品牌 logo 保持固有纵横比，避免仅改单边尺寸的 Image 告警", () => {
+    renderWithTheme(<Sidebar />);
+
+    for (const logo of screen.getAllByAltText("SubHub Timeline S")) {
+      expect(logo).toHaveClass("h-6", "w-auto");
+    }
+  });
+
   it("Admin Shell 保持 main landmark 与状态 Badge 文案可读", () => {
     renderWithTheme(
       <AdminShell title="用户" description="管理后台成员。">

@@ -95,14 +95,14 @@ export function Sidebar({ user, onNavigate, className }: SidebarProps) {
         <span className="relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-muted">
           <Image
             alt="SubHub Timeline S"
-            className="hidden size-[23px] dark:block"
+            className="hidden h-6 w-auto dark:block"
             height={24}
             src="/logo-dark.png"
             width={23}
           />
           <Image
             alt="SubHub Timeline S"
-            className="size-[23px] dark:hidden"
+            className="h-6 w-auto dark:hidden"
             height={24}
             src="/logo-light.png"
             width={23}
