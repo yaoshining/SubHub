@@ -182,6 +182,36 @@ describe("统一字幕查询与下载", () => {
     });
   });
 
+  it("Provider 下载明确返回不可用字幕时保留 SUBTITLE_NOT_FOUND 映射", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    await expect(
+      downloadSubtitle(
+        requestWithKey(callerKey.key),
+        `opensubtitles:${provider.id}:missing_subtitle`,
+        {
+          adapter: {
+            download: vi
+              .fn()
+              .mockRejectedValue(
+                new AppError(
+                  "SUBTITLE_NOT_FOUND",
+                  "未找到可下载的字幕项。",
+                  "subtitleId",
+                ),
+              ),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "SUBTITLE_NOT_FOUND",
+      target: "subtitleId",
+    });
+  });
+
   it("OpenSubtitles 限流错误会进入 cooldown 而不是 exhausted", async () => {
     const [callerKey, provider] = await Promise.all([
       createActiveCallerKey(),

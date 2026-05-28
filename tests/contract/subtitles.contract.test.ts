@@ -51,6 +51,31 @@ describe("对外字幕 API 契约", () => {
     await expectApiError(response, "CALLER_KEY_INVALID");
   });
 
+  it("查询与下载参数校验失败时返回统一校验错误", async () => {
+    const callerKey = await createCallerKey({
+      callerName: "Jellyfin",
+      environment: "production",
+      scope: "subtitles:read",
+      quotaPolicy: "default",
+    });
+
+    await expectApiError(
+      await searchRoute.GET(
+        nextRequest(
+          "http://localhost/api/subtitles/search?year=2024",
+          callerKey.key,
+        ),
+      ),
+      "VALIDATION_FAILED",
+    );
+    await expectApiError(
+      await downloadRoute.GET(
+        nextRequest("http://localhost/api/subtitles/download", callerKey.key),
+      ),
+      "VALIDATION_FAILED",
+    );
+  });
+
   it("无 Provider、无结果、上游失败和下载不可用均返回统一错误结构", async () => {
     const callerKey = await createCallerKey({
       callerName: "Jellyfin",
