@@ -67,10 +67,19 @@ const getProviderCandidates = async (
   );
 };
 
-const mapProviderFailureReason = (error: AppError) =>
-  error.code === "PROVIDER_CREDENTIAL_EXHAUSTED"
-    ? "quota_exhausted"
-    : "upstream_failed";
+const mapProviderFailureReason = (error: AppError) => {
+  if (error.code !== "PROVIDER_CREDENTIAL_EXHAUSTED") {
+    return "upstream_failed";
+  }
+  if (error.target === "rate_limited") {
+    return "rate_limited";
+  }
+  if (error.target === "authentication_failed") {
+    return "authentication_failed";
+  }
+
+  return "quota_exhausted";
+};
 
 const syncProviderFailureState = async (
   providerId: string,

@@ -8,6 +8,7 @@
 
 export type DownloadSubtitleParams = {
   /**
+   * 来自搜索响应 `results[].id` 的完整网关字幕引用，格式为 `opensubtitles:{providerId}:{file_id}`；调用方不应传裸 OpenSubtitles subtitle record id 或 file_id。
    * @minLength 1
    */
   subtitleId: string;

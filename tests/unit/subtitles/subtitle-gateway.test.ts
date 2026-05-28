@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AppError } from "@/lib/errors";
 import {
   createProvider,
   getProviderDetail,
@@ -178,6 +179,39 @@ describe("统一字幕查询与下载", () => {
       fileName: "Example.zh-CN.srt",
       contentType: "application/x-subrip; charset=utf-8",
       subtitleRef: `opensubtitles:${provider.id}:subtitle_001`,
+    });
+  });
+
+  it("OpenSubtitles 限流错误会进入 cooldown 而不是 exhausted", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    await expect(
+      searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Rate Limited" },
+        {
+          adapter: {
+            search: vi
+              .fn()
+              .mockRejectedValue(
+                new AppError(
+                  "PROVIDER_CREDENTIAL_EXHAUSTED",
+                  "OpenSubtitles 上游限流。",
+                  "rate_limited",
+                ),
+              ),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: "UPSTREAM_FAILED" });
+
+    const detail = await getProviderDetail(provider.id);
+    expect(detail.credentials[0]).toMatchObject({
+      status: "cooldown",
+      cooldownUntil: expect.any(String),
     });
   });
 });

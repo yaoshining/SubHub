@@ -160,7 +160,7 @@ export class OpenSubtitlesAdapter {
         throw new AppError(
           "PROVIDER_CREDENTIAL_EXHAUSTED",
           "OpenSubtitles 拒绝当前上游凭据。",
-          "provider_credential",
+          "authentication_failed",
         );
       }
 
@@ -168,7 +168,7 @@ export class OpenSubtitlesAdapter {
         throw new AppError(
           "PROVIDER_CREDENTIAL_EXHAUSTED",
           "OpenSubtitles 上游限流，当前凭据进入冷却或耗尽状态。",
-          "provider_credential",
+          "rate_limited",
         );
       }
 

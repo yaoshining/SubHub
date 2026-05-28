@@ -595,6 +595,7 @@ paths:
         - name: subtitleId
           in: query
           required: true
+          description: 来自搜索响应 `results[].id` 的完整网关字幕引用，格式为 `opensubtitles:{providerId}:{file_id}`；调用方不应传裸 OpenSubtitles subtitle record id 或 file_id。
           schema:
             type: string
             minLength: 1
@@ -1448,7 +1449,7 @@ components:
       properties:
         id:
           type: string
-          description: 网关生成的字幕引用，可直接用于下载接口 subtitleId。
+          description: 网关生成的字幕引用，可直接用于下载接口 subtitleId；OpenSubtitles 结果格式为 `opensubtitles:{providerId}:{file_id}`。
         provider:
           type: string
           enum:
@@ -1463,6 +1464,7 @@ components:
           type: string
         downloadUrl:
           type: string
+          description: 已包含完整 `subtitleId` 查询参数的下载路径，调用方可直接请求。
     SubtitleSearchData:
       type: object
       required:

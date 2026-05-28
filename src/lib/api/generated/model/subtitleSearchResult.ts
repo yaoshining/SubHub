@@ -8,11 +8,12 @@
 import type { SubtitleSearchResultProvider } from "./subtitleSearchResultProvider";
 
 export interface SubtitleSearchResult {
-  /** 网关生成的字幕引用，可直接用于下载接口 subtitleId。 */
+  /** 网关生成的字幕引用，可直接用于下载接口 subtitleId；OpenSubtitles 结果格式为 `opensubtitles:{providerId}:{file_id}`。 */
   id: string;
   provider: SubtitleSearchResultProvider;
   language: string | null;
   releaseName: string | null;
   format: string;
+  /** 已包含完整 `subtitleId` 查询参数的下载路径，调用方可直接请求。 */
   downloadUrl: string;
 }

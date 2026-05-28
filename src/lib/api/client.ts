@@ -57,5 +57,11 @@ export async function subhubApiClient<TResponse>(
     return undefined as TResponse;
   }
 
-  return (await response.json()) as TResponse;
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    return (await response.json()) as TResponse;
+  }
+
+  return (await response.text()) as TResponse;
 }

@@ -82,6 +82,20 @@ const syncProviderFailureState = async (
   }
 };
 
+const mapProviderFailureReason = (error: AppError) => {
+  if (error.code !== "PROVIDER_CREDENTIAL_EXHAUSTED") {
+    return "upstream_failed";
+  }
+  if (error.target === "rate_limited") {
+    return "rate_limited";
+  }
+  if (error.target === "authentication_failed") {
+    return "authentication_failed";
+  }
+
+  return "quota_exhausted";
+};
+
 const sanitizeFileName = (fileName: string) => {
   const normalized = fileName.trim().replaceAll(/[^\w.\- ]/g, "_");
   return normalized || "subtitle.srt";
@@ -180,9 +194,7 @@ export async function downloadSubtitle(
       await markCredentialFailure(
         provider,
         credential.id,
-        error.code === "PROVIDER_CREDENTIAL_EXHAUSTED"
-          ? "quota_exhausted"
-          : "upstream_failed",
+        mapProviderFailureReason(error),
         error.message,
         { db, now },
       );
