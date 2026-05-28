@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import packageJson from "../../package.json";
 import { GET as getOpenApiYaml } from "@/app/api/openapi.yaml/route";
@@ -8,6 +8,10 @@ import { subhubApiClient } from "@/lib/api";
 import { ErrorCode } from "@/lib/api/generated/model";
 
 const repositoryRoot = process.cwd();
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("API 契约链路基础", () => {
   it("以 docs/api/openapi.yaml 作为 OpenAPI 真源并声明基础错误与认证结构", async () => {
@@ -80,5 +84,29 @@ describe("API 契约链路基础", () => {
     );
 
     expect(tsconfig).toContain('".next/types/**/*.ts"');
+  });
+
+  it("GET 请求默认禁用客户端缓存，避免后台导航读取旧列表数据", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: { items: [], total: 0 } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await subhubApiClient<{ data: { items: unknown[]; total: number } }>(
+      "/api/admin/providers",
+      { method: "GET" },
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/admin/providers",
+      expect.objectContaining({
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+      }),
+    );
   });
 });

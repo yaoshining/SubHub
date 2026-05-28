@@ -133,6 +133,7 @@ export function ProvidersClient() {
   }, []);
 
   React.useEffect(() => {
+    mountedRef.current = true;
     const timeoutId = window.setTimeout(() => {
       void loadProviders();
     }, 0);

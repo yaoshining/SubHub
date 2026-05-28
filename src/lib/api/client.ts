@@ -15,6 +15,10 @@ export async function subhubApiClient<TResponse>(
     ...requestInit
   } = options;
   const headers = new Headers(requestHeaders);
+  const method = (requestInit.method ?? "GET").toUpperCase();
+  const cache =
+    requestInit.cache ??
+    (method === "GET" || method === "HEAD" ? "no-store" : undefined);
 
   if (
     body != null &&
@@ -29,6 +33,8 @@ export async function subhubApiClient<TResponse>(
   const response = await fetch(overrideUrl ?? url, {
     credentials: "include",
     ...requestInit,
+    cache,
+    method,
     body,
     headers,
   });

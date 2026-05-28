@@ -1,3 +1,4 @@
+import * as React from "react";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -79,6 +80,19 @@ beforeEach(() => {
 });
 
 describe("Providers 页面", () => {
+  it("在 Strict Mode 下通过客户端挂载仍会读取已有 Provider", async () => {
+    renderWithTheme(
+      <React.StrictMode>
+        <ProvidersClient />
+      </React.StrictMode>,
+    );
+
+    expect(
+      (await screen.findAllByText("OpenSubtitles Primary")).length,
+    ).toBeGreaterThan(0);
+    expect(vi.mocked(api.fetchProviders)).toHaveBeenCalledTimes(1);
+  });
+
   it("展示列表、Token 池摘要与选中 Provider 池检查", async () => {
     renderWithTheme(<ProvidersClient />);
 
