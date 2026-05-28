@@ -29,7 +29,7 @@ const publicAdminApiPaths = [
 const isPublicAdminApiPath = (pathname: string) =>
   publicAdminApiPaths.includes(pathname);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const protectedTarget = `${pathname}${search}`;
   const requestHeaders = new Headers(request.headers);

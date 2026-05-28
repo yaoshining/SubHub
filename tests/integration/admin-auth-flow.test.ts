@@ -12,7 +12,7 @@ import {
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
 } from "@/server/storage/client";
-import { middleware } from "@/middleware";
+import { proxy } from "@/proxy";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
 import * as logoutRoute from "@/app/api/admin/auth/logout/route";
@@ -93,7 +93,7 @@ describe("首个管理员认证流程", () => {
   });
 
   it("允许公开初始化与登录 API，同时拦截未登录后台页面", () => {
-    const loginApi = middleware(
+    const loginApi = proxy(
       new NextRequest("http://localhost/api/admin/auth/login", {
         method: "POST",
       }),
@@ -107,7 +107,7 @@ describe("首个管理员认证流程", () => {
       "/users",
       "/settings",
     ]) {
-      const protectedPage = middleware(
+      const protectedPage = proxy(
         new NextRequest(`http://localhost${path}`),
       );
 
@@ -119,7 +119,7 @@ describe("首个管理员认证流程", () => {
   });
 
   it("拦截未登录后台页面时保留原目标查询参数", () => {
-    const protectedPage = middleware(
+    const protectedPage = proxy(
       new NextRequest("http://localhost/providers?status=degraded"),
     );
 
@@ -130,7 +130,7 @@ describe("首个管理员认证流程", () => {
   });
 
   it("已有脏会话 cookie 时向后续后台布局传递完整原目标", () => {
-    const response = middleware(
+    const response = proxy(
       new NextRequest("http://localhost/users?page=2", {
         headers: { cookie: "subhub_admin_session=stale-session-token" },
       }),
@@ -143,7 +143,7 @@ describe("首个管理员认证流程", () => {
   });
 
   it("未登录访问受保护管理端 API 时返回认证错误", async () => {
-    const response = middleware(
+    const response = proxy(
       new NextRequest("http://localhost/api/admin/auth/me"),
     );
 
