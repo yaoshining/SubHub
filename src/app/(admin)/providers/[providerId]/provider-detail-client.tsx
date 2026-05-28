@@ -350,7 +350,7 @@ export function ProviderDetailClient({
       </section>
 
       <div
-        className="grid min-w-0 gap-6 desktop:items-start desktop:grid-cols-[minmax(0,1fr)_22rem]"
+        className="grid min-w-0 gap-6 desktop:grid-cols-[minmax(0,1fr)_22rem] desktop:items-start"
         data-testid="provider-detail-layout-grid"
       >
         <div

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   selectProviderCredential,
   isolateCredential,
+  markCredentialFailure,
   restoreCredential,
 } from "@/server/providers/credential-pool";
 import { ProviderRepository } from "@/server/providers/provider-repository";
@@ -119,5 +120,100 @@ describe("Provider 凭据池", () => {
       code: "PROVIDER_CREDENTIAL_EXHAUSTED",
       target: "credential_pool",
     });
+  });
+
+  it("覆盖 active、cooldown、isolated、disabled、exhausted 的可调度状态流转", async () => {
+    const now = new Date("2026-05-28T00:00:00.000Z");
+    const repository = new ProviderRepository(getStorageClient().db);
+    const provider = await repository.createProvider(
+      {
+        name: "OpenSubtitles",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "active",
+          secret: "secret-active-token",
+        },
+      },
+      now,
+    );
+    const cooldown = await repository.addCredential(
+      provider.id,
+      {
+        label: "cooldown",
+        secret: "secret-cooldown-token",
+      },
+      now,
+    );
+    const isolated = await repository.addCredential(
+      provider.id,
+      {
+        label: "isolated",
+        secret: "secret-isolated-token",
+      },
+      now,
+    );
+    const disabled = await repository.addCredential(
+      provider.id,
+      {
+        label: "disabled",
+        secret: "secret-disabled-token",
+      },
+      now,
+    );
+    const exhausted = await repository.addCredential(
+      provider.id,
+      {
+        label: "exhausted",
+        secret: "secret-exhausted-token",
+      },
+      now,
+    );
+
+    await markCredentialFailure(
+      provider,
+      cooldown.id,
+      "rate_limited",
+      "429 limited",
+      { now },
+    );
+    await isolateCredential(provider.id, isolated.id, "管理员隔离", { now });
+    await repository.updateCredential(
+      provider.id,
+      disabled.id,
+      { status: "disabled" },
+      now,
+    );
+    await markCredentialFailure(
+      provider,
+      exhausted.id,
+      "quota_exhausted",
+      "quota exhausted",
+      { now },
+    );
+
+    const selected = await selectProviderCredential(provider.id, { now });
+    const detail = await repository.requireProvider(provider.id, now);
+
+    expect(selected.label).toBe("active");
+    expect(detail.credentials).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: cooldown.id, status: "cooldown" }),
+        expect.objectContaining({ id: isolated.id, status: "isolated" }),
+        expect.objectContaining({ id: disabled.id, status: "disabled" }),
+        expect.objectContaining({ id: exhausted.id, status: "exhausted" }),
+      ]),
+    );
+    expect(detail.availableCredentialCount).toBe(1);
+
+    await restoreCredential(provider.id, isolated.id, { now });
+    await restoreCredential(provider.id, disabled.id, { now });
+    const restored = await repository.requireProvider(provider.id, now);
+
+    expect(restored.availableCredentialCount).toBe(3);
+    expect(
+      restored.credentials.filter(
+        (credential) => credential.status === "active",
+      ),
+    ).toHaveLength(3);
   });
 });

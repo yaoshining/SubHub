@@ -32,7 +32,9 @@ const knownAdminPageMetas: AdminPageMeta[] = [
 
 const dashboardMeta = knownAdminPageMetas[0]!;
 
-export function getAdminPageMeta(pathname: string | null | undefined): AdminPageMeta {
+export function getAdminPageMeta(
+  pathname: string | null | undefined,
+): AdminPageMeta {
   const path = pathname?.split("?")[0] ?? "/dashboard";
 
   if (path.startsWith("/providers/")) {

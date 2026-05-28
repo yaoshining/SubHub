@@ -107,9 +107,7 @@ describe("首个管理员认证流程", () => {
       "/users",
       "/settings",
     ]) {
-      const protectedPage = proxy(
-        new NextRequest(`http://localhost${path}`),
-      );
+      const protectedPage = proxy(new NextRequest(`http://localhost${path}`));
 
       expect(protectedPage?.status).toBe(307);
       expect(protectedPage?.headers.get("location")).toBe(

@@ -128,10 +128,7 @@ export function ProviderActivity({ provider }: ProviderActivityProps) {
       <Separator />
       <CardContent className="pt-6">
         {events.length > 0 ? (
-          <div
-            className="grid gap-3"
-            data-testid="provider-activity-list"
-          >
+          <div className="grid gap-3" data-testid="provider-activity-list">
             {events.map((event) => (
               <div
                 className="grid gap-3 rounded-lg border bg-muted/20 p-4"
