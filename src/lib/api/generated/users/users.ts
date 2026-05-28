@@ -139,6 +139,11 @@ export type suspendAdminUserResponse200 = {
   status: 200;
 };
 
+export type suspendAdminUserResponse400 = {
+  data: ErrorResponseResponse;
+  status: 400;
+};
+
 export type suspendAdminUserResponse401 = {
   data: ErrorResponseResponse;
   status: 401;
@@ -158,6 +163,7 @@ export type suspendAdminUserResponseSuccess = suspendAdminUserResponse200 & {
   headers: Headers;
 };
 export type suspendAdminUserResponseError = (
+  | suspendAdminUserResponse400
   | suspendAdminUserResponse401
   | suspendAdminUserResponse403
   | suspendAdminUserResponse500
@@ -195,6 +201,11 @@ export type restoreAdminUserResponse200 = {
   status: 200;
 };
 
+export type restoreAdminUserResponse400 = {
+  data: ErrorResponseResponse;
+  status: 400;
+};
+
 export type restoreAdminUserResponse401 = {
   data: ErrorResponseResponse;
   status: 401;
@@ -214,6 +225,7 @@ export type restoreAdminUserResponseSuccess = restoreAdminUserResponse200 & {
   headers: Headers;
 };
 export type restoreAdminUserResponseError = (
+  | restoreAdminUserResponse400
   | restoreAdminUserResponse401
   | restoreAdminUserResponse403
   | restoreAdminUserResponse500

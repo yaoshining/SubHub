@@ -593,6 +593,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminUserActionResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
         "401":
           $ref: "#/components/responses/ErrorResponse"
         "403":
@@ -617,6 +619,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminUserActionResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
         "401":
           $ref: "#/components/responses/ErrorResponse"
         "403":
