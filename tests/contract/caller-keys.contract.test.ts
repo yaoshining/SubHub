@@ -125,7 +125,7 @@ describe("Caller Key 管理 API 契约", () => {
       { params: { keyId } },
     );
     const rotatedPayload = await readJson<{
-      data: { callerKey: { keySuffix: string }; key: string };
+      data: { callerKey: { id: string; keySuffix: string }; key: string };
     }>(rotated);
 
     expect(rotatedPayload.data.key).not.toBe(createdPayload.data.key);
@@ -150,16 +150,33 @@ describe("Caller Key 管理 API 契约", () => {
 
     const suspended = await suspendRoute.POST(
       nextRequest(
-        `http://localhost/api/admin/caller-keys/${keyId}/suspend`,
+        `http://localhost/api/admin/caller-keys/${rotatedPayload.data.callerKey.id}/suspend`,
         cookie,
         "POST",
       ),
-      { params: { keyId } },
+      { params: { keyId: rotatedPayload.data.callerKey.id } },
     );
     await expect(
       readJson<{ data: { status: string } }>(suspended),
     ).resolves.toEqual({
       data: expect.objectContaining({ status: "suspended" }),
     });
+  });
+
+  it("malformed JSON 返回 400 校验错误而不是上游失败", async () => {
+    const cookie = await createAdminSessionCookie();
+    const response = await callerKeysRoute.POST(
+      new NextRequest("http://localhost/api/admin/caller-keys", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie,
+        },
+        body: "{not-json",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expectApiError(response, "VALIDATION_FAILED");
   });
 });

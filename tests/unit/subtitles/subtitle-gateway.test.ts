@@ -4,7 +4,10 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createProvider } from "@/server/services/provider-service";
+import {
+  createProvider,
+  getProviderDetail,
+} from "@/server/services/provider-service";
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { searchSubtitles } from "@/server/subtitles/subtitle-gateway";
 import { downloadSubtitle } from "@/server/subtitles/subtitle-download";
@@ -101,7 +104,7 @@ describe("统一字幕查询与下载", () => {
   });
 
   it("无结果、无效 Key、上游失败和下载不可用返回统一错误码", async () => {
-    const [callerKey] = await Promise.all([
+    const [callerKey, provider] = await Promise.all([
       createActiveCallerKey(),
       createReadyProvider(),
     ]);
@@ -133,6 +136,10 @@ describe("统一字幕查询与下载", () => {
         },
       ),
     ).rejects.toMatchObject({ code: "UPSTREAM_FAILED" });
+    await expect(getProviderDetail(provider.id)).resolves.toMatchObject({
+      status: "degraded",
+      availableCredentialCount: 0,
+    });
 
     await expect(
       downloadSubtitle(

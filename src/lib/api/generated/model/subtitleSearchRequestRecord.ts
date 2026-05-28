@@ -5,7 +5,22 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
  * OpenAPI spec version: 0.1.0
  */
+import type { SubtitleSearchRequestStatus } from "./subtitleSearchRequestStatus";
 
 export interface SubtitleSearchRequestRecord {
-  [key: string]: unknown;
+  id: string;
+  callerKeyId: string | null;
+  mediaTitle: string;
+  mediaYear: number | null;
+  season: number | null;
+  episode: number | null;
+  language: string | null;
+  status: SubtitleSearchRequestStatus;
+  /** @minimum 0 */
+  resultCount: number;
+  providerId: string | null;
+  credentialId: string | null;
+  /** @minimum 0 */
+  durationMs: number | null;
+  createdAt: string;
 }

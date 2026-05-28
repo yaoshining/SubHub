@@ -72,6 +72,18 @@ const mapProviderFailureReason = (error: AppError) =>
     ? "quota_exhausted"
     : "upstream_failed";
 
+const syncProviderFailureState = async (
+  providerId: string,
+  db: StorageDatabase,
+  now: Date,
+) => {
+  const repository = new ProviderRepository(db);
+  const current = await repository.requireProvider(providerId, now);
+  if (current.status === "enabled" && current.availableCredentialCount === 0) {
+    await repository.setProviderStatus(providerId, "degraded", now);
+  }
+};
+
 export async function searchSubtitles(
   request: Request,
   input: SubtitleSearchInput,
@@ -182,12 +194,23 @@ export async function searchSubtitles(
         error.message,
         { db, now },
       );
+      await syncProviderFailureState(provider.id, db, now);
       await record("provider_failed", 0, provider.id, credential.id);
-      throw error.code === "PROVIDER_CREDENTIAL_EXHAUSTED"
-        ? error
-        : new AppError("UPSTREAM_FAILED", error.message, error.target);
+      throw new AppError(
+        "UPSTREAM_FAILED",
+        "字幕查询上游请求失败。",
+        "provider",
+      );
     }
 
+    await markCredentialFailure(
+      provider,
+      credential.id,
+      "upstream_failed",
+      "字幕查询上游请求失败。",
+      { db, now },
+    );
+    await syncProviderFailureState(provider.id, db, now);
     await record("provider_failed", 0, provider.id, credential.id);
     throw new AppError("UPSTREAM_FAILED", "字幕查询上游请求失败。");
   }

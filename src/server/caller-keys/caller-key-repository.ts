@@ -213,6 +213,13 @@ export class CallerKeyRepository {
         "keyId",
       );
     }
+    if (current.status === "rotated") {
+      throw new AppError(
+        "CALLER_KEY_INVALID",
+        "已轮换 Caller Key 不允许再次轮换。",
+        "keyId",
+      );
+    }
 
     const key = createPlaintextCallerKey(current.environment);
     const rotatedAt = now.toISOString();
@@ -220,27 +227,50 @@ export class CallerKeyRepository {
     const displayParts = createDisplayParts(key);
 
     const result = this.db.transaction((tx) => {
-      const [updated] = tx
+      const [rotated] = tx
         .update(callerKeys)
         .set({
-          keyHash: hashCallerKey(key),
-          ...displayParts,
-          status: "active",
+          status: "rotated",
           updatedAt: rotatedAt,
           lastRotatedAt: rotatedAt,
-          revealUntil,
+          revealUntil: null,
           revealTokenHash: null,
         })
         .where(eq(callerKeys.id, keyId))
         .returning()
         .all();
 
-      if (!updated) {
+      if (!rotated) {
         throw new AppError(
           "CALLER_KEY_INVALID",
           "Caller Key 不存在。",
           "keyId",
         );
+      }
+
+      const [created] = tx
+        .insert(callerKeys)
+        .values({
+          id: createCallerKeyId(),
+          callerName: current.callerName,
+          environment: current.environment,
+          scope: current.scope,
+          quotaPolicy: current.quotaPolicy,
+          keyHash: hashCallerKey(key),
+          ...displayParts,
+          status: "active",
+          createdAt: rotatedAt,
+          updatedAt: rotatedAt,
+          lastUsedAt: null,
+          lastRotatedAt: null,
+          revealUntil,
+          revealTokenHash: null,
+        } satisfies NewCallerKey)
+        .returning()
+        .all();
+
+      if (!created) {
+        throw new AppError("UPSTREAM_FAILED", "创建轮换后 Caller Key 失败。");
       }
 
       const [rotation] = tx
@@ -262,11 +292,11 @@ export class CallerKeyRepository {
         throw new AppError("UPSTREAM_FAILED", "记录 Caller Key 轮换失败。");
       }
 
-      return { updated, rotation };
+      return { created, rotation };
     });
 
     return {
-      callerKey: sanitizeCallerKey(result.updated),
+      callerKey: sanitizeCallerKey(result.created),
       rotation: result.rotation,
       key,
     };

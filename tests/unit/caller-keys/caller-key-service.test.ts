@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { requireCallerKey } from "@/server/api/caller-key-auth";
 import {
   createCallerKey,
+  listCallerKeys,
   rotateCallerKey,
   suspendCallerKey,
 } from "@/server/services/caller-key-service";
@@ -73,6 +74,7 @@ describe("Caller Key service", () => {
     });
 
     expect(rotated.key).not.toBe(created.key);
+    expect(rotated.callerKey.id).not.toBe(created.callerKey.id);
     expect(rotated.rotation).toMatchObject({
       callerKeyId: created.callerKey.id,
       result: "success",
@@ -84,7 +86,17 @@ describe("Caller Key service", () => {
     ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
     await expect(
       requireCallerKey({ request: bearerRequest(rotated.key) }),
-    ).resolves.toMatchObject({ id: created.callerKey.id });
+    ).resolves.toMatchObject({ id: rotated.callerKey.id });
+    await expect(listCallerKeys()).resolves.toEqual({
+      items: expect.arrayContaining([
+        expect.objectContaining({
+          id: created.callerKey.id,
+          status: "rotated",
+        }),
+        expect.objectContaining({ id: rotated.callerKey.id, status: "active" }),
+      ]),
+      total: 2,
+    });
   });
 
   it("停用 Key 后立即拒绝新请求", async () => {

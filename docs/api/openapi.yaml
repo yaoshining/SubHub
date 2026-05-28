@@ -1286,12 +1286,114 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/CallerKeyRotationResult"
+    SubtitleSearchRequestStatus:
+      type: string
+      enum:
+        - success
+        - no_results
+        - service_not_ready
+        - unauthorized
+        - provider_failed
+    SubtitleDownloadRequestStatus:
+      type: string
+      enum:
+        - success
+        - not_found
+        - service_not_ready
+        - unauthorized
+        - provider_failed
     SubtitleSearchRequestRecord:
       type: object
-      additionalProperties: true
+      required:
+        - id
+        - callerKeyId
+        - mediaTitle
+        - mediaYear
+        - season
+        - episode
+        - language
+        - status
+        - resultCount
+        - providerId
+        - credentialId
+        - durationMs
+        - createdAt
+      properties:
+        id:
+          type: string
+        callerKeyId:
+          type: string
+          nullable: true
+        mediaTitle:
+          type: string
+        mediaYear:
+          type: integer
+          nullable: true
+        season:
+          type: integer
+          nullable: true
+        episode:
+          type: integer
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/SubtitleSearchRequestStatus"
+        resultCount:
+          type: integer
+          minimum: 0
+        providerId:
+          type: string
+          nullable: true
+        credentialId:
+          type: string
+          nullable: true
+        durationMs:
+          type: integer
+          minimum: 0
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
     SubtitleDownloadRequestRecord:
       type: object
-      additionalProperties: true
+      required:
+        - id
+        - callerKeyId
+        - subtitleRef
+        - providerId
+        - credentialId
+        - status
+        - contentType
+        - durationMs
+        - createdAt
+      properties:
+        id:
+          type: string
+        callerKeyId:
+          type: string
+          nullable: true
+        subtitleRef:
+          type: string
+        providerId:
+          type: string
+          nullable: true
+        credentialId:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/SubtitleDownloadRequestStatus"
+        contentType:
+          type: string
+          nullable: true
+        durationMs:
+          type: integer
+          minimum: 0
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
     CallerKeyUsage:
       type: object
       required:

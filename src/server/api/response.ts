@@ -63,5 +63,11 @@ export function apiErrorFromUnknown(error: unknown) {
     return apiError(validationErrorFromZod(error));
   }
 
+  if (error instanceof SyntaxError) {
+    return apiError(
+      new AppError("VALIDATION_FAILED", "请求 JSON 格式无效。", "body"),
+    );
+  }
+
   return apiError(new AppError("UPSTREAM_FAILED", "请求处理失败。"));
 }

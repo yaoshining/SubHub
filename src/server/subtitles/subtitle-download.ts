@@ -70,6 +70,18 @@ const requireDownloadProvider = async (
   return provider;
 };
 
+const syncProviderFailureState = async (
+  providerId: string,
+  db: StorageDatabase,
+  now: Date,
+) => {
+  const repository = new ProviderRepository(db);
+  const current = await repository.requireProvider(providerId, now);
+  if (current.status === "enabled" && current.availableCredentialCount === 0) {
+    await repository.setProviderStatus(providerId, "degraded", now);
+  }
+};
+
 const sanitizeFileName = (fileName: string) => {
   const normalized = fileName.trim().replaceAll(/[^\w.\- ]/g, "_");
   return normalized || "subtitle.srt";
@@ -174,12 +186,23 @@ export async function downloadSubtitle(
         error.message,
         { db, now },
       );
+      await syncProviderFailureState(provider.id, db, now);
       await record("provider_failed", null, provider.id, credential.id);
-      throw error.code === "PROVIDER_CREDENTIAL_EXHAUSTED"
-        ? error
-        : new AppError("UPSTREAM_FAILED", error.message, error.target);
+      throw new AppError(
+        "UPSTREAM_FAILED",
+        "字幕下载上游请求失败。",
+        "provider",
+      );
     }
 
+    await markCredentialFailure(
+      provider,
+      credential.id,
+      "upstream_failed",
+      "字幕下载上游请求失败。",
+      { db, now },
+    );
+    await syncProviderFailureState(provider.id, db, now);
     await record("provider_failed", null, provider.id, credential.id);
     throw new AppError("UPSTREAM_FAILED", "字幕下载上游请求失败。");
   }
