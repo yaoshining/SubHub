@@ -169,7 +169,7 @@ describe("Provider 响应式行为", () => {
       document.querySelectorAll('[class*="desktop:hidden"] button'),
     ).map((element) => element.textContent?.trim());
     expect(mobileCredentialActions).toEqual(
-      expect.arrayContaining(["隔离", "恢复"]),
+      expect.arrayContaining(["隔离", "恢复隔离"]),
     );
 
     await user.click(screen.getAllByRole("button", { name: "隔离" })[0]!);
