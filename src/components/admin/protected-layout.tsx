@@ -7,12 +7,23 @@ import type { AdminUserSummary } from "@/components/admin/sidebar";
 type ProtectedLayoutProps = {
   children: React.ReactNode;
   user?: AdminUserSummary;
+  title?: string;
+  description?: string;
 };
 
-export function ProtectedLayout({ children, user }: ProtectedLayoutProps) {
+export function ProtectedLayout({
+  children,
+  user,
+  title,
+  description,
+}: ProtectedLayoutProps) {
   if (!user) {
     redirect("/login");
   }
 
-  return <AdminShell user={user}>{children}</AdminShell>;
+  return (
+    <AdminShell user={user} title={title} description={description}>
+      {children}
+    </AdminShell>
+  );
 }
