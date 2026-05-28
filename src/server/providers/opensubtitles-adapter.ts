@@ -13,6 +13,12 @@ export type OpenSubtitlesSubtitle = {
   downloadCount: number | null;
 };
 
+export type OpenSubtitlesDownloadResult = {
+  content: string;
+  contentType: string;
+  fileName: string;
+};
+
 export type OpenSubtitlesAdapterOptions = {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -64,13 +70,81 @@ export class OpenSubtitlesAdapter {
     });
   }
 
-  private async request<T>(path: string, credentialSecret: string): Promise<T> {
+  async download(
+    credentialSecret: string,
+    subtitleId: string,
+  ): Promise<OpenSubtitlesDownloadResult> {
+    const payload = await this.request<{
+      link?: string;
+      file_name?: string;
+      fileName?: string;
+      content?: string;
+    }>("/download", credentialSecret, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_id: subtitleId }),
+    });
+
+    const fileName = payload.file_name ?? payload.fileName ?? `${subtitleId}.srt`;
+
+    if (payload.content) {
+      return {
+        content: payload.content,
+        contentType: "application/x-subrip; charset=utf-8",
+        fileName,
+      };
+    }
+
+    if (!payload.link) {
+      throw new AppError(
+        "SUBTITLE_NOT_FOUND",
+        "OpenSubtitles 未返回可下载链接。",
+        "subtitleId",
+      );
+    }
+
+    const response = await this.fetchImpl(payload.link, {
+      headers: { "User-Agent": "SubHub/0.1.0" },
+    });
+
+    if (response.status === 404) {
+      throw new AppError(
+        "SUBTITLE_NOT_FOUND",
+        "OpenSubtitles 下载链接不可用。",
+        "subtitleId",
+      );
+    }
+
+    if (!response.ok) {
+      throw new AppError(
+        "UPSTREAM_FAILED",
+        "OpenSubtitles 字幕文件下载失败。",
+        "opensubtitles",
+      );
+    }
+
+    return {
+      content: await response.text(),
+      contentType:
+        response.headers.get("content-type") ??
+        "application/x-subrip; charset=utf-8",
+      fileName,
+    };
+  }
+
+  private async request<T>(
+    path: string,
+    credentialSecret: string,
+    init: RequestInit = {},
+  ): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
       const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        ...init,
         headers: {
+          ...init.headers,
           "Api-Key": credentialSecret,
           "User-Agent": "SubHub/0.1.0",
         },

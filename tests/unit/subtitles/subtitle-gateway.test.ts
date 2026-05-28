@@ -1,0 +1,176 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createProvider } from "@/server/services/provider-service";
+import { createCallerKey } from "@/server/services/caller-key-service";
+import { searchSubtitles } from "@/server/subtitles/subtitle-gateway";
+import { downloadSubtitle } from "@/server/subtitles/subtitle-download";
+import {
+  closeStorageClient,
+  getStorageClient,
+  resetStorageDatabasePathForTesting,
+  setStorageDatabasePathForTesting,
+} from "@/server/storage/client";
+
+let tempDir: string;
+
+const requestWithKey = (key: string, url = "http://localhost/api/subtitles") =>
+  new Request(url, {
+    headers: { authorization: ["Bearer", key].join(" ") },
+  });
+
+const createActiveCallerKey = async () =>
+  createCallerKey({
+    callerName: "Jellyfin",
+    environment: "production",
+    scope: "subtitles:read",
+    quotaPolicy: "default",
+  });
+
+const createReadyProvider = async () =>
+  createProvider({
+    name: "OpenSubtitles Primary",
+    type: "opensubtitles",
+    initialCredential: {
+      label: "primary",
+      secret: "opensubtitles-api-key",
+    },
+  });
+
+beforeEach(() => {
+  tempDir = mkdtempSync(join(tmpdir(), "subhub-subtitle-gateway-"));
+  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  getStorageClient().migrate();
+});
+
+afterEach(() => {
+  closeStorageClient();
+  resetStorageDatabasePathForTesting();
+  rmSync(tempDir, { recursive: true, force: true });
+});
+
+describe("统一字幕查询与下载", () => {
+  it("无 Provider 时返回服务未就绪并记录请求", async () => {
+    const callerKey = await createActiveCallerKey();
+
+    await expect(
+      searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Example", language: "zh-CN" },
+        { adapter: { search: vi.fn() } },
+      ),
+    ).rejects.toMatchObject({
+      code: "SERVICE_NOT_READY",
+      target: "provider_pool",
+    });
+  });
+
+  it("查询成功时归一化结果并生成下载 URL", async () => {
+    const [callerKey] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    const result = await searchSubtitles(
+      requestWithKey(callerKey.key),
+      { title: "Example", year: 2024, season: 1, episode: 2 },
+      {
+        adapter: {
+          search: vi.fn().mockResolvedValue([
+            {
+              id: "subtitle_001",
+              language: "zh-CN",
+              fileName: "Example.S01E02.zh-CN.srt",
+              downloadCount: 10,
+            },
+          ]),
+        },
+      },
+    );
+
+    expect(result.status).toBe("success");
+    expect(result.results[0]).toMatchObject({
+      provider: "opensubtitles",
+      language: "zh-CN",
+      format: "srt",
+      downloadUrl: expect.stringContaining("/api/subtitles/download"),
+    });
+  });
+
+  it("无结果、无效 Key、上游失败和下载不可用返回统一错误码", async () => {
+    const [callerKey] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    await expect(
+      searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "No Result" },
+        { adapter: { search: vi.fn().mockResolvedValue([]) } },
+      ),
+    ).rejects.toMatchObject({ code: "NO_RESULTS" });
+
+    await expect(
+      searchSubtitles(
+        requestWithKey("invalid"),
+        { title: "Example" },
+        { adapter: { search: vi.fn() } },
+      ),
+    ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
+
+    await expect(
+      searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Upstream Failed" },
+        {
+          adapter: {
+            search: vi.fn().mockRejectedValue(new Error("network")),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: "UPSTREAM_FAILED" });
+
+    await expect(
+      downloadSubtitle(
+        requestWithKey(callerKey.key),
+        "opensubtitles:provider_missing:subtitle_001",
+        {
+          adapter: {
+            download: vi.fn(),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: "PROVIDER_UNAVAILABLE" });
+  });
+
+  it("下载成功返回内容、文件名和 content type", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    const result = await downloadSubtitle(
+      requestWithKey(callerKey.key),
+      `opensubtitles:${provider.id}:subtitle_001`,
+      {
+        adapter: {
+          download: vi.fn().mockResolvedValue({
+            content: "1\n00:00:01,000 --> 00:00:02,000\n你好",
+            contentType: "application/x-subrip; charset=utf-8",
+            fileName: "Example.zh-CN.srt",
+          }),
+        },
+      },
+    );
+
+    expect(result).toMatchObject({
+      fileName: "Example.zh-CN.srt",
+      contentType: "application/x-subrip; charset=utf-8",
+      subtitleRef: `opensubtitles:${provider.id}:subtitle_001`,
+    });
+  });
+});
