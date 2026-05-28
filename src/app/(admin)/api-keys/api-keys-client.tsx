@@ -257,7 +257,7 @@ export function ApiKeysClient() {
         </div>
       </div>
 
-      {activeCount === 0 && !loading ? (
+      {activeCount === 0 && !loading && !error ? (
         <Alert variant="warning" data-testid="api-keys-service-unavailable">
           <AlertTriangle aria-hidden="true" className="size-4" />
           <AlertTitle>对外服务不可用</AlertTitle>
@@ -300,7 +300,7 @@ export function ApiKeysClient() {
 
       {loading && callerKeys.length === 0 ? <ApiKeysSkeleton /> : null}
 
-      {!loading && callerKeys.length === 0 ? (
+      {!loading && !error && callerKeys.length === 0 ? (
         <EmptyStateCard
           icon="key-round"
           title="还没有调用方 Key"

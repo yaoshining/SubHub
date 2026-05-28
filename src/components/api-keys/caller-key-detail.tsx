@@ -371,6 +371,7 @@ export function CallerKeyDetail({
 
         {currentReveal && !readOnly ? (
           <RevealSecret
+            key={`${currentReveal.callerKeyId}:${currentReveal.revealUntil}`}
             secret={currentReveal.secret}
             revealUntil={currentReveal.revealUntil}
             disabled={readOnly}
