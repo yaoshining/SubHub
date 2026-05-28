@@ -47,6 +47,15 @@ export function CreateProviderDrawer({
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setSecret("");
+      setError(null);
+      setSubmitting(false);
+    }
+    onOpenChange(nextOpen);
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -81,7 +90,7 @@ export function CreateProviderDrawer({
   }
 
   return (
-    <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer direction="right" open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         <Button disabled={disabled}>
           <Plus aria-hidden="true" className="size-4" />

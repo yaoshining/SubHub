@@ -4,6 +4,7 @@ import * as React from "react";
 import { AlertTriangle } from "lucide-react";
 
 import type {
+  Provider,
   ProviderDetail,
   UpdateProviderRequest,
 } from "@/lib/api/providers";
@@ -43,7 +44,7 @@ export type ProviderPolicyDraft = Required<
 export type ProviderPolicyFormProps = {
   provider: ProviderDetail;
   draft: ProviderPolicyDraft;
-  fallbackCandidates: ProviderDetail[];
+  fallbackCandidates: Provider[];
   readOnly?: boolean;
   onDraftChange: (draft: ProviderPolicyDraft, fieldLabel: string) => void;
 };

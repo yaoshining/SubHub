@@ -71,6 +71,7 @@ export function ProviderPoolInspector({
 
     setLoading(true);
     setError(null);
+    setDetail(null);
     try {
       const nextDetail = await fetchProviderDetail(provider.id);
       setDetail(nextDetail);

@@ -137,11 +137,19 @@ export function ProviderList({
                 <TableRow
                   key={provider.id}
                   className={cn(
-                    "cursor-pointer hover:bg-muted/40",
+                    "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                     selected && "bg-primary/5",
                   )}
                   data-state={selected ? "selected" : undefined}
+                  tabIndex={0}
+                  aria-selected={selected}
                   onClick={() => onSelectProvider(provider.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onSelectProvider(provider.id);
+                    }
+                  }}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">

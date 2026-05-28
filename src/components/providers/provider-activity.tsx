@@ -90,8 +90,25 @@ function EventBadge({ type }: { type: ActivityEvent["type"] }) {
 }
 
 export function ProviderActivity({ provider }: ProviderActivityProps) {
+  const rangeMs: Record<string, number> = {
+    "24h": 24 * 60 * 60 * 1000,
+    "7d": 7 * 24 * 60 * 60 * 1000,
+    "30d": 30 * 24 * 60 * 60 * 1000,
+  };
+
   const [range, setRange] = React.useState("24h");
-  const events = buildEvents(provider);
+  const [cutoff, setCutoff] = React.useState<number>(
+    () => Date.now() - rangeMs["24h"],
+  );
+
+  function handleRangeChange(newRange: string) {
+    setRange(newRange);
+    setCutoff(Date.now() - (rangeMs[newRange] ?? rangeMs["24h"]));
+  }
+
+  const events = buildEvents(provider).filter(
+    (event) => new Date(event.time).getTime() >= cutoff,
+  );
 
   return (
     <Card
@@ -105,7 +122,7 @@ export function ProviderActivity({ provider }: ProviderActivityProps) {
             展示该 Provider 的最近异常、恢复与凭据使用轨迹。
           </p>
         </div>
-        <Select value={range} onValueChange={setRange}>
+        <Select value={range} onValueChange={handleRangeChange}>
           <SelectTrigger className="h-8 w-36">
             <SelectValue />
           </SelectTrigger>

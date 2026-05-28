@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { ProviderCredential, ProviderDetail } from "@/lib/api/providers";
+import type { Provider, ProviderCredential, ProviderDetail } from "@/lib/api/providers";
 import {
   fetchProviderDetail,
   fetchProviders,
@@ -97,7 +97,7 @@ export function ProviderDetailClient({
 }: ProviderDetailClientProps) {
   const [provider, setProvider] = React.useState<ProviderDetail | null>(null);
   const [fallbackCandidates, setFallbackCandidates] = React.useState<
-    ProviderDetail[]
+    Provider[]
   >([]);
   const [draft, setDraft] = React.useState<ProviderPolicyDraft | null>(null);
   const [dirtyFields, setDirtyFields] = React.useState<string[]>([]);
@@ -125,9 +125,7 @@ export function ProviderDetailClient({
       }
       setProvider(detail);
       setDraft(toDraft(detail));
-      setFallbackCandidates(
-        list.items.map((item) => ({ ...item, credentials: [] })),
-      );
+      setFallbackCandidates(list.items);
       setDirtyFields([]);
     } catch (loadError) {
       if (mountedRef.current) {
@@ -175,10 +173,7 @@ export function ProviderDetailClient({
     dirtyLabel: string,
   ) {
     setProvider((current) => (current ? { ...current, credentials } : current));
-    setSuccessMessage(null);
-    setDirtyFields((current) =>
-      current.includes(dirtyLabel) ? current : [...current, dirtyLabel],
-    );
+    toast.success(`凭据操作已即时应用：${dirtyLabel}`);
   }
 
   async function savePolicy() {
