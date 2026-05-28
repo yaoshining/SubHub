@@ -15,14 +15,6 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   formatDateTime,
   formatTokenFragment,
 } from "@/components/providers/provider-utils";
@@ -136,35 +128,31 @@ export function ProviderActivity({ provider }: ProviderActivityProps) {
       <Separator />
       <CardContent className="pt-6">
         {events.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border">
-            <Table className="min-w-[42rem]">
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="text-xs">时间</TableHead>
-                  <TableHead className="text-xs">事件</TableHead>
-                  <TableHead className="text-xs">相关凭据</TableHead>
-                  <TableHead className="text-xs">说明</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="font-mono text-xs">
-                      {formatDateTime(event.time)}
-                    </TableCell>
-                    <TableCell>
-                      <EventBadge type={event.type} />
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {event.credential}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {event.message}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div
+            className="grid gap-3"
+            data-testid="provider-activity-list"
+          >
+            {events.map((event) => (
+              <div
+                className="grid gap-3 rounded-lg border bg-muted/20 p-4"
+                key={event.id}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {formatDateTime(event.time)}
+                  </p>
+                  <EventBadge type={event.type} />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-mono text-xs text-foreground">
+                    {event.credential}
+                  </p>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    {event.message}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3 rounded-lg border bg-muted/30 p-8 text-center">

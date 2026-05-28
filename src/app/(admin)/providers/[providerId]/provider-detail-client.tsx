@@ -242,7 +242,7 @@ export function ProviderDetailClient({
   const dirty = dirtyFields.length > 0;
 
   return (
-    <div className="grid gap-6" data-testid="provider-detail-page">
+    <div className="grid min-w-0 gap-6" data-testid="provider-detail-page">
       <div className="grid gap-4 rounded-lg border bg-surface p-4">
         <Button asChild variant="ghost" size="sm" className="w-fit">
           <Link href="/providers">
@@ -349,8 +349,14 @@ export function ProviderDetailClient({
         />
       </section>
 
-      <div className="grid gap-6 desktop:grid-cols-[minmax(0,1fr)_minmax(22rem,0.72fr)]">
-        <div className="grid gap-6">
+      <div
+        className="grid min-w-0 gap-6 desktop:items-start desktop:grid-cols-[minmax(0,1fr)_22rem]"
+        data-testid="provider-detail-layout-grid"
+      >
+        <div
+          className="grid min-w-0 gap-6"
+          data-testid="provider-detail-primary-column"
+        >
           <ProviderPolicyForm
             provider={provider}
             draft={draft}
@@ -363,7 +369,10 @@ export function ProviderDetailClient({
             onCredentialsChange={updateCredentials}
           />
         </div>
-        <div className="grid gap-6 desktop:sticky desktop:top-20 desktop:self-start">
+        <div
+          className="grid min-w-0 gap-6 desktop:sticky desktop:top-20 desktop:self-start"
+          data-testid="provider-detail-secondary-column"
+        >
           <ProviderActivity provider={provider} />
           <Card className="border-border bg-surface shadow-none">
             <CardHeader>

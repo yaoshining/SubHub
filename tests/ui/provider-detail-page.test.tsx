@@ -19,8 +19,8 @@ const provider = {
   fallbackProviderId: null,
   lastHealthStatus: null,
   lastErrorSummary: null,
-  createdAt: "2026-05-26T00:00:00.000Z",
-  updatedAt: "2026-05-26T00:00:00.000Z",
+  createdAt: "2026-05-28T00:00:00.000Z",
+  updatedAt: "2026-05-28T00:53:00.000Z",
   credentialCount: 1,
   activeCredentialCount: 1,
   availableCredentialCount: 1,
@@ -33,12 +33,12 @@ const provider = {
       displaySuffix: "9f3a",
       status: "active" as const,
       remainingQuota: 47,
-      lastUsedAt: "2026-05-26T00:20:00.000Z",
+      lastUsedAt: "2026-05-28T00:20:00.000Z",
       lastErrorAt: null,
       lastErrorSummary: null,
       cooldownUntil: null,
-      createdAt: "2026-05-26T00:00:00.000Z",
-      updatedAt: "2026-05-26T00:00:00.000Z",
+      createdAt: "2026-05-28T00:00:00.000Z",
+      updatedAt: "2026-05-28T00:20:00.000Z",
     },
   ],
 };
@@ -132,8 +132,29 @@ describe("Provider Detail 页面", () => {
     expect(screen.getByTestId("provider-credential-table")).toHaveTextContent(
       "Token 池",
     );
+    expect(screen.getByTestId("provider-activity-list")).toBeInTheDocument();
     expect(
       screen.queryByTestId("no-active-credential-alert"),
     ).not.toBeInTheDocument();
+  });
+
+  it("Desktop 双栏容器允许子区块收缩，避免详情页出现横向滚动", async () => {
+    renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+    expect(
+      await screen.findByTestId("provider-detail-page"),
+    ).toHaveClass("min-w-0");
+    expect(screen.getByTestId("provider-detail-layout-grid")).toHaveClass(
+      "min-w-0",
+      "desktop:items-start",
+      "desktop:grid-cols-[minmax(0,1fr)_22rem]",
+    );
+
+    expect(
+      await screen.findByTestId("provider-detail-primary-column"),
+    ).toHaveClass("min-w-0");
+    expect(
+      screen.getByTestId("provider-detail-secondary-column"),
+    ).toHaveClass("min-w-0");
   });
 });
