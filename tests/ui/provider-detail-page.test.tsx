@@ -6,6 +6,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderDetailClient } from "@/app/(admin)/providers/[providerId]/provider-detail-client";
 import { renderWithTheme } from "../helpers/ui";
 
+const nowMs = Date.now();
+const recentUpdatedAt = new Date(nowMs - 30 * 60 * 1000).toISOString();
+const recentLastUsedAt = new Date(nowMs - 60 * 60 * 1000).toISOString();
+const createdAt = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString();
+
 const provider = {
   id: "provider_001",
   name: "OpenSubtitles Primary",
@@ -19,8 +24,8 @@ const provider = {
   fallbackProviderId: null,
   lastHealthStatus: null,
   lastErrorSummary: null,
-  createdAt: "2026-05-28T00:00:00.000Z",
-  updatedAt: "2026-05-28T00:53:00.000Z",
+  createdAt,
+  updatedAt: recentUpdatedAt,
   credentialCount: 1,
   activeCredentialCount: 1,
   availableCredentialCount: 1,
@@ -33,12 +38,12 @@ const provider = {
       displaySuffix: "9f3a",
       status: "active" as const,
       remainingQuota: 47,
-      lastUsedAt: "2026-05-28T00:20:00.000Z",
+      lastUsedAt: recentLastUsedAt,
       lastErrorAt: null,
       lastErrorSummary: null,
       cooldownUntil: null,
-      createdAt: "2026-05-28T00:00:00.000Z",
-      updatedAt: "2026-05-28T00:20:00.000Z",
+      createdAt,
+      updatedAt: recentLastUsedAt,
     },
   ],
 };
