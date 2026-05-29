@@ -132,13 +132,16 @@ export function UsersClient() {
 
   React.useEffect(() => {
     mountedRef.current = true;
-    const timeoutId = window.setTimeout(() => {
-      void loadOverview();
-    }, 0);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        void loadOverview();
+      }
+    });
 
     return () => {
+      cancelled = true;
       mountedRef.current = false;
-      window.clearTimeout(timeoutId);
     };
   }, [loadOverview]);
 
@@ -155,7 +158,11 @@ export function UsersClient() {
     overview.sessionsNeedingAttention.length > 0;
 
   const handleInvitationSubmit = async (input: CreateAdminInvitationRequest) => {
+    setSuccess(null);
     const invitation = await createAdminInvitation(input);
+    if (!mountedRef.current) {
+      return;
+    }
 
     setOverview((current) => ({
       ...current,
@@ -169,10 +176,14 @@ export function UsersClient() {
     member: AdminMember,
     action: "suspend" | "restore",
   ) => {
+    setSuccess(null);
     const result =
       action === "suspend"
         ? await suspendAdminUser(member.id)
         : await restoreAdminUser(member.id);
+    if (!mountedRef.current) {
+      return;
+    }
 
     setOverview((current) => ({
       ...current,
@@ -196,7 +207,11 @@ export function UsersClient() {
     sessionId: string,
     input: AdminSessionRemediationRequest,
   ) => {
+    setSuccess(null);
     const result = await remediateAdminSession(sessionId, input);
+    if (!mountedRef.current) {
+      return;
+    }
 
     setOverview((current) => ({
       ...current,

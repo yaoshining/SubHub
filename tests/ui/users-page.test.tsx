@@ -204,6 +204,39 @@ describe("Users 页面", () => {
     );
   });
 
+  it("后续操作失败时会清除旧成功提示并保留失败上下文", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<UsersClient />);
+
+    await screen.findAllByText("Alice Admin");
+    await user.clear(screen.getByLabelText("邀请对象"));
+    await user.type(screen.getByLabelText("邀请对象"), "fresh@example.com");
+    await user.click(
+      within(screen.getByTestId("invitation-form")).getByRole("button", {
+        name: "发送邀请",
+      }),
+    );
+
+    expect(await screen.findByTestId("users-success")).toHaveTextContent(
+      "fresh@example.com 已加入待接受邀请列表",
+    );
+
+    vi.mocked(api.createAdminInvitation).mockRejectedValueOnce(
+      new Error("重复待接受邀请"),
+    );
+
+    await user.clear(screen.getByLabelText("邀请对象"));
+    await user.type(screen.getByLabelText("邀请对象"), "fresh@example.com");
+    await user.click(
+      within(screen.getByTestId("invitation-form")).getByRole("button", {
+        name: "发送邀请",
+      }),
+    );
+
+    expect(await screen.findByText("重复待接受邀请")).toBeInTheDocument();
+    expect(screen.queryByTestId("users-success")).not.toBeInTheDocument();
+  });
+
   it("完成会话处置后移除风险对象并显示成功反馈", async () => {
     const user = userEvent.setup();
     renderWithTheme(<UsersClient />);
