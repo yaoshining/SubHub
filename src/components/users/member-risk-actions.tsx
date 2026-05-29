@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, PauseCircle, RotateCcw, ShieldAlert } from "lucide-react";
+import {
+  AlertTriangle,
+  PauseCircle,
+  RotateCcw,
+  ShieldAlert,
+} from "lucide-react";
 
 import type { AdminMember } from "@/lib/api/users";
 import {
@@ -89,10 +94,13 @@ export function MemberRiskActions({
         <Alert variant={action === "suspend" ? "warning" : "success"}>
           <ShieldAlert aria-hidden="true" className="size-4" />
           <AlertTitle>
-            {action === "suspend" ? "暂停会立即阻止后台访问" : "恢复会重新开放后台访问"}
+            {action === "suspend"
+              ? "暂停会立即阻止后台访问"
+              : "恢复会重新开放后台访问"}
           </AlertTitle>
           <AlertDescription>
-            当前对象：{member.displayName}（{memberStatusMeta[member.status].label}）
+            当前对象：{member.displayName}（
+            {memberStatusMeta[member.status].label}）
           </AlertDescription>
         </Alert>
 

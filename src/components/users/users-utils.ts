@@ -100,7 +100,9 @@ export function getVisibleUsersData(
   if (filter === "pending") {
     return {
       members: [] as AdminMember[],
-      invitations: invitations.filter((invitation) => invitation.status === "pending"),
+      invitations: invitations.filter(
+        (invitation) => invitation.status === "pending",
+      ),
     };
   }
 

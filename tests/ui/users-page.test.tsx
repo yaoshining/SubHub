@@ -47,9 +47,8 @@ const session = {
 };
 
 vi.mock("@/lib/api/users", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api/users")>(
-    "@/lib/api/users",
-  );
+  const actual =
+    await vi.importActual<typeof import("@/lib/api/users")>("@/lib/api/users");
 
   return {
     ...actual,
@@ -101,15 +100,21 @@ describe("Users 页面", () => {
     );
 
     expect(await screen.findByTestId("users-page")).toBeInTheDocument();
+    expect((await screen.findAllByText("Alice Admin")).length).toBeGreaterThan(
+      0,
+    );
     expect(
-      (await screen.findAllByText("Alice Admin")).length,
-    ).toBeGreaterThan(0);
-    expect(screen.getByRole("region", { name: "成员摘要" })).toBeInTheDocument();
-    expect(screen.getByTestId("users-member-list")).toHaveTextContent("活跃成员");
+      screen.getByRole("region", { name: "成员摘要" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("users-member-list")).toHaveTextContent(
+      "活跃成员",
+    );
     expect(screen.getByTestId("invitation-form")).toHaveTextContent(
       "策略编辑不在当前范围",
     );
-    expect(screen.getByTestId("member-detail")).toHaveTextContent("Alice Admin");
+    expect(screen.getByTestId("member-detail")).toHaveTextContent(
+      "Alice Admin",
+    );
     expect(screen.getByTestId("session-remediation")).toHaveTextContent(
       "MacBook Pro",
     );
@@ -140,7 +145,9 @@ describe("Users 页面", () => {
     renderWithTheme(<UsersClient />);
 
     expect(await screen.findByText("Users 当前为空")).toBeInTheDocument();
-    expect(screen.getByTestId("invitation-form")).toHaveTextContent("邀请新成员");
+    expect(screen.getByTestId("invitation-form")).toHaveTextContent(
+      "邀请新成员",
+    );
     expect(screen.getByTestId("member-detail-no-selection")).toHaveTextContent(
       "未选择成员",
     );
@@ -190,7 +197,9 @@ describe("Users 页面", () => {
       "fresh@example.com 已加入待接受邀请列表",
     );
     expect(
-      screen.getByRole("tab", { name: "待接受邀请" }).getAttribute("data-state"),
+      screen
+        .getByRole("tab", { name: "待接受邀请" })
+        .getAttribute("data-state"),
     ).toBe("active");
     expect(screen.getByTestId("users-member-list")).toHaveTextContent(
       "fresh@example.com",
@@ -267,7 +276,9 @@ describe("Users 页面", () => {
     await screen.findAllByText("Alice Admin");
     await user.click(screen.getByRole("tab", { name: "待接受邀请" }));
 
-    expect(screen.getByTestId("member-detail")).toHaveTextContent("Alice Admin");
+    expect(screen.getByTestId("member-detail")).toHaveTextContent(
+      "Alice Admin",
+    );
     expect(screen.getByTestId("member-hidden-by-filter")).toHaveTextContent(
       "当前成员不在筛选结果中",
     );

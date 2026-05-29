@@ -71,7 +71,9 @@ function MemberMobileCard({
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
           <p className="text-muted-foreground">角色</p>
-          <p className="mt-1 font-medium">{rolePresetLabel[member.rolePreset]}</p>
+          <p className="mt-1 font-medium">
+            {rolePresetLabel[member.rolePreset]}
+          </p>
         </div>
         <div>
           <p className="text-muted-foreground">风险会话</p>
@@ -174,18 +176,26 @@ export function MemberList({
                         <TableRow key={invitation.id}>
                           <TableCell>
                             <div className="space-y-1">
-                              <p className="font-medium">{invitation.identifier}</p>
+                              <p className="font-medium">
+                                {invitation.identifier}
+                              </p>
                               <p className="text-xs text-muted-foreground">
                                 创建于 {formatTimestamp(invitation.createdAt)}
                               </p>
                             </div>
                           </TableCell>
-                          <TableCell>{rolePresetLabel[invitation.rolePreset]}</TableCell>
+                          <TableCell>
+                            {rolePresetLabel[invitation.rolePreset]}
+                          </TableCell>
                           <TableCell>admin_console</TableCell>
                           <TableCell>
-                            <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge>
+                            <StatusBadge tone={meta.tone}>
+                              {meta.label}
+                            </StatusBadge>
                           </TableCell>
-                          <TableCell>{formatTimestamp(invitation.expiresAt)}</TableCell>
+                          <TableCell>
+                            {formatTimestamp(invitation.expiresAt)}
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -257,12 +267,18 @@ export function MemberList({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <StatusBadge tone={memberStatusMeta[member.status].tone}>
+                          <StatusBadge
+                            tone={memberStatusMeta[member.status].tone}
+                          >
                             {memberStatusMeta[member.status].label}
                           </StatusBadge>
                         </TableCell>
-                        <TableCell>{rolePresetLabel[member.rolePreset]}</TableCell>
-                        <TableCell>{formatTimestamp(member.lastActiveAt)}</TableCell>
+                        <TableCell>
+                          {rolePresetLabel[member.rolePreset]}
+                        </TableCell>
+                        <TableCell>
+                          {formatTimestamp(member.lastActiveAt)}
+                        </TableCell>
                         <TableCell>{riskSessionCount}</TableCell>
                       </TableRow>
                     );

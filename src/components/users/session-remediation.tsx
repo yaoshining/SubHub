@@ -123,7 +123,9 @@ export function SessionRemediation({
           <Alert variant="success" data-testid="users-session-safe">
             <Shield aria-hidden="true" className="size-4" />
             <AlertTitle>
-              {selectedMember ? "当前成员无异常会话" : "当前无异常会话 / 当前安全"}
+              {selectedMember
+                ? "当前成员无异常会话"
+                : "当前无异常会话 / 当前安全"}
             </AlertTitle>
             <AlertDescription>
               会话区不会留白；当没有风险对象时，明确给出安全状态提示。

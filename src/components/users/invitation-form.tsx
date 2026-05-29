@@ -101,7 +101,8 @@ export function InvitationForm({
           <Shield aria-hidden="true" className="size-4" />
           <AlertTitle>策略编辑不在当前范围</AlertTitle>
           <AlertDescription>
-            Users 页面只负责后台访问生命周期的最小治理。默认角色与接入范围均为预设候选。
+            Users
+            页面只负责后台访问生命周期的最小治理。默认角色与接入范围均为预设候选。
           </AlertDescription>
         </Alert>
 
@@ -115,7 +116,10 @@ export function InvitationForm({
 
         <form className="grid gap-4" onSubmit={handleSubmit}>
           <div className="grid gap-2">
-            <label className={fieldLabelClassName} htmlFor="invitation-identifier">
+            <label
+              className={fieldLabelClassName}
+              htmlFor="invitation-identifier"
+            >
               邀请对象
             </label>
             <Input
@@ -136,7 +140,9 @@ export function InvitationForm({
               <Select
                 disabled={disabled || pending}
                 onValueChange={(value) =>
-                  setRolePreset(value as CreateAdminInvitationRequest["rolePreset"])
+                  setRolePreset(
+                    value as CreateAdminInvitationRequest["rolePreset"],
+                  )
                 }
                 value={rolePreset}
               >
@@ -154,13 +160,18 @@ export function InvitationForm({
             </div>
 
             <div className="grid gap-2">
-              <label className={fieldLabelClassName} htmlFor="invitation-access">
+              <label
+                className={fieldLabelClassName}
+                htmlFor="invitation-access"
+              >
                 接入范围
               </label>
               <Select
                 disabled={disabled || pending}
                 onValueChange={(value) =>
-                  setAccessPreset(value as CreateAdminInvitationRequestAccessPreset)
+                  setAccessPreset(
+                    value as CreateAdminInvitationRequestAccessPreset,
+                  )
                 }
                 value={accessPreset}
               >

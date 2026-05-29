@@ -1,7 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, RefreshCw, ShieldCheck, UserPlus, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  RefreshCw,
+  ShieldCheck,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 import {
   createAdminInvitation,
@@ -64,7 +70,8 @@ function UsersSkeleton() {
 }
 
 export function UsersClient() {
-  const [overview, setOverview] = React.useState<AdminUsersOverview>(emptyOverview);
+  const [overview, setOverview] =
+    React.useState<AdminUsersOverview>(emptyOverview);
   const [selectedMemberId, setSelectedMemberId] = React.useState<string>();
   const [filter, setFilter] = React.useState<UsersFilter>("active");
   const [loading, setLoading] = React.useState(true);
@@ -88,7 +95,8 @@ export function UsersClient() {
         }
 
         return (
-          members.find((member) => member.status === "active")?.id ?? members[0]?.id
+          members.find((member) => member.status === "active")?.id ??
+          members[0]?.id
         );
       });
     },
@@ -157,7 +165,9 @@ export function UsersClient() {
     overview.invitations.length > 0 ||
     overview.sessionsNeedingAttention.length > 0;
 
-  const handleInvitationSubmit = async (input: CreateAdminInvitationRequest) => {
+  const handleInvitationSubmit = async (
+    input: CreateAdminInvitationRequest,
+  ) => {
     setSuccess(null);
     const invitation = await createAdminInvitation(input);
     if (!mountedRef.current) {
@@ -166,7 +176,10 @@ export function UsersClient() {
 
     setOverview((current) => ({
       ...current,
-      invitations: [invitation, ...current.invitations.filter((item) => item.id !== invitation.id)],
+      invitations: [
+        invitation,
+        ...current.invitations.filter((item) => item.id !== invitation.id),
+      ],
     }));
     setFilter("pending");
     setSuccess(`${invitation.identifier} 已加入待接受邀请列表。`);
@@ -187,7 +200,9 @@ export function UsersClient() {
 
     setOverview((current) => ({
       ...current,
-      members: current.members.map((item) => (item.id === result.id ? result : item)),
+      members: current.members.map((item) =>
+        item.id === result.id ? result : item,
+      ),
       sessionsNeedingAttention:
         action === "suspend"
           ? current.sessionsNeedingAttention.filter(
@@ -233,7 +248,9 @@ export function UsersClient() {
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge
               tone={
-                overview.sessionsNeedingAttention.length > 0 ? "warning" : "success"
+                overview.sessionsNeedingAttention.length > 0
+                  ? "warning"
+                  : "success"
               }
             >
               {overview.sessionsNeedingAttention.length > 0
@@ -260,7 +277,9 @@ export function UsersClient() {
             <RefreshCw aria-hidden="true" className="size-4" />
           </Button>
           <Button
-            onClick={() => document.getElementById("invitation-identifier")?.focus()}
+            onClick={() =>
+              document.getElementById("invitation-identifier")?.focus()
+            }
             type="button"
           >
             <UserPlus aria-hidden="true" className="size-4" />
@@ -341,7 +360,10 @@ export function UsersClient() {
             className="grid min-w-0 gap-6 desktop:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)]"
             data-testid="users-layout-grid"
           >
-            <div className="grid min-w-0 gap-6" data-testid="users-primary-column">
+            <div
+              className="grid min-w-0 gap-6"
+              data-testid="users-primary-column"
+            >
               <MemberList
                 filter={filter}
                 invitations={overview.invitations}
@@ -354,7 +376,10 @@ export function UsersClient() {
               <InvitationForm onSubmit={handleInvitationSubmit} />
             </div>
 
-            <div className="grid min-w-0 gap-6" data-testid="users-secondary-column">
+            <div
+              className="grid min-w-0 gap-6"
+              data-testid="users-secondary-column"
+            >
               {selectedMember ? (
                 <div
                   className="flex flex-col gap-2 rounded-lg border bg-surface p-4 md:hidden"
@@ -380,7 +405,10 @@ export function UsersClient() {
                 selectedMember={selectedMember}
                 sessions={overview.sessionsNeedingAttention}
               />
-              <MemberRiskActions member={selectedMember} onAction={handleMemberAction} />
+              <MemberRiskActions
+                member={selectedMember}
+                onAction={handleMemberAction}
+              />
             </div>
           </div>
         </>

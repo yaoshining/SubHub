@@ -1,6 +1,9 @@
 import { Shield, UserRound } from "lucide-react";
 
-import type { AdminMember, AdminSessionAttentionSummary } from "@/lib/api/users";
+import type {
+  AdminMember,
+  AdminSessionAttentionSummary,
+} from "@/lib/api/users";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,10 +94,15 @@ export function MemberDetail({
         <DetailRow
           label="预设角色"
           value={
-            <span className="font-medium">{rolePresetLabel[member.rolePreset]}</span>
+            <span className="font-medium">
+              {rolePresetLabel[member.rolePreset]}
+            </span>
           }
         />
-        <DetailRow label="最近 24h 活动" value={formatTimestamp(member.lastActiveAt)} />
+        <DetailRow
+          label="最近 24h 活动"
+          value={formatTimestamp(member.lastActiveAt)}
+        />
         <DetailRow
           label="负责模块"
           value={

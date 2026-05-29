@@ -35,9 +35,8 @@ const invitation = {
 };
 
 vi.mock("@/lib/api/users", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api/users")>(
-    "@/lib/api/users",
-  );
+  const actual =
+    await vi.importActual<typeof import("@/lib/api/users")>("@/lib/api/users");
 
   return {
     ...actual,
@@ -93,7 +92,9 @@ describe("Users 响应式行为", () => {
   it("Mobile 下显示选中成员动作条，保证高风险动作可达", async () => {
     renderWithTheme(<UsersClient />);
 
-    const selectionBar = await screen.findByTestId("users-mobile-selection-bar");
+    const selectionBar = await screen.findByTestId(
+      "users-mobile-selection-bar",
+    );
     expect(selectionBar).toHaveTextContent("当前选中：Alice Admin");
     expect(selectionBar.querySelector("a")).toHaveAttribute(
       "href",
