@@ -7,25 +7,39 @@ import {
 } from "./generated/users/users";
 import type {
   AdminInvitation,
+  AdminInvitationStatus,
+  AdminMember,
+  AdminRolePreset,
+  AdminSessionAttentionSummary,
+  AdminSessionRemediationAction,
   AdminInvitationResponse,
   AdminSessionRemediationRequest,
   AdminSessionRemediationResponse,
   AdminSessionRemediationResult,
   AdminUserActionResponse,
   AdminUserActionResult,
+  AdminUserStatus,
   AdminUsersOverview,
   AdminUsersOverviewResponse,
   CreateAdminInvitationRequest,
+  CreateAdminInvitationRequestAccessPreset,
 } from "./generated/model";
 import { subhubApiClient } from "./client";
 
 export type {
   AdminInvitation,
+  AdminInvitationStatus,
+  AdminMember,
+  AdminRolePreset,
+  AdminSessionAttentionSummary,
+  AdminSessionRemediationAction,
   AdminSessionRemediationRequest,
   AdminSessionRemediationResult,
   AdminUserActionResult,
+  AdminUserStatus,
   AdminUsersOverview,
   CreateAdminInvitationRequest,
+  CreateAdminInvitationRequestAccessPreset,
 };
 
 const jsonHeaders = (options?: RequestInit) => ({
