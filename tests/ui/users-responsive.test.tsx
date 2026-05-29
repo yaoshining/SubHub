@@ -89,6 +89,31 @@ describe("Users 响应式行为", () => {
     );
   });
 
+  it("Desktop 双栏容器允许成员列表列收缩，避免详情区被表格最小宽度挤乱", async () => {
+    renderWithTheme(<UsersClient />);
+
+    expect(await screen.findByTestId("users-layout-grid")).toHaveClass(
+      "min-w-0",
+      "desktop:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)]",
+    );
+    expect(screen.getByTestId("users-primary-column")).toHaveClass("min-w-0");
+    expect(screen.getByTestId("users-secondary-column")).toHaveClass(
+      "min-w-0",
+    );
+    expect(screen.getByTestId("users-member-list")).toHaveClass(
+      "min-w-0",
+      "overflow-hidden",
+    );
+    expect(screen.getByTestId("users-member-list-content")).toHaveClass(
+      "min-w-0",
+    );
+    expect(screen.getByTestId("users-member-list-table-shell")).toHaveClass(
+      "min-w-0",
+      "max-w-full",
+      "overflow-x-auto",
+    );
+  });
+
   it("Mobile 下显示选中成员动作条，保证高风险动作可达", async () => {
     renderWithTheme(<UsersClient />);
 

@@ -127,7 +127,7 @@ export function MemberList({
 
   return (
     <Card
-      className="border-border bg-surface shadow-none"
+      className="min-w-0 overflow-hidden border-border bg-surface shadow-none"
       data-testid="users-member-list"
     >
       <CardHeader className="gap-4 p-4 sm:p-6">
@@ -153,11 +153,17 @@ export function MemberList({
           </TabsList>
         </Tabs>
       </CardHeader>
-      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+      <CardContent
+        className="min-w-0 p-4 pt-0 sm:p-6 sm:pt-0"
+        data-testid="users-member-list-content"
+      >
         {filter === "pending" ? (
           visible.invitations.length > 0 ? (
             <>
-              <div className="hidden overflow-x-auto rounded-lg border desktop:block">
+              <div
+                className="hidden min-w-0 max-w-full overflow-x-auto rounded-lg border desktop:block"
+                data-testid="users-member-list-table-shell"
+              >
                 <Table className="min-w-[44rem]">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
@@ -221,7 +227,10 @@ export function MemberList({
           )
         ) : visible.members.length > 0 ? (
           <>
-            <div className="hidden overflow-x-auto rounded-lg border desktop:block">
+            <div
+              className="hidden min-w-0 max-w-full overflow-x-auto rounded-lg border desktop:block"
+              data-testid="users-member-list-table-shell"
+            >
               <Table className="min-w-[54rem]">
                 <TableHeader className="bg-muted/50">
                   <TableRow>
