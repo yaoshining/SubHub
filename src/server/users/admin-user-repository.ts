@@ -65,6 +65,15 @@ const invitationTtlMs = 7 * 24 * 60 * 60 * 1000;
 const createInvitationId = () =>
   `invite_${randomBytes(16).toString("base64url")}`;
 
+const isSqliteUniqueConstraintError = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (String((error as { code?: unknown }).code) === "SQLITE_CONSTRAINT_UNIQUE" ||
+    String((error as { message?: unknown }).message).includes(
+      "UNIQUE constraint failed",
+    ));
+
 const toMember = (user: AdminUser): AdminMember => ({
   id: user.id,
   identifier: user.identifier,
@@ -158,61 +167,73 @@ export class AdminUserRepository {
       input.now.getTime() + invitationTtlMs,
     ).toISOString();
 
-    const invitation = this.db.transaction(
-      (tx) => {
-        tx.update(adminInvitations)
-          .set({ status: "expired", updatedAt: nowIso })
-          .where(
-            and(
-              eq(adminInvitations.status, "pending"),
-              lte(adminInvitations.expiresAt, nowIso),
-            ),
-          )
-          .run();
+    let invitation: AdminInvitation | undefined;
+    try {
+      invitation = this.db.transaction(
+        (tx) => {
+          tx.update(adminInvitations)
+            .set({ status: "expired", updatedAt: nowIso })
+            .where(
+              and(
+                eq(adminInvitations.status, "pending"),
+                lte(adminInvitations.expiresAt, nowIso),
+              ),
+            )
+            .run();
 
-        const [existingPending] = tx
-          .select()
-          .from(adminInvitations)
-          .where(
-            and(
-              eq(adminInvitations.identifier, input.identifier),
-              eq(adminInvitations.status, "pending"),
-            ),
-          )
-          .limit(1)
-          .all();
+          const [existingPending] = tx
+            .select()
+            .from(adminInvitations)
+            .where(
+              and(
+                eq(adminInvitations.identifier, input.identifier),
+                eq(adminInvitations.status, "pending"),
+              ),
+            )
+            .limit(1)
+            .all();
 
-        if (existingPending) {
-          throw new AppError(
-            "VALIDATION_FAILED",
-            "该成员标识已存在待接受邀请。",
-            "identifier",
-          );
-        }
+          if (existingPending) {
+            throw new AppError(
+              "VALIDATION_FAILED",
+              "该成员标识已存在待接受邀请。",
+              "identifier",
+            );
+          }
 
-        const [created] = tx
-          .insert(adminInvitations)
-          .values({
-            id: createInvitationId(),
-            identifier: input.identifier,
-            status: "pending",
-            rolePreset: input.rolePreset,
-            accessPreset: input.accessPreset,
-            invitedByAdminUserId: input.invitedByAdminUserId,
-            acceptedAdminUserId: null,
-            expiresAt,
-            acceptedAt: null,
-            revokedAt: null,
-            createdAt: nowIso,
-            updatedAt: nowIso,
-          } satisfies NewAdminInvitation)
-          .returning()
-          .all();
+          const [created] = tx
+            .insert(adminInvitations)
+            .values({
+              id: createInvitationId(),
+              identifier: input.identifier,
+              status: "pending",
+              rolePreset: input.rolePreset,
+              accessPreset: input.accessPreset,
+              invitedByAdminUserId: input.invitedByAdminUserId,
+              acceptedAdminUserId: null,
+              expiresAt,
+              acceptedAt: null,
+              revokedAt: null,
+              createdAt: nowIso,
+              updatedAt: nowIso,
+            } satisfies NewAdminInvitation)
+            .returning()
+            .all();
 
-        return created;
-      },
-      { behavior: "immediate" },
-    );
+          return created;
+        },
+        { behavior: "immediate" },
+      );
+    } catch (error) {
+      if (isSqliteUniqueConstraintError(error)) {
+        throw new AppError(
+          "VALIDATION_FAILED",
+          "该成员标识已存在待接受邀请。",
+          "identifier",
+        );
+      }
+      throw error;
+    }
 
     if (!invitation) {
       throw new AppError("UPSTREAM_FAILED", "创建成员邀请失败。");
