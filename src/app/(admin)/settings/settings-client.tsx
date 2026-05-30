@@ -151,12 +151,16 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
   );
   const [loading, setLoading] = React.useState(!initialStatus);
   const [requestError, setRequestError] = React.useState<string | null>(null);
+  const [permissionDenied, setPermissionDenied] = React.useState<string | null>(
+    null,
+  );
   const mountedRef = React.useRef(true);
 
   const loadStatus = React.useCallback(
     async (isMounted: () => boolean = () => mountedRef.current) => {
       if (isMounted()) {
         setRequestError(null);
+        setPermissionDenied(null);
       }
 
       try {
@@ -166,6 +170,11 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
         }
       } catch (error) {
         if (isMounted()) {
+          if (error instanceof AppError && error.code === "FORBIDDEN") {
+            setPermissionDenied(error.message);
+            setStatus(undefined);
+            return;
+          }
           setRequestError(getErrorMessage(error));
         }
       } finally {
@@ -288,7 +297,13 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
         </Alert>
       ) : null}
 
-      {status ? (
+      {permissionDenied ? (
+        <Alert data-testid="settings-permission" variant="warning">
+          <AlertTriangle aria-hidden="true" className="size-4" />
+          <AlertTitle>当前会话暂不可读取 Settings</AlertTitle>
+          <AlertDescription>{permissionDenied}</AlertDescription>
+        </Alert>
+      ) : status ? (
         <div className="grid gap-6" data-testid="settings-content">
           {!status.gatewayReady &&
           hasReadinessPartialErrors &&

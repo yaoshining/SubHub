@@ -43,6 +43,9 @@ describe("Settings 页面体验", () => {
     expect(screen.getByText("API 密钥")).toBeInTheDocument();
     expect(screen.getByText("用户")).toBeInTheDocument();
     expect(screen.getAllByText("访问控制")).toHaveLength(2);
+    expect(screen.getByText("缓存治理")).toBeInTheDocument();
+    expect(screen.getByText("镜像策略 / 媒体同步")).toBeInTheDocument();
+    expect(screen.getByText("高级系统策略")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /保存|提交/ }),
     ).not.toBeInTheDocument();
@@ -144,5 +147,18 @@ describe("Settings 页面体验", () => {
     expect(
       screen.getByRole("button", { name: "重新读取状态" }),
     ).toBeInTheDocument();
+  });
+
+  it("权限不足时显示独立权限态而不是通用错误态", async () => {
+    mockedFetchSettingsStatus.mockRejectedValue(
+      new AppError("FORBIDDEN", "当前会话需要先完成基础处置"),
+    );
+
+    renderWithTheme(<SettingsClient />);
+
+    expect(await screen.findByTestId("settings-permission")).toHaveTextContent(
+      "当前会话需要先完成基础处置",
+    );
+    expect(screen.queryByTestId("settings-empty")).not.toBeInTheDocument();
   });
 });
