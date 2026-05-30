@@ -97,7 +97,9 @@ describe("Settings 状态确认与配置分流闭环", () => {
     });
 
     const { unmount } = renderWithTheme(
-      React.createElement(SettingsClient, { initialStatus: initialPayload.data }),
+      React.createElement(SettingsClient, {
+        initialStatus: initialPayload.data,
+      }),
     );
 
     expect(screen.getByTestId("settings-not-ready")).toHaveTextContent(
