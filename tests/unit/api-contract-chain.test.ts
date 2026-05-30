@@ -72,11 +72,15 @@ describe("API 契约链路基础", () => {
       "--clean src/lib/api/generated",
     );
     expect(packageJson.scripts["api:docs"]).toBe("next build");
-    expect(packageJson.scripts["api:check"]).toContain("corepack pnpm api:spec");
+    expect(packageJson.scripts["api:check"]).toContain(
+      "corepack pnpm api:spec",
+    );
     expect(packageJson.scripts["api:check"]).toContain(
       "corepack pnpm api:client",
     );
-    expect(packageJson.scripts["api:check"]).toContain("corepack pnpm api:docs");
+    expect(packageJson.scripts["api:check"]).toContain(
+      "corepack pnpm api:docs",
+    );
   });
 
   it("用 db:check 串联 schema 检查与数据库门禁时显式走 corepack pnpm", () => {
@@ -84,7 +88,9 @@ describe("API 契约链路基础", () => {
       "drizzle-kit check --config drizzle.config.ts",
     );
     expect(packageJson.scripts["db:check"]).toContain("corepack pnpm db:drift");
-    expect(packageJson.scripts["db:check"]).toContain("corepack pnpm typecheck");
+    expect(packageJson.scripts["db:check"]).toContain(
+      "corepack pnpm typecheck",
+    );
     expect(packageJson.scripts["db:check"]).toContain(
       "corepack pnpm test tests/unit/storage/schema.test.ts",
     );
