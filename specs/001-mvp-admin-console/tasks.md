@@ -226,12 +226,12 @@ To execute: `/speckit.git.commit`
 
 ### 用户故事 4 的测试 (REQUIRED) ⚠️
 
-- [ ] T124 [P] [US4] 在 `tests/contract/users.contract.test.ts` 为 users list、invitations create、user suspend、user restore、session remediate 编写契约测试
+- [ ] T124 [P] [US4] 在 `tests/contract/users.contract.test.ts` 为 users list、invitations create、user suspend、user restore、session remediate 编写契约测试，并覆盖 self-suspend 与最后一个 active admin 暂停被明确拒绝的错误结果
 - [ ] T125 [P] [US4] 在 `tests/unit/users/admin-invitation-service.test.ts` 测试 AdminInvitation pending、accepted、expired、revoked 状态和重复 pending 邀请约束
-- [ ] T126 [P] [US4] 在 `tests/unit/users/admin-user-service.test.ts` 测试后台成员暂停、恢复、暂停后会话失效和动作结果记录
+- [ ] T126 [P] [US4] 在 `tests/unit/users/admin-user-service.test.ts` 测试后台成员暂停、恢复、暂停后会话失效、self-suspend 拒绝、最后一个 active admin 保护和动作结果记录
 - [ ] T127 [P] [US4] 在 `tests/unit/users/admin-session-remediation.test.ts` 测试基础会话处置、需要关注会话拒绝高风险动作和不触发高级风控流程
-- [ ] T128 [P] [US4] 在 `tests/integration/users-management-flow.test.ts` 编写邀请、暂停、恢复、基础会话处置完整集成测试
-- [ ] T129 [P] [US4] 在 `tests/ui/users-page.test.tsx` 测试 `/users` default、loading、empty、error、permission、needs-attention-session、no-active-session-attention、session-remediated 状态
+- [ ] T128 [P] [US4] 在 `tests/integration/users-management-flow.test.ts` 编写邀请、暂停、恢复、基础会话处置完整集成测试，并覆盖当前管理员不能暂停自己、最后一个 active admin 不能被暂停的边界
+- [ ] T129 [P] [US4] 在 `tests/ui/users-page.test.tsx` 测试 `/users` default、loading、empty、error、permission、needs-attention-session、no-active-session-attention、session-remediated 状态，并覆盖暂停按钮禁用或就地提示的 self-suspend / last-active-admin 限制
 - [ ] T130 [P] [US4] 在 `tests/ui/users-responsive.test.tsx` 测试 Users Tablet 筛选横排、Mobile 单列顺序、批量操作收敛和暂停/恢复二次确认
 
 ### 用户故事 4 的实现
@@ -239,11 +239,11 @@ To execute: `/speckit.git.commit`
 - [ ] T131 [US4] 在 `docs/api/openapi.yaml` 补齐 Users list、invitations create、user suspend、user restore、session remediate 的路径、请求、响应和错误 schema
 - [ ] T132 [US4] 在 `src/server/users/admin-user-repository.ts` 实现 AdminUser、AdminInvitation、AdminSession 的 Users 页读写查询
 - [ ] T133 [US4] 在 `src/server/services/admin-invitation-service.ts` 实现成员邀请创建、重复 pending 邀请拒绝、过期判断、撤销和 `admin_invitation_created`、`admin_invitation_revoked` 动作记录
-- [ ] T134 [US4] 在 `src/server/services/admin-user-service.ts` 实现成员列表、成员暂停、成员恢复、暂停后会话失效和 `admin_user_suspended`、`admin_user_restored` 动作记录
+- [ ] T134 [US4] 在 `src/server/services/admin-user-service.ts` 实现成员列表、成员暂停、成员恢复、暂停后会话失效、self-suspend 拒绝、最后一个 active admin 保护和 `admin_user_suspended`、`admin_user_restored` 动作记录
 - [ ] T135 [US4] 在 `src/server/services/admin-session-service.ts` 实现后台会话摘要、risk 会话基础处置、revoke/mark_resolved 行为和 `admin_session_remediated` 动作记录
 - [ ] T136 [US4] 在 `src/app/api/admin/users/route.ts` 实现后台成员、邀请和基础会话摘要查询接口
 - [ ] T137 [US4] 在 `src/app/api/admin/users/invitations/route.ts` 实现成员邀请创建接口
-- [ ] T138 [US4] 在 `src/app/api/admin/users/[userId]/suspend/route.ts` 实现成员暂停接口
+- [ ] T138 [US4] 在 `src/app/api/admin/users/[userId]/suspend/route.ts` 实现成员暂停接口，并为 self-suspend 与最后一个 active admin 保护返回明确业务拒绝原因
 - [ ] T139 [US4] 在 `src/app/api/admin/users/[userId]/restore/route.ts` 实现成员恢复接口
 - [ ] T140 [US4] 在 `src/app/api/admin/sessions/[sessionId]/remediate/route.ts` 实现基础会话处置接口
 - [ ] T141 [US4] 在 `src/lib/api/users.ts` 封装 Users API 调用并接入 `src/lib/api/generated/`
@@ -253,7 +253,7 @@ To execute: `/speckit.git.commit`
 - [ ] T145 [US4] 在 `src/components/users/invitation-form.tsx` 实现邀请表单，包含 identifier、rolePreset、accessPreset，并明确禁止策略编辑语义
 - [ ] T146 [US4] 在 `src/components/users/member-detail.tsx` 实现选中成员详情、预设角色、最近活动、负责模块和当前状态展示
 - [ ] T147 [US4] 在 `src/components/users/session-remediation.tsx` 实现需要关注会话列表、基础处置按钮、处置确认和处置结果反馈
-- [ ] T148 [US4] 在 `src/components/users/member-risk-actions.tsx` 实现成员暂停/恢复的 `AlertDialog` 二次确认、成功反馈和失败对象保留
+- [ ] T148 [US4] 在 `src/components/users/member-risk-actions.tsx` 实现成员暂停/恢复的 `AlertDialog` 二次确认、成功反馈、失败对象保留，以及 self-suspend / last-active-admin 限制下的禁用或就地提示
 - [ ] T149 [US4] 在 `src/app/(admin)/users/page.tsx` 实现 Users Desktop/Tablet/Mobile 响应式行为，覆盖 Tablet 筛选横排、Mobile 模块顺序、批量操作收敛和高风险动作可达性
 - [ ] T150 [US4] 在 `src/app/(admin)/users/page.tsx` 移除或拒绝权限矩阵、审批流、完整 RBAC、审计导出、高级风险分析、风控策略系统和 access-control 主流程入口
 - [ ] T151 [US4] 运行 `pnpm api:spec`、`pnpm api:client`、`pnpm typecheck`、`pnpm test -- tests/contract/users.contract.test.ts tests/unit/users/admin-invitation-service.test.ts tests/unit/users/admin-user-service.test.ts tests/unit/users/admin-session-remediation.test.ts tests/integration/users-management-flow.test.ts tests/ui/users-page.test.tsx tests/ui/users-responsive.test.tsx` 并修复 `docs/api/openapi.yaml`、`src/server/users/`、`src/app/(admin)/users/`
