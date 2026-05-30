@@ -315,7 +315,7 @@ To execute: `/speckit.git.commit`
 - [ ] T182 在 `src/app/`、`src/components/`、`src/server/`、`docs/api/openapi.yaml` 运行 UI review，对照 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen` 修复保真、响应式与图标偏差
 - [ ] T183 在 `src/app/`、`src/server/`、`src/lib/api/`、`tests/` 运行 code review，检查行为正确性、状态流转、测试缺口、API 契约链路、安全边界和 Users MVP 范围
 - [ ] T184 在 `package.json` 执行 `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm api:check`、`pnpm db:check` 并修复所有失败项，确认 Drizzle schema、migration 文件与 `specs/001-mvp-admin-console/database-design.md` 保持一致
-- [ ] T185 在 `specs/001-mvp-admin-console/tasks.md` 回填实现过程中发现的任务拆分偏差，确保后续 task issue 同步仍限定在 `specs/001-mvp-admin-console/`
+- [ ] T185 在 `specs/001-mvp-admin-console/tasks.md` 回填实现过程中发现的任务拆分偏差，确保后续 task issue 同步仍限定在 `specs/001-mvp-admin-console/`；本次补记：门禁链式脚本在无全局 pnpm 环境中需显式使用 `corepack pnpm`，后续仅在当前 feature 目录内延续该约束
 
 ---
 

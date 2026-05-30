@@ -72,9 +72,22 @@ describe("API 契约链路基础", () => {
       "--clean src/lib/api/generated",
     );
     expect(packageJson.scripts["api:docs"]).toBe("next build");
-    expect(packageJson.scripts["api:check"]).toContain("pnpm api:spec");
-    expect(packageJson.scripts["api:check"]).toContain("pnpm api:client");
-    expect(packageJson.scripts["api:check"]).toContain("pnpm api:docs");
+    expect(packageJson.scripts["api:check"]).toContain("corepack pnpm api:spec");
+    expect(packageJson.scripts["api:check"]).toContain(
+      "corepack pnpm api:client",
+    );
+    expect(packageJson.scripts["api:check"]).toContain("corepack pnpm api:docs");
+  });
+
+  it("用 db:check 串联 schema 检查与数据库门禁时显式走 corepack pnpm", () => {
+    expect(packageJson.scripts["db:check"]).toContain(
+      "drizzle-kit check --config drizzle.config.ts",
+    );
+    expect(packageJson.scripts["db:check"]).toContain("corepack pnpm db:drift");
+    expect(packageJson.scripts["db:check"]).toContain("corepack pnpm typecheck");
+    expect(packageJson.scripts["db:check"]).toContain(
+      "corepack pnpm test tests/unit/storage/schema.test.ts",
+    );
   });
 
   it("保持 Scalar 文档构建使用的 Next 类型入口稳定，避免 api:check 产生已跟踪差异", async () => {
