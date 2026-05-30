@@ -320,7 +320,7 @@ export function ApiKeysClient() {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              aria-label="轮换当前 Caller Key"
+              aria-label="轮换当前 Key"
               type="button"
               variant="outline"
               disabled={!canRotateSelectedCallerKey || headerRotatePending}
