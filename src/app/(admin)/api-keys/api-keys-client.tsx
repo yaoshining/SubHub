@@ -308,6 +308,7 @@ export function ApiKeysClient() {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
+              aria-label="轮换当前 Caller Key"
               type="button"
               variant="outline"
               disabled={!canRotateSelectedCallerKey || headerRotatePending}
@@ -337,6 +338,7 @@ export function ApiKeysClient() {
           </AlertDialogContent>
         </AlertDialog>
         <Button
+          aria-label="生成新 Caller Key"
           type="button"
           onClick={() => document.getElementById("caller-name")?.focus()}
         >
