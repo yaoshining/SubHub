@@ -181,6 +181,8 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
   );
 
   React.useEffect(() => {
+    mountedRef.current = true;
+
     if (!initialStatus) {
       let mounted = true;
       const timeoutId = window.setTimeout(() => {
@@ -189,18 +191,15 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
 
       return () => {
         mounted = false;
+        mountedRef.current = false;
         window.clearTimeout(timeoutId);
       };
     }
 
-    return undefined;
-  }, [initialStatus, loadStatus]);
-
-  React.useEffect(() => {
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [initialStatus, loadStatus]);
 
   const missingActions = status?.missingConditions.map((condition) => {
     if (condition === "provider") {
@@ -221,6 +220,12 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
     };
   });
 
+  const readinessPartialErrors =
+    status?.partialErrors.filter((error) =>
+      ["admin", "provider", "caller_key"].includes(error.target),
+    ) ?? [];
+  const hasReadinessPartialErrors = readinessPartialErrors.length > 0;
+
   return (
     <div
       className="grid min-w-0 gap-6 overflow-x-hidden"
@@ -233,8 +238,22 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
         <div className="flex flex-col gap-3 desktop:flex-row desktop:items-start desktop:justify-between">
           <div className="space-y-3">
             {status ? (
-              <StatusBadge tone={status.gatewayReady ? "success" : "warning"}>
-                {status.gatewayReady ? "统一出口已就绪" : "统一出口未就绪"}
+              <StatusBadge
+                tone={
+                  status.gatewayReady
+                    ? "success"
+                    : hasReadinessPartialErrors &&
+                        status.missingConditions.length === 0
+                      ? "secondary"
+                      : "warning"
+                }
+              >
+                {status.gatewayReady
+                  ? "统一出口已就绪"
+                  : hasReadinessPartialErrors &&
+                      status.missingConditions.length === 0
+                    ? "统一出口读数受限"
+                    : "统一出口未就绪"}
               </StatusBadge>
             ) : (
               <StatusBadge tone="secondary">等待状态读数</StatusBadge>
@@ -272,7 +291,32 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
 
       {status ? (
         <div className="grid gap-6" data-testid="settings-content">
-          {!status.gatewayReady ? (
+          {!status.gatewayReady &&
+          hasReadinessPartialErrors &&
+          status.missingConditions.length === 0 ? (
+            <Alert data-testid="settings-readiness-degraded" variant="warning">
+              <AlertTriangle aria-hidden="true" className="size-4" />
+              <AlertTitle>统一出口状态暂时无法完全确认</AlertTitle>
+              <AlertDescription className="space-y-3">
+                <p>
+                  部分 readiness 摘要读取失败，当前页面只保留已知可用信息，不把失败项直接当成缺失条件。
+                </p>
+                <ul className="space-y-2">
+                  {readinessPartialErrors.map((error, index) => (
+                    <li
+                      className="rounded-md border bg-muted/30 px-3 py-2"
+                      key={`${error.target}-${index}`}
+                    >
+                      <span className="font-medium">
+                        {partialErrorTargetLabels[error.target] ?? error.target}
+                      </span>
+                      ：{error.message}
+                    </li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          ) : !status.gatewayReady ? (
             <Alert data-testid="settings-not-ready" variant="warning">
               <AlertTriangle aria-hidden="true" className="size-4" />
               <AlertTitle>当前实例仍未满足对外服务条件</AlertTitle>

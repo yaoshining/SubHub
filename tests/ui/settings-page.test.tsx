@@ -35,12 +35,12 @@ describe("Settings 页面体验", () => {
 
     expect(screen.getByText("当前页只做状态确认与配置分流")).toBeInTheDocument();
     expect(screen.getByText("统一出口已就绪")).toBeInTheDocument();
-    expect(screen.getByText("部署环境")).toBeInTheDocument();
-    expect(screen.getByText("系统版本")).toBeInTheDocument();
+    expect(screen.getAllByText("部署环境")).toHaveLength(2);
+    expect(screen.getAllByText("系统版本")).toHaveLength(2);
     expect(screen.getByText("服务商详情")).toBeInTheDocument();
     expect(screen.getByText("API 密钥")).toBeInTheDocument();
     expect(screen.getByText("用户")).toBeInTheDocument();
-    expect(screen.getByText("访问控制")).toBeInTheDocument();
+    expect(screen.getAllByText("访问控制")).toHaveLength(2);
     expect(screen.queryByRole("button", { name: /保存|提交/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "前往服务商页" })).toHaveAttribute(
@@ -79,6 +79,8 @@ describe("Settings 页面体验", () => {
         initialStatus={{
           ...settingsStatus,
           environment: "unknown",
+          gatewayReady: false,
+          missingConditions: [],
           partialErrors: [
             {
               target: "environment",
@@ -101,8 +103,13 @@ describe("Settings 页面体验", () => {
     expect(screen.getByTestId("settings-partial-errors")).toHaveTextContent(
       "Provider 可用性：provider summary unavailable",
     );
-    expect(screen.getByText("未知环境")).toBeInTheDocument();
-    expect(screen.getByText("系统版本")).toBeInTheDocument();
+    expect(screen.getByTestId("settings-readiness-degraded")).toHaveTextContent(
+      "统一出口状态暂时无法完全确认",
+    );
+    expect(screen.queryByTestId("settings-not-ready")).not.toBeInTheDocument();
+    expect(screen.getByText("统一出口读数受限")).toBeInTheDocument();
+    expect(screen.getAllByText("未知环境")).toHaveLength(3);
+    expect(screen.getAllByText("系统版本")).toHaveLength(2);
   });
 
   it("初次进入页面时先展示骨架，再加载 Settings 状态", async () => {

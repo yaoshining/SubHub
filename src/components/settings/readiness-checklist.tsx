@@ -13,7 +13,7 @@ type ChecklistItemProps = {
   title: string;
   description: string;
   summary: string;
-  ready: boolean;
+  state: "ready" | "missing" | "error";
   icon: LucideIcon;
 };
 
@@ -21,7 +21,7 @@ function ChecklistItem({
   title,
   description,
   summary,
-  ready,
+  state,
   icon: Icon,
 }: ChecklistItemProps) {
   return (
@@ -38,8 +38,20 @@ function ChecklistItem({
             </p>
           </div>
         </div>
-        <StatusBadge tone={ready ? "success" : "warning"}>
-          {ready ? "通过" : "待补齐"}
+        <StatusBadge
+          tone={
+            state === "ready"
+              ? "success"
+              : state === "error"
+                ? "secondary"
+                : "warning"
+          }
+        >
+          {state === "ready"
+            ? "通过"
+            : state === "error"
+              ? "读数失败"
+              : "待补齐"}
         </StatusBadge>
       </div>
       <p className="mt-4 rounded-lg border bg-background px-3 py-2 text-sm text-muted-foreground">
@@ -50,47 +62,84 @@ function ChecklistItem({
 }
 
 export function ReadinessChecklist({ status }: { status: SettingsStatus }) {
+  const partialErrorMap = new Map(
+    status.partialErrors.map((error) => [error.target, error.message]),
+  );
+
   return (
     <div className="grid gap-4" data-testid="settings-readiness-checklist">
       <ChecklistItem
         description="必须至少存在一个启用中的 Provider 且拥有活跃凭据。"
         icon={Server}
-        ready={status.activeProviderCount > 0}
+        state={
+          partialErrorMap.has("provider")
+            ? "error"
+            : status.activeProviderCount > 0
+              ? "ready"
+              : "missing"
+        }
         summary={
-          status.activeProviderCount > 0
+          partialErrorMap.get("provider") ??
+          (status.activeProviderCount > 0
             ? `当前已有 ${status.activeProviderCount} 个可用 Provider 参与统一出口。`
-            : "尚未检测到可用 Provider，请前往服务商页补齐。"
+            : "尚未检测到可用 Provider，请前往服务商页补齐。")
         }
         title="Provider 可用性"
       />
       <ChecklistItem
         description="调用方 Key 用于下游应用访问统一字幕出口。"
         icon={KeyRound}
-        ready={status.activeCallerKeyCount > 0}
+        state={
+          partialErrorMap.has("caller_key")
+            ? "error"
+            : status.activeCallerKeyCount > 0
+              ? "ready"
+              : "missing"
+        }
         summary={
-          status.activeCallerKeyCount > 0
+          partialErrorMap.get("caller_key") ??
+          (status.activeCallerKeyCount > 0
             ? `当前已有 ${status.activeCallerKeyCount} 个活跃调用方 Key 可用。`
-            : "尚未检测到活跃调用方 Key，请前往 API 密钥页创建。"
+            : "尚未检测到活跃调用方 Key，请前往 API 密钥页创建。")
         }
         title="调用方 Key"
       />
       <ChecklistItem
         description="后台必须存在可用管理员入口，才能继续承接治理动作。"
         icon={Users}
-        ready={status.adminInitialized}
+        state={
+          partialErrorMap.has("admin")
+            ? "error"
+            : status.adminInitialized
+              ? "ready"
+              : "missing"
+        }
         summary={
-          status.adminInitialized
+          partialErrorMap.get("admin") ??
+          (status.adminInitialized
             ? "首个管理员已初始化，可继续访问后台治理页面。"
-            : "尚未完成管理员初始化，请先完成首轮开通。"
+            : "尚未完成管理员初始化，请先完成首轮开通。")
         }
         title="管理员认证"
       />
       <ChecklistItem
         description="统一出口就绪度取决于管理员、Provider 与调用方 Key 是否同时满足基础条件。"
         icon={Shield}
-        ready={status.gatewayReady}
+        state={
+          partialErrorMap.has("admin") ||
+          partialErrorMap.has("provider") ||
+          partialErrorMap.has("caller_key")
+            ? "error"
+            : status.gatewayReady
+              ? "ready"
+              : "missing"
+        }
         summary={
-          status.gatewayReady
+          partialErrorMap.has("admin") ||
+          partialErrorMap.has("provider") ||
+          partialErrorMap.has("caller_key")
+            ? "部分 readiness 摘要读取失败，请先参考局部失败提示并在稍后重新核查。"
+            : status.gatewayReady
             ? "统一出口已具备最小服务条件，可继续通过其他治理页维护细节。"
             : `当前仍缺少：${status.missingConditions
                 .map((condition) =>

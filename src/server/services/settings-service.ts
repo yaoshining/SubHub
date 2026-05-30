@@ -44,6 +44,11 @@ export type SettingsServiceOptions = {
 };
 
 const defaultAppVersion = "0.1.0";
+const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
+  "admin",
+  "provider",
+  "caller_key",
+]);
 
 async function countRows(
   query: Promise<Array<{ value: number }>>,
@@ -149,14 +154,21 @@ export async function getSystemReadiness({
   ]);
 
   const missingConditions: SystemReadiness["missingConditions"] = [];
+  const failedTargets = new Set(partialErrors.map((error) => error.target));
+  const hasReadinessPartialErrors = partialErrors.some((error) =>
+    readinessTargets.has(error.target),
+  );
 
-  if (!adminInitialized) {
+  if (!adminInitialized && !failedTargets.has("admin")) {
     missingConditions.push("admin");
   }
-  if (activeProviderCount === 0) {
+  if (activeProviderCount === 0 && !failedTargets.has("provider")) {
     missingConditions.push("provider");
   }
-  if (activeCallerKeyCount === 0) {
+  if (
+    activeCallerKeyCount === 0 &&
+    !failedTargets.has("caller_key")
+  ) {
     missingConditions.push("caller_key");
   }
 
@@ -166,7 +178,8 @@ export async function getSystemReadiness({
     adminInitialized,
     activeProviderCount,
     activeCallerKeyCount,
-    gatewayReady: missingConditions.length === 0,
+    gatewayReady:
+      missingConditions.length === 0 && !hasReadinessPartialErrors,
     missingConditions,
     lastCheckedAt: now.toISOString(),
     partialErrors,

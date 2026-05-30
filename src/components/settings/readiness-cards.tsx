@@ -64,6 +64,13 @@ function ReadinessCard({
 }
 
 export function ReadinessCards({ status }: { status: SettingsStatus }) {
+  const hasAdminPartialError = status.partialErrors.some(
+    (error) => error.target === "admin",
+  );
+  const hasReadinessPartialError = status.partialErrors.some((error) =>
+    ["admin", "provider", "caller_key"].includes(error.target),
+  );
+
   return (
     <section
       className="grid gap-4 tablet:grid-cols-2 desktop:grid-cols-4"
@@ -86,29 +93,71 @@ export function ReadinessCards({ status }: { status: SettingsStatus }) {
       />
       <ReadinessCard
         badge={
-          <StatusBadge tone={status.adminInitialized ? "success" : "warning"}>
-            {status.adminInitialized ? "已完成" : "待完成"}
-          </StatusBadge>
-        }
-        description="确认后台访问入口是否已建立，避免把未初始化实例误当成正常可运营环境。"
-        icon={Users}
-        title="首个管理员"
-        value={status.adminInitialized ? "已初始化" : "未初始化"}
-      />
-      <ReadinessCard
-        badge={
-          <StatusBadge tone={status.gatewayReady ? "success" : "warning"}>
-            {status.gatewayReady ? "已就绪" : "未就绪"}
+          <StatusBadge
+            tone={
+              hasAdminPartialError
+                ? "secondary"
+                : status.adminInitialized
+                  ? "success"
+                  : "warning"
+            }
+          >
+            {hasAdminPartialError
+              ? "读数失败"
+              : status.adminInitialized
+                ? "已完成"
+                : "待完成"}
           </StatusBadge>
         }
         description={
-          status.gatewayReady
+          hasAdminPartialError
+            ? "管理员初始化摘要暂时不可用，请结合局部失败提示确认失败对象。"
+            : "确认后台访问入口是否已建立，避免把未初始化实例误当成正常可运营环境。"
+        }
+        icon={Users}
+        title="首个管理员"
+        value={
+          hasAdminPartialError
+            ? "读数失败"
+            : status.adminInitialized
+              ? "已初始化"
+              : "未初始化"
+        }
+      />
+      <ReadinessCard
+        badge={
+          <StatusBadge
+            tone={
+              hasReadinessPartialError
+                ? "secondary"
+                : status.gatewayReady
+                  ? "success"
+                  : "warning"
+            }
+          >
+            {hasReadinessPartialError
+              ? "读数受限"
+              : status.gatewayReady
+                ? "已就绪"
+                : "未就绪"}
+          </StatusBadge>
+        }
+        description={
+          hasReadinessPartialError
+            ? "部分 readiness 摘要读取失败，当前只保留已知信息，不把失败项直接判定为缺失。"
+            : status.gatewayReady
             ? "Provider、调用方 Key 与管理员入口均满足统一出口的最小条件。"
             : `仍缺少 ${status.missingConditions.length} 项基础条件，需前往对应治理页补齐。`
         }
         icon={Shield}
         title="统一出口状态"
-        value={status.gatewayReady ? "基础条件通过" : "等待补齐条件"}
+        value={
+          hasReadinessPartialError
+            ? "等待重新核查"
+            : status.gatewayReady
+              ? "基础条件通过"
+              : "等待补齐条件"
+        }
       />
     </section>
   );
