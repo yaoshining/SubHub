@@ -31,6 +31,24 @@ afterEach(() => {
 });
 
 describe("SystemReadiness 聚合", () => {
+  it("在管理员、Provider 与 Caller Key 都缺失时返回未就绪原因", async () => {
+    const readiness = await getSystemReadiness({
+      now: new Date("2026-05-30T09:00:00.000Z"),
+    });
+
+    expect(readiness).toMatchObject({
+      environment: "test",
+      version: "0.1.0",
+      adminInitialized: false,
+      activeProviderCount: 0,
+      activeCallerKeyCount: 0,
+      gatewayReady: false,
+      missingConditions: ["admin", "provider", "caller_key"],
+      partialErrors: [],
+      lastCheckedAt: "2026-05-30T09:00:00.000Z",
+    });
+  });
+
   it("在管理员、Provider 与 Caller Key 都可用时返回 ready", async () => {
     await getStorageClient().db.insert(adminUsers).values({
       id: "admin_1",

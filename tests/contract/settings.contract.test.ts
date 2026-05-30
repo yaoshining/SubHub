@@ -3,12 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { NextRequest } from "next/server";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { adminSessionCookieName } from "@/lib/auth/constants";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
 import * as settingsStatusRoute from "@/app/api/admin/settings/status/route";
+import * as settingsService from "@/server/services/settings-service";
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { createProvider } from "@/server/services/provider-service";
 import {
@@ -66,6 +67,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
@@ -133,5 +135,55 @@ describe("Settings status API 契约", () => {
     expect(payload.data.lastCheckedAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
     );
+  });
+
+  it("在未就绪时返回缺失条件，并在局部失败时透传 partialErrors", async () => {
+    const cookie = await createAdminSessionCookie();
+    const readinessSpy = vi
+      .spyOn(settingsService, "getSystemReadiness")
+      .mockResolvedValueOnce({
+        environment: "production",
+        version: "0.1.0",
+        adminInitialized: true,
+        activeProviderCount: 0,
+        activeCallerKeyCount: 0,
+        gatewayReady: false,
+        missingConditions: ["provider", "caller_key"],
+        lastCheckedAt: "2026-05-30T12:00:00.000Z",
+        partialErrors: [
+          {
+            target: "environment",
+            code: "UPSTREAM_FAILED",
+            message: "environment unavailable",
+          },
+        ],
+      });
+
+    const response = await settingsStatusRoute.GET(
+      nextRequest("http://localhost/api/admin/settings/status", cookie),
+    );
+    const payload = await readJson<{
+      data: Awaited<ReturnType<typeof settingsService.getSystemReadiness>>;
+    }>(response);
+
+    expect(response.status).toBe(200);
+    expect(payload.data).toMatchObject({
+      environment: "production",
+      version: "0.1.0",
+      adminInitialized: true,
+      activeProviderCount: 0,
+      activeCallerKeyCount: 0,
+      gatewayReady: false,
+      missingConditions: ["provider", "caller_key"],
+      partialErrors: [
+        {
+          target: "environment",
+          code: "UPSTREAM_FAILED",
+          message: "environment unavailable",
+        },
+      ],
+    });
+
+    readinessSpy.mockRestore();
   });
 });
