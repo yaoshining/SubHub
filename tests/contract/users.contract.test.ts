@@ -238,6 +238,8 @@ describe("Users 管理 API 契约", () => {
       }),
     });
     expect(restoredPayload.data).not.toHaveProperty("passwordHash");
+    expect(restoredPayload.data).not.toHaveProperty("sessionTokenHash");
+    expect(restoredPayload.data).not.toHaveProperty("attentionReason");
 
     await getStorageClient().db.insert(adminSessions).values({
       id: "session_attention_second",

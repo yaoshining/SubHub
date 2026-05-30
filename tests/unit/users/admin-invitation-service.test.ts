@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -161,8 +162,15 @@ describe("Admin invitation service", () => {
     });
 
     const actions = await getStorageClient()
-      .db.select()
-      .from(adminActionResults);
+      .db.select({
+        actorAdminUserId: adminActionResults.actorAdminUserId,
+        actionType: adminActionResults.actionType,
+        targetType: adminActionResults.targetType,
+        targetId: adminActionResults.targetId,
+        result: adminActionResults.result,
+      })
+      .from(adminActionResults)
+      .where(eq(adminActionResults.targetId, invitation.id));
     expect(actions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

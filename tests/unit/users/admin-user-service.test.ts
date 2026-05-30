@@ -24,6 +24,7 @@ import {
 } from "@/server/storage/schema";
 
 let tempDir: string;
+const TEST_OPERATOR_ID = "admin_operator";
 
 const seedUsers = async () => {
   const db = getStorageClient().db;
@@ -40,7 +41,7 @@ const seedUsers = async () => {
       lastLoginAt: "2026-05-28T09:00:00.000Z",
     },
     {
-      id: "admin_operator",
+      id: TEST_OPERATOR_ID,
       identifier: "operator@example.com",
       displayName: "Operator",
       passwordHash: "hash",
@@ -67,7 +68,7 @@ const seedUsers = async () => {
   await db.insert(adminSessions).values([
     {
       id: "session_active",
-      adminUserId: "admin_operator",
+      adminUserId: TEST_OPERATOR_ID,
       sessionTokenHash: "hash_active",
       status: "active",
       createdAt: "2026-05-28T00:00:00.000Z",
@@ -78,7 +79,7 @@ const seedUsers = async () => {
     },
     {
       id: "session_attention",
-      adminUserId: "admin_operator",
+      adminUserId: TEST_OPERATOR_ID,
       sessionTokenHash: "hash_attention",
       status: "needs_attention",
       createdAt: "2026-05-28T00:00:00.000Z",
@@ -125,7 +126,7 @@ describe("Admin user service", () => {
       sessionsNeedingAttention: [
         expect.objectContaining({
           id: "session_attention",
-          memberId: "admin_operator",
+          memberId: TEST_OPERATOR_ID,
           reason: "unusual_location",
         }),
       ],
@@ -135,19 +136,19 @@ describe("Admin user service", () => {
   it("暂停成员后撤销其 active 和 needs_attention 会话并记录动作", async () => {
     await seedUsers();
 
-    const suspended = await suspendAdminUser("admin_operator", {
+    const suspended = await suspendAdminUser(TEST_OPERATOR_ID, {
       actorAdminUserId: "admin_owner",
       now: new Date("2026-05-28T12:00:00.000Z"),
     });
 
     expect(suspended).toMatchObject({
-      id: "admin_operator",
+      id: TEST_OPERATOR_ID,
       status: "suspended",
     });
     const sessions = await getStorageClient()
       .db.select()
       .from(adminSessions)
-      .where(eq(adminSessions.adminUserId, "admin_operator"));
+      .where(eq(adminSessions.adminUserId, TEST_OPERATOR_ID));
     expect(sessions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "session_active", status: "revoked" }),
@@ -161,7 +162,7 @@ describe("Admin user service", () => {
       expect.objectContaining({
         actionType: "admin_user_suspended",
         targetType: "admin_user",
-        targetId: "admin_operator",
+        targetId: TEST_OPERATOR_ID,
         result: "success",
       }),
     ]);
@@ -169,36 +170,42 @@ describe("Admin user service", () => {
 
   it("恢复 suspended 成员并记录动作", async () => {
     await seedUsers();
-    await suspendAdminUser("admin_operator", {
+    await suspendAdminUser(TEST_OPERATOR_ID, {
       actorAdminUserId: "admin_owner",
     });
 
     await expect(
-      restoreAdminUser("admin_operator", {
+      restoreAdminUser(TEST_OPERATOR_ID, {
         actorAdminUserId: "admin_owner",
         now: new Date("2026-05-28T13:00:00.000Z"),
       }),
     ).resolves.toMatchObject({
-      id: "admin_operator",
+      id: TEST_OPERATOR_ID,
       status: "active",
       updatedAt: "2026-05-28T13:00:00.000Z",
     });
 
     const actions = await getStorageClient()
-      .db.select()
-      .from(adminActionResults);
+      .db.select({
+        actionType: adminActionResults.actionType,
+        targetType: adminActionResults.targetType,
+        targetId: adminActionResults.targetId,
+        result: adminActionResults.result,
+      })
+      .from(adminActionResults)
+      .where(eq(adminActionResults.targetId, TEST_OPERATOR_ID));
     expect(actions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           actionType: "admin_user_suspended",
           targetType: "admin_user",
-          targetId: "admin_operator",
+          targetId: TEST_OPERATOR_ID,
           result: "success",
         }),
         expect.objectContaining({
           actionType: "admin_user_restored",
           targetType: "admin_user",
-          targetId: "admin_operator",
+          targetId: TEST_OPERATOR_ID,
           result: "success",
         }),
       ]),

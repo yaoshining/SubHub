@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -311,7 +311,11 @@ describe("Users 管理闭环", () => {
       })
       .from(adminUsers)
       .where(eq(adminUsers.identifier, "admin@example.com"));
-    expect(owner?.id).toBeTruthy();
+    const ownerId = owner?.id;
+    expect(ownerId).toBeTruthy();
+    if (!ownerId) {
+      throw new Error("expected bootstrap owner id");
+    }
 
     const [remediatedSession] = await getStorageClient()
       .db.select({
@@ -322,7 +326,7 @@ describe("Users 管理闭环", () => {
       .where(eq(adminSessions.id, "session_attention_second"));
     expect(remediatedSession).toEqual({
       status: "remediated",
-      remediatedByAdminUserId: owner?.id ?? null,
+      remediatedByAdminUserId: ownerId,
     });
 
     const actions = await getStorageClient()
@@ -330,7 +334,20 @@ describe("Users 管理闭环", () => {
         actionType: adminActionResults.actionType,
         result: adminActionResults.result,
       })
-      .from(adminActionResults);
+      .from(adminActionResults)
+      .where(
+        and(
+          eq(adminActionResults.actorAdminUserId, ownerId),
+          inArray(adminActionResults.actionType, [
+            "bootstrap_admin_created",
+            "admin_login",
+            "admin_invitation_created",
+            "admin_user_suspended",
+            "admin_user_restored",
+            "admin_session_remediated",
+          ]),
+        ),
+      );
     expect(actions).toEqual(
       expect.arrayContaining([
         { actionType: "bootstrap_admin_created", result: "success" },
