@@ -75,6 +75,19 @@ describe("API 契约链路基础", () => {
     expect(packageJson.scripts["api:check"]).toContain("pnpm api:spec");
     expect(packageJson.scripts["api:check"]).toContain("pnpm api:client");
     expect(packageJson.scripts["api:check"]).toContain("pnpm api:docs");
+    expect(packageJson.scripts["api:check"]).not.toContain("corepack pnpm");
+  });
+
+  it("数据库门禁链路保持直接使用 pnpm，而不是把 corepack workaround 固化进仓库脚本", () => {
+    expect(packageJson.scripts["db:check"]).toContain(
+      "drizzle-kit check --config drizzle.config.ts",
+    );
+    expect(packageJson.scripts["db:check"]).toContain("pnpm db:drift");
+    expect(packageJson.scripts["db:check"]).toContain("pnpm typecheck");
+    expect(packageJson.scripts["db:check"]).toContain(
+      "pnpm test tests/unit/storage/schema.test.ts",
+    );
+    expect(packageJson.scripts["db:check"]).not.toContain("corepack pnpm");
   });
 
   it("用 db:check 串联 schema 检查、漂移校验、类型检查与 schema 单测", () => {

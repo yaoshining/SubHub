@@ -15,6 +15,7 @@ shell commands, and other important information, read the current plan:
 - 安装依赖、运行开发服务、执行测试、运行 lint/typecheck、执行 codegen、运行 migration、运行 API 契约脚本时，默认都应优先使用 `pnpm`。
 - 未经用户明确要求，不要输出 `npm` 命令示例。
 - 若文档、prompt、agent 输出或任务说明中存在 `npm` 示例，后续更新时应优先改写为 `pnpm` 对应写法。
+- 若某个执行环境暂时缺少全局 `pnpm`，应通过安装/启用 `pnpm` 解决，不得把 `corepack pnpm` 这类环境级 workaround 写入 `package.json`、测试断言、任务文档或其他仓库真源。
 - 若项目脚本已在 `package.json` 中定义，则默认使用：
 	- `pnpm install`
 	- `pnpm dev`
@@ -30,6 +31,7 @@ shell commands, and other important information, read the current plan:
 	- `pnpm db:migrate`
 	- `pnpm db:check`
 - 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
+- `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
 
 ## 前端实现约束：TailwindCSS + shadcn/ui
 
