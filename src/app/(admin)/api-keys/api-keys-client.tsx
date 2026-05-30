@@ -282,15 +282,26 @@ export function ApiKeysClient() {
       return;
     }
 
+    if (!mountedRef.current) {
+      return;
+    }
+
     setError(null);
     setHeaderRotatePending(true);
     try {
       const result = await rotateCallerKey(selectedCallerKey.id);
+      if (!mountedRef.current) {
+        return;
+      }
       handleRotated(result);
     } catch (rotateError) {
-      setError(getErrorMessage(rotateError));
+      if (mountedRef.current) {
+        setError(getErrorMessage(rotateError));
+      }
     } finally {
-      setHeaderRotatePending(false);
+      if (mountedRef.current) {
+        setHeaderRotatePending(false);
+      }
     }
   }, [handleRotated, selectedCallerKey]);
 
