@@ -43,7 +43,7 @@ describe("Lucide 图标基线", () => {
     }
   });
 
-  it("设计稿 Assets / Icons / Lucide 与实现侧命名保持一致", () => {
+  it("设计稿 Assets / Icons / Lucide 约定图标与实现侧命名保持一致", () => {
     const designSource = readFileSync(
       path.resolve(process.cwd(), "design/main.pen"),
       "utf8",
