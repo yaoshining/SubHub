@@ -135,7 +135,7 @@ describe("OpenAPI / Orval / 手写 API 封装链路一致性", () => {
     expect(apiReference).toContain('layout: "modern"');
 
     expect(packageJson).toContain(
-      '"api:check": "corepack pnpm api:spec && corepack pnpm api:client && corepack pnpm api:docs"',
+      '"api:check": "pnpm api:spec && pnpm api:client && pnpm api:docs"',
     );
   });
 
