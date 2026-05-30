@@ -1,13 +1,4 @@
-import {
-  and,
-  count,
-  countDistinct,
-  desc,
-  eq,
-  inArray,
-  isNotNull,
-  or,
-} from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, or } from "drizzle-orm";
 
 import {
   getStorageClient,
@@ -15,21 +6,17 @@ import {
 } from "@/server/storage/client";
 import {
   adminActionResults,
-  adminUsers,
   callerKeys,
   providerCredentials,
   providers,
 } from "@/server/storage/schema";
+import {
+  getSystemReadiness,
+  type SystemReadiness,
+} from "@/server/services/settings-service";
 
 export type DashboardSummary = {
-  readiness: {
-    adminInitialized: boolean;
-    activeProviderCount: number;
-    activeCallerKeyCount: number;
-    gatewayReady: boolean;
-    missingConditions: Array<"admin" | "provider" | "caller_key">;
-    lastCheckedAt: string;
-  };
+  readiness: SystemReadiness;
   northStar: {
     status: "ready" | "not_ready";
     message: string;
@@ -96,10 +83,7 @@ export async function getDashboardSummary({
   db = getStorageClient().db,
   now = new Date(),
 }: DashboardServiceOptions = {}): Promise<DashboardSummary> {
-  const [adminUser] = await db
-    .select({ id: adminUsers.id })
-    .from(adminUsers)
-    .limit(1);
+  const readiness = await getSystemReadiness({ db, now });
   const providerRows = await db
     .select()
     .from(providers)
@@ -125,18 +109,6 @@ export async function getDashboardSummary({
   const providerTotalCount = await countRows(
     db.select({ value: count() }).from(providers),
   );
-  const activeProviderCount = await countRows(
-    db
-      .select({ value: countDistinct(providerCredentials.providerId) })
-      .from(providerCredentials)
-      .innerJoin(providers, eq(providerCredentials.providerId, providers.id))
-      .where(
-        and(
-          eq(providers.status, "enabled"),
-          eq(providerCredentials.status, "active"),
-        ),
-      ),
-  );
   const needsAttentionProviderCount = await countRows(
     db
       .select({ value: count() })
@@ -148,12 +120,6 @@ export async function getDashboardSummary({
           isNotNull(providers.lastErrorSummary),
         ),
       ),
-  );
-  const activeCallerKeyCount = await countRows(
-    db
-      .select({ value: count() })
-      .from(callerKeys)
-      .where(eq(callerKeys.status, "active")),
   );
   const suspendedCallerKeyCount = await countRows(
     db
@@ -196,20 +162,8 @@ export async function getDashboardSummary({
       lastErrorSummary: provider.lastErrorSummary,
     };
   });
-  const missingConditions: DashboardSummary["readiness"]["missingConditions"] =
-    [];
-  if (!adminUser) {
-    missingConditions.push("admin");
-  }
-  if (activeProviderCount === 0) {
-    missingConditions.push("provider");
-  }
-  if (activeCallerKeyCount === 0) {
-    missingConditions.push("caller_key");
-  }
-  const gatewayReady = missingConditions.length === 0;
   const nextActions = [
-    ...(adminUser
+    ...(readiness.adminInitialized
       ? []
       : [
           {
@@ -219,7 +173,7 @@ export async function getDashboardSummary({
             priority: "high" as const,
           },
         ]),
-    ...(activeProviderCount > 0
+    ...(readiness.activeProviderCount > 0
       ? []
       : [
           {
@@ -229,7 +183,7 @@ export async function getDashboardSummary({
             priority: "high" as const,
           },
         ]),
-    ...(activeCallerKeyCount > 0
+    ...(readiness.activeCallerKeyCount > 0
       ? []
       : [
           {
@@ -242,28 +196,21 @@ export async function getDashboardSummary({
   ];
 
   return {
-    readiness: {
-      adminInitialized: Boolean(adminUser),
-      activeProviderCount,
-      activeCallerKeyCount,
-      gatewayReady,
-      missingConditions,
-      lastCheckedAt: now.toISOString(),
-    },
+    readiness,
     northStar: {
-      status: gatewayReady ? "ready" : "not_ready",
-      message: gatewayReady
+      status: readiness.gatewayReady ? "ready" : "not_ready",
+      message: readiness.gatewayReady
         ? "统一字幕出口已具备基础服务条件。"
         : "当前实例尚未完成首轮服务条件，请优先处理缺失项。",
     },
     providerSnapshot: {
       total: providerTotalCount,
-      available: activeProviderCount,
+      available: readiness.activeProviderCount,
       needsAttention: needsAttentionProviderCount,
       items: providerItems,
     },
     callerKeySnapshot: {
-      active: activeCallerKeyCount,
+      active: readiness.activeCallerKeyCount,
       suspended: suspendedCallerKeyCount,
       rotated: rotatedCallerKeyCount,
     },
