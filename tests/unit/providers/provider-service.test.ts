@@ -125,6 +125,28 @@ describe("Provider service 状态流转", () => {
     expect(restored.provider.availableCredentialCount).toBe(1);
   });
 
+  it("拒绝重复隔离已移出活跃池的凭据", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Primary",
+      type: "opensubtitles",
+      initialCredential: {
+        label: "primary",
+        secret: "opensubtitles-api-key",
+      },
+    });
+    const credentialId = provider.credentials[0]!.id;
+
+    await isolateProviderCredential(provider.id, credentialId, "上游认证失败");
+
+    await expect(
+      isolateProviderCredential(provider.id, credentialId, "重复隔离"),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "credentialId",
+      message: "当前凭据已经不在活跃池中，无需重复隔离。",
+    });
+  });
+
   it("同类型 Provider 名称必须可区分", async () => {
     await createProvider({ name: "OpenSubtitles", type: "opensubtitles" });
 

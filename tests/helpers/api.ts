@@ -10,9 +10,17 @@ export function createJsonRequest(method: string, body?: unknown): RequestInit {
   };
 }
 
-export async function expectApiError(response: Response, code: AppErrorCode) {
+export async function expectApiError(
+  response: Response,
+  code: AppErrorCode,
+  expectedMessage?: string,
+) {
   const payload = (await response.json()) as ApiErrorResponse;
   expect(payload.error.code).toBe(code);
-  expect(payload.error.message).toEqual(expect.any(String));
+  if (expectedMessage) {
+    expect(payload.error.message).toBe(expectedMessage);
+  } else {
+    expect(payload.error.message).toEqual(expect.any(String));
+  }
   return payload;
 }

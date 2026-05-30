@@ -21,7 +21,7 @@ export type AdminSessionServiceOptions = {
 
 export type AdminSessionRemediationResult = {
   sessionId: string;
-  status: "remediated";
+  status: "revoked" | "remediated";
   action: AdminSessionRemediationAction;
 };
 
@@ -49,6 +49,7 @@ export async function remediateAdminSession(
 
   const session = await getRepository(options.db).remediateSession(
     sessionId,
+    input.action,
     options.actorAdminUserId ?? null,
     options.now,
   );
@@ -66,7 +67,7 @@ export async function remediateAdminSession(
 
   return {
     sessionId: session.id,
-    status: "remediated",
+    status: session.status,
     action: input.action,
   };
 }

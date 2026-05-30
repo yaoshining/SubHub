@@ -148,6 +148,33 @@ export async function isolateCredential(
   const now = options.now ?? new Date();
   const db = options.db ?? getStorageClient().db;
 
+  const [current] = await db
+    .select()
+    .from(providerCredentials)
+    .where(
+      and(
+        eq(providerCredentials.providerId, providerId),
+        eq(providerCredentials.id, credentialId),
+      ),
+    )
+    .limit(1);
+
+  if (!current) {
+    throw new AppError(
+      "PROVIDER_UNAVAILABLE",
+      "Provider 凭据不存在。",
+      "credentialId",
+    );
+  }
+
+  if (current.status === "isolated" || current.status === "disabled") {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "当前凭据已经不在活跃池中，无需重复隔离。",
+      "credentialId",
+    );
+  }
+
   const [credential] = await db
     .update(providerCredentials)
     .set({

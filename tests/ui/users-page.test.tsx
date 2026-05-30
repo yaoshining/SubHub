@@ -281,6 +281,34 @@ describe("Users 页面", () => {
     expect(await screen.findByTestId("users-session-safe")).toBeInTheDocument();
   });
 
+  it("按动作区分会话处置确认文案", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<UsersClient />);
+
+    expect(await screen.findByText("MacBook Pro")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "标记已处理" }));
+    expect(
+      await screen.findByText(
+        "标记已处理会保留当前上下文，但会从需要关注列表中移除。",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "确认标记已处理" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "取消" }));
+
+    await user.click(screen.getByRole("button", { name: "撤销会话" }));
+    expect(
+      await screen.findByText(
+        "撤销后该后台会话将立即失效，用于阻止继续访问受保护后台动作。",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "确认撤销" }),
+    ).toBeInTheDocument();
+  });
+
   it("筛选隐藏当前选中成员时仍保留详情上下文", async () => {
     const user = userEvent.setup();
     renderWithTheme(<UsersClient />);

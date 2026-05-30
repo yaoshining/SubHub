@@ -238,4 +238,52 @@ describe("Provider 管理 API 契约", () => {
       data: { id: providerId, credentials: expect.any(Array) },
     });
   });
+
+  it("拒绝重复隔离已移出活跃池的凭据并返回明确原因", async () => {
+    const cookie = await createAdminSessionCookie();
+
+    const created = await providersRoute.POST(
+      jsonRequest(
+        "http://localhost/api/admin/providers",
+        {
+          name: "OpenSubtitles Primary",
+          type: "opensubtitles",
+          initialCredential: {
+            label: "primary",
+            secret: "opensubtitles-api-key",
+          },
+        },
+        cookie,
+      ),
+    );
+    const createdPayload = await readJson<{
+      data: { id: string; credentials: Array<{ id: string }> };
+    }>(created);
+    const providerId = createdPayload.data.id;
+    const credentialId = createdPayload.data.credentials[0]!.id;
+
+    await credentialIsolateRoute.POST(
+      jsonRequest(
+        `http://localhost/api/admin/providers/${providerId}/credentials/${credentialId}/isolate`,
+        { reason: "429 限流" },
+        cookie,
+      ),
+      { params: { providerId, credentialId } },
+    );
+
+    const repeated = await credentialIsolateRoute.POST(
+      jsonRequest(
+        `http://localhost/api/admin/providers/${providerId}/credentials/${credentialId}/isolate`,
+        { reason: "重复隔离" },
+        cookie,
+      ),
+      { params: { providerId, credentialId } },
+    );
+
+    await expectApiError(
+      repeated,
+      "VALIDATION_FAILED",
+      "当前凭据已经不在活跃池中，无需重复隔离。",
+    );
+  });
 });

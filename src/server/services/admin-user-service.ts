@@ -56,7 +56,11 @@ export async function suspendAdminUser(
     targetUser.status === "active" &&
     activeAdminCount <= 1
   ) {
-    throw new AppError("FORBIDDEN", "最后一个 active admin 不可被暂停。", "userId");
+    throw new AppError(
+      "FORBIDDEN",
+      "最后一个 active admin 不可被暂停。",
+      "userId",
+    );
   }
 
   if (options.actorAdminUserId && options.actorAdminUserId === userId) {

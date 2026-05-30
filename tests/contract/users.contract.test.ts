@@ -64,8 +64,8 @@ const createAdminSessionCookie = async () => {
 };
 
 const getAdminUserIdByIdentifier = async (identifier: string) => {
-  const [adminUser] = await getStorageClient().db
-    .select({ id: adminUsers.id })
+  const [adminUser] = await getStorageClient()
+    .db.select({ id: adminUsers.id })
     .from(adminUsers)
     .where(eq(adminUsers.identifier, identifier))
     .limit(1);
@@ -292,7 +292,7 @@ describe("Users 管理 API 契约", () => {
     ).resolves.toEqual({
       data: {
         sessionId: "session_attention_second",
-        status: "remediated",
+        status: "revoked",
         action: "revoke",
       },
     });

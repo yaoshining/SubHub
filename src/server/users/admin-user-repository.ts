@@ -333,6 +333,7 @@ export class AdminUserRepository {
 
   async remediateSession(
     sessionId: string,
+    action: "revoke" | "mark_resolved",
     remediatedByAdminUserId: string | null,
     now = new Date(),
   ) {
@@ -346,11 +347,12 @@ export class AdminUserRepository {
       );
     }
 
+    const nextStatus = action === "revoke" ? "revoked" : "remediated";
     const remediatedAt = now.toISOString();
     const [session] = await this.db
       .update(adminSessions)
       .set({
-        status: "remediated",
+        status: nextStatus,
         remediatedAt,
         remediatedByAdminUserId,
       })

@@ -10,5 +10,6 @@ export type AdminSessionRemediationResultStatus =
   (typeof AdminSessionRemediationResultStatus)[keyof typeof AdminSessionRemediationResultStatus];
 
 export const AdminSessionRemediationResultStatus = {
+  revoked: "revoked",
   remediated: "remediated",
 } as const;

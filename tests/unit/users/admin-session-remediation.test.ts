@@ -69,7 +69,7 @@ afterEach(() => {
 });
 
 describe("Admin session remediation service", () => {
-  it("处置 needs_attention 会话并记录 admin_session_remediated 动作", async () => {
+  it("revoke 会把 needs_attention 会话撤销为 revoked 并记录 admin_session_remediated 动作", async () => {
     await seedSession();
 
     const result = await remediateAdminSession(
@@ -83,14 +83,14 @@ describe("Admin session remediation service", () => {
 
     expect(result).toEqual({
       sessionId: "session_attention",
-      status: "remediated",
+      status: "revoked",
       action: "revoke",
     });
 
     const [session] = await getStorageClient().db.select().from(adminSessions);
     expect(session).toMatchObject({
       id: "session_attention",
-      status: "remediated",
+      status: "revoked",
       remediatedAt: "2026-05-28T12:00:00.000Z",
       remediatedByAdminUserId: "admin_owner",
     });
@@ -106,6 +106,33 @@ describe("Admin session remediation service", () => {
         result: "success",
       }),
     ]);
+  });
+
+  it("mark_resolved 会把 needs_attention 会话标记为 remediated", async () => {
+    await seedSession();
+
+    const result = await remediateAdminSession(
+      "session_attention",
+      { action: "mark_resolved", reason: "checked" },
+      {
+        actorAdminUserId: "admin_owner",
+        now: new Date("2026-05-28T12:05:00.000Z"),
+      },
+    );
+
+    expect(result).toEqual({
+      sessionId: "session_attention",
+      status: "remediated",
+      action: "mark_resolved",
+    });
+
+    const [session] = await getStorageClient().db.select().from(adminSessions);
+    expect(session).toMatchObject({
+      id: "session_attention",
+      status: "remediated",
+      remediatedAt: "2026-05-28T12:05:00.000Z",
+      remediatedByAdminUserId: "admin_owner",
+    });
   });
 
   it("拒绝处置非 needs_attention 会话，避免扩展为完整风控平台", async () => {
