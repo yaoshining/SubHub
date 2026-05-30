@@ -130,6 +130,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm api:check
+pnpm db:check
 ```
 
 预期结果：

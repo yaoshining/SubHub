@@ -90,6 +90,17 @@ describe("API 契约链路基础", () => {
     expect(packageJson.scripts["db:check"]).not.toContain("corepack pnpm");
   });
 
+  it("用 db:check 串联 schema 检查、漂移校验、类型检查与 schema 单测", () => {
+    expect(packageJson.scripts["db:check"]).toContain(
+      "drizzle-kit check --config drizzle.config.ts",
+    );
+    expect(packageJson.scripts["db:check"]).toContain("pnpm db:drift");
+    expect(packageJson.scripts["db:check"]).toContain("pnpm typecheck");
+    expect(packageJson.scripts["db:check"]).toContain(
+      "pnpm test tests/unit/storage/schema.test.ts",
+    );
+  });
+
   it("保持 Scalar 文档构建使用的 Next 类型入口稳定，避免 api:check 产生已跟踪差异", async () => {
     const tsconfig = await readFile(
       join(repositoryRoot, "tsconfig.json"),
