@@ -4,7 +4,7 @@
 
 **前置条件**: `plan.md`、`spec.md`、`research.md`、`data-model.md`、`database-design.md`、`contracts/api-contract.md`、`quickstart.md`、`DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`
 
-**可追溯前置条件**: Feature ID `001`，spec 目录 `specs/001-mvp-admin-console/`，分支 `feat/001-mvp-admin-console`，主追踪 issue 已创建但编号尚未回填到仓库文档；同步 task issue 前必须补齐主 Issue 编号关联。
+**可追溯前置条件**: Feature ID `001`，spec 目录 `specs/001-mvp-admin-console/`，分支 `feat/001-mvp-admin-console`，主追踪 issue 为 `#3`；同步 task issue 时必须保持与主 Issue 的关联。
 
 **测试**: REQUIRED。任务必须覆盖 unit、integration、contract、UI 状态、响应式、OpenAPI/Orval/Scalar 链路。
 

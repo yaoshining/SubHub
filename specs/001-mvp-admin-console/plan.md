@@ -92,7 +92,7 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - **设计来源映射**: 通过。`DESIGN.md`、`docs/layouts/admin-layout.md`、7 个 Active page spec 与 `design/main.pen` 均纳入正式输入。
 - **是否需要增补 `DESIGN.md`**: No。当前 feature 复用既有系统级设计语言；若实现发现跨页面新规则，必须先提出并更新 `DESIGN.md` 或 `docs/layouts/admin-layout.md`。
 - **worktree 隔离**: 通过。当前 active feature 为 `specs/001-mvp-admin-console`，分支为 `feat/001-mvp-admin-console`。
-- **可追溯关系**: 通过。Feature ID `001` 已映射到 spec 目录、分支与已创建的主追踪 issue；当前仓库尚未回填 issue 编号。
+- **可追溯关系**: 通过。Feature ID `001` 已映射到 spec 目录、分支与主追踪 issue `#3`。
 - **issue 同步范围**: 通过。后续 `speckit.tasks` 与 issue 同步仅面向 `specs/001-mvp-admin-console`。
 
 ## 设计映射

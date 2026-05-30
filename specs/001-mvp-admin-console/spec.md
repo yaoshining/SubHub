@@ -15,7 +15,7 @@
 - **Feature ID**: `001`
 - **Spec 目录**: `specs/001-mvp-admin-console/`
 - **主分支**: `feat/001-mvp-admin-console`
-- **主 Issue**: 已创建，待回填编号
+- **主 Issue**: `#3`（MVP 管理控制台与统一字幕出口主追踪）
 - **Task Issue 策略**: 先完成 `spec -> plan -> tasks`，确认 MVP 范围后再决定是否拆分 task issues
 
 ## 设计上下文 *(mandatory)*
