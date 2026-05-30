@@ -48,10 +48,13 @@ describe("Lucide 图标基线", () => {
       path.resolve(process.cwd(), "design/main.pen"),
       "utf8",
     );
-    const lucideSection = designSource.slice(
-      designSource.indexOf('"name": "Assets / Icons / Lucide"'),
-      designSource.indexOf('"name": "Sidebar / Dark / Base"'),
-    );
+
+    const start = designSource.indexOf('"name": "Assets / Icons / Lucide"');
+    const end = designSource.indexOf('"name": "Sidebar / Dark / Base"', start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+
+    const lucideSection = designSource.slice(start, end);
 
     expect(lucideSection).toContain('"name": "Assets / Icons / Lucide"');
 
