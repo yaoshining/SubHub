@@ -11,7 +11,7 @@
     "api:spec": "orval --config orval.config.ts --fail-on-warnings --formatter prettier",
     "api:client": "orval --config orval.config.ts --clean src/lib/api/generated --formatter prettier",
     "api:docs": "next build",
-    "api:check": "pnpm api:spec && pnpm api:client && pnpm api:docs",
+    "api:check": "corepack pnpm api:spec && corepack pnpm api:client && corepack pnpm api:docs",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "tsx -e \"import { getStorageClient } from './src/server/storage/client.ts'; const client = getStorageClient(); client.migrate(); client.close();\"",
     "db:check": "drizzle-kit check --config drizzle.config.ts && pnpm db:drift && pnpm typecheck && pnpm test tests/unit/storage/schema.test.ts",
