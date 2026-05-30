@@ -1,11 +1,37 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+shell commands, and other important information, read the current plan:
+`specs/001-mvp-admin-console/plan.md`
 <!-- SPECKIT END -->
 
 ## 语言规范
 
 - 所有回复、文档撰写、git提交消息、PR 与 Issue 默认使用中文表达。
+
+## 包管理器与脚本执行约定
+
+- 以下为仓库级执行约定，适用于实现类 agent、review agent、Speckit 流程与后续文档示例。
+- 本仓库默认且首选包管理器为 `pnpm`。
+- 安装依赖、运行开发服务、执行测试、运行 lint/typecheck、执行 codegen、运行 migration、运行 API 契约脚本时，默认都应优先使用 `pnpm`。
+- 未经用户明确要求，不要输出 `npm` 命令示例。
+- 若文档、prompt、agent 输出或任务说明中存在 `npm` 示例，后续更新时应优先改写为 `pnpm` 对应写法。
+- 若某个执行环境暂时缺少全局 `pnpm`，应通过安装/启用 `pnpm` 解决，不得把 `corepack pnpm` 这类环境级 workaround 写入 `package.json`、测试断言、任务文档或其他仓库真源。
+- 若项目脚本已在 `package.json` 中定义，则默认使用：
+	- `pnpm install`
+	- `pnpm dev`
+	- `pnpm build`
+	- `pnpm lint`
+	- `pnpm typecheck`
+	- `pnpm test`
+	- `pnpm api:spec`
+	- `pnpm api:client`
+	- `pnpm api:docs`
+	- `pnpm api:check`
+	- `pnpm db:generate`
+	- `pnpm db:migrate`
+	- `pnpm db:check`
+- 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
+- `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
 
 ## 前端实现约束：TailwindCSS + shadcn/ui
 
@@ -20,6 +46,14 @@ shell commands, and other important information, read the current plan
 - 若设计稿或页面规范中存在可映射到 `shadcn/ui` 的结构，应优先按该组件体系落地，而不是重新发明等价实现。
 - 若设计意图与 `shadcn/ui` 默认模式冲突，应先提出映射方案或 tradeoff，再由人工确认是否引入新组件。
 
+## 设计稿文件约定
+
+所有设计稿工件统一存放于 `design/` 目录：
+
+- `design/main.pen`：**设计稿主文件**，包含深/浅主题 Dashboard 设计稿（Pencil 格式）
+- 新增页面设计稿应命名为 `design/<page-name>.pen` 或放入 `design/main.pen` 内的对应 Frame
+
+设计代理（UI 代理）在操作设计稿时，默认以 `design/main.pen` 为入口文件。
 ## 图标系统约定（Lucide）
 
 - 本项目默认图标系统为 **Lucide**。
@@ -86,3 +120,45 @@ shell commands, and other important information, read the current plan
 - 当实现、评审或集成涉及接口变化时，必须提醒检查：`docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/`、`api:spec`、`api:client`、`api:docs`。
 - 即使仓库暂未落地上述脚本，也应将其视为预期标准命名，不得自行发明替代命名。
 - 未经用户明确要求，不得自行创建另一套 OpenAPI 路径、Orval 路径或 API 脚本命名。
+
+## GitHub issue / PR / milestone 执行规则（适用于 Speckit taskstoissues）
+
+- 以下为仓库级执行规则，适用于手动创建 issue、agent 创建 issue、`speckit.taskstoissues` 以及未来任何将任务同步到 GitHub issue 的流程。
+
+### 1. 适用范围
+
+- 本仓库 issue / PR 默认遵守既有 `type:*`、`area:*`、`stage:*`、`priority:*`、`scope:*` 标签体系与 `MVP`、`Post-MVP`、`Future` milestone 约定。
+- 未经用户明确要求，不应绕过本仓库 labels / milestones 约定，自行发明另一套分类方式。
+
+### 2. issue 最小标签要求
+
+- 正式 issue 默认至少具备：1 个 `type:*`、1 个 `area:*`、1 个 `priority:*`、1 个 `scope:*`。
+- 如 issue 已进入执行流程，还应补充 1 个 `stage:*`。
+- 若当前上下文不足以可靠判断全部标签，至少先补 `type:*` 与 `scope:*`，并在说明中明确其余标签待补。
+
+### 3. milestone 规则
+
+- 当前仓库 milestone 包括：`MVP`、`Post-MVP`、`Future`。
+- `scope:mvp` 的 issue 默认优先挂到 `MVP`。
+- `scope:post-mvp` 的 issue 默认优先挂到 `Post-MVP`。
+- `scope:future` 的 issue 默认优先挂到 `Future`，或在仅做积压管理时只保留 `scope:future`。
+- `scope:stretch` 的 issue 可根据上下文决定是否挂 milestone，但不应默认挤入 `MVP`。
+
+### 4. taskstoissues 额外规则
+
+- 当 `speckit.taskstoissues` 或类似流程根据 `tasks.md` 创建 issue 时，应默认遵守本仓库标签与 milestone 规则。
+- issue 标题与任务边界应尽量清晰，并尽量映射到单一任务或单一可执行单元。
+- 默认使用本仓库标签体系，而不是 GitHub 默认标签的随意组合。
+- 若当前 feature 已明确属于 MVP 或 Post-MVP，应自动继承相应 `scope:*` 与 milestone 倾向。
+- 若任务属于未来工作，应明确标记为 `scope:future`，不要混入当前 MVP 任务批次。
+
+### 5. PR 规则
+
+- PR 应尽量继承对应 issue 的核心标签，至少反映主要 `type:*` 与 `area:*`。
+- 若 PR 关联 MVP 范围 issue，不应在没有说明的情况下混入明显属于 `scope:future` 的改动。
+
+### 6. 保持上游可升级性
+
+- 不要将上述规则重度写死到 Speckit 原生 agent 文件中。
+- 应优先通过本仓库全局 instructions 约束 `speckit.taskstoissues` 等流程。
+- 如果未来需要更强控制，应优先增加本仓库的包装命令或协调层，而不是直接深改上游 Speckit agent 本体。

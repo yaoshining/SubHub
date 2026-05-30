@@ -1,0 +1,2178 @@
+openapi: 3.1.0
+info:
+  title: SubHub API
+  version: 0.1.0
+  description: SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
+servers:
+  - url: http://localhost:3000
+    description: 本地开发
+paths:
+  /api/admin/bootstrap/status:
+    get:
+      tags:
+        - Admin Auth
+      operationId: getAdminBootstrapStatus
+      summary: 查询首轮管理员初始化状态
+      responses:
+        "200":
+          description: 初始化状态
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BootstrapStatusResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/bootstrap:
+    post:
+      tags:
+        - Admin Auth
+      operationId: createInitialAdmin
+      summary: 创建首个管理员
+      description: 仅允许在系统尚未完成首轮初始化时调用；重复初始化会被拒绝。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInitialAdminRequest"
+      responses:
+        "201":
+          description: 首个管理员已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateInitialAdminResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/auth/login:
+    post:
+      tags:
+        - Admin Auth
+      operationId: loginAdmin
+      summary: 管理员登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginRequest"
+      responses:
+        "200":
+          description: 登录成功并写入管理员会话 Cookie
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: "`subhub_admin_session` HttpOnly 会话 Cookie。"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/auth/logout:
+    post:
+      tags:
+        - Admin Auth
+      operationId: logoutAdmin
+      summary: 管理员登出
+      security:
+        - AdminSession: []
+      responses:
+        "204":
+          description: 当前会话已撤销，Cookie 已清理。
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/auth/me:
+    get:
+      tags:
+        - Admin Auth
+      operationId: getCurrentAdmin
+      summary: 查询当前登录管理员
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: 当前管理员
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentAdminResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/dashboard/summary:
+    get:
+      tags:
+        - System
+      operationId: getAdminDashboardSummary
+      summary: 查询 Dashboard 摘要
+      description: 返回 Dashboard 所需的首轮开通、Provider、调用方 Key、队列、缓存、最近异常和下一步入口聚合读模型。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Dashboard 摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummaryResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/settings/status:
+    get:
+      tags:
+        - System
+      operationId: getAdminSettingsStatus
+      summary: 查询 Settings 系统状态
+      description: 返回 Settings 页所需的只读系统状态聚合；单项读数失败时仍返回已知信息，并通过 partialErrors 标识失败对象。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Settings 系统状态
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettingsStatusResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers:
+    get:
+      tags:
+        - Providers
+      operationId: listAdminProviders
+      summary: 查询 Provider 列表
+      description: 返回上游 Provider 与凭据池摘要；不会返回上游凭据明文或密文。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Provider 列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags:
+        - Providers
+      operationId: createAdminProvider
+      summary: 创建 OpenSubtitles Provider
+      description: MVP 仅允许创建 OpenSubtitles Provider；可随请求写入首个上游凭据。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderRequest"
+      responses:
+        "201":
+          description: Provider 已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}:
+    get:
+      tags:
+        - Providers
+      operationId: getAdminProvider
+      summary: 查询 Provider 详情
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 详情与凭据池
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+    patch:
+      tags:
+        - Providers
+      operationId: updateAdminProvider
+      summary: 更新 Provider 运行策略
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderRequest"
+      responses:
+        "200":
+          description: Provider 已更新
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/enable:
+    post:
+      tags:
+        - Providers
+      operationId: enableAdminProvider
+      summary: 启用 Provider
+      description: 只有存在可参与调度的 active 凭据时才允许启用。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 已启用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/disable:
+    post:
+      tags:
+        - Providers
+      operationId: disableAdminProvider
+      summary: 停用 Provider
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 已停用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDetailResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/credentials:
+    get:
+      tags:
+        - Providers
+      operationId: listAdminProviderCredentials
+      summary: 查询 Provider 凭据池
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider 凭据列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags:
+        - Providers
+      operationId: createAdminProviderCredential
+      summary: 新增 Provider 上游凭据
+      description: 明文 secret 只允许在写入请求中出现；响应只返回受控展示片段。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderCredentialRequest"
+      responses:
+        "201":
+          description: Provider 凭据已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/credentials/{credentialId}/isolate:
+    post:
+      tags:
+        - Providers
+      operationId: isolateAdminProviderCredential
+      summary: 隔离异常 Provider 凭据
+      description: 隔离后该凭据立即退出调度池，不影响同 Provider 下其他 active 凭据。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+        - $ref: "#/components/parameters/CredentialId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IsolateProviderCredentialRequest"
+      responses:
+        "200":
+          description: Provider 凭据已隔离
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialActionResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/providers/{providerId}/credentials/{credentialId}/restore:
+    post:
+      tags:
+        - Providers
+      operationId: restoreAdminProviderCredential
+      summary: 恢复 Provider 凭据
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+        - $ref: "#/components/parameters/CredentialId"
+      responses:
+        "200":
+          description: Provider 凭据已恢复为 active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredentialActionResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys:
+    get:
+      tags:
+        - Caller Keys
+      operationId: listAdminCallerKeys
+      summary: 查询 Caller Key 列表
+      description: 返回下游调用方 Key inventory；不会返回 keyHash、revealTokenHash 或完整明文。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Caller Key 列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags:
+        - Caller Keys
+      operationId: createAdminCallerKey
+      summary: 创建 Caller Key
+      description: 完整明文 Key 仅在创建响应的受控 reveal window 中返回一次；服务端只持久化 hash 与展示片段。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCallerKeyRequest"
+      responses:
+        "201":
+          description: Caller Key 已创建，完整明文仅本次响应可见。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyRevealResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys/{keyId}/rotate:
+    post:
+      tags:
+        - Caller Keys
+      operationId: rotateAdminCallerKey
+      summary: 轮换 Caller Key
+      description: 轮换后旧 Key 立即失效，新完整明文仅在本次响应中返回。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/CallerKeyId"
+      responses:
+        "200":
+          description: Caller Key 已轮换
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyRotationResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys/{keyId}/suspend:
+    post:
+      tags:
+        - Caller Keys
+      operationId: suspendAdminCallerKey
+      summary: 停用 Caller Key
+      description: 停用后该 Key 的新字幕查询与下载请求立即被拒绝。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/CallerKeyId"
+      responses:
+        "200":
+          description: Caller Key 已停用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/caller-keys/{keyId}/usage:
+    get:
+      tags:
+        - Caller Keys
+      operationId: getAdminCallerKeyUsage
+      summary: 查询 Caller Key 使用摘要
+      description: 返回最近 24 小时内的查询/下载计数与最近记录列表，以及最近轮换结果。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/CallerKeyId"
+      responses:
+        "200":
+          description: Caller Key 最近查询、下载与轮换摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallerKeyUsageResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users:
+    get:
+      tags:
+        - Users
+      operationId: listAdminUsers
+      summary: 查询后台成员、邀请与基础会话摘要
+      description: 返回 Users 页所需的成员列表、邀请状态和需要管理员关注的后台会话摘要；不包含权限矩阵、审批流或高级风控信息。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Users 管理摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUsersOverviewResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users/invitations:
+    post:
+      tags:
+        - Users
+      operationId: createAdminUserInvitation
+      summary: 创建后台成员邀请
+      description: MVP 仅允许预设角色和 admin_console 接入范围；同一 identifier 不允许同时存在多个 pending 邀请。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminInvitationRequest"
+      responses:
+        "201":
+          description: 成员邀请已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminInvitationResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users/{userId}/suspend:
+    post:
+      tags:
+        - Users
+      operationId: suspendAdminUser
+      summary: 暂停后台成员
+      description: 暂停成员后，该成员既有 active 与 needs_attention 后台会话会失效，不得继续执行受保护后台动作。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/AdminUserId"
+      responses:
+        "200":
+          description: 后台成员已暂停
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserActionResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/users/{userId}/restore:
+    post:
+      tags:
+        - Users
+      operationId: restoreAdminUser
+      summary: 恢复后台成员
+      description: 将已暂停成员恢复为 active；不会恢复已撤销或已处置的旧会话。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/AdminUserId"
+      responses:
+        "200":
+          description: 后台成员已恢复
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserActionResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/sessions/{sessionId}/remediate:
+    post:
+      tags:
+        - Users
+      operationId: remediateAdminSession
+      summary: 执行基础后台会话处置
+      description: 仅处理 needs_attention 后台会话，支持 revoke 或 mark_resolved 两种 MVP 基础动作；不包含风险评分、设备指纹、自动策略或完整审计调查流。
+      security:
+        - AdminSession: []
+      parameters:
+        - $ref: "#/components/parameters/AdminSessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSessionRemediationRequest"
+      responses:
+        "200":
+          description: 后台会话已完成基础处置
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSessionRemediationResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/subtitles/search:
+    get:
+      tags:
+        - Subtitles
+      operationId: searchSubtitles
+      summary: 统一字幕查询
+      description: 外部调用方使用 active Caller Key 查询字幕；无 Provider、无活跃凭据、无结果与上游失败均使用统一错误结构。
+      security:
+        - CallerKeyBearer: []
+      parameters:
+        - name: title
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1800
+            maximum: 3000
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: episode
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: language
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: 字幕查询成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubtitleSearchResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/subtitles/download:
+    get:
+      tags:
+        - Subtitles
+      operationId: downloadSubtitle
+      summary: 统一字幕下载
+      description: 基于查询结果中的 subtitleId 下载字幕文件；下载失败使用统一错误结构。
+      security:
+        - CallerKeyBearer: []
+      parameters:
+        - name: subtitleId
+          in: query
+          required: true
+          description: 来自搜索响应 `results[].id` 的完整网关字幕引用，格式为 `opensubtitles:{providerId}:{file_id}`；调用方不应传裸 OpenSubtitles subtitle record id 或 file_id。
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: 字幕文件内容
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              description: 字幕文件 MIME 类型，例如 application/x-subrip。
+            Content-Disposition:
+              schema:
+                type: string
+              description: attachment 文件下载头，包含安全文件名。
+          content:
+            application/x-subrip:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+components:
+  parameters:
+    ProviderId:
+      name: providerId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Provider 稳定标识。
+    CallerKeyId:
+      name: keyId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: CallerKey 稳定标识。
+    AdminUserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: AdminUser 稳定标识。
+    AdminSessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: AdminSession 稳定标识。
+    CredentialId:
+      name: credentialId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: ProviderCredential 稳定标识。
+  responses:
+    ErrorResponse:
+      description: 统一错误响应
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  securitySchemes:
+    AdminSession:
+      type: apiKey
+      in: cookie
+      name: subhub_admin_session
+      description: 管理端 API 使用的管理员会话 Cookie。
+    CallerKeyBearer:
+      type: http
+      scheme: bearer
+      description: 对外字幕 API 使用的下游调用方 Key。
+  schemas:
+    ErrorCode:
+      type: string
+      enum:
+        - AUTHENTICATION_REQUIRED
+        - FORBIDDEN
+        - VALIDATION_FAILED
+        - SERVICE_NOT_READY
+        - CALLER_KEY_INVALID
+        - CALLER_KEY_SUSPENDED
+        - PROVIDER_UNAVAILABLE
+        - PROVIDER_CREDENTIAL_EXHAUSTED
+        - NO_RESULTS
+        - SUBTITLE_NOT_FOUND
+        - UPSTREAM_FAILED
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
+        target:
+          type: string
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorDetail"
+    BootstrapStatus:
+      type: object
+      required:
+        - initialized
+      properties:
+        initialized:
+          type: boolean
+    BootstrapStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/BootstrapStatus"
+    CreateInitialAdminRequest:
+      type: object
+      required:
+        - identifier
+        - displayName
+        - password
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+          description: 管理员登录标识，服务端会规范化为小写。
+          example: admin@example.com
+        displayName:
+          type: string
+          minLength: 1
+          example: Admin
+        password:
+          type: string
+          minLength: 1
+          format: password
+    CreateInitialAdminResult:
+      type: object
+      required:
+        - adminUserId
+        - status
+      properties:
+        adminUserId:
+          type: string
+          example: admin_001
+        status:
+          type: string
+          enum:
+            - active
+    CreateInitialAdminResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CreateInitialAdminResult"
+    AdminLoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+          example: admin@example.com
+        password:
+          type: string
+          minLength: 1
+          format: password
+        deviceLabel:
+          type: string
+          maxLength: 120
+          description: 可选设备标签，用于后台会话排查。
+    AdminPrincipal:
+      type: object
+      required:
+        - id
+        - identifier
+        - displayName
+        - role
+      properties:
+        id:
+          type: string
+          example: admin_001
+        identifier:
+          type: string
+          example: admin@example.com
+        displayName:
+          type: string
+          example: Admin
+        role:
+          type: string
+          enum:
+            - admin
+            - operator
+    AdminLoginData:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/components/schemas/AdminPrincipal"
+    AdminLoginResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminLoginData"
+    CurrentAdminResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminLoginData"
+    ProviderType:
+      type: string
+      enum:
+        - opensubtitles
+    ProviderStatus:
+      type: string
+      enum:
+        - enabled
+        - disabled
+        - needs_config
+        - degraded
+    ProviderCredentialStatus:
+      type: string
+      enum:
+        - active
+        - cooldown
+        - isolated
+        - disabled
+        - exhausted
+    Provider:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - priority
+        - weight
+        - concurrencyLimit
+        - rotationEnabled
+        - cooldownSeconds
+        - fallbackProviderId
+        - lastHealthStatus
+        - lastErrorSummary
+        - createdAt
+        - updatedAt
+        - credentialCount
+        - activeCredentialCount
+        - availableCredentialCount
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/ProviderType"
+        status:
+          $ref: "#/components/schemas/ProviderStatus"
+        priority:
+          type: integer
+          minimum: 0
+        weight:
+          type: integer
+          minimum: 0
+        concurrencyLimit:
+          type: integer
+          minimum: 1
+        rotationEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+          minimum: 0
+        fallbackProviderId:
+          type: string
+          nullable: true
+        lastHealthStatus:
+          type: string
+          nullable: true
+        lastErrorSummary:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        credentialCount:
+          type: integer
+          minimum: 0
+        activeCredentialCount:
+          type: integer
+          minimum: 0
+        availableCredentialCount:
+          type: integer
+          minimum: 0
+    ProviderCredential:
+      type: object
+      required:
+        - id
+        - providerId
+        - label
+        - displayPrefix
+        - displaySuffix
+        - status
+        - remainingQuota
+        - lastUsedAt
+        - lastErrorAt
+        - lastErrorSummary
+        - cooldownUntil
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        providerId:
+          type: string
+        label:
+          type: string
+        displayPrefix:
+          type: string
+          nullable: true
+        displaySuffix:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/ProviderCredentialStatus"
+        remainingQuota:
+          type: integer
+          nullable: true
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastErrorAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastErrorSummary:
+          type: string
+          nullable: true
+        cooldownUntil:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProviderDetail:
+      allOf:
+        - $ref: "#/components/schemas/Provider"
+        - type: object
+          required:
+            - credentials
+          properties:
+            credentials:
+              type: array
+              items:
+                $ref: "#/components/schemas/ProviderCredential"
+    ProviderList:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Provider"
+        total:
+          type: integer
+          minimum: 0
+    ProviderListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderList"
+    ProviderDetailResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderDetail"
+    ProviderCredentialList:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderCredential"
+        total:
+          type: integer
+          minimum: 0
+    ProviderCredentialListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderCredentialList"
+    ProviderCredentialResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderCredential"
+    ProviderCredentialAction:
+      type: object
+      required:
+        - credential
+        - provider
+      properties:
+        credential:
+          $ref: "#/components/schemas/ProviderCredential"
+        provider:
+          $ref: "#/components/schemas/ProviderDetail"
+    ProviderCredentialActionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ProviderCredentialAction"
+    CreateProviderCredentialRequest:
+      type: object
+      required:
+        - label
+        - secret
+      properties:
+        label:
+          type: string
+          minLength: 1
+        secret:
+          type: string
+          minLength: 1
+          format: password
+    CreateProviderRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          $ref: "#/components/schemas/ProviderType"
+        initialCredential:
+          $ref: "#/components/schemas/CreateProviderCredentialRequest"
+    UpdateProviderRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        priority:
+          type: integer
+          minimum: 0
+        weight:
+          type: integer
+          minimum: 0
+        concurrencyLimit:
+          type: integer
+          minimum: 1
+        rotationEnabled:
+          type: boolean
+        cooldownSeconds:
+          type: integer
+          minimum: 0
+        fallbackProviderId:
+          type: string
+          nullable: true
+    IsolateProviderCredentialRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+    CallerKeyEnvironment:
+      type: string
+      enum:
+        - production
+        - staging
+        - development
+    CallerKeyStatus:
+      type: string
+      enum:
+        - active
+        - suspended
+        - rotated
+    CallerKey:
+      type: object
+      required:
+        - id
+        - callerName
+        - environment
+        - scope
+        - quotaPolicy
+        - keyPrefix
+        - keySuffix
+        - status
+        - createdAt
+        - updatedAt
+        - lastUsedAt
+        - lastRotatedAt
+        - revealUntil
+      properties:
+        id:
+          type: string
+        callerName:
+          type: string
+        environment:
+          $ref: "#/components/schemas/CallerKeyEnvironment"
+        scope:
+          type: string
+          enum:
+            - subtitles:read
+        quotaPolicy:
+          type: string
+        keyPrefix:
+          type: string
+          nullable: true
+        keySuffix:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/CallerKeyStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastRotatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        revealUntil:
+          type: string
+          format: date-time
+          nullable: true
+    CallerKeyList:
+      type: object
+      required:
+        - items
+        - summary
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CallerKey"
+        summary:
+          $ref: "#/components/schemas/CallerKeyListSummary"
+        total:
+          type: integer
+          minimum: 0
+    CallerKeyListSummary:
+      type: object
+      required:
+        - activeCount
+        - suspendedCount
+        - quotaAlertCount
+        - rotationCount30d
+      properties:
+        activeCount:
+          type: integer
+          minimum: 0
+        suspendedCount:
+          type: integer
+          minimum: 0
+        quotaAlertCount:
+          type: integer
+          minimum: 0
+        rotationCount30d:
+          type: integer
+          minimum: 0
+    CallerKeyListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyList"
+    CreateCallerKeyRequest:
+      type: object
+      required:
+        - callerName
+        - environment
+        - scope
+        - quotaPolicy
+      properties:
+        callerName:
+          type: string
+          minLength: 1
+        environment:
+          $ref: "#/components/schemas/CallerKeyEnvironment"
+        scope:
+          type: string
+          enum:
+            - subtitles:read
+        quotaPolicy:
+          type: string
+          minLength: 1
+    CallerKeyReveal:
+      type: object
+      required:
+        - callerKey
+        - key
+      properties:
+        callerKey:
+          $ref: "#/components/schemas/CallerKey"
+        key:
+          type: string
+          description: 完整 Caller Key 明文，仅创建或轮换响应中返回一次。
+          format: password
+    CallerKeyRevealResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyReveal"
+    CallerKeyResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKey"
+    CallerKeyRotation:
+      type: object
+      required:
+        - id
+        - callerKeyId
+        - oldKeySuffix
+        - newKeySuffix
+        - result
+        - reason
+        - createdAt
+        - performedByAdminUserId
+      properties:
+        id:
+          type: string
+        callerKeyId:
+          type: string
+        oldKeySuffix:
+          type: string
+          nullable: true
+        newKeySuffix:
+          type: string
+          nullable: true
+        result:
+          type: string
+          enum:
+            - success
+            - failed
+        reason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        performedByAdminUserId:
+          type: string
+          nullable: true
+    CallerKeyRotationResult:
+      type: object
+      required:
+        - callerKey
+        - rotation
+        - key
+      properties:
+        callerKey:
+          $ref: "#/components/schemas/CallerKey"
+        rotation:
+          $ref: "#/components/schemas/CallerKeyRotation"
+        key:
+          type: string
+          format: password
+    CallerKeyRotationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyRotationResult"
+    SubtitleSearchRequestStatus:
+      type: string
+      enum:
+        - success
+        - no_results
+        - service_not_ready
+        - unauthorized
+        - provider_failed
+    SubtitleDownloadRequestStatus:
+      type: string
+      enum:
+        - success
+        - not_found
+        - service_not_ready
+        - unauthorized
+        - provider_failed
+    SubtitleSearchRequestRecord:
+      type: object
+      required:
+        - id
+        - callerKeyId
+        - mediaTitle
+        - mediaYear
+        - season
+        - episode
+        - language
+        - status
+        - resultCount
+        - providerId
+        - credentialId
+        - durationMs
+        - createdAt
+      properties:
+        id:
+          type: string
+        callerKeyId:
+          type: string
+          nullable: true
+        mediaTitle:
+          type: string
+        mediaYear:
+          type: integer
+          nullable: true
+        season:
+          type: integer
+          nullable: true
+        episode:
+          type: integer
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/SubtitleSearchRequestStatus"
+        resultCount:
+          type: integer
+          minimum: 0
+        providerId:
+          type: string
+          nullable: true
+        credentialId:
+          type: string
+          nullable: true
+        durationMs:
+          type: integer
+          minimum: 0
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    SubtitleDownloadRequestRecord:
+      type: object
+      required:
+        - id
+        - callerKeyId
+        - subtitleRef
+        - providerId
+        - credentialId
+        - status
+        - contentType
+        - durationMs
+        - createdAt
+      properties:
+        id:
+          type: string
+        callerKeyId:
+          type: string
+          nullable: true
+        subtitleRef:
+          type: string
+        providerId:
+          type: string
+          nullable: true
+        credentialId:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/SubtitleDownloadRequestStatus"
+        contentType:
+          type: string
+          nullable: true
+        durationMs:
+          type: integer
+          minimum: 0
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    CallerKeyUsage:
+      type: object
+      required:
+        - callerKeyId
+        - lastUsedAt
+        - searchCount
+        - downloadCount
+        - recentSearches
+        - recentDownloads
+        - recentRotations
+      properties:
+        callerKeyId:
+          type: string
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        searchCount:
+          type: integer
+          minimum: 0
+          description: 最近 24 小时内的查询次数。
+        downloadCount:
+          type: integer
+          minimum: 0
+          description: 最近 24 小时内的下载次数。
+        recentSearches:
+          type: array
+          description: 最近 24 小时内的最近查询记录，最多返回最新 20 条。
+          items:
+            $ref: "#/components/schemas/SubtitleSearchRequestRecord"
+        recentDownloads:
+          type: array
+          description: 最近 24 小时内的最近下载记录，最多返回最新 20 条。
+          items:
+            $ref: "#/components/schemas/SubtitleDownloadRequestRecord"
+        recentRotations:
+          type: array
+          description: 最近轮换结果，按时间倒序返回，最多 20 条。
+          items:
+            $ref: "#/components/schemas/CallerKeyRotation"
+    CallerKeyUsageResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CallerKeyUsage"
+    AdminUserStatus:
+      type: string
+      enum:
+        - active
+        - suspended
+    AdminRolePreset:
+      type: string
+      enum:
+        - admin
+        - operator
+    AdminInvitationStatus:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - expired
+        - revoked
+    AdminSessionStatus:
+      type: string
+      enum:
+        - active
+        - revoked
+        - expired
+        - needs_attention
+        - remediated
+    AdminMember:
+      type: object
+      required:
+        - id
+        - identifier
+        - displayName
+        - status
+        - rolePreset
+        - lastActiveAt
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        displayName:
+          type: string
+        status:
+          $ref: "#/components/schemas/AdminUserStatus"
+        rolePreset:
+          $ref: "#/components/schemas/AdminRolePreset"
+        lastActiveAt:
+          type: string
+          format: date-time
+          nullable: true
+    AdminUserActionResult:
+      allOf:
+        - $ref: "#/components/schemas/AdminMember"
+        - type: object
+          required:
+            - updatedAt
+          properties:
+            updatedAt:
+              type: string
+              format: date-time
+    AdminInvitation:
+      type: object
+      required:
+        - id
+        - identifier
+        - status
+        - rolePreset
+        - accessPreset
+        - expiresAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        status:
+          $ref: "#/components/schemas/AdminInvitationStatus"
+        rolePreset:
+          $ref: "#/components/schemas/AdminRolePreset"
+        accessPreset:
+          type: string
+          enum:
+            - admin_console
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AdminSessionAttentionSummary:
+      type: object
+      required:
+        - id
+        - memberId
+        - status
+        - reason
+        - lastSeenAt
+        - deviceLabel
+      properties:
+        id:
+          type: string
+        memberId:
+          type: string
+        status:
+          type: string
+          enum:
+            - needs_attention
+        reason:
+          type: string
+          nullable: true
+        lastSeenAt:
+          type: string
+          format: date-time
+          nullable: true
+        deviceLabel:
+          type: string
+          nullable: true
+    AdminUsersOverview:
+      type: object
+      required:
+        - members
+        - invitations
+        - sessionsNeedingAttention
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminMember"
+        invitations:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminInvitation"
+        sessionsNeedingAttention:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminSessionAttentionSummary"
+    AdminUsersOverviewResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminUsersOverview"
+    CreateAdminInvitationRequest:
+      type: object
+      required:
+        - identifier
+        - rolePreset
+        - accessPreset
+      properties:
+        identifier:
+          type: string
+          minLength: 1
+        rolePreset:
+          $ref: "#/components/schemas/AdminRolePreset"
+        accessPreset:
+          type: string
+          enum:
+            - admin_console
+    AdminInvitationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminInvitation"
+    AdminUserActionResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminUserActionResult"
+    AdminSessionRemediationAction:
+      type: string
+      enum:
+        - revoke
+        - mark_resolved
+    AdminSessionRemediationRequest:
+      type: object
+      required:
+        - action
+        - reason
+      properties:
+        action:
+          $ref: "#/components/schemas/AdminSessionRemediationAction"
+        reason:
+          type: string
+          minLength: 1
+    AdminSessionRemediationResult:
+      type: object
+      required:
+        - sessionId
+        - status
+        - action
+      properties:
+        sessionId:
+          type: string
+        status:
+          type: string
+          enum:
+            - revoked
+            - remediated
+        action:
+          $ref: "#/components/schemas/AdminSessionRemediationAction"
+    AdminSessionRemediationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/AdminSessionRemediationResult"
+    SubtitleSearchResult:
+      type: object
+      required:
+        - id
+        - provider
+        - language
+        - releaseName
+        - format
+        - downloadUrl
+      properties:
+        id:
+          type: string
+          description: 网关生成的字幕引用，可直接用于下载接口 subtitleId；OpenSubtitles 结果格式为 `opensubtitles:{providerId}:{file_id}`。
+        provider:
+          type: string
+          enum:
+            - opensubtitles
+        language:
+          type: string
+          nullable: true
+        releaseName:
+          type: string
+          nullable: true
+        format:
+          type: string
+        downloadUrl:
+          type: string
+          description: 已包含完整 `subtitleId` 查询参数的下载路径，调用方可直接请求。
+    SubtitleSearchData:
+      type: object
+      required:
+        - status
+        - results
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleSearchResult"
+    SubtitleSearchResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/SubtitleSearchData"
+    ReadinessSummary:
+      type: object
+      required:
+        - environment
+        - version
+        - adminInitialized
+        - activeProviderCount
+        - activeCallerKeyCount
+        - gatewayReady
+        - missingConditions
+        - lastCheckedAt
+        - partialErrors
+      properties:
+        environment:
+          type: string
+        version:
+          type: string
+        adminInitialized:
+          type: boolean
+        activeProviderCount:
+          type: integer
+          minimum: 0
+        activeCallerKeyCount:
+          type: integer
+          minimum: 0
+        gatewayReady:
+          type: boolean
+        missingConditions:
+          type: array
+          items:
+            type: string
+            enum:
+              - admin
+              - provider
+              - caller_key
+        lastCheckedAt:
+          type: string
+          format: date-time
+        partialErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReadinessPartialError"
+    ReadinessPartialError:
+      type: object
+      required:
+        - target
+        - code
+        - message
+      properties:
+        target:
+          type: string
+          enum:
+            - environment
+            - version
+            - admin
+            - provider
+            - caller_key
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
+    DashboardNorthStar:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - ready
+            - not_ready
+        message:
+          type: string
+    DashboardProviderSnapshotItem:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - status
+        - activeCredentialCount
+        - lastHealthStatus
+        - lastErrorSummary
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        activeCredentialCount:
+          type: integer
+          minimum: 0
+        lastHealthStatus:
+          type: string
+          nullable: true
+        lastErrorSummary:
+          type: string
+          nullable: true
+    DashboardProviderSnapshot:
+      type: object
+      required:
+        - total
+        - available
+        - needsAttention
+        - items
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        available:
+          type: integer
+          minimum: 0
+        needsAttention:
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardProviderSnapshotItem"
+    DashboardCallerKeySnapshot:
+      type: object
+      required:
+        - active
+        - suspended
+        - rotated
+      properties:
+        active:
+          type: integer
+          minimum: 0
+        suspended:
+          type: integer
+          minimum: 0
+        rotated:
+          type: integer
+          minimum: 0
+    DashboardQueueSummary:
+      type: object
+      required:
+        - status
+        - pendingJobs
+        - failedJobs
+      properties:
+        status:
+          type: string
+          enum:
+            - idle
+        pendingJobs:
+          type: integer
+          minimum: 0
+        failedJobs:
+          type: integer
+          minimum: 0
+    DashboardCacheSummary:
+      type: object
+      required:
+        - status
+        - hitRate
+        - coverage
+      properties:
+        status:
+          type: string
+          enum:
+            - not_configured
+        hitRate:
+          type: number
+          nullable: true
+        coverage:
+          type: string
+          enum:
+            - not_available
+    DashboardRecentIssue:
+      type: object
+      required:
+        - id
+        - targetType
+        - targetId
+        - message
+        - createdAt
+      properties:
+        id:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    DashboardNextAction:
+      type: object
+      required:
+        - id
+        - label
+        - href
+        - priority
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        href:
+          type: string
+        priority:
+          type: string
+          enum:
+            - high
+            - medium
+    DashboardSummary:
+      type: object
+      required:
+        - readiness
+        - northStar
+        - providerSnapshot
+        - callerKeySnapshot
+        - queue
+        - cache
+        - recentIssues
+        - nextActions
+      properties:
+        readiness:
+          $ref: "#/components/schemas/ReadinessSummary"
+        northStar:
+          $ref: "#/components/schemas/DashboardNorthStar"
+        providerSnapshot:
+          $ref: "#/components/schemas/DashboardProviderSnapshot"
+        callerKeySnapshot:
+          $ref: "#/components/schemas/DashboardCallerKeySnapshot"
+        queue:
+          $ref: "#/components/schemas/DashboardQueueSummary"
+        cache:
+          $ref: "#/components/schemas/DashboardCacheSummary"
+        recentIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardRecentIssue"
+        nextActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DashboardNextAction"
+    DashboardSummaryResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/DashboardSummary"
+    SettingsStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ReadinessSummary"
+tags:
+  - name: Admin Auth
+    description: 管理端初始化、登录与会话。
+  - name: Providers
+    description: 上游 Provider 与凭据池。
+  - name: Caller Keys
+    description: 下游调用方 Key 生命周期。
+  - name: Users
+    description: 后台成员、邀请与基础会话处置。
+  - name: Subtitles
+    description: 统一字幕查询与下载出口。
+  - name: System
+    description: Dashboard、Settings 与系统状态。

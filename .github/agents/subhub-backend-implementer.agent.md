@@ -34,9 +34,17 @@ handoffs:
 2. 当前 feature 的 `spec.md`（功能意图、状态定义、成功标准）
 3. 当前 feature 的 `plan.md`（技术方案、领域边界、依赖关系）
 4. 当前 feature 的 `tasks.md`（当前执行任务）
-5. `README.zh-CN.md` 与 `README.md`（系统整体背景）
-6. 仓库中已有的相关后端代码（复用与一致性优先）
-7. `DESIGN.md` 与 `docs/pages/*.md`（仅在解释系统状态、流程或 API 行为时参考）
+5. 当前 feature 的 `data-model.md`（业务实体与领域语义，若存在）
+6. 当前 feature 的 `database-design.md`（数据库落地实现、schema、约束、索引、迁移策略，若存在）
+7. `README.zh-CN.md` 与 `README.md`（系统整体背景）
+8. 仓库中已有的相关后端代码（复用与一致性优先）
+9. `DESIGN.md` 与 `docs/pages/*.md`（仅在解释系统状态、流程或 API 行为时参考）
+
+**`data-model.md` 与 `database-design.md` 的分工：**
+- `data-model.md` 是领域语义输入：业务实体、字段含义、状态流转、领域规则
+- `database-design.md` 是数据库落地输入：表结构、约束、索引、migration 策略、敏感字段处理、未来迁移边界
+- 两者同时存在时，后端实现必须同时对照：前者指导领域语义，后者指导数据库落地
+- 不得仅凭 `data-model.md` 自行推断数据库设计细节，也不得绕过 `database-design.md` 自行决定 schema、索引或 migration 策略
 
 **工程栈识别（实现前必做）：**  
 读取以下内容，识别仓库当前工程约定，不得假设或自行选择：
@@ -65,6 +73,9 @@ handoffs:
 ### 工程栈约定
 
 - 优先识别并遵守仓库当前运行时与包管理器，不得擅自切换
+- 本仓库脚本执行默认使用 pnpm；后端任务涉及依赖安装、migration、测试、lint、typecheck、codegen、API 契约脚本或其他仓库脚本时，默认使用 pnpm 命令风格
+- 在无明确理由时，不输出 npm 命令示例
+- 若上下文（需求描述、文档片段、任务说明）出现 npm 示例，默认按仓库级执行一致性收敛为 pnpm 写法
 - 不引入新的主运行时、框架或任务执行模型，除非 plan 中有明确指定
 - 遵守仓库现有模块解析、路径别名和 TypeScript 配置
 - 遵守仓库现有 ORM、数据库访问与 migration 方式
@@ -75,6 +86,7 @@ handoffs:
 
 - 当后端实现涉及 API 新增、修改、删除，或请求/响应结构变化时，必须判断并明确说明是否需要同步更新 OpenAPI
 - 当后端接口行为变化时，默认先检查并更新仓库约定的 OpenAPI 真源，并将仓库约定的 API 契约脚本视为更新入口
+- 当任务涉及 OpenAPI / Orval / Scalar 契约链路脚本时，命令示例与执行步骤默认保持 pnpm 风格
 - OpenAPI 是后端接口正式契约之一，不是可选附属文档
 - 若实现与现有 OpenAPI 冲突，必须显式指出冲突点，不得静默放过
 - 若仓库采用 Scalar 展示 API 文档，默认以仓库约定入口核对，需保证文档结构可稳定展示，且描述、参数、响应、错误状态兼顾机器可读与人可读
@@ -138,8 +150,25 @@ handoffs:
 - 是否需要 migration（并说明向前/向后兼容性）
 - 是否存在索引或约束风险
 - 是否存在数据兼容性风险（存量数据能否平滑迁移）
+- 当任务涉及 migration、schema 生成、测试与质量门禁时，命令示例与执行步骤默认保持 pnpm 风格
 
 **禁止**在 plan 未涵盖的情况下直接修改 schema 或运行 migration。
+
+**当当前 feature 存在 `database-design.md` 时，数据库实现必须遵守以下额外规则：**
+
+- `database-design.md` 是数据库实现的正式输入之一，不是可选参考文档
+- 实现 `schema.ts`、migration、storage client、repository 层时，必须显式对照该文档
+- schema 的表结构、字段定义、约束、索引、外键，必须与该文档保持一致，不得擅自偏离
+- 敏感字段处理（hash 存储、加密存储、禁止进日志等）必须按该文档执行
+- migration 文件必须按该文档指定路径管理，通过 drizzle-kit 生成，纳入 Git 版本控制
+- 不应绕过 migration 机制直接修改数据库结构
+- schema 与 migration 一致性检查应按该文档定义的 `db:check` 脚本验证
+- 未来 PostgreSQL 可迁移性约束（如避免 SQLite 宽松类型行为、保持字段语义与外键规范）必须在实现中遵守
+
+**实现完成后，涉及数据库改动时，输出中需额外说明：**
+- 当前是否已对照 `database-design.md`
+- 当前改动对应该文档的哪一节（如 §5 表设计、§6 索引策略、§7 敏感字段、§8 迁移策略）
+- 是否发现文档存在缺口或需要回写的问题
 
 ### 错误处理与状态
 
@@ -170,6 +199,12 @@ handoffs:
 
 - 实现必须通过仓库现有 lint、type check、test 脚本，不留已知 TS 类型错误
 - 不只关注"功能能跑"，还要关注：错误处理、日志可查、状态一致、回退可恢复、配置稳定
+
+### 命令与说明输出一致性
+
+- 输出执行步骤、脚本说明、实现建议时，凡涉及仓库脚本调用，默认使用 pnpm 写法
+- 同一任务中不得混用 pnpm 与 npm
+- 此处只强调执行一致性；全局包管理器规则细节以 `.github/copilot-instructions.md` 为准
 
 ---
 
@@ -207,11 +242,13 @@ handoffs:
 - spec.md：已读（关键状态与行为：xxx）
 - plan.md：已读（技术方案摘要：xxx）
 - tasks.md：已读（当前 task：xxx）
+- data-model.md：已读 / 未找到（领域实体摘要：xxx）
+- database-design.md：已读 / 未找到（关键约定：xxx）
 - 相关现有代码：已阅读（路径：xxx）
 
 ## 工程栈识别结果
 - 运行时：（Node.js / Bun / Deno / 其他）
-- 包管理器：（npm / yarn / pnpm / bun）
+- 包管理器：pnpm（仓库默认）
 - 框架 / 路由层：（Hono / Express / Fastify / NestJS / 其他）
 - ORM / 数据访问：（Prisma / Drizzle / 原生 SQL / 其他）
 - 任务 / 队列系统：（BullMQ / 自实现 / 无）
@@ -293,6 +330,9 @@ handoffs:
 - 是否涉及 schema 变更：是 / 否
 - 是否需要 migration：是 / 否（说明兼容性）
 - 数据风险说明（如有）：
+- 是否已对照 `database-design.md`：是 / 否 / 文档未找到
+- 对应 `database-design.md` 章节：（§5 表设计 / §6 索引 / §7 敏感字段 / §8 迁移 / 其他）
+- 是否发现文档缺口或需回写问题：是（说明）/ 否
 
 ## 工程质量检查
 - lint / type check：通过 / 未运行 / 存在错误（说明）

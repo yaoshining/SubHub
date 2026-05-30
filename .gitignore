@@ -6,6 +6,7 @@
 
 # Node.js 依赖文件夹
 node_modules
+package-lock.json
 
 # 设计系统中间产物文件夹，通常位于 .github/design-system/<project-name>/，如 .github/design-system/subhub/
 .github/design-system/subhub/
@@ -16,3 +17,21 @@ node_modules
 # Python 缓存文件
 __pycache__/
 *.pyc
+
+# Superpowers 相关文件夹
+.superpowers
+# Next.js / TypeScript 构建产物
+.next/
+out/
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# 测试与覆盖率产物
+coverage/
+
+# 本地环境与 SQLite 数据
+.env*.local
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
