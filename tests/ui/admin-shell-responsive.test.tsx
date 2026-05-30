@@ -3,9 +3,19 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { AdminShell } from "@/components/admin/admin-shell";
+import { AdminShell, useAdminHeader } from "@/components/admin/admin-shell";
 import { PageHeader } from "@/components/admin/page-header";
 import { ResponsiveDrawer } from "@/components/admin/responsive-drawer";
+
+function HeaderSlotsProbe() {
+  useAdminHeader({
+    status: <span>服务可用</span>,
+    actions: <button type="button">轮换当前 Key</button>,
+    children: <p>停用会立即拒绝新请求。</p>,
+  });
+
+  return <section>主体内容</section>;
+}
 
 describe("Admin Shell 响应式骨架", () => {
   it("Desktop 保留常驻 Sidebar，并约束页面根不横向滚动", () => {
@@ -146,5 +156,23 @@ describe("Admin Shell 响应式骨架", () => {
     expect(
       screen.getByRole("button", { name: "新增 OpenSubtitles" }),
     ).toBeVisible();
+  });
+
+  it("页面内容可回填共享页头的状态、说明与关键操作", () => {
+    setMockPathname("/api-keys");
+
+    renderWithTheme(
+      <AdminShell title="API 密钥" description="管理下游调用方 Key。">
+        <HeaderSlotsProbe />
+      </AdminShell>,
+    );
+
+    expect(screen.getByTestId("page-header")).toHaveTextContent("服务可用");
+    expect(
+      screen.getByRole("button", { name: "轮换当前 Key" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("page-header")).toHaveTextContent(
+      "停用会立即拒绝新请求。",
+    );
   });
 });

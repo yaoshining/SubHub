@@ -9,7 +9,8 @@ import type {
   CallerKeyReveal,
   CallerKeyRotationResult,
 } from "@/lib/api/caller-keys";
-import { fetchCallerKeys } from "@/lib/api/caller-keys";
+import { fetchCallerKeys, rotateCallerKey } from "@/lib/api/caller-keys";
+import { useAdminHeader } from "@/components/admin/admin-shell";
 import {
   EmptyStateActionButton,
   EmptyStateCard,
@@ -25,6 +26,17 @@ import {
   type CallerKeyFilter,
 } from "@/components/api-keys/caller-key-inventory";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppError } from "@/lib/errors";
@@ -114,6 +126,8 @@ export function ApiKeysClient() {
   const [success, setSuccess] = React.useState<string | null>(null);
   const [revealWindow, setRevealWindow] =
     React.useState<RevealWindowState | null>(null);
+  const [headerRotatePending, setHeaderRotatePending] = React.useState(false);
+  const callerNameInputRef = React.useRef<HTMLInputElement>(null);
   const mountedRef = React.useRef(true);
 
   const loadCallerKeys = React.useCallback(async () => {
@@ -259,42 +273,123 @@ export function ApiKeysClient() {
     );
   }, []);
 
-  return (
-    <div className="grid gap-6" data-testid="api-keys-page">
-      <div className="flex flex-col gap-3 rounded-lg border bg-surface p-4 desktop:flex-row desktop:items-center desktop:justify-between">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge tone={activeCount > 0 ? "success" : "warning"}>
-              {activeCount > 0 ? "对外服务可用" : "对外服务不可用"}
-            </StatusBadge>
-            <span className="text-sm text-muted-foreground">
-              管理下游调用方 Key 的创建、轮换、停用与一次性明文窗口。
-            </span>
-          </div>
+  const canRotateSelectedCallerKey = Boolean(
+    selectedCallerKey && selectedCallerKey.status === "active" && !loading,
+  );
+
+  const handleHeaderRotate = React.useCallback(async () => {
+    if (!selectedCallerKey) {
+      return;
+    }
+
+    if (!mountedRef.current) {
+      return;
+    }
+
+    setError(null);
+    setHeaderRotatePending(true);
+    try {
+      const result = await rotateCallerKey(selectedCallerKey.id);
+      if (!mountedRef.current) {
+        return;
+      }
+      handleRotated(result);
+    } catch (rotateError) {
+      if (mountedRef.current) {
+        setError(getErrorMessage(rotateError));
+      }
+    } finally {
+      if (mountedRef.current) {
+        setHeaderRotatePending(false);
+      }
+    }
+  }, [handleRotated, selectedCallerKey]);
+
+  const headerActions = React.useMemo(
+    () => (
+      <>
+        <Button
+          aria-label="刷新 Caller Key 列表"
+          variant="outline"
+          size="icon"
+          onClick={() => void loadCallerKeys()}
+          disabled={loading}
+        >
+          <RefreshCw aria-hidden="true" className="size-4" />
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              aria-label="轮换当前 Key"
+              type="button"
+              variant="outline"
+              disabled={!canRotateSelectedCallerKey || headerRotatePending}
+            >
+              <RefreshCw aria-hidden="true" className="size-4" />
+              轮换当前 Key
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确认轮换当前 Caller Key</AlertDialogTitle>
+              <AlertDialogDescription>
+                轮换会创建新版本并让当前 Key
+                进入已轮换状态。新明文只会在受控窗口内显示，请确认下游具备更新窗口。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={headerRotatePending}>
+                取消
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={headerRotatePending}
+                onClick={() => void handleHeaderRotate()}
+              >
+                {headerRotatePending ? "轮换中" : "确认轮换"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <Button
+          aria-label="生成新 Key"
+          type="button"
+          onClick={() => callerNameInputRef.current?.focus()}
+        >
+          <KeyRound aria-hidden="true" className="size-4" />
+          生成新 Key
+        </Button>
+      </>
+    ),
+    [
+      canRotateSelectedCallerKey,
+      handleHeaderRotate,
+      headerRotatePending,
+      loadCallerKeys,
+      loading,
+    ],
+  );
+
+  useAdminHeader(
+    React.useMemo(
+      () => ({
+        status: (
+          <StatusBadge tone={activeCount > 0 ? "success" : "warning"}>
+            {activeCount > 0 ? "对外服务可用" : "对外服务不可用"}
+          </StatusBadge>
+        ),
+        actions: headerActions,
+        children: (
           <p className="text-xs leading-5 text-muted-foreground">
             停用会立即拒绝新请求；轮换会创建新版本。两者均保留二次确认。
           </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button
-            aria-label="刷新 Caller Key 列表"
-            variant="outline"
-            size="icon"
-            onClick={() => void loadCallerKeys()}
-            disabled={loading}
-          >
-            <RefreshCw aria-hidden="true" className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            onClick={() => document.getElementById("caller-name")?.focus()}
-          >
-            <KeyRound aria-hidden="true" className="size-4" />
-            生成新 Key
-          </Button>
-        </div>
-      </div>
+        ),
+      }),
+      [activeCount, headerActions],
+    ),
+  );
 
+  return (
+    <div className="grid gap-6" data-testid="api-keys-page">
       {activeCount === 0 && !loading && !error ? (
         <Alert variant="warning" data-testid="api-keys-service-unavailable">
           <AlertTriangle aria-hidden="true" className="size-4" />
@@ -345,7 +440,7 @@ export function ApiKeysClient() {
           description="创建首个 Caller Key 后，下游应用才能访问统一字幕出口。完整明文只会在受控窗口内显示一次。"
           action={
             <EmptyStateActionButton
-              onClick={() => document.getElementById("caller-name")?.focus()}
+              onClick={() => callerNameInputRef.current?.focus()}
             >
               创建首个 Key
             </EmptyStateActionButton>
@@ -399,7 +494,10 @@ export function ApiKeysClient() {
               onSelectCallerKey={setSelectedCallerKeyId}
             />
           ) : null}
-          <CallerKeyForm onCreated={handleCreated} />
+          <CallerKeyForm
+            callerNameInputRef={callerNameInputRef}
+            onCreated={handleCreated}
+          />
         </div>
         <div className="min-w-0" data-testid="api-keys-detail-column">
           <CallerKeyDetail
