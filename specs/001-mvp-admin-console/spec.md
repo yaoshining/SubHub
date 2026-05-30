@@ -6,7 +6,7 @@
 
 **最后更新**: 2026-05-26
 
-**状态**: Draft
+**状态**: Implemented
 
 **输入**: 用户描述: "先实现最主要功能，有一个简单用户可以登录控制台，然后配置字幕库，比如 opensubtitle，然后配置几个 api key，api key 可以自动切换，然后可以提供出口 api 服务，让其他应用调用查询字幕并下载字幕就行；其他功能可以之后再补"
 
@@ -15,7 +15,7 @@
 - **Feature ID**: `001`
 - **Spec 目录**: `specs/001-mvp-admin-console/`
 - **主分支**: `feat/001-mvp-admin-console`
-- **主 Issue**: `TBD`
+- **主 Issue**: 已创建，待回填编号
 - **Task Issue 策略**: 先完成 `spec -> plan -> tasks`，确认 MVP 范围后再决定是否拆分 task issues
 
 ## 设计上下文 *(mandatory)*
