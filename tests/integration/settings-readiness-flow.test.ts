@@ -41,7 +41,8 @@ const nextRequest = (url: string, cookie?: string, method = "GET") =>
     headers: cookie ? { cookie } : undefined,
   });
 
-const readJson = async <T>(response: Response) => (await response.json()) as T;
+const readJson = async <TData>(response: Response) =>
+  (await response.json()) as TData;
 
 const createAdminSessionCookie = async () => {
   await bootstrapRoute.POST(

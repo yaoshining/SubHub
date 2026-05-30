@@ -40,6 +40,26 @@ const nextRequest = (url: string, cookie?: string, method = "GET") =>
 
 const readJson = async <T>(response: Response) => (await response.json()) as T;
 
+const mockedDegradedReadiness: Awaited<
+  ReturnType<typeof settingsService.getSystemReadiness>
+> = {
+  environment: "production",
+  version: "0.1.0",
+  adminInitialized: true,
+  activeProviderCount: 0,
+  activeCallerKeyCount: 0,
+  gatewayReady: false,
+  missingConditions: ["provider", "caller_key"],
+  lastCheckedAt: "2026-05-30T12:00:00.000Z",
+  partialErrors: [
+    {
+      target: "environment",
+      code: "UPSTREAM_FAILED",
+      message: "environment unavailable",
+    },
+  ],
+};
+
 const createAdminSessionCookie = async () => {
   await bootstrapRoute.POST(
     jsonRequest("http://localhost/api/admin/bootstrap", {
@@ -141,23 +161,7 @@ describe("Settings status API 契约", () => {
     const cookie = await createAdminSessionCookie();
     const readinessSpy = vi
       .spyOn(settingsService, "getSystemReadiness")
-      .mockResolvedValueOnce({
-        environment: "production",
-        version: "0.1.0",
-        adminInitialized: true,
-        activeProviderCount: 0,
-        activeCallerKeyCount: 0,
-        gatewayReady: false,
-        missingConditions: ["provider", "caller_key"],
-        lastCheckedAt: "2026-05-30T12:00:00.000Z",
-        partialErrors: [
-          {
-            target: "environment",
-            code: "UPSTREAM_FAILED",
-            message: "environment unavailable",
-          },
-        ],
-      });
+      .mockResolvedValueOnce(mockedDegradedReadiness);
 
     const response = await settingsStatusRoute.GET(
       nextRequest("http://localhost/api/admin/settings/status", cookie),
@@ -167,22 +171,7 @@ describe("Settings status API 契约", () => {
     }>(response);
 
     expect(response.status).toBe(200);
-    expect(payload.data).toMatchObject({
-      environment: "production",
-      version: "0.1.0",
-      adminInitialized: true,
-      activeProviderCount: 0,
-      activeCallerKeyCount: 0,
-      gatewayReady: false,
-      missingConditions: ["provider", "caller_key"],
-      partialErrors: [
-        {
-          target: "environment",
-          code: "UPSTREAM_FAILED",
-          message: "environment unavailable",
-        },
-      ],
-    });
+    expect(payload.data).toMatchObject(mockedDegradedReadiness);
 
     readinessSpy.mockRestore();
   });

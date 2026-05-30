@@ -44,7 +44,8 @@ describe("Settings 页面体验", () => {
     expect(screen.getByText("用户")).toBeInTheDocument();
     expect(screen.getAllByText("访问控制")).toHaveLength(2);
     expect(screen.getByText("缓存治理")).toBeInTheDocument();
-    expect(screen.getAllByText("后续版本").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getByText("镜像策略 / 媒体同步")).toBeInTheDocument();
+    expect(screen.getByText("高级系统策略")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /保存|提交/ }),
     ).not.toBeInTheDocument();
