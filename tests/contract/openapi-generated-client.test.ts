@@ -48,7 +48,9 @@ const collectFiles = async (path: string): Promise<string[]> => {
 describe("OpenAPI / Orval / 手写 API 封装链路一致性", () => {
   it("让 OpenAPI 覆盖契约规划中的全部路径、错误码与 tag 分组", async () => {
     const [contract, openApi] = await Promise.all([
-      readRepositoryFile("specs/001-mvp-admin-console/contracts/api-contract.md"),
+      readRepositoryFile(
+        "specs/001-mvp-admin-console/contracts/api-contract.md",
+      ),
       readRepositoryFile("docs/api/openapi.yaml"),
     ]);
 
@@ -112,7 +114,9 @@ describe("OpenAPI / Orval / 手写 API 封装链路一致性", () => {
       ]);
 
     expect(orvalConfig).toContain('input: "./docs/api/openapi.yaml"');
-    expect(orvalConfig).toContain('target: "./src/lib/api/generated/subhub.ts"');
+    expect(orvalConfig).toContain(
+      'target: "./src/lib/api/generated/subhub.ts"',
+    );
     expect(orvalConfig).toContain('schemas: "./src/lib/api/generated/model"');
     expect(orvalConfig).toContain('path: "./src/lib/api/client.ts"');
     expect(orvalConfig).toContain('name: "subhubApiClient"');
@@ -124,7 +128,7 @@ describe("OpenAPI / Orval / 手写 API 封装链路一致性", () => {
     expect(apiIndex).toContain('export * from "./users";');
     expect(apiIndex).toContain('export * from "./settings";');
 
-    expect(page).toContain('@scalar/api-reference-react/style.css');
+    expect(page).toContain("@scalar/api-reference-react/style.css");
     expect(page).toContain("return <ApiReference />");
     expect(apiReference).toContain('url: "/api/openapi.yaml"');
     expect(apiReference).toContain('theme: "moon"');
