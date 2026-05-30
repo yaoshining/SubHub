@@ -71,6 +71,8 @@ describe("Settings 响应式行为", () => {
       "flex-col",
       "gap-4",
     );
-    expect(screen.queryByRole("button", { name: /保存|提交|测试连接/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /保存|提交|测试连接/ }),
+    ).not.toBeInTheDocument();
   });
 });

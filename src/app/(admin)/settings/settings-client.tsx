@@ -10,10 +10,7 @@ import {
   Shield,
 } from "lucide-react";
 
-import {
-  type SettingsStatus,
-  fetchSettingsStatus,
-} from "@/lib/api/settings";
+import { type SettingsStatus, fetchSettingsStatus } from "@/lib/api/settings";
 import { AppError } from "@/lib/errors";
 import { ConfigRouting } from "@/components/settings/config-routing";
 import { ReadinessCards } from "@/components/settings/readiness-cards";
@@ -259,7 +256,9 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
               <StatusBadge tone="secondary">等待状态读数</StatusBadge>
             )}
             <div className="space-y-1">
-              <p className="text-sm font-medium">当前页只做状态确认与配置分流</p>
+              <p className="text-sm font-medium">
+                当前页只做状态确认与配置分流
+              </p>
               <p className="text-sm leading-6 text-muted-foreground">
                 Settings 保持只读定位，不在此页提供 Provider、API 密钥、成员治理
                 或权限策略的深配置表单与保存动作。
@@ -299,7 +298,8 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
               <AlertTitle>统一出口状态暂时无法完全确认</AlertTitle>
               <AlertDescription className="space-y-3">
                 <p>
-                  部分 readiness 摘要读取失败，当前页面只保留已知可用信息，不把失败项直接当成缺失条件。
+                  部分 readiness
+                  摘要读取失败，当前页面只保留已知可用信息，不把失败项直接当成缺失条件。
                 </p>
                 <ul className="space-y-2">
                   {readinessPartialErrors.map((error, index) => (
@@ -330,7 +330,13 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   {missingActions?.map((action) => (
-                    <Button asChild className="justify-start" key={action.href} size="sm" variant="outline">
+                    <Button
+                      asChild
+                      className="justify-start"
+                      key={action.href}
+                      size="sm"
+                      variant="outline"
+                    >
                       <Link href={action.href}>{action.label}</Link>
                     </Button>
                   ))}
@@ -342,7 +348,8 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
               <CheckCircle2 aria-hidden="true" className="size-4" />
               <AlertTitle>基础服务条件已满足</AlertTitle>
               <AlertDescription>
-                最近检测于 {formatDateTime(status.lastCheckedAt)}，当前实例已具备统一出口所需的最小条件。
+                最近检测于 {formatDateTime(status.lastCheckedAt)}
+                ，当前实例已具备统一出口所需的最小条件。
               </AlertDescription>
             </Alert>
           )}
@@ -355,7 +362,10 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
                 <p>已保留其余可用信息，并明确标出失败对象：</p>
                 <ul className="space-y-2">
                   {status.partialErrors.map((error, index) => (
-                    <li className="rounded-md border bg-muted/30 px-3 py-2" key={`${error.target}-${index}`}>
+                    <li
+                      className="rounded-md border bg-muted/30 px-3 py-2"
+                      key={`${error.target}-${index}`}
+                    >
                       <span className="font-medium">
                         {partialErrorTargetLabels[error.target] ?? error.target}
                       </span>
@@ -376,13 +386,17 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
           >
             <div className="grid gap-4">
               <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
-                <Info aria-hidden="true" className="mt-0.5 size-4 text-primary" />
+                <Info
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 text-primary"
+                />
                 <div className="space-y-2">
                   <p className="text-sm font-medium">
                     Settings 不是系统配置中心
                   </p>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Provider 调度、API 密钥生命周期、成员治理与复杂权限模型都必须在各自页面完成。
+                    Provider 调度、API
+                    密钥生命周期、成员治理与复杂权限模型都必须在各自页面完成。
                     当前页只提供确认、解释与分流，不伪装保存动作。
                   </p>
                 </div>
@@ -542,7 +556,9 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
               接口是否可用。
             </p>
             {requestError ? (
-              <p className="text-sm text-destructive">失败原因：{requestError}</p>
+              <p className="text-sm text-destructive">
+                失败原因：{requestError}
+              </p>
             ) : null}
             <Button
               className="w-fit"

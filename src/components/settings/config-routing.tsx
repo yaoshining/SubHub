@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, type LucideIcon, KeyRound, Server, Shield, Users } from "lucide-react";
+import {
+  ArrowRight,
+  type LucideIcon,
+  KeyRound,
+  Server,
+  Shield,
+  Users,
+} from "lucide-react";
 
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Button } from "@/components/ui/button";
@@ -42,7 +49,12 @@ function RoutingCard({
         <p className="text-sm leading-6 text-muted-foreground">{detail}</p>
       </div>
       {href && actionLabel ? (
-        <Button asChild className="mt-4 w-full justify-between sm:w-auto" size="sm" variant="outline">
+        <Button
+          asChild
+          className="mt-4 w-full justify-between sm:w-auto"
+          size="sm"
+          variant="outline"
+        >
           <Link href={href}>
             {actionLabel}
             <ArrowRight aria-hidden="true" className="size-4" />

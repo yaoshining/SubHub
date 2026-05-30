@@ -1,10 +1,4 @@
-import {
-  type LucideIcon,
-  KeyRound,
-  Server,
-  Shield,
-  Users,
-} from "lucide-react";
+import { type LucideIcon, KeyRound, Server, Shield, Users } from "lucide-react";
 
 import type { SettingsStatus } from "@/lib/api/settings";
 import { StatusBadge } from "@/components/admin/status-badge";
@@ -140,16 +134,16 @@ export function ReadinessChecklist({ status }: { status: SettingsStatus }) {
           partialErrorMap.has("caller_key")
             ? "部分 readiness 摘要读取失败，请先参考局部失败提示并在稍后重新核查。"
             : status.gatewayReady
-            ? "统一出口已具备最小服务条件，可继续通过其他治理页维护细节。"
-            : `当前仍缺少：${status.missingConditions
-                .map((condition) =>
-                  condition === "provider"
-                    ? "可用 Provider"
-                    : condition === "caller_key"
-                      ? "调用方 Key"
-                      : "首个管理员",
-                )
-                .join("、")} 。`
+              ? "统一出口已具备最小服务条件，可继续通过其他治理页维护细节。"
+              : `当前仍缺少：${status.missingConditions
+                  .map((condition) =>
+                    condition === "provider"
+                      ? "可用 Provider"
+                      : condition === "caller_key"
+                        ? "调用方 Key"
+                        : "首个管理员",
+                  )
+                  .join("、")} 。`
         }
         title="统一出口"
       />

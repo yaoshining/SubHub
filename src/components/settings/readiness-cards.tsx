@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  type LucideIcon,
-  Server,
-  Settings,
-  Shield,
-  Users,
-} from "lucide-react";
+import { type LucideIcon, Server, Settings, Shield, Users } from "lucide-react";
 
 import type { SettingsStatus } from "@/lib/api/settings";
 import { StatusBadge } from "@/components/admin/status-badge";
@@ -53,10 +47,16 @@ function ReadinessCard({
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             {title}
           </p>
-          <p className={mono ? "font-mono text-lg font-semibold" : "text-lg font-semibold"}>
+          <p
+            className={
+              mono ? "font-mono text-lg font-semibold" : "text-lg font-semibold"
+            }
+          >
             {value}
           </p>
-          <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -77,7 +77,11 @@ export function ReadinessCards({ status }: { status: SettingsStatus }) {
       data-testid="settings-readiness-cards"
     >
       <ReadinessCard
-        badge={<StatusBadge tone="secondary">{getEnvironmentLabel(status.environment)}</StatusBadge>}
+        badge={
+          <StatusBadge tone="secondary">
+            {getEnvironmentLabel(status.environment)}
+          </StatusBadge>
+        }
         description="展示当前实例运行环境，帮助维护者确认部署上下文。"
         icon={Server}
         title="部署环境"
@@ -146,8 +150,8 @@ export function ReadinessCards({ status }: { status: SettingsStatus }) {
           hasReadinessPartialError
             ? "部分 readiness 摘要读取失败，当前只保留已知信息，不把失败项直接判定为缺失。"
             : status.gatewayReady
-            ? "Provider、调用方 Key 与管理员入口均满足统一出口的最小条件。"
-            : `仍缺少 ${status.missingConditions.length} 项基础条件，需前往对应治理页补齐。`
+              ? "Provider、调用方 Key 与管理员入口均满足统一出口的最小条件。"
+              : `仍缺少 ${status.missingConditions.length} 项基础条件，需前往对应治理页补齐。`
         }
         icon={Shield}
         title="统一出口状态"

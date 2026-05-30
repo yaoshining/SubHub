@@ -33,7 +33,9 @@ describe("Settings 页面体验", () => {
   it("展示只读状态卡、配置分流并且没有保存动作", () => {
     renderWithTheme(<SettingsClient initialStatus={settingsStatus} />);
 
-    expect(screen.getByText("当前页只做状态确认与配置分流")).toBeInTheDocument();
+    expect(
+      screen.getByText("当前页只做状态确认与配置分流"),
+    ).toBeInTheDocument();
     expect(screen.getByText("统一出口已就绪")).toBeInTheDocument();
     expect(screen.getAllByText("部署环境")).toHaveLength(2);
     expect(screen.getAllByText("系统版本")).toHaveLength(2);
@@ -41,7 +43,9 @@ describe("Settings 页面体验", () => {
     expect(screen.getByText("API 密钥")).toBeInTheDocument();
     expect(screen.getByText("用户")).toBeInTheDocument();
     expect(screen.getAllByText("访问控制")).toHaveLength(2);
-    expect(screen.queryByRole("button", { name: /保存|提交/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /保存|提交/ }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "前往服务商页" })).toHaveAttribute(
       "href",

@@ -165,10 +165,7 @@ export async function getSystemReadiness({
   if (activeProviderCount === 0 && !failedTargets.has("provider")) {
     missingConditions.push("provider");
   }
-  if (
-    activeCallerKeyCount === 0 &&
-    !failedTargets.has("caller_key")
-  ) {
+  if (activeCallerKeyCount === 0 && !failedTargets.has("caller_key")) {
     missingConditions.push("caller_key");
   }
 
@@ -178,8 +175,7 @@ export async function getSystemReadiness({
     adminInitialized,
     activeProviderCount,
     activeCallerKeyCount,
-    gatewayReady:
-      missingConditions.length === 0 && !hasReadinessPartialErrors,
+    gatewayReady: missingConditions.length === 0 && !hasReadinessPartialErrors,
     missingConditions,
     lastCheckedAt: now.toISOString(),
     partialErrors,
