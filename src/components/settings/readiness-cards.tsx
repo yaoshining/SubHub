@@ -86,7 +86,7 @@ export function ReadinessCards({ status }: { status: SettingsStatus }) {
       <ReadinessCard
         badge={<StatusBadge tone="secondary">只读</StatusBadge>}
         description="当前版本号只做读数展示，不在本页承担升级或切换动作。"
-      icon={Settings}
+        icon={Settings}
         mono
         title="系统版本"
         value={status.version}
