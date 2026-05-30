@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { AppError } from "@/lib/errors";
 import {
   listAdminUsersOverview,
   restoreAdminUser,
@@ -25,6 +26,7 @@ import {
 
 let tempDir: string;
 const TEST_OPERATOR_ID = "admin_operator";
+const TEST_BACKUP_ADMIN_ID = "admin_backup";
 
 const seedUsers = async () => {
   const db = getStorageClient().db;
@@ -89,6 +91,20 @@ const seedUsers = async () => {
       attentionReason: "unusual_location",
     },
   ]);
+};
+
+const seedBackupAdmin = async () => {
+  await getStorageClient().db.insert(adminUsers).values({
+    id: TEST_BACKUP_ADMIN_ID,
+    identifier: "backup@example.com",
+    displayName: "Backup Admin",
+    passwordHash: "hash",
+    role: "admin",
+    status: "active",
+    createdAt: "2026-05-28T00:00:00.000Z",
+    updatedAt: "2026-05-28T00:00:00.000Z",
+    lastLoginAt: "2026-05-28T09:30:00.000Z",
+  });
 };
 
 beforeEach(() => {
@@ -210,5 +226,52 @@ describe("Admin user service", () => {
         }),
       ]),
     );
+  });
+
+  it("拒绝当前登录管理员暂停自己", async () => {
+    await seedUsers();
+    await seedBackupAdmin();
+
+    await expect(
+      suspendAdminUser("admin_owner", {
+        actorAdminUserId: "admin_owner",
+        now: new Date("2026-05-28T12:30:00.000Z"),
+      }),
+    ).rejects.toMatchObject<AppError>({
+      code: "FORBIDDEN",
+      message: "当前登录管理员不能暂停自己。",
+    });
+
+    const [owner] = await getStorageClient()
+      .db.select()
+      .from(adminUsers)
+      .where(eq(adminUsers.id, "admin_owner"));
+    expect(owner?.status).toBe("active");
+
+    const actions = await getStorageClient()
+      .db.select()
+      .from(adminActionResults)
+      .where(eq(adminActionResults.targetId, "admin_owner"));
+    expect(actions).toEqual([]);
+  });
+
+  it("拒绝暂停最后一个 active admin", async () => {
+    await seedUsers();
+
+    await expect(
+      suspendAdminUser("admin_owner", {
+        actorAdminUserId: "admin_owner",
+        now: new Date("2026-05-28T12:45:00.000Z"),
+      }),
+    ).rejects.toMatchObject<AppError>({
+      code: "FORBIDDEN",
+      message: "最后一个 active admin 不可被暂停。",
+    });
+
+    const [owner] = await getStorageClient()
+      .db.select()
+      .from(adminUsers)
+      .where(eq(adminUsers.id, "admin_owner"));
+    expect(owner?.status).toBe("active");
   });
 });

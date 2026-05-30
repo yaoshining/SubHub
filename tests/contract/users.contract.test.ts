@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -62,6 +63,16 @@ const createAdminSessionCookie = async () => {
   return setCookie?.split(";")[0] ?? "";
 };
 
+const getAdminUserIdByIdentifier = async (identifier: string) => {
+  const [adminUser] = await getStorageClient().db
+    .select({ id: adminUsers.id })
+    .from(adminUsers)
+    .where(eq(adminUsers.identifier, identifier))
+    .limit(1);
+
+  return adminUser?.id;
+};
+
 const seedOperatorAndAttentionSession = async () => {
   const db = getStorageClient().db;
   await db.insert(adminUsers).values({
@@ -84,6 +95,20 @@ const seedOperatorAndAttentionSession = async () => {
     lastSeenAt: "2026-05-28T11:00:00.000Z",
     deviceLabel: "Unknown device",
     attentionReason: "unusual_location",
+  });
+};
+
+const seedBackupAdmin = async () => {
+  await getStorageClient().db.insert(adminUsers).values({
+    id: "admin_backup",
+    identifier: "backup@example.com",
+    displayName: "Backup Admin",
+    passwordHash: "hash",
+    role: "admin",
+    status: "active",
+    createdAt: "2026-05-28T00:00:00.000Z",
+    updatedAt: "2026-05-28T00:00:00.000Z",
+    lastLoginAt: "2026-05-28T09:30:00.000Z",
   });
 };
 
@@ -271,5 +296,44 @@ describe("Users 管理 API 契约", () => {
         action: "revoke",
       },
     });
+  });
+
+  it("拒绝当前登录管理员暂停自己并返回明确业务原因", async () => {
+    const cookie = await createAdminSessionCookie();
+    await seedBackupAdmin();
+    const ownerId = await getAdminUserIdByIdentifier("admin@example.com");
+    expect(ownerId).toBeTruthy();
+
+    const response = await suspendRoute.POST(
+      nextRequest(
+        `http://localhost/api/admin/users/${ownerId}/suspend`,
+        cookie,
+        "POST",
+      ),
+      { params: { userId: ownerId! } },
+    );
+
+    expect(response.status).toBe(403);
+    const payload = await expectApiError(response, "FORBIDDEN");
+    expect(payload.error.message).toBe("当前登录管理员不能暂停自己。");
+  });
+
+  it("拒绝暂停最后一个 active admin 并返回明确业务原因", async () => {
+    const cookie = await createAdminSessionCookie();
+    const ownerId = await getAdminUserIdByIdentifier("admin@example.com");
+    expect(ownerId).toBeTruthy();
+
+    const response = await suspendRoute.POST(
+      nextRequest(
+        `http://localhost/api/admin/users/${ownerId}/suspend`,
+        cookie,
+        "POST",
+      ),
+      { params: { userId: ownerId! } },
+    );
+
+    expect(response.status).toBe(403);
+    const payload = await expectApiError(response, "FORBIDDEN");
+    expect(payload.error.message).toBe("最后一个 active admin 不可被暂停。");
   });
 });

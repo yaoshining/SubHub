@@ -20,6 +20,7 @@ import {
   type AdminUsersOverview,
   type CreateAdminInvitationRequest,
 } from "@/lib/api/users";
+import { fetchCurrentAdmin } from "@/lib/api/admin-auth";
 import {
   EmptyStateActionButton,
   EmptyStateCard,
@@ -72,6 +73,9 @@ function UsersSkeleton() {
 export function UsersClient() {
   const [overview, setOverview] =
     React.useState<AdminUsersOverview>(emptyOverview);
+  const [currentAdminUserId, setCurrentAdminUserId] = React.useState<
+    string | undefined
+  >();
   const [selectedMemberId, setSelectedMemberId] = React.useState<string>();
   const [filter, setFilter] = React.useState<UsersFilter>("active");
   const [loading, setLoading] = React.useState(true);
@@ -110,12 +114,16 @@ export function UsersClient() {
       setPermissionDenied(null);
 
       try {
-        const nextOverview = await fetchAdminUsersOverview();
+        const [nextOverview, currentAdmin] = await Promise.all([
+          fetchAdminUsersOverview(),
+          fetchCurrentAdmin().catch(() => null),
+        ]);
         if (!mountedRef.current) {
           return;
         }
 
         setOverview(nextOverview);
+        setCurrentAdminUserId(currentAdmin?.id);
         syncSelectedMember(nextOverview.members, preferredMemberId);
       } catch (loadError) {
         if (!mountedRef.current) {
@@ -164,6 +172,9 @@ export function UsersClient() {
     overview.members.length > 0 ||
     overview.invitations.length > 0 ||
     overview.sessionsNeedingAttention.length > 0;
+  const activeAdminCount = overview.members.filter(
+    (member) => member.rolePreset === "admin" && member.status === "active",
+  ).length;
 
   const handleInvitationSubmit = async (
     input: CreateAdminInvitationRequest,
@@ -406,6 +417,8 @@ export function UsersClient() {
                 sessions={overview.sessionsNeedingAttention}
               />
               <MemberRiskActions
+                activeAdminCount={activeAdminCount}
+                currentAdminUserId={currentAdminUserId}
                 member={selectedMember}
                 onAction={handleMemberAction}
               />

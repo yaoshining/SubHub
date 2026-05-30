@@ -26,6 +26,8 @@ import { memberStatusMeta } from "@/components/users/users-utils";
 
 type MemberRiskActionsProps = {
   member?: AdminMember;
+  currentAdminUserId?: string;
+  activeAdminCount: number;
   onAction: (
     member: AdminMember,
     action: "suspend" | "restore",
@@ -42,6 +44,8 @@ const getErrorMessage = (error: unknown) => {
 
 export function MemberRiskActions({
   member,
+  currentAdminUserId,
+  activeAdminCount,
   onAction,
 }: MemberRiskActionsProps) {
   const [open, setOpen] = React.useState(false);
@@ -63,6 +67,14 @@ export function MemberRiskActions({
   }
 
   const action = member.status === "active" ? "suspend" : "restore";
+  const blockedReason =
+    action === "suspend"
+      ? member.rolePreset === "admin" && activeAdminCount <= 1
+        ? "最后一个 active admin 不可被暂停。"
+        : member.id === currentAdminUserId
+          ? "当前登录管理员不能暂停自己。"
+          : null
+      : null;
 
   const handleConfirm = async () => {
     setPending(true);
@@ -104,8 +116,17 @@ export function MemberRiskActions({
           </AlertDescription>
         </Alert>
 
+        {blockedReason ? (
+          <Alert variant="warning">
+            <AlertTriangle aria-hidden="true" className="size-4" />
+            <AlertTitle>当前不能执行暂停</AlertTitle>
+            <AlertDescription>{blockedReason}</AlertDescription>
+          </Alert>
+        ) : null}
+
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
+            disabled={Boolean(blockedReason)}
             onClick={() => {
               setOpen(true);
               setError(null);

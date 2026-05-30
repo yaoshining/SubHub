@@ -1,8 +1,9 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UsersClient } from "@/app/(admin)/users/users-client";
+import { fetchCurrentAdmin } from "@/lib/api/admin-auth";
 import { renderWithTheme } from "../helpers/ui";
 
 const memberActive = {
@@ -48,10 +49,21 @@ vi.mock("@/lib/api/users", async () => {
   };
 });
 
+vi.mock("@/lib/api/admin-auth", () => ({
+  fetchCurrentAdmin: vi.fn(),
+}));
+
 const api = await import("@/lib/api/users");
+const mockedFetchCurrentAdmin = vi.mocked(fetchCurrentAdmin);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockedFetchCurrentAdmin.mockResolvedValue({
+    id: "admin_001",
+    identifier: "admin@example.com",
+    displayName: "Alice Admin",
+    role: "admin",
+  });
   vi.mocked(api.fetchAdminUsersOverview).mockResolvedValue({
     members: [memberActive, memberSuspended],
     invitations: [invitation],
@@ -126,18 +138,24 @@ describe("Users 响应式行为", () => {
     expect(selectionBar).toHaveClass("md:hidden");
   });
 
-  it("暂停 / 恢复在窄屏场景下仍保留二次确认", async () => {
+  it("恢复在窄屏场景下仍保留二次确认", async () => {
     const user = userEvent.setup();
     renderWithTheme(<UsersClient />);
 
     await screen.findAllByText("Alice Admin");
-    await user.click(screen.getByRole("button", { name: "暂停成员" }));
-    expect(await screen.findByText("确认暂停当前成员")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "确认暂停" }));
+    await user.click(screen.getByRole("tab", { name: "已暂停成员" }));
+    await user.click(
+      within(screen.getByTestId("users-member-list")).getAllByText(
+        "Olivia Operator",
+      )[0],
+    );
+    await user.click(screen.getByRole("button", { name: "恢复成员" }));
+    expect(await screen.findByText("确认恢复当前成员")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "确认恢复" }));
 
-    expect(vi.mocked(api.suspendAdminUser)).toHaveBeenCalledWith("admin_001");
+    expect(vi.mocked(api.restoreAdminUser)).toHaveBeenCalledWith("admin_002");
     expect(await screen.findByTestId("users-success")).toHaveTextContent(
-      "Alice Admin 已暂停",
+      "Olivia Operator 已恢复后台访问状态",
     );
   });
 });

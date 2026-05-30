@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UsersClient } from "@/app/(admin)/users/users-client";
+import { fetchCurrentAdmin } from "@/lib/api/admin-auth";
 import { AppError } from "@/lib/errors";
 import { renderWithTheme } from "../helpers/ui";
 
@@ -60,10 +61,21 @@ vi.mock("@/lib/api/users", async () => {
   };
 });
 
+vi.mock("@/lib/api/admin-auth", () => ({
+  fetchCurrentAdmin: vi.fn(),
+}));
+
 const api = await import("@/lib/api/users");
+const mockedFetchCurrentAdmin = vi.mocked(fetchCurrentAdmin);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockedFetchCurrentAdmin.mockResolvedValue({
+    id: "admin_001",
+    identifier: "admin@example.com",
+    displayName: "Alice Admin",
+    role: "admin",
+  });
   vi.mocked(api.fetchAdminUsersOverview).mockResolvedValue({
     members: [memberActive, memberSuspended],
     invitations: [invitation],
@@ -287,5 +299,39 @@ describe("Users 页面", () => {
         "new-operator@example.com",
       ).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("当前登录管理员不能暂停自己时禁用按钮并给出明确提示", async () => {
+    vi.mocked(api.fetchAdminUsersOverview).mockResolvedValueOnce({
+      members: [
+        memberActive,
+        {
+          id: "admin_003",
+          identifier: "backup@example.com",
+          displayName: "Backup Admin",
+          status: "active",
+          rolePreset: "admin",
+          lastActiveAt: "2026-05-28T09:30:00.000Z",
+        },
+      ],
+      invitations: [invitation],
+      sessionsNeedingAttention: [],
+    });
+
+    renderWithTheme(<UsersClient />);
+
+    expect(await screen.findByTestId("member-risk-actions")).toHaveTextContent(
+      "当前登录管理员不能暂停自己。",
+    );
+    expect(screen.getByRole("button", { name: "暂停成员" })).toBeDisabled();
+  });
+
+  it("最后一个 active admin 不可被暂停时给出明确提示", async () => {
+    renderWithTheme(<UsersClient />);
+
+    expect(await screen.findByTestId("member-risk-actions")).toHaveTextContent(
+      "最后一个 active admin 不可被暂停。",
+    );
+    expect(screen.getByRole("button", { name: "暂停成员" })).toBeDisabled();
   });
 });

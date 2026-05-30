@@ -1,4 +1,5 @@
 import { recordAdminActionResult } from "@/server/audit/action-results";
+import { AppError } from "@/lib/errors";
 import {
   createAdminUserRepository,
   type AdminMember,
@@ -43,7 +44,26 @@ export async function suspendAdminUser(
   userId: string,
   options: AdminUserServiceOptions = {},
 ): Promise<AdminUserActionResult> {
-  const user = await getRepository(options.db).suspendUser(userId, options.now);
+  const repository = getRepository(options.db);
+  const targetUser = await repository.requireAdminUser(userId);
+  const overview = await repository.listOverview();
+  const activeAdminCount = overview.members.filter(
+    (member) => member.rolePreset === "admin" && member.status === "active",
+  ).length;
+
+  if (
+    targetUser.role === "admin" &&
+    targetUser.status === "active" &&
+    activeAdminCount <= 1
+  ) {
+    throw new AppError("FORBIDDEN", "最后一个 active admin 不可被暂停。", "userId");
+  }
+
+  if (options.actorAdminUserId && options.actorAdminUserId === userId) {
+    throw new AppError("FORBIDDEN", "当前登录管理员不能暂停自己。", "userId");
+  }
+
+  const user = await repository.suspendUser(userId, options.now);
 
   await recordAdminActionResult({
     db: options.db,
