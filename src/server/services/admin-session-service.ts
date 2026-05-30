@@ -67,7 +67,7 @@ export async function remediateAdminSession(
 
   return {
     sessionId: session.id,
-    status: session.status,
+    status: input.action === "revoke" ? "revoked" : "remediated",
     action: input.action,
   };
 }

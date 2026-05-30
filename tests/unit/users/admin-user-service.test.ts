@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { AppError } from "@/lib/errors";
 import {
   listAdminUsersOverview,
   restoreAdminUser,
@@ -237,7 +236,7 @@ describe("Admin user service", () => {
         actorAdminUserId: "admin_owner",
         now: new Date("2026-05-28T12:30:00.000Z"),
       }),
-    ).rejects.toMatchObject<AppError>({
+    ).rejects.toMatchObject({
       code: "FORBIDDEN",
       message: "当前登录管理员不能暂停自己。",
     });
@@ -263,7 +262,7 @@ describe("Admin user service", () => {
         actorAdminUserId: "admin_owner",
         now: new Date("2026-05-28T12:45:00.000Z"),
       }),
-    ).rejects.toMatchObject<AppError>({
+    ).rejects.toMatchObject({
       code: "FORBIDDEN",
       message: "最后一个 active admin 不可被暂停。",
     });
