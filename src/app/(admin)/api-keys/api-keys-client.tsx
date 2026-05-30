@@ -333,7 +333,8 @@ export function ApiKeysClient() {
             <AlertDialogHeader>
               <AlertDialogTitle>确认轮换当前 Caller Key</AlertDialogTitle>
               <AlertDialogDescription>
-                轮换会创建新版本并让当前 Key 进入已轮换状态。新明文只会在受控窗口内显示，请确认下游具备更新窗口。
+                轮换会创建新版本并让当前 Key
+                进入已轮换状态。新明文只会在受控窗口内显示，请确认下游具备更新窗口。
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

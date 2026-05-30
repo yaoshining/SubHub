@@ -28,10 +28,9 @@ type AdminShellHeaderSlots = Pick<
   "eyebrow" | "status" | "actions" | "children"
 >;
 
-const AdminHeaderContext =
-  React.createContext<React.Dispatch<React.SetStateAction<AdminShellHeaderSlots | null>> | null>(
-    null,
-  );
+const AdminHeaderContext = React.createContext<React.Dispatch<
+  React.SetStateAction<AdminShellHeaderSlots | null>
+> | null>(null);
 
 export function useAdminHeader(slots: AdminShellHeaderSlots | null) {
   const setHeaderSlots = React.useContext(AdminHeaderContext);
