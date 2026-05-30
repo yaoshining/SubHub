@@ -28,6 +28,21 @@ export type AdminSessionRemediationResult = {
 const getRepository = (db?: StorageDatabase) =>
   createAdminUserRepository(db ?? getStorageClient().db);
 
+const getRemediationStatus = (
+  action: AdminSessionRemediationAction,
+): AdminSessionRemediationResult["status"] => {
+  switch (action) {
+    case "revoke":
+      return "revoked";
+    case "mark_resolved":
+      return "remediated";
+    default: {
+      const _exhaustive: never = action;
+      return _exhaustive;
+    }
+  }
+};
+
 export async function remediateAdminSession(
   sessionId: string,
   input: AdminSessionRemediationInput,
@@ -67,7 +82,7 @@ export async function remediateAdminSession(
 
   return {
     sessionId: session.id,
-    status: input.action === "revoke" ? "revoked" : "remediated",
+    status: getRemediationStatus(input.action),
     action: input.action,
   };
 }
