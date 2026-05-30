@@ -2170,6 +2170,8 @@ tags:
     description: 上游 Provider 与凭据池。
   - name: Caller Keys
     description: 下游调用方 Key 生命周期。
+  - name: Users
+    description: 后台成员、邀请与基础会话处置。
   - name: Subtitles
     description: 统一字幕查询与下载出口。
   - name: System
