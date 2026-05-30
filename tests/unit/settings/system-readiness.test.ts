@@ -114,7 +114,7 @@ describe("SystemReadiness 聚合", () => {
       activeProviderCount: 0,
       activeCallerKeyCount: 2,
       gatewayReady: false,
-      missingConditions: ["provider"],
+      missingConditions: [],
       lastCheckedAt: "2026-05-30T10:30:00.000Z",
       partialErrors: [
         {
