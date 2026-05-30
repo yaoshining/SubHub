@@ -23,7 +23,7 @@ import { AppError } from "@/lib/errors";
 
 export type CallerKeyFormProps = {
   disabled?: boolean;
-  callerNameInputRef?: React.RefObject<HTMLInputElement | null>;
+  callerNameInputRef?: React.RefObject<HTMLInputElement>;
   onCreated: (result: CallerKeyReveal) => void;
 };
 
