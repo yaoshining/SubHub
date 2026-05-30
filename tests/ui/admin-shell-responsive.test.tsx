@@ -24,12 +24,22 @@ describe("Admin Shell 响应式骨架", () => {
       "desktop:fixed",
     );
     expect(screen.getByTestId("admin-shell")).toHaveClass(
+      "min-h-[100dvh]",
+      "overflow-x-hidden",
+    );
+    expect(screen.getByTestId("admin-shell").className).not.toContain(
       "desktop:h-screen",
+    );
+    expect(screen.getByTestId("admin-shell").className).not.toContain(
       "desktop:overflow-hidden",
     );
     expect(screen.getByTestId("admin-content-region")).toHaveClass(
       "desktop:pl-[var(--sidebar-width)]",
+    );
+    expect(screen.getByTestId("admin-content-region").className).not.toContain(
       "desktop:h-screen",
+    );
+    expect(screen.getByTestId("admin-content-region").className).not.toContain(
       "desktop:overflow-y-auto",
     );
     expect(screen.getByRole("link", { name: "仪表盘" })).toHaveAttribute(
