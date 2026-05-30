@@ -20,6 +20,23 @@ It can sit between your applications and multiple subtitle sources, providing:
 
 The goal is to make subtitle access more stable, extensible, and controllable.
 
+## Design Document Entry Points
+
+If you want to verify where recent design updates are reflected, check these source-of-truth documents first:
+
+- Global design baseline: [`DESIGN.md`](./DESIGN.md)
+- Shared admin layout and responsive shell rules: [`docs/layouts/admin-layout.md`](./docs/layouts/admin-layout.md)
+- Page-level specs: [`docs/pages/`](./docs/pages/)
+
+At the moment, this repository has already captured the **global design rules** and the **shared admin layout rules**. The `docs/pages/` directory currently only contains the page spec template [`page-spec-template.md`](./docs/pages/page-spec-template.md).
+
+So if someone says “the design draft has been updated”, the visible updates in this repository currently live mainly in:
+
+- `DESIGN.md`
+- `docs/layouts/admin-layout.md`
+
+If you do not see concrete page documents under `docs/pages/`, it means page-level specs are still being filled in gradually, not that no design update happened.
+
 ## Why This Project
 
 Most subtitle providers have one or more of the following limitations:
