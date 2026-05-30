@@ -127,6 +127,7 @@ export function ApiKeysClient() {
   const [revealWindow, setRevealWindow] =
     React.useState<RevealWindowState | null>(null);
   const [headerRotatePending, setHeaderRotatePending] = React.useState(false);
+  const callerNameInputRef = React.useRef<HTMLInputElement>(null);
   const mountedRef = React.useRef(true);
 
   const loadCallerKeys = React.useCallback(async () => {
@@ -340,7 +341,7 @@ export function ApiKeysClient() {
         <Button
           aria-label="生成新 Caller Key"
           type="button"
-          onClick={() => document.getElementById("caller-name")?.focus()}
+          onClick={() => callerNameInputRef.current?.focus()}
         >
           <KeyRound aria-hidden="true" className="size-4" />
           生成新 Key
@@ -427,7 +428,7 @@ export function ApiKeysClient() {
           description="创建首个 Caller Key 后，下游应用才能访问统一字幕出口。完整明文只会在受控窗口内显示一次。"
           action={
             <EmptyStateActionButton
-              onClick={() => document.getElementById("caller-name")?.focus()}
+              onClick={() => callerNameInputRef.current?.focus()}
             >
               创建首个 Key
             </EmptyStateActionButton>
@@ -481,7 +482,10 @@ export function ApiKeysClient() {
               onSelectCallerKey={setSelectedCallerKeyId}
             />
           ) : null}
-          <CallerKeyForm onCreated={handleCreated} />
+          <CallerKeyForm
+            callerNameInputRef={callerNameInputRef}
+            onCreated={handleCreated}
+          />
         </div>
         <div className="min-w-0" data-testid="api-keys-detail-column">
           <CallerKeyDetail

@@ -23,6 +23,7 @@ import { AppError } from "@/lib/errors";
 
 export type CallerKeyFormProps = {
   disabled?: boolean;
+  callerNameInputRef?: React.RefObject<HTMLInputElement | null>;
   onCreated: (result: CallerKeyReveal) => void;
 };
 
@@ -33,7 +34,11 @@ const getErrorMessage = (error: unknown) => {
   return "创建 Caller Key 失败，请稍后重试。";
 };
 
-export function CallerKeyForm({ disabled, onCreated }: CallerKeyFormProps) {
+export function CallerKeyForm({
+  disabled,
+  callerNameInputRef,
+  onCreated,
+}: CallerKeyFormProps) {
   const [callerName, setCallerName] = React.useState("Jellyfin Living Room");
   const [environment, setEnvironment] =
     React.useState<CreateCallerKeyRequest["environment"]>("production");
@@ -102,6 +107,7 @@ export function CallerKeyForm({ disabled, onCreated }: CallerKeyFormProps) {
             </label>
             <Input
               id="caller-name"
+              ref={callerNameInputRef}
               value={callerName}
               onChange={(event) => setCallerName(event.target.value)}
               placeholder="例如 Jellyfin Living Room"
