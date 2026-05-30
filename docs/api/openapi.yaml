@@ -138,6 +138,28 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
         "500":
           $ref: "#/components/responses/ErrorResponse"
+  /api/admin/settings/status:
+    get:
+      tags:
+        - System
+      operationId: getAdminSettingsStatus
+      summary: 查询 Settings 系统状态
+      description: 返回 Settings 页所需的只读系统状态聚合；单项读数失败时仍返回已知信息，并通过 partialErrors 标识失败对象。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Settings 系统状态
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettingsStatusResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
   /api/admin/providers:
     get:
       tags:
@@ -1883,13 +1905,20 @@ components:
     ReadinessSummary:
       type: object
       required:
+        - environment
+        - version
         - adminInitialized
         - activeProviderCount
         - activeCallerKeyCount
         - gatewayReady
         - missingConditions
         - lastCheckedAt
+        - partialErrors
       properties:
+        environment:
+          type: string
+        version:
+          type: string
         adminInitialized:
           type: boolean
         activeProviderCount:
@@ -1911,6 +1940,29 @@ components:
         lastCheckedAt:
           type: string
           format: date-time
+        partialErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReadinessPartialError"
+    ReadinessPartialError:
+      type: object
+      required:
+        - target
+        - code
+        - message
+      properties:
+        target:
+          type: string
+          enum:
+            - environment
+            - version
+            - admin
+            - provider
+            - caller_key
+        code:
+          $ref: "#/components/schemas/ErrorCode"
+        message:
+          type: string
     DashboardNorthStar:
       type: object
       required:
@@ -2104,6 +2156,13 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/DashboardSummary"
+    SettingsStatusResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/ReadinessSummary"
 tags:
   - name: Admin Auth
     description: 管理端初始化、登录与会话。

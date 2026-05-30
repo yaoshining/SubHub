@@ -5,7 +5,11 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
  * OpenAPI spec version: 0.1.0
  */
-import type { DashboardSummaryResponse, ErrorResponseResponse } from "../model";
+import type {
+  DashboardSummaryResponse,
+  ErrorResponseResponse,
+  SettingsStatusResponse,
+} from "../model";
 
 import { subhubApiClient } from "../../client";
 
@@ -58,6 +62,62 @@ export const getAdminDashboardSummary = async (
 ): Promise<getAdminDashboardSummaryResponse> => {
   return subhubApiClient<getAdminDashboardSummaryResponse>(
     getGetAdminDashboardSummaryUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export type getAdminSettingsStatusResponse200 = {
+  data: SettingsStatusResponse;
+  status: 200;
+};
+
+export type getAdminSettingsStatusResponse401 = {
+  data: ErrorResponseResponse;
+  status: 401;
+};
+
+export type getAdminSettingsStatusResponse403 = {
+  data: ErrorResponseResponse;
+  status: 403;
+};
+
+export type getAdminSettingsStatusResponse500 = {
+  data: ErrorResponseResponse;
+  status: 500;
+};
+
+export type getAdminSettingsStatusResponseSuccess =
+  getAdminSettingsStatusResponse200 & {
+    headers: Headers;
+  };
+export type getAdminSettingsStatusResponseError = (
+  | getAdminSettingsStatusResponse401
+  | getAdminSettingsStatusResponse403
+  | getAdminSettingsStatusResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAdminSettingsStatusResponse =
+  | getAdminSettingsStatusResponseSuccess
+  | getAdminSettingsStatusResponseError;
+
+export const getGetAdminSettingsStatusUrl = () => {
+  return `/api/admin/settings/status`;
+};
+
+/**
+ * 返回 Settings 页所需的只读系统状态聚合；单项读数失败时仍返回已知信息，并通过 partialErrors 标识失败对象。
+ * @summary 查询 Settings 系统状态
+ */
+export const getAdminSettingsStatus = async (
+  options?: RequestInit,
+): Promise<getAdminSettingsStatusResponse> => {
+  return subhubApiClient<getAdminSettingsStatusResponse>(
+    getGetAdminSettingsStatusUrl(),
     {
       ...options,
       method: "GET",

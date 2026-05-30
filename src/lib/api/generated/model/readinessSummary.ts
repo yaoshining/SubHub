@@ -5,9 +5,12 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
  * OpenAPI spec version: 0.1.0
  */
+import type { ReadinessPartialError } from "./readinessPartialError";
 import type { ReadinessSummaryMissingConditionsItem } from "./readinessSummaryMissingConditionsItem";
 
 export interface ReadinessSummary {
+  environment: string;
+  version: string;
   adminInitialized: boolean;
   /** @minimum 0 */
   activeProviderCount: number;
@@ -16,4 +19,5 @@ export interface ReadinessSummary {
   gatewayReady: boolean;
   missingConditions: ReadinessSummaryMissingConditionsItem[];
   lastCheckedAt: string;
+  partialErrors: ReadinessPartialError[];
 }

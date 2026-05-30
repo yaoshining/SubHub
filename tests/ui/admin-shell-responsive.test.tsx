@@ -36,12 +36,12 @@ describe("Admin Shell 响应式骨架", () => {
     expect(screen.getByTestId("admin-content-region")).toHaveClass(
       "desktop:pl-[var(--sidebar-width)]",
     );
-    expect(
-      screen.getByTestId("admin-content-region").className,
-    ).not.toContain("desktop:h-screen");
-    expect(
-      screen.getByTestId("admin-content-region").className,
-    ).not.toContain("desktop:overflow-y-auto");
+    expect(screen.getByTestId("admin-content-region").className).not.toContain(
+      "desktop:h-screen",
+    );
+    expect(screen.getByTestId("admin-content-region").className).not.toContain(
+      "desktop:overflow-y-auto",
+    );
     expect(screen.getByRole("link", { name: "仪表盘" })).toHaveAttribute(
       "aria-current",
       "page",

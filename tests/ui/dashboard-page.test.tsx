@@ -16,12 +16,15 @@ const mockedFetchDashboardSummary = vi.mocked(fetchDashboardSummary);
 
 const dashboardSummary: DashboardSummary = {
   readiness: {
+    environment: "test",
+    version: "0.1.0",
     adminInitialized: true,
     activeProviderCount: 0,
     activeCallerKeyCount: 0,
     gatewayReady: false,
     missingConditions: ["provider", "caller_key"],
     lastCheckedAt: "2026-05-27T07:00:00.000Z",
+    partialErrors: [],
   },
   northStar: {
     status: "not_ready",
