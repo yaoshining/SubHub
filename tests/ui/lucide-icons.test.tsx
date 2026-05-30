@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { renderWithTheme } from "../helpers/ui";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -20,10 +23,42 @@ const requiredIconNames = [
   "sun",
 ] as const;
 
+const requiredDesignIconNames = [
+  "cloud-off",
+  "key-round",
+  "users",
+  "layout-dashboard",
+  "server",
+  "settings",
+  "menu",
+  "panel-left",
+  "moon",
+  "sun",
+] as const;
+
 describe("Lucide 图标基线", () => {
   it("集中导出约定 Lucide 命名", () => {
     for (const iconName of requiredIconNames) {
       expect(lucideIcons[iconName]).toBeDefined();
+    }
+  });
+
+  it("设计稿 Assets / Icons / Lucide 与实现侧命名保持一致", () => {
+    const designSource = readFileSync(
+      path.resolve(process.cwd(), "design/main.pen"),
+      "utf8",
+    );
+    const lucideSection = designSource.slice(
+      designSource.indexOf('"name": "Assets / Icons / Lucide"'),
+      designSource.indexOf('"name": "Sidebar / Dark / Base"'),
+    );
+
+    expect(lucideSection).toContain('"name": "Assets / Icons / Lucide"');
+
+    for (const iconName of requiredDesignIconNames) {
+      expect(lucideSection).toContain(`"name": "${iconName}"`);
+      expect(lucideSection).toContain(`"iconFontName": "${iconName}"`);
+      expect(lucideSection).toContain(`"content": "${iconName}"`);
     }
   });
 

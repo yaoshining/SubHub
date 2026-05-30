@@ -89685,6 +89685,49 @@
             },
             {
               "type": "frame",
+              "id": "v2RmQ",
+              "name": "panel-left",
+              "width": 88,
+              "height": 92,
+              "fill": "#121A2B",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#25324A"
+              },
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                10,
+                8
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "rT8Ls",
+                  "name": "panel-left-icon",
+                  "width": 50,
+                  "height": 50,
+                  "iconFontName": "panel-left",
+                  "iconFontFamily": "lucide",
+                  "fill": "#A7B4C8"
+                },
+                {
+                  "type": "text",
+                  "id": "hK4mN",
+                  "fill": "#7F8CA3",
+                  "content": "panel-left",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 8,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "d0gtSD",
               "name": "layout-dashboard",
               "width": 88,
