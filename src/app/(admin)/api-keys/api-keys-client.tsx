@@ -350,7 +350,7 @@ export function ApiKeysClient() {
           </AlertDialogContent>
         </AlertDialog>
         <Button
-          aria-label="生成新 Caller Key"
+          aria-label="生成新 Key"
           type="button"
           onClick={() => callerNameInputRef.current?.focus()}
         >
