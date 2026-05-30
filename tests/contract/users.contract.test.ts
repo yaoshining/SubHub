@@ -228,13 +228,18 @@ describe("Users 管理 API 契约", () => {
       ),
       { params: { userId: "admin_operator" } },
     );
-    await expect(
-      readJson<{ data: { id: string; status: string; passwordHash?: string } }>(
-        restored,
-      ),
-    ).resolves.toEqual({
-      data: expect.not.objectContaining({ passwordHash: expect.any(String) }),
+    const restoredPayload = await readJson<{
+      data: { id: string; status: string; passwordHash?: string };
+    }>(restored);
+    expect(restoredPayload).toEqual({
+      data: expect.objectContaining({
+        id: "admin_operator",
+        status: "active",
+      }),
     });
+    expect(restoredPayload.data).not.toHaveProperty("passwordHash");
+    expect(restoredPayload.data).not.toHaveProperty("sessionTokenHash");
+    expect(restoredPayload.data).not.toHaveProperty("attentionReason");
 
     await getStorageClient().db.insert(adminSessions).values({
       id: "session_attention_second",
