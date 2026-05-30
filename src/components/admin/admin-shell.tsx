@@ -49,7 +49,7 @@ export function AdminShell({
 
   return (
     <div
-      className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground desktop:h-screen desktop:overflow-hidden"
+      className="min-h-[100dvh] overflow-x-hidden bg-background text-foreground"
       data-testid="admin-shell"
     >
       <Sidebar
@@ -57,7 +57,7 @@ export function AdminShell({
         user={user}
       />
       <div
-        className="min-w-0 desktop:h-screen desktop:overflow-y-auto desktop:pl-[var(--sidebar-width)]"
+        className="min-w-0 desktop:pl-[var(--sidebar-width)]"
         data-testid="admin-content-region"
       >
         <div className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur desktop:hidden">
