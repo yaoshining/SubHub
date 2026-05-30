@@ -183,5 +183,25 @@ describe("Admin user service", () => {
       status: "active",
       updatedAt: "2026-05-28T13:00:00.000Z",
     });
+
+    const actions = await getStorageClient()
+      .db.select()
+      .from(adminActionResults);
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          actionType: "admin_user_suspended",
+          targetType: "admin_user",
+          targetId: "admin_operator",
+          result: "success",
+        }),
+        expect.objectContaining({
+          actionType: "admin_user_restored",
+          targetType: "admin_user",
+          targetId: "admin_operator",
+          result: "success",
+        }),
+      ]),
+    );
   });
 });

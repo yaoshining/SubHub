@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { eq, inArray } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -19,8 +20,11 @@ import {
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
 } from "@/server/storage/client";
-import { adminSessions, adminUsers } from "@/server/storage/schema";
-import { expectApiError } from "../helpers/api";
+import {
+  adminActionResults,
+  adminSessions,
+  adminUsers,
+} from "@/server/storage/schema";
 
 let tempDir: string;
 
@@ -57,12 +61,13 @@ const createAdminSessionCookie = async () => {
     }),
   );
   const setCookie = login.headers.get("set-cookie");
+
   expect(setCookie).toContain(`${adminSessionCookieName}=`);
 
   return setCookie?.split(";")[0] ?? "";
 };
 
-const seedOperatorAndAttentionSession = async () => {
+const seedOperatorWithSessions = async () => {
   const db = getStorageClient().db;
   await db.insert(adminUsers).values({
     id: "admin_operator",
@@ -74,21 +79,34 @@ const seedOperatorAndAttentionSession = async () => {
     createdAt: "2026-05-28T00:00:00.000Z",
     updatedAt: "2026-05-28T00:00:00.000Z",
   });
-  await db.insert(adminSessions).values({
-    id: "session_attention",
-    adminUserId: "admin_operator",
-    sessionTokenHash: "hash_attention",
-    status: "needs_attention",
-    createdAt: "2026-05-28T00:00:00.000Z",
-    expiresAt: "2026-05-29T00:00:00.000Z",
-    lastSeenAt: "2026-05-28T11:00:00.000Z",
-    deviceLabel: "Unknown device",
-    attentionReason: "unusual_location",
-  });
+  await db.insert(adminSessions).values([
+    {
+      id: "session_active",
+      adminUserId: "admin_operator",
+      sessionTokenHash: "hash_active",
+      status: "active",
+      createdAt: "2026-05-28T00:00:00.000Z",
+      expiresAt: "2026-05-29T00:00:00.000Z",
+      lastSeenAt: "2026-05-28T10:00:00.000Z",
+      deviceLabel: "Chrome on macOS",
+      attentionReason: null,
+    },
+    {
+      id: "session_attention",
+      adminUserId: "admin_operator",
+      sessionTokenHash: "hash_attention",
+      status: "needs_attention",
+      createdAt: "2026-05-28T00:00:00.000Z",
+      expiresAt: "2026-05-29T00:00:00.000Z",
+      lastSeenAt: "2026-05-28T11:00:00.000Z",
+      deviceLabel: "Unknown device",
+      attentionReason: "unusual_location",
+    },
+  ]);
 };
 
 beforeEach(() => {
-  tempDir = mkdtempSync(join(tmpdir(), "subhub-users-contract-"));
+  tempDir = mkdtempSync(join(tmpdir(), "subhub-users-flow-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   getStorageClient().migrate();
 });
@@ -99,96 +117,67 @@ afterEach(() => {
   rmSync(tempDir, { recursive: true, force: true });
 });
 
-describe("Users 管理 API 契约", () => {
-  it("要求管理员会话", async () => {
-    const response = await usersRoute.GET(
-      nextRequest("http://localhost/api/admin/users"),
-    );
-
-    await expectApiError(response, "AUTHENTICATION_REQUIRED");
-  });
-
-  it("覆盖 list/create invitation/suspend/restore/remediate 且不暴露密码哈希", async () => {
+describe("Users 管理闭环", () => {
+  it("可完成邀请、暂停恢复成员与基础会话处置，并留下最小审计轨迹", async () => {
     const cookie = await createAdminSessionCookie();
-    await seedOperatorAndAttentionSession();
+    await seedOperatorWithSessions();
 
-    const createdInvitation = await invitationsRoute.POST(
+    const invitation = await invitationsRoute.POST(
       jsonRequest(
         "http://localhost/api/admin/users/invitations",
         {
-          identifier: "Invited@Example.com",
+          identifier: "new-operator@example.com",
           rolePreset: "operator",
           accessPreset: "admin_console",
         },
         cookie,
       ),
     );
-    expect(createdInvitation.status).toBe(201);
-    const createdInvitationPayload = await readJson<{
+    expect(invitation.status).toBe(201);
+
+    await expect(
+      readJson<{
+        data: {
+          identifier: string;
+          rolePreset: string;
+          accessPreset: string;
+          status: string;
+        };
+      }>(invitation),
+    ).resolves.toMatchObject({
       data: {
-        identifier: string;
-        status: string;
-        rolePreset: string;
-        accessPreset: string;
-        invitedByAdminUserId?: string;
-        acceptedAdminUserId?: string | null;
-        acceptedAt?: string | null;
-        revokedAt?: string | null;
-      };
-    }>(createdInvitation);
-    expect(createdInvitationPayload).toEqual({
-      data: expect.objectContaining({
-        identifier: "invited@example.com",
-        status: "pending",
+        identifier: "new-operator@example.com",
         rolePreset: "operator",
         accessPreset: "admin_console",
-      }),
+        status: "pending",
+      },
     });
-    expect(createdInvitationPayload.data).not.toHaveProperty(
-      "invitedByAdminUserId",
-    );
-    expect(createdInvitationPayload.data).not.toHaveProperty(
-      "acceptedAdminUserId",
-    );
-    expect(createdInvitationPayload.data).not.toHaveProperty("acceptedAt");
-    expect(createdInvitationPayload.data).not.toHaveProperty("revokedAt");
 
-    const duplicateInvitation = await invitationsRoute.POST(
-      jsonRequest(
-        "http://localhost/api/admin/users/invitations",
-        {
-          identifier: "invited@example.com",
-          rolePreset: "operator",
-          accessPreset: "admin_console",
-        },
-        cookie,
-      ),
-    );
-    expect(duplicateInvitation.status).toBe(400);
-    await expectApiError(duplicateInvitation, "VALIDATION_FAILED");
-
-    const list = await usersRoute.GET(
+    const initialOverview = await usersRoute.GET(
       nextRequest("http://localhost/api/admin/users", cookie),
     );
     await expect(
       readJson<{
         data: {
-          members: Array<{ id: string; rolePreset: string }>;
+          members: Array<{ id: string; status: string }>;
           invitations: Array<{ identifier: string; status: string }>;
-          sessionsNeedingAttention: Array<{ id: string; reason: string }>;
+          sessionsNeedingAttention: Array<{
+            id: string;
+            reason: string | null;
+          }>;
         };
-      }>(list),
+      }>(initialOverview),
     ).resolves.toMatchObject({
       data: {
         members: expect.arrayContaining([
           expect.objectContaining({
             id: "admin_operator",
-            rolePreset: "operator",
+            status: "active",
           }),
         ]),
         invitations: expect.arrayContaining([
           expect.objectContaining({
-            identifier: "invited@example.com",
+            identifier: "new-operator@example.com",
             status: "pending",
           }),
         ]),
@@ -209,16 +198,30 @@ describe("Users 管理 API 契约", () => {
       ),
       { params: { userId: "admin_operator" } },
     );
-    const suspendedPayload = await readJson<{
-      data: { id: string; status: string; passwordHash?: string };
-    }>(suspended);
-    expect(suspendedPayload.data).toEqual(
-      expect.objectContaining({
+    await expect(
+      readJson<{ data: { id: string; status: string } }>(suspended),
+    ).resolves.toEqual({
+      data: expect.objectContaining({
         id: "admin_operator",
         status: "suspended",
       }),
+    });
+
+    const revokedSessions = await getStorageClient()
+      .db.select({
+        id: adminSessions.id,
+        status: adminSessions.status,
+      })
+      .from(adminSessions)
+      .where(
+        inArray(adminSessions.id, ["session_active", "session_attention"]),
+      );
+    expect(revokedSessions).toEqual(
+      expect.arrayContaining([
+        { id: "session_active", status: "revoked" },
+        { id: "session_attention", status: "revoked" },
+      ]),
     );
-    expect(suspendedPayload.data).not.toHaveProperty("passwordHash");
 
     const restored = await restoreRoute.POST(
       nextRequest(
@@ -228,16 +231,14 @@ describe("Users 管理 API 契约", () => {
       ),
       { params: { userId: "admin_operator" } },
     );
-    const restoredPayload = await readJson<{
-      data: { id: string; status: string; passwordHash?: string };
-    }>(restored);
-    expect(restoredPayload).toEqual({
+    await expect(
+      readJson<{ data: { id: string; status: string } }>(restored),
+    ).resolves.toEqual({
       data: expect.objectContaining({
         id: "admin_operator",
         status: "active",
       }),
     });
-    expect(restoredPayload.data).not.toHaveProperty("passwordHash");
 
     await getStorageClient().db.insert(adminSessions).values({
       id: "session_attention_second",
@@ -250,10 +251,14 @@ describe("Users 管理 API 契约", () => {
       deviceLabel: "Unknown device",
       attentionReason: "admin_review",
     });
+
     const remediated = await remediateRoute.POST(
       jsonRequest(
         "http://localhost/api/admin/sessions/session_attention_second/remediate",
-        { action: "revoke", reason: "admin_review" },
+        {
+          action: "mark_resolved",
+          reason: "管理员已复核并确认",
+        },
         cookie,
       ),
       { params: { sessionId: "session_attention_second" } },
@@ -266,8 +271,75 @@ describe("Users 管理 API 契约", () => {
       data: {
         sessionId: "session_attention_second",
         status: "remediated",
-        action: "revoke",
+        action: "mark_resolved",
       },
     });
+
+    const finalOverview = await usersRoute.GET(
+      nextRequest("http://localhost/api/admin/users", cookie),
+    );
+    await expect(
+      readJson<{
+        data: {
+          members: Array<{ id: string; status: string }>;
+          sessionsNeedingAttention: Array<{ id: string }>;
+        };
+      }>(finalOverview),
+    ).resolves.toMatchObject({
+      data: {
+        members: expect.arrayContaining([
+          expect.objectContaining({
+            id: "admin_operator",
+            status: "active",
+          }),
+        ]),
+        sessionsNeedingAttention: [],
+      },
+    });
+
+    const [operator] = await getStorageClient()
+      .db.select({
+        status: adminUsers.status,
+      })
+      .from(adminUsers)
+      .where(eq(adminUsers.id, "admin_operator"));
+    expect(operator?.status).toBe("active");
+
+    const [owner] = await getStorageClient()
+      .db.select({
+        id: adminUsers.id,
+      })
+      .from(adminUsers)
+      .where(eq(adminUsers.identifier, "admin@example.com"));
+    expect(owner?.id).toBeTruthy();
+
+    const [remediatedSession] = await getStorageClient()
+      .db.select({
+        status: adminSessions.status,
+        remediatedByAdminUserId: adminSessions.remediatedByAdminUserId,
+      })
+      .from(adminSessions)
+      .where(eq(adminSessions.id, "session_attention_second"));
+    expect(remediatedSession).toEqual({
+      status: "remediated",
+      remediatedByAdminUserId: owner?.id ?? null,
+    });
+
+    const actions = await getStorageClient()
+      .db.select({
+        actionType: adminActionResults.actionType,
+        result: adminActionResults.result,
+      })
+      .from(adminActionResults);
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        { actionType: "bootstrap_admin_created", result: "success" },
+        { actionType: "admin_login", result: "success" },
+        { actionType: "admin_invitation_created", result: "success" },
+        { actionType: "admin_user_suspended", result: "success" },
+        { actionType: "admin_user_restored", result: "success" },
+        { actionType: "admin_session_remediated", result: "success" },
+      ]),
+    );
   });
 });

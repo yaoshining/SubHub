@@ -97,9 +97,7 @@ describe("Users 响应式行为", () => {
       "desktop:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.85fr)]",
     );
     expect(screen.getByTestId("users-primary-column")).toHaveClass("min-w-0");
-    expect(screen.getByTestId("users-secondary-column")).toHaveClass(
-      "min-w-0",
-    );
+    expect(screen.getByTestId("users-secondary-column")).toHaveClass("min-w-0");
     expect(screen.getByTestId("users-member-list")).toHaveClass(
       "min-w-0",
       "overflow-hidden",

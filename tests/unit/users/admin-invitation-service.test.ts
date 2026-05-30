@@ -159,5 +159,27 @@ describe("Admin invitation service", () => {
       status: "revoked",
       updatedAt: "2026-05-28T13:00:00.000Z",
     });
+
+    const actions = await getStorageClient()
+      .db.select()
+      .from(adminActionResults);
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          actorAdminUserId: admin.id,
+          actionType: "admin_invitation_created",
+          targetType: "admin_invitation",
+          targetId: invitation.id,
+          result: "success",
+        }),
+        expect.objectContaining({
+          actorAdminUserId: admin.id,
+          actionType: "admin_invitation_revoked",
+          targetType: "admin_invitation",
+          targetId: invitation.id,
+          result: "success",
+        }),
+      ]),
+    );
   });
 });
