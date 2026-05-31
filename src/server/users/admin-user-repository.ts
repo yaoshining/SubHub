@@ -63,6 +63,16 @@ export type CreateInvitationInput = Pick<
 
 const invitationTtlMs = 7 * 24 * 60 * 60 * 1000;
 
+const normalizeTimestamp = (value: string | null | undefined) => {
+  if (!value) {
+    return value ?? null;
+  }
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+};
+
 const createInvitationId = () =>
   `invite_${randomBytes(16).toString("base64url")}`;
 
@@ -72,7 +82,7 @@ const toMember = (user: AdminUser): AdminMember => ({
   displayName: user.displayName,
   status: user.status,
   rolePreset: user.role,
-  lastActiveAt: user.lastLoginAt,
+  lastActiveAt: normalizeTimestamp(user.lastLoginAt),
 });
 
 export const toAdminInvitationSummary = (
@@ -83,9 +93,9 @@ export const toAdminInvitationSummary = (
   status: invitation.status,
   rolePreset: invitation.rolePreset,
   accessPreset: invitation.accessPreset,
-  expiresAt: invitation.expiresAt,
-  createdAt: invitation.createdAt,
-  updatedAt: invitation.updatedAt,
+  expiresAt: normalizeTimestamp(invitation.expiresAt) ?? invitation.expiresAt,
+  createdAt: normalizeTimestamp(invitation.createdAt) ?? invitation.createdAt,
+  updatedAt: normalizeTimestamp(invitation.updatedAt) ?? invitation.updatedAt,
 });
 
 const toSessionAttentionSummary = (
@@ -95,7 +105,7 @@ const toSessionAttentionSummary = (
   memberId: session.adminUserId,
   status: "needs_attention",
   reason: session.attentionReason,
-  lastSeenAt: session.lastSeenAt,
+  lastSeenAt: normalizeTimestamp(session.lastSeenAt),
   deviceLabel: session.deviceLabel,
 });
 

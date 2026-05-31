@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -12,49 +13,44 @@ import {
 } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
-  createStorageClient,
+  closeStorageClient,
+  getStorageClient,
+  resetStorageDatabasePathForTesting,
+  setStorageDatabasePathForTesting,
   type StorageClient,
 } from "@/server/storage/client";
-
-type LegacyStorageClient = StorageClient & {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sqlite: any;
-};
+import { adminSessions, adminUsers } from "@/server/storage/schema";
 
 const now = new Date("2026-05-26T00:00:00.000Z");
 let tempDir: string;
-let client: LegacyStorageClient;
+let client: StorageClient;
 
-const insertAdminUser = (status: "active" | "suspended" = "active") => {
-  client.sqlite
-    .prepare(
-      `insert into admin_users (
-        id, identifier, display_name, password_hash, status, role, created_at, updated_at
-      ) values (?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      "admin_session_test",
-      "admin-session-test@example.com",
-      "Session Test Admin",
-      "password_hash",
-      status,
-      "admin",
-      now.toISOString(),
-      now.toISOString(),
-    );
+const insertAdminUser = async (
+  status: "active" | "suspended" = "active",
+) => {
+  await client.db.insert(adminUsers).values({
+    id: "admin_session_test",
+    identifier: "admin-session-test@example.com",
+    displayName: "Session Test Admin",
+    passwordHash: "password_hash",
+    status,
+    role: "admin",
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  });
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-session-"));
-  client = createStorageClient({
-    runtimeDatabaseUrl: "postgresql://legacy-runtime@localhost:5432/subhub",
-    directDatabaseUrl: "postgresql://legacy-direct@localhost:5432/subhub",
-  }) as LegacyStorageClient;
-  insertAdminUser();
+  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  client = getStorageClient();
+  await client.migrate();
+  await insertAdminUser();
 });
 
-afterEach(() => {
-  client.close();
+afterEach(async () => {
+  await closeStorageClient();
+  resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 
@@ -122,11 +118,13 @@ describe("后台会话访问控制", () => {
       db: client.db,
     });
 
-    client.sqlite
-      .prepare(
-        "update admin_sessions set status = ?, attention_reason = ? where id = ?",
-      )
-      .run("needs_attention", "unexpected_location", session.id);
+    await client.db
+      .update(adminSessions)
+      .set({
+        status: "needs_attention",
+        attentionReason: "unexpected_location",
+      })
+      .where(eq(adminSessions.id, session.id));
 
     const riskySession = await getAdminSessionByToken(token, {
       now,

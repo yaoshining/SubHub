@@ -3,16 +3,31 @@ const {
   directEndMock,
   drizzleMock,
   migrateMock,
+  pgliteConstructorMock,
+  pgliteDrizzleMock,
+  pgliteMigrateMock,
   postgresMock,
   runtimeEndMock,
   transactionMock,
 } = vi.hoisted(() => ({
   migrateMock: vi.fn().mockResolvedValue(undefined),
+  pgliteMigrateMock: vi.fn().mockResolvedValue(undefined),
   transactionMock: vi.fn(async (callback: (tx: unknown) => unknown) =>
     callback({ tx: "runtime" }),
   ),
   runtimeEndMock: vi.fn().mockResolvedValue(undefined),
   directEndMock: vi.fn().mockResolvedValue(undefined),
+  pgliteConstructorMock: vi.fn(
+    class MockPGlite {
+      close = vi.fn().mockResolvedValue(undefined);
+
+      waitReady = Promise.resolve();
+    },
+  ),
+  pgliteDrizzleMock: vi.fn(({ client }: { client: unknown }) => ({
+    $client: client,
+    transaction: transactionMock,
+  })),
   postgresMock: vi.fn((url: string) => ({
     end: url.includes("runtime") ? runtimeEndMock : directEndMock,
   })),
@@ -30,8 +45,20 @@ vi.mock("drizzle-orm/postgres-js", () => ({
   drizzle: drizzleMock,
 }));
 
+vi.mock("@electric-sql/pglite", () => ({
+  PGlite: pgliteConstructorMock,
+}));
+
+vi.mock("drizzle-orm/pglite", () => ({
+  drizzle: pgliteDrizzleMock,
+}));
+
 vi.mock("drizzle-orm/postgres-js/migrator", () => ({
   migrate: migrateMock,
+}));
+
+vi.mock("drizzle-orm/pglite/migrator", () => ({
+  migrate: pgliteMigrateMock,
 }));
 
 describe("Postgres storage client integration boundary", () => {
@@ -41,18 +68,15 @@ describe("Postgres storage client integration boundary", () => {
     postgresMock.mockClear();
     drizzleMock.mockClear();
     migrateMock.mockClear();
+    pgliteConstructorMock.mockClear();
+    pgliteDrizzleMock.mockClear();
+    pgliteMigrateMock.mockClear();
     transactionMock.mockClear();
     runtimeEndMock.mockClear();
     directEndMock.mockClear();
   });
 
-  it("maps legacy sqlite-style test override to dedicated test database urls", async () => {
-    vi.stubEnv("DATABASE_URL_TEST", "postgresql://test-runtime@localhost:5432/subhub_test");
-    vi.stubEnv(
-      "DATABASE_URL_TEST_UNPOOLED",
-      "postgresql://test-direct@localhost:5432/subhub_test",
-    );
-
+  it("keeps legacy sqlite-style test override on in-memory test storage without touching postgres", async () => {
     const {
       createStorageClient,
       resetStorageDatabasePathForTesting,
@@ -61,13 +85,14 @@ describe("Postgres storage client integration boundary", () => {
 
     setStorageDatabasePathForTesting("/tmp/subhub/test.sqlite");
     const client = createStorageClient();
+    await client.migrate();
+    await client.transaction(async (db) => db);
+    await client.close();
 
-    expect(client.runtimeUrl).toBe(
-      "postgresql://test-runtime@localhost:5432/subhub_test",
-    );
-    expect(client.directUrl).toBe(
-      "postgresql://test-direct@localhost:5432/subhub_test",
-    );
+    expect(postgresMock).not.toHaveBeenCalled();
+    expect(pgliteConstructorMock).toHaveBeenCalledTimes(1);
+    expect(pgliteDrizzleMock).toHaveBeenCalledTimes(1);
+    expect(pgliteMigrateMock).toHaveBeenCalledTimes(1);
 
     resetStorageDatabasePathForTesting();
   });

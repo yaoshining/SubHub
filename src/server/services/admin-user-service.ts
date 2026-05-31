@@ -20,6 +20,16 @@ export type AdminUserServiceOptions = {
 const getRepository = (db?: StorageDatabase) =>
   createAdminUserRepository(db ?? getStorageClient().db);
 
+const normalizeTimestamp = (value: string | null | undefined) => {
+  if (!value) {
+    return value ?? null;
+  }
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+};
+
 export type AdminUserActionResult = AdminMember & {
   updatedAt: string;
 };
@@ -30,8 +40,8 @@ const toActionResult = (user: AdminUser): AdminUserActionResult => ({
   displayName: user.displayName,
   status: user.status,
   rolePreset: user.role,
-  lastActiveAt: user.lastLoginAt,
-  updatedAt: user.updatedAt,
+  lastActiveAt: normalizeTimestamp(user.lastLoginAt),
+  updatedAt: normalizeTimestamp(user.updatedAt) ?? user.updatedAt,
 });
 
 export async function listAdminUsersOverview(

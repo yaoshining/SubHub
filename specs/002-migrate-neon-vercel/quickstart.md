@@ -11,6 +11,15 @@
 
 说明：Neon 不再作为本地或 CI 日常测试主库。日常真实数据库测试默认走本地 Docker Postgres 与 GitHub Actions Postgres service；Neon 仅保留给 staging / preview / production / cutover / 部署验证。
 
+本地 Docker Postgres 最小基线：
+
+- 容器名：`subhub-postgres-test`
+- 镜像：`postgres:16-alpine`
+- 端口：`55432 -> 5432`
+- 数据库名：`subhub_test`
+- 用户名：`subhub_test`
+- 密码：`subhub_test_password`
+
 ## 2. 配置环境变量
 
 ### 2.1 Vercel Production
@@ -76,6 +85,12 @@
 - 本地真实数据库测试的核心要求是“状态干净、隔离、可重复”，而不是机械要求每次都销毁 Docker 容器
 - 本地允许采用“容器常驻 + 测试前 reset”或“测试前启动、测试后停止/删除”两类策略，但必须通过脚本、命令约定或文档明确，不得完全交由个人习惯处理
 
+当前仓库已在测试入口内置本地 Docker Postgres 默认连接，无需额外创建共享示例文件。
+只有在你需要覆盖默认主机、端口、库名或凭据时，才应在本地创建未提交的 `.env.test.local` 或 `.env.test`。
+
+- `pnpm test` 继续作为日常全量测试入口，不负责自动创建本地 Docker Postgres 容器
+- `pnpm test:db` 作为真实 Postgres 测试入口，负责创建 / 准备容器、运行数据库相关测试，并在结束后清理测试容器
+
 ## 3. 建立 Postgres 基线
 
 1. 安装依赖：`pnpm install`
@@ -112,6 +127,15 @@
 2. 运行测试前执行测试数据库 prepare / reset
 3. 再运行数据库相关单测、集成测试、契约测试
 4. 测试结束后执行清理、重建、reset、stop container 或 remove container 中的受控策略之一，使 test 基线恢复干净
+
+最小命令：
+
+- 启动本地 test Postgres：`pnpm db:start:test`
+- 重置 test database：`pnpm db:reset:test`
+- 对 test database 执行 migration：`pnpm db:migrate:test`
+- 准备本地 test database：`pnpm db:prepare:test`
+- 运行本地真实数据库 smoke test：`pnpm test:db`
+- 停止本地 test Postgres：`pnpm db:stop:test`
 
 说明：数据库相关测试不得依赖 dev、staging 或 production 中的历史脏数据通过。
 

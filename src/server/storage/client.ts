@@ -1,3 +1,6 @@
+import { PGlite } from "@electric-sql/pglite";
+import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
+import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 import {
@@ -8,6 +11,7 @@ import {
   resolveRuntimeDatabaseUrl,
   type PostgresClientOptions,
 } from "./postgres-client";
+import { schema } from "./schema";
 
 export type StorageDatabase = PostgresDatabase;
 
@@ -44,6 +48,7 @@ const isPostgresUrl = (value: string) => /^postgres(ql)?:\/\//.test(value);
 
 let testRuntimeDatabaseUrl: string | undefined;
 let testDirectDatabaseUrl: string | undefined;
+let testPGliteDatabasePath: string | undefined;
 let resetTestDataAfterMigrate = false;
 
 export const resolveStorageDatabasePath = (databaseUrl?: string): string =>
@@ -52,6 +57,35 @@ export const resolveStorageDatabasePath = (databaseUrl?: string): string =>
 export const createStorageClient = (
   options: StorageClientOptions = {},
 ): StorageClient => {
+  if (testPGliteDatabasePath) {
+    const pgliteClient = new PGlite();
+    const pgliteDb = drizzlePglite({
+      client: pgliteClient,
+      schema,
+    }) as unknown as StorageDatabase;
+
+    return {
+      db: pgliteDb,
+      runtimeUrl: `pglite:${testPGliteDatabasePath}`,
+      directUrl: `pglite:${testPGliteDatabasePath}`,
+      migrate: async () => {
+        await pgliteClient.waitReady;
+        await migratePglite(pgliteDb as never, { migrationsFolder });
+      },
+      transaction: async (callback) => {
+        await pgliteClient.waitReady;
+
+        return (pgliteDb as {
+          transaction: <T>(runner: (tx: unknown) => Promise<T> | T) => Promise<T>;
+        }).transaction(async (tx) => callback(tx as StorageDatabase));
+      },
+      close: async () => {
+        await pgliteClient.waitReady;
+        await pgliteClient.close();
+      },
+    };
+  }
+
   const runtimeUrl = resolveRuntimeDatabaseUrl(
     options.runtimeDatabaseUrl ?? testRuntimeDatabaseUrl,
   );
@@ -122,20 +156,22 @@ export const setStorageDatabasePathForTesting = (databaseUrl: string) => {
   if (isPostgresUrl(databaseUrl)) {
     testRuntimeDatabaseUrl = databaseUrl;
     testDirectDatabaseUrl = databaseUrl;
+    testPGliteDatabasePath = undefined;
     resetTestDataAfterMigrate = false;
 
     return;
   }
 
-  testRuntimeDatabaseUrl = process.env.DATABASE_URL_TEST;
-  testDirectDatabaseUrl =
-    process.env.DATABASE_URL_TEST_UNPOOLED ?? process.env.DATABASE_URL_TEST;
-  resetTestDataAfterMigrate = true;
+  testRuntimeDatabaseUrl = undefined;
+  testDirectDatabaseUrl = undefined;
+  testPGliteDatabasePath = databaseUrl;
+  resetTestDataAfterMigrate = false;
 };
 
 export const resetStorageDatabasePathForTesting = () => {
   singleton = undefined;
   testRuntimeDatabaseUrl = undefined;
   testDirectDatabaseUrl = undefined;
+  testPGliteDatabasePath = undefined;
   resetTestDataAfterMigrate = false;
 };

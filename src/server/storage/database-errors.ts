@@ -1,12 +1,26 @@
-const getDatabaseErrorCode = (error: unknown) =>
-  typeof error === "object" && error !== null && "code" in error
-    ? String(error.code)
-    : "";
+const getErrorField = (
+  error: unknown,
+  field: "code" | "message",
+): string => {
+  if (typeof error !== "object" || error === null) {
+    return "";
+  }
+
+  if (field in error && error[field] !== undefined && error[field] !== null) {
+    return String(error[field]);
+  }
+
+  if ("cause" in error) {
+    return getErrorField(error.cause, field);
+  }
+
+  return "";
+};
+
+const getDatabaseErrorCode = (error: unknown) => getErrorField(error, "code");
 
 const getDatabaseErrorMessage = (error: unknown) =>
-  typeof error === "object" && error !== null && "message" in error
-    ? String(error.message)
-    : "";
+  getErrorField(error, "message");
 
 export const isConstraintError = (error: unknown) => {
   const code = getDatabaseErrorCode(error);

@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
+import { applyLocalTestDatabaseEnvDefaults } from "@/server/storage/test-database";
+
 const loadLocalEnvFile = (filePath: string) => {
   if (!existsSync(filePath)) {
     return;
@@ -82,6 +84,8 @@ const localStorageMock = createMemoryStorage();
 const sessionStorageMock = createMemoryStorage();
 
 beforeAll(() => {
+  applyLocalTestDatabaseEnvDefaults(process.env);
+
   if (!HTMLElement.prototype.setPointerCapture) {
     HTMLElement.prototype.setPointerCapture = vi.fn();
   }
@@ -133,15 +137,9 @@ beforeAll(() => {
       process.env.ADMIN_SESSION_SECRET ?? "test-admin-session-secret-32-byte",
     CALLER_KEY_SECRET:
       process.env.CALLER_KEY_SECRET ?? "test-caller-key-secret-at-least-32",
+    DATABASE_URL_TEST: process.env.DATABASE_URL_TEST,
+    DATABASE_URL_TEST_UNPOOLED: process.env.DATABASE_URL_TEST_UNPOOLED,
   };
-
-  if (process.env.DATABASE_URL_TEST) {
-    envDefaults.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST;
-  }
-
-  if (process.env.DATABASE_URL_TEST_UNPOOLED) {
-    envDefaults.DATABASE_URL_TEST_UNPOOLED = process.env.DATABASE_URL_TEST_UNPOOLED;
-  }
 
   Object.assign(process.env, envDefaults);
 });
