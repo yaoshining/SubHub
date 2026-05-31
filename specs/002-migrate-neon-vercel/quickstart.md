@@ -73,6 +73,8 @@
 - `DATABASE_URL_TEST_UNPOOLED` 只用于测试 migration、bootstrap、fixture 准备、reset 或重建
 - 当前阶段 `test` 数据库语义收敛为：本地使用 Docker Postgres 测试库，CI 使用 GitHub Actions Postgres service container，不引入共享远程 test branch，也不要求每次 PR 或每次 test run 自动创建临时数据库 branch
 - `test` 数据库必须允许清理、重建或 reset，不得承载开发预览、发布前验证或生产运维职责
+- 本地真实数据库测试的核心要求是“状态干净、隔离、可重复”，而不是机械要求每次都销毁 Docker 容器
+- 本地允许采用“容器常驻 + 测试前 reset”或“测试前启动、测试后停止/删除”两类策略，但必须通过脚本、命令约定或文档明确，不得完全交由个人习惯处理
 
 ## 3. 建立 Postgres 基线
 
@@ -99,18 +101,24 @@
 
 数据库相关测试执行前，应保证 `test` 数据库具备以下条件：
 
-1. 已使用 `DATABASE_URL_TEST_UNPOOLED` 完成 schema migration
-2. 已完成最小 bootstrap 或 fixture 准备
-3. 当前库内不存在上一次测试遗留的脏数据、旧 schema 或不可重复使用的状态
+1. Docker Postgres `test` 容器已运行且可连接；若未运行，先按约定命令启动
+2. 已使用 `DATABASE_URL_TEST_UNPOOLED` 完成 schema migration
+3. 已完成最小 bootstrap 或 fixture 准备
+4. 当前库内不存在上一次测试遗留的脏数据、旧 schema 或不可重复使用的状态
 
 推荐流程：
 
-1. 在本地先启动 Docker Postgres，并确认 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 指向本地测试库
-2. 运行测试前先执行测试数据库 prepare / reset
-2. 再运行数据库相关单测、集成测试、契约测试
-3. 测试结束后执行清理、重建或 reset，使 test 基线恢复干净
+1. 若采用按需启动策略，先启动本地 Docker Postgres `test` 容器，并确认 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 指向本地测试库
+2. 运行测试前执行测试数据库 prepare / reset
+3. 再运行数据库相关单测、集成测试、契约测试
+4. 测试结束后执行清理、重建、reset、stop container 或 remove container 中的受控策略之一，使 test 基线恢复干净
 
 说明：数据库相关测试不得依赖 dev、staging 或 production 中的历史脏数据通过。
+
+本地容器生命周期示例：
+
+- 常驻容器路径：启动一次 Docker Postgres `test` 容器，后续每次测试前执行 prepare / reset，测试后按需保留容器，但不得跳过下一次测试前的干净基线恢复
+- 按需容器路径：测试前启动 Docker Postgres `test` 容器并完成 prepare / reset，测试后执行 stop 或 remove；下一次测试仍需重新回到干净基线
 
 补充：本地快速数据库单测可使用 PGlite，但正式 migration 验证、Postgres schema / migration、SQLite cutover 与部署验证仍必须走“本地 Docker Postgres / GitHub Actions Postgres service + Neon 验证层”路线。
 

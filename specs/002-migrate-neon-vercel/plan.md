@@ -229,12 +229,15 @@ tests/
 
 - 数据库相关单测、集成测试、契约测试，以及 CI 中需要真实数据库行为验证的测试，统一使用独立 `test` 数据库语义，不复用 prod、staging 或 dev。
 - 本地需要真实数据库行为的测试，默认连接本地 Docker Postgres；该主线必须具备 reset、migrate、seed 与验证能力，不得默认连接 dev、staging、prod 或其他共享远程数据库。
+- 本地真实数据库测试在执行前必须先确认 Docker Postgres `test` 容器已运行且可连接；若容器未运行，必须有显式启动或恢复步骤，而不是依赖手动临场处理。
 - GitHub Actions 中需要真实数据库行为的测试，默认连接 Postgres service container；每次 CI run 都必须获得临时干净数据库，不依赖共享远程测试库。
 - 当前已完成最小 PGlite 试点验证；PGlite 可作为快速数据库单测层，用于少量 repository / service 层数据库行为验证，但不替代本地 Docker Postgres、GitHub Actions Postgres service 或 Neon staging 的正式验证职责。
 - 测试默认消费 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`；其中 pooled URL 用于模拟运行时读写路径，direct/unpooled URL 用于 migration、reset、bootstrap 和最小 fixture 准备。
 - `test` 数据库不属于新的产品部署环境层；应用运行时的环境主路由仍只覆盖 prod / staging / dev，测试入口通过测试脚手架或显式测试配置接入 `test` URL 对。
 - 当前阶段将 `test` 数据库语义收敛为单一日常主线：本地使用 Docker Postgres，CI 使用 GitHub Actions Postgres service；两者都必须保证可重复、可清理、可重建，不引入共享远程 test branch，也不要求每次 PR 或每次 test run 自动创建临时数据库 branch。
 - 测试执行前必须能够明确 schema 已建立，并完成最小 fixture 准备；测试执行后必须支持清理、重建或 reset，避免依赖历史脏数据继续通过。
+- 本地 Docker Postgres 容器生命周期的真正约束是“测试状态干净、隔离、可重复”，而不是机械要求每次都删除容器；允许采用“容器常驻 + 测试前 reset”或“测试前启动、测试后停止/删除”两类策略，但都必须被脚本或文档明确约束，不得完全交由个人习惯决定。
+- 测试结束后的本地清理可以是 reset database、truncate / reseed、stop container 或 remove container；无论选择哪种方式，下一次测试运行前都必须能回到干净基线。
 - Neon 不再作为本地或 CI 日常测试主库，以避免远程网络波动、共享数据与环境污染影响测试稳定性；它只保留给 staging / preview / production / cutover / 部署验证。
 - PGlite 不作为正式运行时数据库，不作为 SQLite -> Postgres cutover 验证底座，也不替代生产化 migration / deploy / release gate 验证链路。
 
@@ -268,6 +271,7 @@ tests/
   - **bootstrap**: 建立系统最小运行前提，例如版本标记、可选系统元数据、管理员初始化状态
   - **seed**: 仅限 dev / staging 的可重复样例数据或测试数据
 - `test` 数据库不复用 staging/dev seed 语义；它应拥有独立的 migration、bootstrap、最小 fixture 与 reset 路径，以保证数据库相关测试的隔离和可重复性。
+- 本地 Docker Postgres 测试容器可以常驻以提升效率，但常驻不等于长期保留脏状态；测试批次前后的 reset / rebuild / truncate / reseed 责任必须明确。
 - production 禁止自动写入演示或测试数据；但必须区分两种初始化路径：
   - **greenfield production**: `schema migration + 必需 bootstrap + 首个管理员初始化`
   - **SQLite cutover production**: `schema migration + 必需 bootstrap + 数据搬迁 + 迁移后校验`，以迁移既有管理员为主，不进入“首个管理员初始化”路径
@@ -298,6 +302,7 @@ tests/
 ## 计划中的文档与脚本改动
 
 - **必改脚本**: `package.json` 中的 `db:generate`、`db:migrate`、`db:check` 将切换到 Postgres 目标；新增 `db:bootstrap`、`db:seed:dev`、`db:seed:staging`、`db:import:sqlite`、`db:validate:cutover`
+- **本地测试执行基线**: 需要在脚本或文档中明确 Docker Postgres `test` 容器的启动、可用性检查、prepare/reset 与测试后清理策略，至少覆盖“容器常驻 + 测试前 reset”和“测试前启动、测试后停止/删除”两种允许路径。
 - **必改配置**: `drizzle.config.ts`、`src/lib/env.ts`、Vercel 环境变量、GitHub Actions secrets
 - **可选文档补充**: 仅当页面需要最小未就绪提示时更新相关 page spec；否则不改 `DESIGN.md` 与页面规范
 
