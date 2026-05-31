@@ -35,5 +35,7 @@ jobs:
         run: pnpm typecheck
       - name: 单元测试
         run: pnpm test
+      - name: 环境映射护栏检查
+        run: pnpm test tests/unit/env/runtime-environment.test.ts tests/unit/env/local-development-env.test.ts tests/contract/runtime/environment-contract.test.ts tests/integration/runtime/preview-branch-mapping.test.ts tests/smoke/nonproduction-runtime.smoke.test.ts
       - name: API 契约链路检查
         run: pnpm api:check
