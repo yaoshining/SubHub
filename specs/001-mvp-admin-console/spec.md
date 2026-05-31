@@ -17,6 +17,7 @@
 - **主分支**: `feat/001-mvp-admin-console`
 - **主 Issue**: `#3`（MVP 管理控制台与统一字幕出口主追踪）
 - **Task Issue 策略**: 先完成 `spec -> plan -> tasks`，确认 MVP 范围后再决定是否拆分 task issues
+- **版本归属**: 当前 feature 收口版本为 `v0.1.0`（详见 `docs/releases/versioning.md`）
 
 ## 设计上下文 *(mandatory)*
 

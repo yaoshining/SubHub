@@ -33,6 +33,12 @@ shell commands, and other important information, read the current plan:
 - 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
 - `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
 
+## 版本约定
+
+- 仓库版本约定主真源为 `docs/releases/versioning.md`。
+- 当前已收口的 MVP 版本为 `v0.1.0`；数据库与部署生产化目标版本为 `v0.2.0`；正式稳定首发目标版本为 `v1.0.0`。
+- 涉及 feature、issue、milestone、spec 或 release 说明时，如已明确版本目标，应优先沿用该文档中的版本定义，不要临时发明并行版本说法。
+
 ## 前端实现约束：TailwindCSS + shadcn/ui
 
 本项目前端界面默认优先使用 **TailwindCSS + shadcn/ui** 进行组件化实现。
