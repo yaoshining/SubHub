@@ -3,13 +3,13 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import {
   createDirectPostgresClient,
   createRuntimePostgresClient,
+  type PostgresDatabase,
   resolveDirectDatabaseUrl,
   resolveRuntimeDatabaseUrl,
   type PostgresClientOptions,
 } from "./postgres-client";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type StorageDatabase = any;
+export type StorageDatabase = PostgresDatabase;
 
 export type StorageClient = {
   db: StorageDatabase;
@@ -44,9 +44,7 @@ export const createStorageClient = (
   const runtimeClient = createRuntimePostgresClient({
     runtimeDatabaseUrl: runtimeUrl,
   });
-  let directClient = createDirectPostgresClient({
-    directDatabaseUrl: directUrl,
-  });
+  let directClient: ReturnType<typeof createDirectPostgresClient> | undefined;
 
   const client: StorageClient = {
     db: runtimeClient.db as StorageDatabase,

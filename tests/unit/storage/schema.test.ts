@@ -14,6 +14,10 @@ type LegacyStorageClient = StorageClient & {
   sqlite: any;
 };
 
+type LegacyTransactionDatabase = {
+  run: (sql: string) => unknown;
+};
+
 const coreTables = [
   "admin_users",
   "admin_invitations",
@@ -665,7 +669,7 @@ describe.skip("legacy SQLite + Drizzle storage schema", () => {
   it("rolls back storage client transactions on failure", () => {
     expect(() => {
       client.transaction((db) => {
-        db.run(
+        (db as unknown as LegacyTransactionDatabase).run(
           `insert into admin_users (
             id, identifier, display_name, password_hash, status, role, created_at, updated_at
           ) values ('admin_tx', 'tx@example.com', 'Tx Admin', 'hash', 'active', 'admin', '${now}', '${now}')`,
