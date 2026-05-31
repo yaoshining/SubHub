@@ -101,6 +101,8 @@
 
 说明：数据库相关测试不得依赖 dev、staging 或 production 中的历史脏数据通过。
 
+补充：本地快速数据库单测可使用 PGlite，但正式 migration 验证、Postgres schema / migration、SQLite cutover 与部署验证仍必须走真实 Postgres / Neon 路线。
+
 ## 7. 验证
 
 执行：

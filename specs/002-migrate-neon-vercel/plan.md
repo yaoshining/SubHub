@@ -56,7 +56,11 @@
 
 **测试**:
 - `vitest` 单元、集成与契约测试
+- `mock / no-db` 用于纯逻辑快速单测
+- `PGlite` 用于本地快速数据库单测层，优先覆盖少量 repository / service 层数据库行为
 - 数据库相关测试默认使用独立 `test` 数据库，并通过专用 runtime/direct URL 运行
+- real Postgres（本地 Docker / CI service / 独立 `test` 数据库）仍是正式数据库测试层
+- Neon staging / deploy verification 仍是环境与发布验证层
 - 数据库 schema / migration / drift 校验
 - SQLite -> Postgres 数据搬迁校验
 - production / staging / dev 烟雾验证
@@ -224,10 +228,12 @@ tests/
 ### 1.5 测试数据库策略
 
 - 数据库相关单测、集成测试、契约测试，以及 CI 中需要真实数据库行为验证的测试，统一使用独立 `test` 数据库语义，不复用 prod、staging 或 dev。
+- 当前已完成最小 PGlite 试点验证；PGlite 可作为快速数据库单测层，用于少量 repository / service 层数据库行为验证，但不替代独立 `test` 数据库、CI Postgres service 或 Neon staging 的正式验证职责。
 - 测试默认消费 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`；其中 pooled URL 用于模拟运行时读写路径，direct/unpooled URL 用于 migration、reset、bootstrap 和最小 fixture 准备。
 - `test` 数据库不属于新的产品部署环境层；应用运行时的环境主路由仍只覆盖 prod / staging / dev，测试入口通过测试脚手架或显式测试配置接入 `test` URL 对。
 - 当前阶段优先使用长期存在的 `test` 数据库或 test branch，保证可重复、可清理、可重建；不要求每次 PR 或每次 test run 自动创建临时数据库 branch。
 - 测试执行前必须能够明确 schema 已建立，并完成最小 fixture 准备；测试执行后必须支持清理、重建或 reset，避免依赖历史脏数据继续通过。
+- PGlite 不作为正式运行时数据库，不作为 SQLite -> Postgres cutover 验证底座，也不替代生产化 migration / deploy / release gate 验证链路。
 
 ### 2. 数据库驱动与 client 边界
 
@@ -284,6 +290,7 @@ tests/
 - 保持 OpenAPI 真源、Orval 生成与 Scalar 文档入口不变；必要时只调整服务器 URL、环境说明或就绪状态相关描述
 - 保持既有后台页面与管理 API 行为不变；若数据库错误导致未就绪，只允许新增清晰的失败/未就绪反馈
 - 保持 001 已有测试与回归链路可继续运行；新增 Postgres 迁移与环境解析测试不能替代原有产品主链路回归
+- 保持测试分层边界清晰；PGlite 的定位仅为快速数据库单测层，后续扩大覆盖面只能作为增量优化，不得挤占 real Postgres / Neon 的正式验证责任
 
 ## 计划中的文档与脚本改动
 

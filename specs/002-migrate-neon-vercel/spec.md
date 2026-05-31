@@ -41,6 +41,15 @@
 
 ## 用户场景与测试 *(mandatory)*
 
+### 测试分层策略
+
+- `mock / no-db`：用于纯逻辑快速单测，不验证真实数据库语义。
+- `PGlite`：用于本地快速数据库单测，覆盖少量 repository / service 层数据库行为，作为比 mock 更真实、比 Docker/远程数据库更快的测试层。
+- `real Postgres`（本地 Docker / CI service / 独立 `test` 数据库）：用于正式数据库测试层，负责 schema、migration、约束、真实连接边界与回归验证。
+- `Neon staging / deploy verification`：用于环境与发布验证层，负责 staging、cutover、deploy、release gate 与生产前验证。
+
+当前结论：PGlite 已完成最小试点验证，可作为 SubHub 的“快速数据库单测层”，但它只服务于快速数据库单测，不作为正式运行时数据库，不作为 SQLite -> Postgres cutover 验证底座，也不替代生产化 migration / deploy / release gate 验证链路。
+
 ### 用户故事 1 - 生产环境可稳定运行当前 MVP (Priority: P1)
 
 作为 SubHub 的维护者，我希望当前 MVP 可以在 Vercel 上连接 Neon Postgres 稳定运行，从而不再依赖 SQLite 文件和单机部署约定作为正式上线前提。
@@ -148,6 +157,7 @@
 - **FR-023**: 系统 MUST 约束数据库相关单测、集成测试、契约测试与 CI 中需要真实数据库行为验证的测试默认连接 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`，并在测试前完成 schema 建立与最小 fixture 准备。
 - **FR-024**: 系统 MUST 允许测试流程在结束后执行清理、重建或 reset，使 `test` 数据库保持干净、隔离、可重复的运行基线；测试不得依赖 dev、staging 或 production 中的历史脏数据。
 - **FR-025**: 系统 MUST 将当前阶段的测试数据库策略收敛为长期存在的 `test` 数据库或 test branch，而不是要求每次 PR 或每次 test run 动态创建临时数据库 branch。
+- **FR-026**: 系统 MAY 在数据库相关单测中使用 PGlite 作为快速数据库单测层，但该层 MUST 与正式 Postgres / Neon 验证链路隔离，不得替代真实 Postgres test database、CI Postgres service、Neon staging、cutover 或 deploy verification。
 
 ### 非功能需求 *(mandatory)*
 
@@ -158,6 +168,7 @@
 - **NFR-005 (设计保真)**: Feature MUST 声明本次迁移不改变 `DESIGN.md`、共享布局和 page specs 的功能边界；若需要页面提示或状态文案调整，只能作为基础设施迁移的最小表现层变化。
 - **NFR-006 (并行隔离)**: Feature MUST 绑定当前 active feature 目录 `specs/002-migrate-neon-vercel`，并确认该 worktree 当前只跟踪 002 基础设施迁移 feature。
 - **NFR-007 (Issue 同步范围)**: 后续 tasks 或 issue 同步 MUST 仅面向 `specs/002-migrate-neon-vercel`，不得与 `specs/001-mvp-admin-console` 混批。
+- **NFR-008 (测试分层边界)**: Feature MUST 保持测试分层清晰：PGlite 仅用于快速数据库单测层，real Postgres 与 Neon 验证链路仍是 schema / migration / cutover / deploy / release gate 的正式验证基线。
 
 ### 关键实体 *(如功能涉及数据请填写)*
 
@@ -186,6 +197,7 @@
 - Neon Postgres 是当前阶段的正式数据库路线，Vercel 是当前阶段的正式部署平台；本 spec 不再比较替代路线。
 - `preview` 分支是长期 staging / preview 验证入口，其他功能分支默认共享 dev 数据库，而不是各自拥有独立数据库分支。
 - 数据库相关测试默认使用长期存在的专用 `test` 数据库或 test branch，并通过 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 接入；当前阶段不要求每次 PR 或每次测试动态创建临时数据库 branch。
+- PGlite 最小试点已证明其适合少量 repository / service 层快速数据库单测，但该结论不改变正式 Postgres / Neon 作为运行时、迁移验证与发布验证主线的地位。
 - 未来可能引入每个 PR 独立数据库 branch，但当前阶段只要求为其保留扩展空间，不要求在本 feature 中交付自动化能力。
 - 当前已有 SQLite 数据可能需要迁移到 Postgres；若某些历史数据不满足结构约束，迁移流程必须显式暴露问题，而不是静默跳过。
 - 当前 feature 可以引入运行时和部署层面的必要环境变量调整，但不应重塑产品层认证模型、权限模型或页面信息架构。

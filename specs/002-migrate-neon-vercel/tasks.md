@@ -8,6 +8,12 @@
 
 **测试**: REQUIRED。任务必须显式覆盖环境映射、数据库 URL 解析、Postgres schema / migration、SQLite 数据搬迁、bootstrap / seed / cutover、三层环境可用性验证、独立 `test` 数据库隔离 / reset 策略，以及 `001-mvp-admin-console` 主链路回归。
 
+**测试分层约束**:
+- 当前已完成 PGlite 最小试点验证，已通过 `tests/unit/providers/credential-pool.test.ts` 与 `tests/unit/caller-keys/caller-key-service.test.ts` 两组聚焦测试。
+- PGlite 当前仅作为快速数据库单测层的已验证选项，后续是否继续扩展覆盖面，属于增量优化，不是当前 feature 的强制交付项。
+- 当前阶段不要求将所有数据库测试迁移到 PGlite。
+- 正式 Postgres test database、CI Postgres service、Neon staging / cutover / deploy verification 链路必须继续保留，不得被 PGlite 试点替代。
+
 **组织方式**: 任务按用户故事分组，同时在任务描述中标明所属迁移层：环境映射层、Postgres 接入层、SQLite 搬迁层、bootstrap / seed 层、部署与发布门禁层、测试与回归层、文档层。
 
 ## 格式: `[ID] [P?] [Story] Description`
@@ -50,6 +56,8 @@ To execute: `/speckit.git.commit`
 - [ ] T008 [P] 在 `docs/workflows/vercel-neon-environments.md` 记录 Vercel 环境变量分组、Preview 分支覆盖、Neon prod / staging / dev 数据库准备步骤，以及独立 `test` 数据库的准备、清理与重建约束，作为仓库内的环境映射操作手册
 
 **检查点**: 仓库已有单一 URL 环境变量基线、Postgres 测试脚手架和 Vercel/Neon 环境说明，可继续推进正式接入。
+
+补充说明：若后续引入更多 PGlite 覆盖，应优先落在支持显式 db 注入的 repository / service 测试上，并保持其定位为快速数据库单测层，而不是替换整个数据库测试体系。
 
 ---
 
@@ -181,6 +189,8 @@ To execute: `/speckit.git.commit`
 ## 阶段 7: 收尾与横切关注点
 
 **目的**: 完成文档对齐、001 主链路回归、OpenAPI/Orval/Scalar 兼容验证和发布候选校验。
+
+收尾约束：本阶段若回写测试策略结论，应明确保留 PGlite = 快速数据库单测层、real Postgres = 正式数据库测试层、Neon = 环境与发布验证层的分层，不得把最小试点表述为数据库测试主路线替换。
 
 - [ ] T059 [P] 在 `docs/decisions/neon-vercel-runtime.md` 和 `docs/workflows/vercel-neon-environments.md` 回写最终环境变量命名、Vercel 分支覆盖规则和 cutover runbook
 - [ ] T060 [P] 在 `specs/001-mvp-admin-console/database-design.md` 记录“SQLite 已降级为迁移输入、Postgres 成为正式运行基线”的仓库真源变化，并保留 001 数据语义不变
