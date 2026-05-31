@@ -8,7 +8,7 @@
 
 ## 摘要
 
-本 feature 将 SubHub 的正式运行底座从 SQLite + 本地文件路径 + 单机部署假设，切换到 Neon Postgres + Vercel 的三层环境模型。实现重点不是新增页面或 API，而是收敛环境解析、数据库 URL 管理、Postgres schema 基线、SQLite 数据搬迁、bootstrap/seed、迁移执行方式、发布门禁和三层环境验证流程。
+本 feature 将 SubHub 的正式运行底座从 SQLite + 本地文件路径 + 单机部署假设，切换到 Neon Postgres + Vercel 的三层运行环境模型，并补充独立 `test` 数据库语义。实现重点不是新增页面或 API，而是收敛环境解析、数据库 URL 管理、Postgres schema 基线、SQLite 数据搬迁、bootstrap/seed、迁移执行方式、发布门禁，以及 production / staging / dev 与测试隔离的验证流程。
 
 技术策略上，当前运行时将以 Neon Postgres 为正式数据库目标，采用“运行时使用 pooled URL、迁移与数据搬迁使用 direct/unpooled URL”的边界；SQLite 时代的 migration 历史不做 1:1 继承，而是为 Postgres 重新建立正式 migration 基线，并通过独立数据搬迁流程把必须保留的管理数据迁入新库。Vercel 负责 production / preview 部署，GitHub Actions 或等价受控发布流程负责 migration 与 cutover 门禁，避免把数据库切换与应用构建混成不可控的单一步骤。
 
@@ -51,10 +51,12 @@
 **存储**:
 - 正式运行目标：Neon Postgres
 - 环境分层：prod database、staging database、dev database
+- 测试隔离目标：test database（仅供数据库相关单测、集成测试、契约测试与 CI 真实数据库校验使用）
 - 旧基线：SQLite 文件数据库，仅作为历史数据来源与迁移输入，不再作为正式部署目标
 
 **测试**:
 - `vitest` 单元、集成与契约测试
+- 数据库相关测试默认使用独立 `test` 数据库，并通过专用 runtime/direct URL 运行
 - 数据库 schema / migration / drift 校验
 - SQLite -> Postgres 数据搬迁校验
 - production / staging / dev 烟雾验证
@@ -76,9 +78,11 @@
 - 不扩大 `001-mvp-admin-console` 的产品功能、页面职责、API 范围或 UX 范围
 - 环境切换必须由 Vercel 环境变量与分支规则驱动，不得依赖手工改连数据库
 - Vercel 对当前部署只注入唯一一组 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`；应用层不得同时持有 prod、staging、dev 多套数据库 URL 后再自行路由
+- `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 只服务测试与 CI 的真实数据库校验，不得参与 production、preview 或本地 development 的应用运行主路由
 - 运行时请求只能使用 pooled URL；migration、DDL、数据搬迁、bootstrap 和校验脚本只能使用 direct/unpooled URL
 - Vercel build/start 阶段不得隐式执行生产 migration
 - Postgres 正式 migration 基线必须独立建立；SQLite 历史 migration 不作为 1:1 迁移目标
+- `test` 数据库是测试隔离语义，不是新的产品环境层，也不是当前阶段要求新增的 Vercel 部署层
 
 **规模/范围**:
 - 影响当前全部 MVP 页面、管理端 API、对外字幕 API、数据库访问层、环境变量层、部署链路和测试链路
@@ -89,7 +93,7 @@
 *门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。*
 
 - **代码质量门禁**: 通过。计划继续沿用 `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm db:check`、`pnpm api:check` 作为核心门禁，并新增 Postgres 迁移与数据搬迁验证步骤。
-- **必需测试策略**: 通过。覆盖环境映射、数据库 URL 解析、Postgres schema/migration、SQLite 数据搬迁、bootstrap/seed、三层环境 smoke test 与 001 主链路回归。
+- **必需测试策略**: 通过。覆盖环境映射、数据库 URL 解析、Postgres schema/migration、SQLite 数据搬迁、bootstrap/seed、三层环境 smoke test、独立 `test` 数据库隔离/reset 策略与 001 主链路回归。
 - **UX/API 一致性约束**: 通过。迁移后后台页面与对外 API 行为继续以 001 定义为准，仅允许新增运行时错误和未就绪状态的最小表达。
 - **性能预算与验证方法**: 通过。保持 001 的核心性能目标，同时要求启动失败与发布校验快速、明确。
 - **可维护性/模块化方案**: 通过。运行时 env 解析、Postgres client、SQLite 数据搬迁、bootstrap/seed、发布脚本与 Vercel/GitHub Actions 分离。
@@ -217,6 +221,14 @@ tests/
 - 环境切换的主路由选择由 Vercel 环境变量分组与 Preview 分支覆盖完成：Production 只注入 prod URL；`preview` 分支对应的 Preview 只注入 staging URL；其他 Preview 分支只注入 dev URL；本地 development 只配置 dev URL。
 - 应用层只使用 `VERCEL_ENV`、`VERCEL_GIT_COMMIT_REF`、`NODE_ENV` 与当前注入的单一 URL 对进行身份校验、未就绪护栏和错误提示，不负责在 prod/staging/dev 多套 URL 之间做主路由选择。
 
+### 1.5 测试数据库策略
+
+- 数据库相关单测、集成测试、契约测试，以及 CI 中需要真实数据库行为验证的测试，统一使用独立 `test` 数据库语义，不复用 prod、staging 或 dev。
+- 测试默认消费 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`；其中 pooled URL 用于模拟运行时读写路径，direct/unpooled URL 用于 migration、reset、bootstrap 和最小 fixture 准备。
+- `test` 数据库不属于新的产品部署环境层；应用运行时的环境主路由仍只覆盖 prod / staging / dev，测试入口通过测试脚手架或显式测试配置接入 `test` URL 对。
+- 当前阶段优先使用长期存在的 `test` 数据库或 test branch，保证可重复、可清理、可重建；不要求每次 PR 或每次 test run 自动创建临时数据库 branch。
+- 测试执行前必须能够明确 schema 已建立，并完成最小 fixture 准备；测试执行后必须支持清理、重建或 reset，避免依赖历史脏数据继续通过。
+
 ### 2. 数据库驱动与 client 边界
 
 - 用 Postgres 运行时 client 替代当前 `better-sqlite3` 正式路径。
@@ -246,11 +258,13 @@ tests/
   - **schema migration**: 建立 Postgres 表、索引与约束
   - **bootstrap**: 建立系统最小运行前提，例如版本标记、可选系统元数据、管理员初始化状态
   - **seed**: 仅限 dev / staging 的可重复样例数据或测试数据
+- `test` 数据库不复用 staging/dev seed 语义；它应拥有独立的 migration、bootstrap、最小 fixture 与 reset 路径，以保证数据库相关测试的隔离和可重复性。
 - production 禁止自动写入演示或测试数据；但必须区分两种初始化路径：
   - **greenfield production**: `schema migration + 必需 bootstrap + 首个管理员初始化`
   - **SQLite cutover production**: `schema migration + 必需 bootstrap + 数据搬迁 + 迁移后校验`，以迁移既有管理员为主，不进入“首个管理员初始化”路径
 - staging 允许受控 seed，但不得使用 production 真数据副本，除非有单独脱敏流程
 - dev 允许可重复 reset / reseed，用于本地与非生产 Preview 验证
+- test 允许在每次测试批次前后执行 reset / rebuild，但不得承载开发预览、发布前验证或生产运维职责
 - bootstrap 和 seed 都必须具备幂等性；重复执行不得污染正式数据或重复创建管理员/演示数据。管理员初始化逻辑必须只在“数据库内无管理员且显式 greenfield 模式”时允许执行。
 
 ### 5. Vercel 部署与发布门禁

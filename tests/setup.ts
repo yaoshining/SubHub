@@ -1,11 +1,6 @@
 import "@testing-library/jest-dom/vitest";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
-
-let testDatabaseDirectory: string | undefined;
 
 const createMemoryStorage = () => {
   const store = new Map<string, string>();
@@ -36,8 +31,6 @@ const localStorageMock = createMemoryStorage();
 const sessionStorageMock = createMemoryStorage();
 
 beforeAll(() => {
-  testDatabaseDirectory = mkdtempSync(join(tmpdir(), "subhub-test-db-"));
-
   if (!HTMLElement.prototype.setPointerCapture) {
     HTMLElement.prototype.setPointerCapture = vi.fn();
   }
@@ -73,7 +66,18 @@ beforeAll(() => {
   Object.assign(process.env, {
     NODE_ENV: process.env.NODE_ENV ?? "test",
     APP_URL: process.env.APP_URL ?? "http://localhost:3000",
-    SQLITE_DATABASE_PATH: join(testDatabaseDirectory, "subhub-test.sqlite"),
+    DATABASE_URL:
+      process.env.DATABASE_URL ??
+      "postgresql://runtime-user@localhost:5432/subhub",
+    DATABASE_URL_UNPOOLED:
+      process.env.DATABASE_URL_UNPOOLED ??
+      "postgresql://direct-user@localhost:5432/subhub",
+    DATABASE_URL_TEST:
+      process.env.DATABASE_URL_TEST ??
+      "postgresql://test-runtime@localhost:5432/subhub_test",
+    DATABASE_URL_TEST_UNPOOLED:
+      process.env.DATABASE_URL_TEST_UNPOOLED ??
+      "postgresql://test-direct@localhost:5432/subhub_test",
     OPENSUBTITLES_API_URL:
       process.env.OPENSUBTITLES_API_URL ??
       "https://api.opensubtitles.com/api/v1",
@@ -96,7 +100,5 @@ afterEach(() => {
 });
 
 afterAll(() => {
-  if (testDatabaseDirectory && existsSync(testDatabaseDirectory)) {
-    rmSync(testDatabaseDirectory, { recursive: true, force: true });
-  }
+  return undefined;
 });

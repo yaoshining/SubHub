@@ -5,7 +5,10 @@ const baseEnvSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   APP_URL: z.string().url().default("http://localhost:3000"),
-  SQLITE_DATABASE_PATH: z.string().min(1).default("./data/subhub.sqlite"),
+  DATABASE_URL: z.string().min(1).optional(),
+  DATABASE_URL_UNPOOLED: z.string().min(1).optional(),
+  DATABASE_URL_TEST: z.string().min(1).optional(),
+  DATABASE_URL_TEST_UNPOOLED: z.string().min(1).optional(),
   OPENSUBTITLES_API_URL: z
     .string()
     .url()

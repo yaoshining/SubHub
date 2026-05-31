@@ -21,7 +21,7 @@ const resolveRequiredUrl = (
   if (!value) {
     throw new Error(`${label} 未配置。`);
   }
-
+  console.log(`Resolved ${label}: ${value}`);
   assertPostgresUrl(label, value);
 
   return value;
