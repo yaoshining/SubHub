@@ -27,7 +27,11 @@ export type StorageClientOptions = PostgresClientOptions;
 
 const migrationsFolder = "src/server/storage/migrations";
 let singleton: StorageClient | undefined;
-let testDatabaseUrl: string | undefined;
+
+const isPostgresUrl = (value: string) => /^postgres(ql)?:\/\//.test(value);
+
+let testRuntimeDatabaseUrl: string | undefined;
+let testDirectDatabaseUrl: string | undefined;
 
 export const resolveStorageDatabasePath = (databaseUrl?: string): string =>
   resolveRuntimeDatabaseUrl(databaseUrl);
@@ -36,10 +40,10 @@ export const createStorageClient = (
   options: StorageClientOptions = {},
 ): StorageClient => {
   const runtimeUrl = resolveRuntimeDatabaseUrl(
-    options.runtimeDatabaseUrl ?? testDatabaseUrl,
+    options.runtimeDatabaseUrl ?? testRuntimeDatabaseUrl,
   );
   const directUrl = resolveDirectDatabaseUrl(
-    options.directDatabaseUrl ?? testDatabaseUrl,
+    options.directDatabaseUrl ?? testDirectDatabaseUrl,
   );
   const runtimeClient = createRuntimePostgresClient({
     runtimeDatabaseUrl: runtimeUrl,
@@ -94,10 +98,21 @@ export const closeStorageClient = async () => {
 
 export const setStorageDatabasePathForTesting = (databaseUrl: string) => {
   singleton = undefined;
-  testDatabaseUrl = databaseUrl;
+
+  if (isPostgresUrl(databaseUrl)) {
+    testRuntimeDatabaseUrl = databaseUrl;
+    testDirectDatabaseUrl = databaseUrl;
+
+    return;
+  }
+
+  testRuntimeDatabaseUrl = process.env.DATABASE_URL_TEST;
+  testDirectDatabaseUrl =
+    process.env.DATABASE_URL_TEST_UNPOOLED ?? process.env.DATABASE_URL_TEST;
 };
 
 export const resetStorageDatabasePathForTesting = () => {
   singleton = undefined;
-  testDatabaseUrl = undefined;
+  testRuntimeDatabaseUrl = undefined;
+  testDirectDatabaseUrl = undefined;
 };

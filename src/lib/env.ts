@@ -5,10 +5,10 @@ const baseEnvSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   APP_URL: z.string().url().default("http://localhost:3000"),
-  DATABASE_URL: z.string().min(1).optional(),
-  DATABASE_URL_UNPOOLED: z.string().min(1).optional(),
-  DATABASE_URL_TEST: z.string().min(1).optional(),
-  DATABASE_URL_TEST_UNPOOLED: z.string().min(1).optional(),
+  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL_UNPOOLED: z.string().url().optional(),
+  DATABASE_URL_TEST: z.string().url().optional(),
+  DATABASE_URL_TEST_UNPOOLED: z.string().url().optional(),
   OPENSUBTITLES_API_URL: z
     .string()
     .url()
@@ -24,7 +24,21 @@ const productionSecrets = [
   "CALLER_KEY_SECRET",
 ] as const;
 
+const testDatabaseUrls = ["DATABASE_URL_TEST", "DATABASE_URL_TEST_UNPOOLED"] as const;
+
 const envSchema = baseEnvSchema.superRefine((env, ctx) => {
+  if (env.NODE_ENV === "test") {
+    for (const key of testDatabaseUrls) {
+      if (!env[key]) {
+        ctx.addIssue({
+          code: "custom",
+          path: [key],
+          message: `${key} 在 test 环境中必须配置。`,
+        });
+      }
+    }
+  }
+
   if (env.NODE_ENV !== "production") {
     return;
   }
