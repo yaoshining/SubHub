@@ -55,6 +55,15 @@ describe("readEnv 本地 development 护栏", () => {
     ).toThrowError(/DEV_DATABASE_URL/);
   });
 
+  it("在本地 development 仅注入 DATABASE_URL_UNPOOLED 时也会精确阻断", () => {
+    expect(() =>
+      readEnv({
+        ...baseSource,
+        DATABASE_URL_UNPOOLED: "prod-direct-url",
+      }),
+    ).toThrowError(/DATABASE_URL_UNPOOLED/);
+  });
+
   it("在本地 development 缺少 DEV_* 真源时失败", () => {
     expect(() =>
       readEnv({

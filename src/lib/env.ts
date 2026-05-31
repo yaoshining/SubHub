@@ -33,7 +33,9 @@ const productionSecrets = [
 ] as const;
 
 export type DeploymentProvider = "vercel" | "local";
-export type VercelEnvironment = z.infer<typeof vercelEnvironmentSchema> | "none";
+export type VercelEnvironment =
+  | z.infer<typeof vercelEnvironmentSchema>
+  | "none";
 export type RuntimeTier = "production" | "staging" | "development";
 
 export type AppEnv = {
@@ -62,6 +64,17 @@ const resolveRuntimeIdentity = (
   env: z.infer<typeof rawEnvSchema>,
   reportIssue: EnvIssueReporter,
 ) => {
+  if (env.NODE_ENV === "test") {
+    return {
+      deploymentProvider: "local" as const,
+      vercelEnvironment: "none" as const,
+      gitBranch: null,
+      resolvedTier: "development" as const,
+      isPreviewDeployment: false,
+      requiresDirectMigrationGate: false,
+    };
+  }
+
   if (env.VERCEL_ENV === "production") {
     if (env.VERCEL_GIT_COMMIT_REF !== "main") {
       reportIssue(
@@ -132,7 +145,7 @@ const resolveRuntimeIdentity = (
     };
   }
 
-  if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
+  if (env.NODE_ENV === "development") {
     return {
       deploymentProvider: "local" as const,
       vercelEnvironment: "none" as const,
@@ -154,12 +167,25 @@ const resolveDatabaseUrls = (
   env: z.infer<typeof rawEnvSchema>,
   reportIssue: EnvIssueReporter,
 ) => {
-  if (env.VERCEL_ENV === "development" || env.NODE_ENV === "development") {
-    if (env.DATABASE_URL || env.DATABASE_URL_UNPOOLED) {
+  if (
+    env.NODE_ENV !== "test" &&
+    (env.VERCEL_ENV === "development" || env.NODE_ENV === "development")
+  ) {
+    if (env.DATABASE_URL) {
       reportIssue(
         "DATABASE_URL",
         "本地 development 必须通过 DEV_DATABASE_URL / DEV_DATABASE_URL_UNPOOLED 提供 dev 数据库真源，避免误连非 dev 数据库。",
       );
+    }
+
+    if (env.DATABASE_URL_UNPOOLED) {
+      reportIssue(
+        "DATABASE_URL_UNPOOLED",
+        "本地 development 必须通过 DEV_DATABASE_URL / DEV_DATABASE_URL_UNPOOLED 提供 dev 数据库真源，避免误连非 dev 数据库。",
+      );
+    }
+
+    if (env.DATABASE_URL || env.DATABASE_URL_UNPOOLED) {
       return null;
     }
 
@@ -187,7 +213,7 @@ const resolveDatabaseUrls = (
     };
   }
 
-  if (env.VERCEL_ENV) {
+  if (env.VERCEL_ENV && env.NODE_ENV !== "test") {
     if (!env.DATABASE_URL) {
       reportIssue("DATABASE_URL", "当前部署必须注入 DATABASE_URL。");
     }
@@ -212,7 +238,8 @@ const resolveDatabaseUrls = (
   if (env.NODE_ENV === "test") {
     return {
       DATABASE_URL: env.DATABASE_URL ?? testDatabaseUrl,
-      DATABASE_URL_UNPOOLED: env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL ?? testDatabaseUrl,
+      DATABASE_URL_UNPOOLED:
+        env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL ?? testDatabaseUrl,
     };
   }
 

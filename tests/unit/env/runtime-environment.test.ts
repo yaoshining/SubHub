@@ -90,4 +90,23 @@ describe("readEnv 运行环境映射", () => {
       }),
     ).toThrowError(/preview.*feature.*agent/);
   });
+
+  it("在 test 环境下忽略 VERCEL_* 部署身份并走本地回退", () => {
+    const env = readEnv({
+      ...baseSource,
+      NODE_ENV: "test",
+      VERCEL_ENV: "preview",
+    });
+
+    expect(env).toMatchObject({
+      deploymentProvider: "local",
+      vercelEnvironment: "none",
+      gitBranch: null,
+      resolvedTier: "development",
+      isPreviewDeployment: false,
+      requiresDirectMigrationGate: false,
+      DATABASE_URL: "pooled-current-deployment",
+      DATABASE_URL_UNPOOLED: "direct-current-deployment",
+    });
+  });
 });
