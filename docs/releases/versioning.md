@@ -50,3 +50,13 @@
 - 当前 `specs/001-mvp-admin-console/` 对应的收口版本为 `v0.1.0`。
 - 后续数据库 / 部署生产化工作建议以独立 feature 或独立 spec 形式推进，并默认对应 `v0.2.0`。
 - GitHub milestone 可逐步从阶段性命名过渡到版本号命名，但 `scope:*` 标签仍保留为范围控制手段，不与版本号职责混淆。
+
+## GitHub Milestone 约定
+
+- 当前仓库已建立版本 milestones：`v0.1.0`、`v0.2.0`、`v1.0.0`。
+- 历史 milestones：`MVP`、`Post-MVP`、`Future` 继续保留，用于过渡期兼容与历史查询，不再作为版本归档主入口。
+- 已完成的 MVP 管理控制台与统一字幕出口相关 issue 已迁移至 `v0.1.0`；旧 `MVP` milestone 保留但应维持为空。
+- 后续新 issue 默认优先按版本目标挂 milestone，而不是继续挂到 `MVP`、`Post-MVP`、`Future`。
+- `scope:*` 标签负责表达范围层级，例如 `scope:mvp`、`scope:post-mvp`、`scope:future`；milestone 负责表达目标版本，两者不得互相替代。
+- 当 issue 属于当前首发闭环，应优先归入 `v0.1.0`；数据库与部署生产化工作应优先归入 `v0.2.0`；正式稳定首发收口工作应优先归入 `v1.0.0`。
+- 若出现仅需表达长期积压、但尚未承诺版本窗口的事项，可暂不设置版本 milestone，仅保留 `scope:*` 标签，待进入明确版本规划后再补 milestone。
