@@ -19,6 +19,9 @@ import {
 
 let tempDir: string;
 
+const toIsoString = (value: string | null) =>
+  value ? new Date(value).toISOString() : null;
+
 const seedSession = async () => {
   const db = getStorageClient().db;
   await db.insert(adminUsers).values([
@@ -91,9 +94,9 @@ describe("Admin session remediation service", () => {
     expect(session).toMatchObject({
       id: "session_attention",
       status: "revoked",
-      remediatedAt: "2026-05-28T12:00:00.000Z",
       remediatedByAdminUserId: "admin_owner",
     });
+    expect(toIsoString(session.remediatedAt)).toBe("2026-05-28T12:00:00.000Z");
 
     const actions = await getStorageClient()
       .db.select()
@@ -130,9 +133,9 @@ describe("Admin session remediation service", () => {
     expect(session).toMatchObject({
       id: "session_attention",
       status: "remediated",
-      remediatedAt: "2026-05-28T12:05:00.000Z",
       remediatedByAdminUserId: "admin_owner",
     });
+    expect(toIsoString(session.remediatedAt)).toBe("2026-05-28T12:05:00.000Z");
   });
 
   it("拒绝处置非 needs_attention 会话，避免扩展为完整风控平台", async () => {

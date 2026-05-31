@@ -1,9 +1,57 @@
 import "@testing-library/jest-dom/vitest";
-import { loadEnvConfig } from "@next/env";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-loadEnvConfig(process.cwd());
+const loadLocalEnvFile = (filePath: string) => {
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf("=");
+
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+
+    if (!key || process.env[key] !== undefined) {
+      continue;
+    }
+
+    let value = line.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+};
+
+const loadTestEnvFiles = () => {
+  const rootDir = process.cwd();
+
+  for (const name of [".env.test.local", ".env.local", ".env.test", ".env"]) {
+    loadLocalEnvFile(join(rootDir, name));
+  }
+};
+
+loadTestEnvFiles();
 
 const createMemoryStorage = () => {
   const store = new Map<string, string>();

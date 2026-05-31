@@ -1,7 +1,3 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -13,29 +9,23 @@ import {
 } from "@/server/providers/credential-pool";
 import { ProviderRepository } from "@/server/providers/provider-repository";
 import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+  type PGliteTestHarness,
+  createPGliteTestHarness,
+} from "../../helpers/pglite-storage";
 
-let tempDir: string;
+let harness: PGliteTestHarness;
 
 beforeEach(async () => {
-  tempDir = mkdtempSync(join(tmpdir(), "subhub-credential-pool-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  await getStorageClient().migrate();
+  harness = await createPGliteTestHarness();
 });
 
 afterEach(async () => {
-  await closeStorageClient();
-  resetStorageDatabasePathForTesting();
-  rmSync(tempDir, { recursive: true, force: true });
+  await harness.close();
 });
 
 describe("Provider 凭据池", () => {
   it("只选择 active 且未冷却的凭据，并可解密供 adapter 使用", async () => {
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider({
       name: "OpenSubtitles",
       type: "opensubtitles",
@@ -45,7 +35,9 @@ describe("Provider 凭据池", () => {
       },
     });
 
-    const selected = await selectProviderCredential(provider.id);
+    const selected = await selectProviderCredential(provider.id, {
+      db: harness.db,
+    });
 
     expect(selected.label).toBe("primary");
     expect(selected.secret).toBe("secret-primary-token");
@@ -54,7 +46,7 @@ describe("Provider 凭据池", () => {
   });
 
   it("隔离单个异常凭据不会影响同 Provider 下其他 active 凭据", async () => {
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider({
       name: "OpenSubtitles",
       type: "opensubtitles",
@@ -72,9 +64,12 @@ describe("Provider 凭据池", () => {
       provider.id,
       provider.credentials[0]!.id,
       "429 限流",
+      { db: harness.db },
     );
     const afterIsolate = await repository.requireProvider(provider.id);
-    const selected = await selectProviderCredential(provider.id);
+    const selected = await selectProviderCredential(provider.id, {
+      db: harness.db,
+    });
 
     expect(afterIsolate.availableCredentialCount).toBe(1);
     expect(selected.id).toBe(secondary.id);
@@ -82,7 +77,7 @@ describe("Provider 凭据池", () => {
   });
 
   it("恢复被隔离凭据后重新进入 active 调度池", async () => {
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider({
       name: "OpenSubtitles",
       type: "opensubtitles",
@@ -93,8 +88,10 @@ describe("Provider 凭据池", () => {
     });
     const credentialId = provider.credentials[0]!.id;
 
-    await isolateCredential(provider.id, credentialId, "管理员隔离");
-    await restoreCredential(provider.id, credentialId);
+    await isolateCredential(provider.id, credentialId, "管理员隔离", {
+      db: harness.db,
+    });
+    await restoreCredential(provider.id, credentialId, { db: harness.db });
     const restored = await repository.requireCredential(
       provider.id,
       credentialId,
@@ -105,7 +102,7 @@ describe("Provider 凭据池", () => {
   });
 
   it("所有凭据均不可用时返回明确的凭据池耗尽错误", async () => {
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider({
       name: "OpenSubtitles",
       type: "opensubtitles",
@@ -115,9 +112,13 @@ describe("Provider 凭据池", () => {
       },
     });
 
-    await isolateCredential(provider.id, provider.credentials[0]!.id, "异常");
+    await isolateCredential(provider.id, provider.credentials[0]!.id, "异常", {
+      db: harness.db,
+    });
 
-    await expect(selectProviderCredential(provider.id)).rejects.toMatchObject({
+    await expect(
+      selectProviderCredential(provider.id, { db: harness.db }),
+    ).rejects.toMatchObject({
       code: "PROVIDER_CREDENTIAL_EXHAUSTED",
       target: "credential_pool",
     });
@@ -125,7 +126,7 @@ describe("Provider 凭据池", () => {
 
   it("覆盖 active、cooldown、isolated、disabled、exhausted 的可调度状态流转", async () => {
     const now = new Date("2026-05-28T00:00:00.000Z");
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider(
       {
         name: "OpenSubtitles",
@@ -175,9 +176,12 @@ describe("Provider 凭据池", () => {
       cooldown.id,
       "rate_limited",
       "429 limited",
-      { now },
+      { db: harness.db, now },
     );
-    await isolateCredential(provider.id, isolated.id, "管理员隔离", { now });
+    await isolateCredential(provider.id, isolated.id, "管理员隔离", {
+      db: harness.db,
+      now,
+    });
     await repository.updateCredential(
       provider.id,
       disabled.id,
@@ -189,10 +193,13 @@ describe("Provider 凭据池", () => {
       exhausted.id,
       "quota_exhausted",
       "quota exhausted",
-      { now },
+      { db: harness.db, now },
     );
 
-    const selected = await selectProviderCredential(provider.id, { now });
+    const selected = await selectProviderCredential(provider.id, {
+      db: harness.db,
+      now,
+    });
     const detail = await repository.requireProvider(provider.id, now);
 
     expect(selected.label).toBe("active");
@@ -206,7 +213,10 @@ describe("Provider 凭据池", () => {
     );
     expect(detail.availableCredentialCount).toBe(1);
 
-    await restoreCredential(provider.id, isolated.id, { now });
+    await restoreCredential(provider.id, isolated.id, {
+      db: harness.db,
+      now,
+    });
     const restored = await repository.requireProvider(provider.id, now);
 
     expect(restored.availableCredentialCount).toBe(2);
@@ -222,7 +232,7 @@ describe("Provider 凭据池", () => {
 
   it("禁止通过 restore 重新激活 disabled 凭据", async () => {
     const now = new Date("2026-05-28T00:00:00.000Z");
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider(
       {
         name: "OpenSubtitles",
@@ -251,7 +261,10 @@ describe("Provider 凭据池", () => {
     );
 
     await expect(
-      restoreCredential(provider.id, disabled.id, { now }),
+      restoreCredential(provider.id, disabled.id, {
+        db: harness.db,
+        now,
+      }),
     ).rejects.toMatchObject({
       code: "VALIDATION_FAILED",
       target: "credentialId",
@@ -264,7 +277,7 @@ describe("Provider 凭据池", () => {
   it("cooldown 到期后可重新参与调度，成功使用后恢复 active", async () => {
     const now = new Date("2026-05-28T00:00:00.000Z");
     const later = new Date("2026-05-28T00:02:00.000Z");
-    const repository = new ProviderRepository(getStorageClient().db);
+    const repository = new ProviderRepository(harness.db);
     const provider = await repository.createProvider(
       {
         name: "OpenSubtitles",
@@ -283,18 +296,22 @@ describe("Provider 凭据池", () => {
       credentialId,
       "rate_limited",
       "429 limited",
-      { now },
+      { db: harness.db, now },
     );
     await expect(
-      selectProviderCredential(provider.id, { now }),
+      selectProviderCredential(provider.id, { db: harness.db, now }),
     ).rejects.toMatchObject({
       code: "PROVIDER_CREDENTIAL_EXHAUSTED",
     });
 
     const selected = await selectProviderCredential(provider.id, {
+      db: harness.db,
       now: later,
     });
-    await markCredentialUsed(provider.id, credentialId, { now: later });
+    await markCredentialUsed(provider.id, credentialId, {
+      db: harness.db,
+      now: later,
+    });
     const detail = await repository.requireProvider(provider.id, later);
 
     expect(selected.id).toBe(credentialId);

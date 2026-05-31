@@ -27,11 +27,24 @@ export type StorageClientOptions = PostgresClientOptions;
 
 const migrationsFolder = "src/server/storage/migrations";
 let singleton: StorageClient | undefined;
+const resettableTestTables = [
+  "admin_action_results",
+  "subtitle_download_requests",
+  "subtitle_search_requests",
+  "caller_key_rotations",
+  "caller_keys",
+  "provider_credentials",
+  "providers",
+  "admin_sessions",
+  "admin_invitations",
+  "admin_users",
+] as const;
 
 const isPostgresUrl = (value: string) => /^postgres(ql)?:\/\//.test(value);
 
 let testRuntimeDatabaseUrl: string | undefined;
 let testDirectDatabaseUrl: string | undefined;
+let resetTestDataAfterMigrate = false;
 
 export const resolveStorageDatabasePath = (databaseUrl?: string): string =>
   resolveRuntimeDatabaseUrl(databaseUrl);
@@ -62,17 +75,24 @@ export const createStorageClient = (
       }
 
       await migrate(directClient.db, { migrationsFolder });
+
+      if (resetTestDataAfterMigrate) {
+        await directClient.sql.unsafe(
+          `TRUNCATE TABLE ${resettableTestTables
+            .map((tableName) => `"${tableName}"`)
+            .join(", ")} RESTART IDENTITY CASCADE`,
+        );
+      }
     },
     transaction: async (callback) =>
       runtimeClient.db.transaction(async (tx) =>
         callback(tx as StorageDatabase),
       ),
     close: async () => {
-      await runtimeClient.close();
-
-      if (directClient) {
-        await directClient.close();
-      }
+      await Promise.all([
+        runtimeClient.close(),
+        directClient ? directClient.close() : Promise.resolve(),
+      ]);
     },
   };
 
@@ -102,6 +122,7 @@ export const setStorageDatabasePathForTesting = (databaseUrl: string) => {
   if (isPostgresUrl(databaseUrl)) {
     testRuntimeDatabaseUrl = databaseUrl;
     testDirectDatabaseUrl = databaseUrl;
+    resetTestDataAfterMigrate = false;
 
     return;
   }
@@ -109,10 +130,12 @@ export const setStorageDatabasePathForTesting = (databaseUrl: string) => {
   testRuntimeDatabaseUrl = process.env.DATABASE_URL_TEST;
   testDirectDatabaseUrl =
     process.env.DATABASE_URL_TEST_UNPOOLED ?? process.env.DATABASE_URL_TEST;
+  resetTestDataAfterMigrate = true;
 };
 
 export const resetStorageDatabasePathForTesting = () => {
   singleton = undefined;
   testRuntimeDatabaseUrl = undefined;
   testDirectDatabaseUrl = undefined;
+  resetTestDataAfterMigrate = false;
 };
