@@ -6,10 +6,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { StorageDatabase } from "@/server/storage/client";
 
 import {
-  closeStorageClient,
   getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
 } from "../../helpers/pglite-storage-client";
 
 import { createCallerKey } from "@/server/services/caller-key-service";
@@ -21,13 +21,13 @@ let tempDir: string;
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-settings-service-"));
-  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
-  await closeStorageClient();
-  await resetStorageDatabasePathForTesting();
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

@@ -6,10 +6,10 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  closeStorageClient,
   getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
 } from "../helpers/pglite-storage-client";
 
 import { adminSessionCookieName } from "@/lib/auth/constants";
@@ -83,14 +83,14 @@ const createAdminSessionCookie = async () => {
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-settings-contract-"));
-  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
-  await closeStorageClient();
-  await resetStorageDatabasePathForTesting();
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

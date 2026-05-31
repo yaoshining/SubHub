@@ -14,10 +14,10 @@ import {
 } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
-  closeStorageClient,
   getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
 } from "../../helpers/pglite-storage-client";
 import { adminSessions, adminUsers } from "@/server/storage/schema";
 
@@ -42,15 +42,15 @@ const insertAdminUser = async (
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-session-"));
-  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
   client = getStorageClient();
   await client.migrate();
   await insertAdminUser();
 });
 
 afterEach(async () => {
-  await closeStorageClient();
-  await resetStorageDatabasePathForTesting();
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

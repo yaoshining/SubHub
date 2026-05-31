@@ -6,10 +6,10 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  closeStorageClient,
   getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
 } from "../helpers/pglite-storage-client";
 
 import { createCallerKey } from "@/server/services/caller-key-service";
@@ -33,13 +33,13 @@ const readJson = async <T>(response: Response) => (await response.json()) as T;
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-subtitles-contract-"));
-  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
-  await closeStorageClient();
-  await resetStorageDatabasePathForTesting();
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

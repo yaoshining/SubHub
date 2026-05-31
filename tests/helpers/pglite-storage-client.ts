@@ -13,7 +13,7 @@ let currentStorageClient: StorageClient | undefined;
 const requireStorageClient = (): StorageClient => {
   if (!currentStorageClient) {
     throw new Error(
-      "PGlite test storage 尚未初始化，请先调用 setStorageDatabasePathForTesting().",
+      "PGlite test storage 尚未初始化，请先调用 initializePGliteStorageForTesting().",
     );
   }
 
@@ -33,24 +33,24 @@ const buildStorageClient = (
       transaction: <T>(runner: (tx: unknown) => Promise<T> | T) => Promise<T>;
     }).transaction(async (tx) => callback(tx as StorageDatabase)),
   close: async () => {
-    await closeStorageClient();
+    await closePGliteStorageForTesting();
   },
 });
 
-export const setStorageDatabasePathForTesting = async (
-  databasePath: string,
+export const initializePGliteStorageForTesting = async (
+  storageLabel: string,
 ) => {
-  await closeStorageClient();
+  await closePGliteStorageForTesting();
 
   currentHarness = await createPGliteTestHarness();
-  currentStorageClient = buildStorageClient(currentHarness, databasePath);
+  currentStorageClient = buildStorageClient(currentHarness, storageLabel);
 
   return currentStorageClient;
 };
 
 export const getStorageClient = () => requireStorageClient();
 
-export const closeStorageClient = async () => {
+export const closePGliteStorageForTesting = async () => {
   if (currentHarness) {
     await currentHarness.close();
   }
@@ -59,8 +59,8 @@ export const closeStorageClient = async () => {
   currentStorageClient = undefined;
 };
 
-export const resetStorageDatabasePathForTesting = async () => {
-  await closeStorageClient();
+export const resetPGliteStorageForTesting = async () => {
+  await closePGliteStorageForTesting();
 };
 
 vi.mock("@/server/storage/client", async () => {
@@ -72,6 +72,6 @@ vi.mock("@/server/storage/client", async () => {
     ...actual,
     createStorageClient: () => requireStorageClient(),
     getStorageClient,
-    closeStorageClient,
+    closeStorageClient: closePGliteStorageForTesting,
   };
 });
