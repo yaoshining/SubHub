@@ -73,11 +73,11 @@ describe("Provider 管理闭环", () => {
       .db.select()
       .from(adminActionResults)
       .orderBy(adminActionResults.createdAt);
-    expect(actions.map((action) => action.actionType)).toEqual([
+    expect(actions.map((action: any) => action.actionType)).toEqual([
       "provider_enabled",
       "credential_isolated",
       "credential_restored",
     ]);
-    expect(actions.every((action) => action.result === "success")).toBe(true);
+    expect(actions.every((action: any) => action.result === "success")).toBe(true);
   });
 });

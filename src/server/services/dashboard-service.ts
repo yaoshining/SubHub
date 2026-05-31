@@ -89,7 +89,7 @@ export async function getDashboardSummary({
     .from(providers)
     .orderBy(providers.priority, providers.name)
     .limit(dashboardProviderSnapshotLimit);
-  const providerIds = providerRows.map((provider) => provider.id);
+  const providerIds = providerRows.map((provider: any) => provider.id);
   const credentialRows =
     providerIds.length > 0
       ? await db
@@ -148,7 +148,7 @@ export async function getDashboardSummary({
     );
   }
 
-  const providerItems = providerRows.map((provider) => {
+  const providerItems = providerRows.map((provider: any) => {
     const activeCredentialCount =
       activeCredentialCountByProvider.get(provider.id) ?? 0;
 
@@ -224,7 +224,7 @@ export async function getDashboardSummary({
       hitRate: null,
       coverage: "not_available",
     },
-    recentIssues: failedActions.map((action) => ({
+    recentIssues: failedActions.map((action: any) => ({
       id: action.id,
       targetType: action.targetType,
       targetId: action.targetId,

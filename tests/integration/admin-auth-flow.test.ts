@@ -71,7 +71,7 @@ describe("首个管理员认证流程", () => {
       .select()
       .from(adminActionResults)
       .orderBy(adminActionResults.createdAt);
-    expect(actions.map((action) => [action.actionType, action.result])).toEqual(
+    expect(actions.map((action: any) => [action.actionType, action.result])).toEqual(
       [
         ["bootstrap_admin_created", "success"],
         ["admin_login", "failed"],

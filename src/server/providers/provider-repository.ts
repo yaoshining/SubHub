@@ -145,7 +145,7 @@ export class ProviderRepository {
       .select()
       .from(providers)
       .orderBy(providers.priority, providers.name);
-    const providerIds = providerRows.map((provider) => provider.id);
+    const providerIds = providerRows.map((provider: any) => provider.id);
     const credentialRows =
       providerIds.length > 0
         ? await this.db
@@ -163,7 +163,7 @@ export class ProviderRepository {
       }
     }
 
-    return providerRows.map((provider) =>
+    return providerRows.map((provider: any) =>
       addCredentialSummary(
         provider,
         credentialsByProviderId.get(provider.id) ?? [],
@@ -226,7 +226,7 @@ export class ProviderRepository {
     let provider: Provider | undefined;
 
     try {
-      provider = this.db.transaction((tx) => {
+      provider = this.db.transaction((tx: any) => {
         const [insertedProvider] = tx
           .insert(providers)
           .values({

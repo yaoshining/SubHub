@@ -63,7 +63,7 @@ describe("SQLite + Drizzle storage schema", () => {
     const tables = client.sqlite
       .prepare("select name from sqlite_master where type = 'table'")
       .all()
-      .map((row) => (row as { name: string }).name);
+      .map((row: any) => (row as { name: string }).name);
 
     for (const table of coreTables) {
       expect(tables).toContain(table);
@@ -583,7 +583,7 @@ describe("SQLite + Drizzle storage schema", () => {
         client.sqlite
           .prepare(`pragma table_info(${tableName})`)
           .all()
-          .map((row) => (row as { name: string }).name),
+          .map((row: any) => (row as { name: string }).name),
       ]),
     ) as Record<string, string[]>;
 
@@ -616,7 +616,7 @@ describe("SQLite + Drizzle storage schema", () => {
       client.sqlite
         .prepare(`pragma index_info(${indexName})`)
         .all()
-        .map((row) => (row as { name: string }).name);
+        .map((row: any) => (row as { name: string }).name);
 
     const expectIndex = (
       tableName: string,
@@ -626,7 +626,7 @@ describe("SQLite + Drizzle storage schema", () => {
       const indexes = client.sqlite
         .prepare(`pragma index_list(${tableName})`)
         .all()
-        .map((row) => (row as { name: string }).name);
+        .map((row: any) => (row as { name: string }).name);
 
       expect(indexes).toContain(indexName);
       expect(getIndexColumns(indexName)).toEqual(columns);

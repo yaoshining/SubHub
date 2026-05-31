@@ -280,7 +280,7 @@ export class CallerKeyRepository {
     const revealUntil = new Date(now.getTime() + revealWindowMs).toISOString();
     const displayParts = createDisplayParts(key);
 
-    const result = this.db.transaction((tx) => {
+    const result = this.db.transaction((tx: any) => {
       const [rotated] = tx
         .update(callerKeys)
         .set({

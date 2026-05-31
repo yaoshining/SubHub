@@ -96,7 +96,7 @@ export async function createInitialAdmin(
 
   try {
     adminUser = db.transaction(
-      (tx) => {
+      (tx: any) => {
         const [existing] = tx
           .select({ id: adminUsers.id })
           .from(adminUsers)

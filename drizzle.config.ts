@@ -1,17 +1,17 @@
 import { defineConfig } from "drizzle-kit";
 
-const databasePath =
-  process.env.SQLITE_DATABASE_PATH ??
-  process.env.SUBHUB_SQLITE_PATH ??
-  process.env.SUBHUB_DATABASE_URL ??
-  ".subhub/subhub.sqlite";
+const databaseUrl = process.env.DATABASE_URL_UNPOOLED;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL_UNPOOLED 未配置，无法生成或检查 Postgres migration。");
+}
 
 export default defineConfig({
-  dialect: "sqlite",
+  dialect: "postgresql",
   schema: "./src/server/storage/schema.ts",
   out: "./src/server/storage/migrations",
   dbCredentials: {
-    url: databasePath.startsWith("file:") ? databasePath.slice("file:".length) : databasePath,
+    url: databaseUrl,
   },
   strict: true,
   verbose: true,

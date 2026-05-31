@@ -1,106 +1,82 @@
-import { dirname, isAbsolute, resolve } from "node:path";
-import { mkdirSync } from "node:fs";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 
-import Database from "better-sqlite3";
 import {
-  drizzle,
-  type BetterSQLite3Database,
-} from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+  createDirectPostgresClient,
+  createRuntimePostgresClient,
+  resolveDirectDatabaseUrl,
+  resolveRuntimeDatabaseUrl,
+  type PostgresClientOptions,
+} from "./postgres-client";
 
-import { schema } from "./schema";
-
-export type StorageDatabase = BetterSQLite3Database<typeof schema>;
+export type StorageDatabase = any;
 
 export type StorageClient = {
   db: StorageDatabase;
-  sqlite: Database.Database;
-  path: string;
-  migrate: () => void;
-  transaction: <T>(callback: (db: StorageDatabase) => T) => T;
-  close: () => void;
+  sqlite: any;
+  runtimeUrl: string;
+  directUrl: string;
+  migrate: () => Promise<void>;
+  transaction: <T>(
+    callback: (db: StorageDatabase) => Promise<T> | T,
+  ) => Promise<T>;
+  close: () => Promise<void>;
 };
 
-export type StorageClientOptions = {
+export type StorageClientOptions = PostgresClientOptions & {
   sqlitePath?: string;
   runMigrations?: boolean;
-  readonly?: boolean;
 };
 
 const migrationsFolder = "src/server/storage/migrations";
 let singleton: StorageClient | undefined;
-let testDatabasePath: string | undefined;
+let testDatabaseUrl: string | undefined;
 
-const normalizeSqlitePath = (databasePath: string): string => {
-  const withoutFileScheme = databasePath.startsWith("file:")
-    ? databasePath.slice("file:".length)
-    : databasePath;
-
-  if (withoutFileScheme === ":memory:") {
-    return withoutFileScheme;
-  }
-
-  return isAbsolute(withoutFileScheme)
-    ? withoutFileScheme
-    : resolve(process.cwd(), withoutFileScheme);
-};
-
-const ensureDatabaseDirectory = (databasePath: string) => {
-  if (databasePath === ":memory:") {
-    return;
-  }
-
-  mkdirSync(dirname(databasePath), { recursive: true });
-};
-
-export const resolveStorageDatabasePath = (sqlitePath?: string): string => {
-  const configuredPath =
-    sqlitePath ??
-    testDatabasePath ??
-    process.env.SQLITE_DATABASE_PATH ??
-    process.env.SUBHUB_SQLITE_PATH ??
-    process.env.SUBHUB_DATABASE_URL ??
-    ".subhub/subhub.sqlite";
-
-  return normalizeSqlitePath(configuredPath);
-};
+export const resolveStorageDatabasePath = (databaseUrl?: string): string =>
+  resolveRuntimeDatabaseUrl(databaseUrl);
 
 export const createStorageClient = (
   options: StorageClientOptions = {},
 ): StorageClient => {
-  const databasePath = resolveStorageDatabasePath(options.sqlitePath);
-  ensureDatabaseDirectory(databasePath);
-
-  const sqlite = new Database(databasePath, {
-    readonly: options.readonly ?? false,
+  const runtimeUrl = resolveRuntimeDatabaseUrl(
+    options.runtimeDatabaseUrl ?? options.sqlitePath ?? testDatabaseUrl,
+  );
+  const directUrl = resolveDirectDatabaseUrl(
+    options.directDatabaseUrl ?? testDatabaseUrl,
+  );
+  const runtimeClient = createRuntimePostgresClient({
+    runtimeDatabaseUrl: runtimeUrl,
+  });
+  let directClient = createDirectPostgresClient({
+    directDatabaseUrl: directUrl,
   });
 
-  sqlite.pragma("foreign_keys = ON");
-
-  if (databasePath !== ":memory:" && !(options.readonly ?? false)) {
-    sqlite.pragma("journal_mode = WAL");
-  }
-
-  const db = drizzle(sqlite, { schema });
-
   const client: StorageClient = {
-    db,
-    sqlite,
-    path: databasePath,
-    migrate: () => {
-      sqlite.pragma("foreign_keys = ON");
-      migrate(db, { migrationsFolder });
+    db: runtimeClient.db as StorageDatabase,
+    sqlite: undefined,
+    runtimeUrl,
+    directUrl,
+    migrate: async () => {
+      if (!directClient) {
+        directClient = createDirectPostgresClient({
+          directDatabaseUrl: directUrl,
+        });
+      }
+
+      await migrate(directClient.db, { migrationsFolder });
     },
-    transaction: (callback) =>
-      db.transaction((tx) => callback(tx as StorageDatabase)),
-    close: () => sqlite.close(),
+    transaction: async (callback) =>
+      runtimeClient.db.transaction(async (tx) => callback(tx as StorageDatabase)),
+    close: async () => {
+      await runtimeClient.close();
+
+      if (directClient) {
+        await directClient.close();
+      }
+    },
   };
 
-  const shouldRunMigrations =
-    options.runMigrations ?? !(options.readonly ?? false);
-
-  if (shouldRunMigrations) {
-    client.migrate();
+  if (options.runMigrations) {
+    void client.migrate();
   }
 
   return client;
@@ -114,17 +90,21 @@ export const getStorageClient = (): StorageClient => {
   return singleton;
 };
 
-export const closeStorageClient = () => {
-  singleton?.close();
+export const closeStorageClient = async () => {
+  if (!singleton) {
+    return;
+  }
+
+  await singleton.close();
   singleton = undefined;
 };
 
-export const setStorageDatabasePathForTesting = (sqlitePath: string) => {
-  closeStorageClient();
-  testDatabasePath = sqlitePath;
+export const setStorageDatabasePathForTesting = (databaseUrl: string) => {
+  singleton = undefined;
+  testDatabaseUrl = databaseUrl;
 };
 
 export const resetStorageDatabasePathForTesting = () => {
-  closeStorageClient();
-  testDatabasePath = undefined;
+  singleton = undefined;
+  testDatabaseUrl = undefined;
 };

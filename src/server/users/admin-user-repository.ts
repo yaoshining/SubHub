@@ -116,18 +116,18 @@ export class AdminUserRepository {
         .select()
         .from(adminUsers)
         .orderBy(desc(adminUsers.updatedAt))
-        .then((rows) => rows.map(toMember)),
+        .then((rows: any[]) => rows.map(toMember)),
       this.db
         .select()
         .from(adminInvitations)
         .orderBy(desc(adminInvitations.createdAt))
-        .then((rows) => rows.map(toAdminInvitationSummary)),
+        .then((rows: any[]) => rows.map(toAdminInvitationSummary)),
       this.db
         .select()
         .from(adminSessions)
         .where(eq(adminSessions.status, "needs_attention"))
         .orderBy(desc(adminSessions.lastSeenAt))
-        .then((rows) => rows.map(toSessionAttentionSummary)),
+        .then((rows: any[]) => rows.map(toSessionAttentionSummary)),
     ]);
 
     return { members, invitations, sessionsNeedingAttention };
@@ -170,7 +170,7 @@ export class AdminUserRepository {
     let invitation: AdminInvitation | undefined;
     try {
       invitation = this.db.transaction(
-        (tx) => {
+        (tx: any) => {
           tx.update(adminInvitations)
             .set({ status: "expired", updatedAt: nowIso })
             .where(
@@ -275,7 +275,7 @@ export class AdminUserRepository {
     const updatedAt = now.toISOString();
 
     const user = this.db.transaction(
-      (tx) => {
+      (tx: any) => {
         const [updated] = tx
           .update(adminUsers)
           .set({ status: "suspended", updatedAt })
