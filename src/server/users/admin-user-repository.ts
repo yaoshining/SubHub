@@ -170,8 +170,7 @@ export class AdminUserRepository {
               eq(adminInvitations.status, "pending"),
               lte(adminInvitations.expiresAt, nowIso),
             ),
-          )
-          .returning();
+          );
 
         const [existingPending] = await tx
           .select()
@@ -184,28 +183,31 @@ export class AdminUserRepository {
           )
           .limit(1);
 
-          if (existingPending) {
-            throw new AppError(
-              "VALIDATION_FAILED",
-              "该成员标识已存在待接受邀请。",
-              "identifier",
-            );
-          }
+        if (existingPending) {
+          throw new AppError(
+            "VALIDATION_FAILED",
+            "该成员标识已存在待接受邀请。",
+            "identifier",
+          );
+        }
 
-        const [created] = await tx.insert(adminInvitations).values({
-          id: createInvitationId(),
-          identifier: input.identifier,
-          status: "pending",
-          rolePreset: input.rolePreset,
-          accessPreset: input.accessPreset,
-          invitedByAdminUserId: input.invitedByAdminUserId,
-          acceptedAdminUserId: null,
-          expiresAt,
-          acceptedAt: null,
-          revokedAt: null,
-          createdAt: nowIso,
-          updatedAt: nowIso,
-        } satisfies NewAdminInvitation).returning();
+        const [created] = await tx
+          .insert(adminInvitations)
+          .values({
+            id: createInvitationId(),
+            identifier: input.identifier,
+            status: "pending",
+            rolePreset: input.rolePreset,
+            accessPreset: input.accessPreset,
+            invitedByAdminUserId: input.invitedByAdminUserId,
+            acceptedAdminUserId: null,
+            expiresAt,
+            acceptedAt: null,
+            revokedAt: null,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          } satisfies NewAdminInvitation)
+          .returning();
 
         return created;
       });
@@ -274,8 +276,7 @@ export class AdminUserRepository {
             eq(adminSessions.adminUserId, userId),
             eq(adminSessions.status, "active"),
           ),
-        )
-        .returning();
+        );
 
       await tx
         .update(adminSessions)
@@ -285,8 +286,7 @@ export class AdminUserRepository {
             eq(adminSessions.adminUserId, userId),
             eq(adminSessions.status, "needs_attention"),
           ),
-        )
-        .returning();
+        );
 
       return updated;
     });

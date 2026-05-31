@@ -13,8 +13,7 @@ export type StorageDatabase = any;
 
 export type StorageClient = {
   db: StorageDatabase;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sqlite: any;
+  sqlite?: undefined;
   runtimeUrl: string;
   directUrl: string;
   migrate: () => Promise<void>;
@@ -24,10 +23,7 @@ export type StorageClient = {
   close: () => Promise<void>;
 };
 
-export type StorageClientOptions = PostgresClientOptions & {
-  sqlitePath?: string;
-  runMigrations?: boolean;
-};
+export type StorageClientOptions = PostgresClientOptions;
 
 const migrationsFolder = "src/server/storage/migrations";
 let singleton: StorageClient | undefined;
@@ -40,7 +36,7 @@ export const createStorageClient = (
   options: StorageClientOptions = {},
 ): StorageClient => {
   const runtimeUrl = resolveRuntimeDatabaseUrl(
-    options.runtimeDatabaseUrl ?? options.sqlitePath ?? testDatabaseUrl,
+    options.runtimeDatabaseUrl ?? testDatabaseUrl,
   );
   const directUrl = resolveDirectDatabaseUrl(
     options.directDatabaseUrl ?? testDatabaseUrl,
@@ -54,7 +50,6 @@ export const createStorageClient = (
 
   const client: StorageClient = {
     db: runtimeClient.db as StorageDatabase,
-    sqlite: undefined,
     runtimeUrl,
     directUrl,
     migrate: async () => {
@@ -67,7 +62,9 @@ export const createStorageClient = (
       await migrate(directClient.db, { migrationsFolder });
     },
     transaction: async (callback) =>
-      runtimeClient.db.transaction(async (tx) => callback(tx as StorageDatabase)),
+      runtimeClient.db.transaction(async (tx) =>
+        callback(tx as StorageDatabase),
+      ),
     close: async () => {
       await runtimeClient.close();
 
@@ -76,10 +73,6 @@ export const createStorageClient = (
       }
     },
   };
-
-  if (options.runMigrations) {
-    void client.migrate();
-  }
 
   return client;
 };

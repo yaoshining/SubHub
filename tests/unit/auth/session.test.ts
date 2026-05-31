@@ -16,9 +16,14 @@ import {
   type StorageClient,
 } from "@/server/storage/client";
 
+type LegacyStorageClient = StorageClient & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sqlite: any;
+};
+
 const now = new Date("2026-05-26T00:00:00.000Z");
 let tempDir: string;
-let client: StorageClient;
+let client: LegacyStorageClient;
 
 const insertAdminUser = (status: "active" | "suspended" = "active") => {
   client.sqlite
@@ -42,9 +47,9 @@ const insertAdminUser = (status: "active" | "suspended" = "active") => {
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-session-"));
   client = createStorageClient({
-    sqlitePath: join(tempDir, "test.sqlite"),
-    runMigrations: true,
-  });
+    runtimeDatabaseUrl: "postgresql://legacy-runtime@localhost:5432/subhub",
+    directDatabaseUrl: "postgresql://legacy-direct@localhost:5432/subhub",
+  }) as LegacyStorageClient;
   insertAdminUser();
 });
 
