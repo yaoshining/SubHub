@@ -1,5 +1,5 @@
 ---
-description: 用于 SubHub 的流程阶段判定与下一步协调：识别当前阶段、缺失工件、worktree 风险，并推荐最小正确下一步与对应代理/命令。
+description: 用于 SubHub 的流程阶段判定与下一步协调：识别当前阶段、缺失工件、worktree 风险，以及数据库测试分层（mock / PGlite / real Postgres / Neon）适配层级，并推荐最小正确下一步与对应代理/命令。
 name: SubHub 流程协调器
 user-invocable: true
 handoffs:
@@ -170,6 +170,15 @@ active feature 回退判定：
 - 可能需要同步前端生成 client
 - 可能需要检查 API 文档展示是否受影响
 
+### 数据库测试分层触发判断（mock / PGlite / real Postgres / Neon）
+
+- 当任务涉及数据库相关实现、测试或验证时，先判断“当前任务更适合哪一层数据库测试”，而不是默认把所有数据库验证都归到同一种方式。
+- 若任务主要是纯逻辑快速单测，且不依赖真实数据库行为，优先判定为 `mock / no-db`。
+- 若任务主要是 repository 基础行为、简单 query / filter / order 测试，或少量 service 层数据库逻辑，优先判定为 `PGlite` 快速数据库单测层。
+- 若任务涉及更正式的数据库行为验证，且需要保留真实 Postgres 语义与测试数据库链路，优先判定为 `real Postgres` 正式数据库测试层。
+- 若任务涉及 migration、DDL、SQLite -> Postgres 数据搬迁、cutover、release gate、staging / production 行为验证或环境映射验证，不应只安排 `PGlite`，应优先路由到 `real Postgres` 或 `Neon` 验证链路。
+- 若当前只是快速试点或快速数据库单测，不得将其表述为正式数据库验证替代品；只需简洁提示仍需保留正式 Postgres / Neon 验证。
+
 ### 设计前置触发判断（page spec / DESIGN.md）
 
 - 有原型/草图但缺 page spec：优先推荐 `/subhub.page-spec`
@@ -211,6 +220,7 @@ active feature 回退判定：
     - 关键输入存在明显冲突；或
     - 文档仍含关键未决标记（如 TODO / NEEDS CLARIFICATION）。
 - 若任务可用一个简单动作前进，不要过度流程化。
+- 当任务涉及数据库测试时，优先给出“当前更适合哪一层”的单步判断，不在本 agent 内展开完整测试策略文档。
 - 当设计稿阶段卡住且根因不是页面职责不清，而是共享骨架与响应式行为缺少统一规则时，优先推荐先补 `docs/layouts/admin-layout.md`，再继续设计稿。
 - 当准备进入实现阶段但共享布局与响应式骨架尚未统一时，必须提示实现漂移与 review 成本上升风险，并将“补共享布局文档”作为实现前推荐前置步骤之一。
 
@@ -222,6 +232,7 @@ active feature 回退判定：
   - 当前阶段：
   - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
   - 当前缺口类型：page spec 缺口 / 共享布局文档缺口 / 设计稿缺口 / spec-plan-tasks 缺口
+  - 数据库测试层建议（如适用）：mock / PGlite / real Postgres / Neon
   - 推荐下一步：
   - 推荐代理或命令：
   - 是否需要触发仓库级开发约定：
@@ -231,9 +242,11 @@ active feature 回退判定：
   - 当前阶段：
   - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
   - 当前缺口类型：page spec 缺口 / 共享布局文档缺口 / 设计稿缺口 / spec-plan-tasks 缺口
+  - 数据库测试层建议（如适用）：mock / PGlite / real Postgres / Neon
   - 可用工件：
   - 缺失工件：
   - 流程风险：
+  - 是否仍需正式 Postgres / Neon 验证（如适用）：
   - 是否需要触发仓库级开发约定：
   - 推荐下一步：
   - 推荐代理或命令：

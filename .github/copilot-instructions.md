@@ -33,6 +33,15 @@ shell commands, and other important information, read the current plan:
 - 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
 - `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
 
+## 数据库测试分层约定（PGlite / Postgres / Neon）
+
+- 本仓库数据库测试默认应保持分层意识：`mock / no-db` 用于纯逻辑快速单测，`PGlite` 用于快速数据库单测层，`real Postgres` 用于正式数据库测试层，`Neon staging / deploy verification` 用于环境与发布验证层。
+- `PGlite` 的定位是“快速数据库单测层”，适用于少量 repository 基础行为测试与少量 service 层数据库逻辑测试；它比 mock 更真实，但不替代真实 Postgres / Neon 验证链路。
+- 未经用户明确要求，不应把 `PGlite` 视为正式运行时数据库，也不应将其作为正式 migration 验证主路径、SQLite -> Postgres cutover 验证底座、staging / production 行为替代验证或发布门禁替代验证。
+- 当任务涉及 schema migration、DDL 验证、SQLite -> Postgres 数据搬迁、cutover 校验、环境映射、部署验证、发布门禁、staging / production 行为验证时，应优先保留并使用真实 Postgres 测试数据库（本地或 CI）或 Neon staging / deploy verification。
+- 不要因为 `PGlite` 接入方便或试点成功，就顺手删除、弱化或绕过真实 Postgres test database、CI Postgres service 或 Neon staging 验证步骤。
+- 当输出实现方案、测试建议、评审结论或任务说明时，如涉及数据库测试，应尽量明确：当前测试属于哪一层、为什么选择 `PGlite` 或真实 Postgres，以及哪些验证仍需留在正式数据库或 Neon 环境中。
+
 ## 版本约定
 
 - 仓库版本约定主真源为 `docs/releases/versioning.md`。
