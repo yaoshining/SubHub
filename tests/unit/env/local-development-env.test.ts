@@ -28,6 +28,23 @@ describe("readEnv 本地 development 护栏", () => {
     });
   });
 
+  it("在 vercel dev 场景下仍然使用 DEV_* 真源", () => {
+    const env = readEnv({
+      ...baseSource,
+      VERCEL_ENV: "development",
+      DEV_DATABASE_URL: "dev-pooled-url",
+      DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
+    });
+
+    expect(env).toMatchObject({
+      deploymentProvider: "vercel",
+      vercelEnvironment: "development",
+      resolvedTier: "development",
+      DATABASE_URL: "dev-pooled-url",
+      DATABASE_URL_UNPOOLED: "dev-direct-url",
+    });
+  });
+
   it("在本地 development 直接注入 DATABASE_URL 时阻断误连", () => {
     expect(() =>
       readEnv({

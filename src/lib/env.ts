@@ -154,29 +154,7 @@ const resolveDatabaseUrls = (
   env: z.infer<typeof rawEnvSchema>,
   reportIssue: EnvIssueReporter,
 ) => {
-  if (env.VERCEL_ENV) {
-    if (!env.DATABASE_URL) {
-      reportIssue("DATABASE_URL", "当前部署必须注入 DATABASE_URL。");
-    }
-
-    if (!env.DATABASE_URL_UNPOOLED) {
-      reportIssue(
-        "DATABASE_URL_UNPOOLED",
-        "当前部署必须注入 DATABASE_URL_UNPOOLED。",
-      );
-    }
-
-    if (!env.DATABASE_URL || !env.DATABASE_URL_UNPOOLED) {
-      return null;
-    }
-
-    return {
-      DATABASE_URL: env.DATABASE_URL,
-      DATABASE_URL_UNPOOLED: env.DATABASE_URL_UNPOOLED,
-    };
-  }
-
-  if (env.NODE_ENV === "development") {
+  if (env.VERCEL_ENV === "development" || env.NODE_ENV === "development") {
     if (env.DATABASE_URL || env.DATABASE_URL_UNPOOLED) {
       reportIssue(
         "DATABASE_URL",
@@ -206,6 +184,28 @@ const resolveDatabaseUrls = (
     return {
       DATABASE_URL: env.DEV_DATABASE_URL,
       DATABASE_URL_UNPOOLED: env.DEV_DATABASE_URL_UNPOOLED,
+    };
+  }
+
+  if (env.VERCEL_ENV) {
+    if (!env.DATABASE_URL) {
+      reportIssue("DATABASE_URL", "当前部署必须注入 DATABASE_URL。");
+    }
+
+    if (!env.DATABASE_URL_UNPOOLED) {
+      reportIssue(
+        "DATABASE_URL_UNPOOLED",
+        "当前部署必须注入 DATABASE_URL_UNPOOLED。",
+      );
+    }
+
+    if (!env.DATABASE_URL || !env.DATABASE_URL_UNPOOLED) {
+      return null;
+    }
+
+    return {
+      DATABASE_URL: env.DATABASE_URL,
+      DATABASE_URL_UNPOOLED: env.DATABASE_URL_UNPOOLED,
     };
   }
 
