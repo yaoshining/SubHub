@@ -96,24 +96,27 @@ export async function createInitialAdmin(
         .from(adminUsers)
         .limit(1);
 
-        if (existing) {
-          throw new AppError(
-            "FORBIDDEN",
-            "系统已完成首轮管理员初始化。",
-            "bootstrap",
-          );
-        }
+      if (existing) {
+        throw new AppError(
+          "FORBIDDEN",
+          "系统已完成首轮管理员初始化。",
+          "bootstrap",
+        );
+      }
 
-      const [inserted] = await tx.insert(adminUsers).values({
-        id: createAdminUserId(),
-        identifier,
-        displayName,
-        passwordHash,
-        status: "active",
-        role: "admin",
-        createdAt,
-        updatedAt: createdAt,
-      }).returning();
+      const [inserted] = await tx
+        .insert(adminUsers)
+        .values({
+          id: createAdminUserId(),
+          identifier,
+          displayName,
+          passwordHash,
+          status: "active",
+          role: "admin",
+          createdAt,
+          updatedAt: createdAt,
+        })
+        .returning();
 
       return inserted;
     });

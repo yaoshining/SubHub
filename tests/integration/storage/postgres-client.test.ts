@@ -47,15 +47,17 @@ describe("Postgres storage client integration boundary", () => {
   });
 
   it("builds runtime storage from pooled URL and migration from unpooled URL", async () => {
-    vi.stubEnv("DATABASE_URL", "postgresql://runtime-user@localhost:5432/subhub");
+    vi.stubEnv(
+      "DATABASE_URL",
+      "postgresql://runtime-user@localhost:5432/subhub",
+    );
     vi.stubEnv(
       "DATABASE_URL_UNPOOLED",
       "postgresql://direct-user@localhost:5432/subhub",
     );
 
-    const { createStorageClient } = await import(
-      "../../../src/server/storage/client.js"
-    );
+    const { createStorageClient } =
+      await import("../../../src/server/storage/client.js");
 
     const client = createStorageClient();
     await client.migrate();
@@ -84,9 +86,8 @@ describe("Postgres storage client integration boundary", () => {
   });
 
   it("supports test override URLs without falling back to sqlite paths", async () => {
-    const { createStorageClient } = await import(
-      "../../../src/server/storage/client.js"
-    );
+    const { createStorageClient } =
+      await import("../../../src/server/storage/client.js");
 
     const client = createStorageClient({
       runtimeDatabaseUrl: "postgresql://runtime-override@localhost:5432/subhub",
@@ -105,9 +106,8 @@ describe("Postgres storage client integration boundary", () => {
     vi.stubEnv("DATABASE_URL", "");
     vi.stubEnv("DATABASE_URL_UNPOOLED", "");
 
-    const { createStorageClient } = await import(
-      "../../../src/server/storage/client.js"
-    );
+    const { createStorageClient } =
+      await import("../../../src/server/storage/client.js");
 
     expect(() => createStorageClient()).toThrow("DATABASE_URL 未配置。");
   });

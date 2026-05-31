@@ -42,7 +42,8 @@ describe("Postgres storage schema baseline", () => {
         ?.columnType,
     ).toBe("PgBoolean");
     expect(
-      providerColumns.find((column) => column.name === "created_at")?.columnType,
+      providerColumns.find((column) => column.name === "created_at")
+        ?.columnType,
     ).toBe("PgTimestampString");
     expect(
       adminUserColumns.find((column) => column.name === "last_login_at")
@@ -85,13 +86,12 @@ describe("Postgres storage schema baseline", () => {
   });
 
   it("keeps provider credential and session query indexes for Postgres", () => {
-    const providerCredentialIndexes = getTableConfig(providerCredentials).indexes;
+    const providerCredentialIndexes =
+      getTableConfig(providerCredentials).indexes;
     const adminSessionIndexes = getTableConfig(adminSessions).indexes;
     const rotationForeignKeys = getTableConfig(callerKeyRotations).foreignKeys;
 
-    expect(
-      providerCredentialIndexes.map((index) => index.config.name),
-    ).toEqual(
+    expect(providerCredentialIndexes.map((index) => index.config.name)).toEqual(
       expect.arrayContaining([
         "provider_credentials_provider_id_status_idx",
         "provider_credentials_provider_id_status_cooldown_until_idx",
@@ -103,7 +103,9 @@ describe("Postgres storage schema baseline", () => {
         "admin_sessions_expires_at_idx",
       ]),
     );
-    expect(rotationForeignKeys.map((foreignKey) => foreignKey.getName())).toEqual(
+    expect(
+      rotationForeignKeys.map((foreignKey) => foreignKey.getName()),
+    ).toEqual(
       expect.arrayContaining([
         "caller_key_rotations_caller_key_id_fk",
         "caller_key_rotations_performed_by_admin_user_id_fk",

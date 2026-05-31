@@ -1,8 +1,5 @@
 import postgres, { type Sql } from "postgres";
-import {
-  drizzle,
-  type PostgresJsDatabase,
-} from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 import { schema } from "./schema";
 

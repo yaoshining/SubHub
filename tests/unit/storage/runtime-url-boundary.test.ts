@@ -32,7 +32,10 @@ describe("Postgres runtime URL boundary", () => {
   });
 
   it("resolves pooled runtime URL and unpooled direct URL from dedicated env vars", () => {
-    vi.stubEnv("DATABASE_URL", "postgresql://runtime-user@localhost:5432/subhub");
+    vi.stubEnv(
+      "DATABASE_URL",
+      "postgresql://runtime-user@localhost:5432/subhub",
+    );
     vi.stubEnv(
       "DATABASE_URL_UNPOOLED",
       "postgresql://direct-user@localhost:5432/subhub",
@@ -45,7 +48,10 @@ describe("Postgres runtime URL boundary", () => {
   });
 
   it("creates runtime client only from DATABASE_URL", () => {
-    vi.stubEnv("DATABASE_URL", "postgresql://runtime-user@localhost:5432/subhub");
+    vi.stubEnv(
+      "DATABASE_URL",
+      "postgresql://runtime-user@localhost:5432/subhub",
+    );
     vi.stubEnv(
       "DATABASE_URL_UNPOOLED",
       "postgresql://direct-user@localhost:5432/subhub",
@@ -61,7 +67,10 @@ describe("Postgres runtime URL boundary", () => {
   });
 
   it("creates direct client only from DATABASE_URL_UNPOOLED", () => {
-    vi.stubEnv("DATABASE_URL", "postgresql://runtime-user@localhost:5432/subhub");
+    vi.stubEnv(
+      "DATABASE_URL",
+      "postgresql://runtime-user@localhost:5432/subhub",
+    );
     vi.stubEnv(
       "DATABASE_URL_UNPOOLED",
       "postgresql://direct-user@localhost:5432/subhub",
@@ -77,7 +86,10 @@ describe("Postgres runtime URL boundary", () => {
   });
 
   it("fails fast when unpooled migration URL is missing or not postgres", () => {
-    vi.stubEnv("DATABASE_URL", "postgresql://runtime-user@localhost:5432/subhub");
+    vi.stubEnv(
+      "DATABASE_URL",
+      "postgresql://runtime-user@localhost:5432/subhub",
+    );
     vi.stubEnv("DATABASE_URL_UNPOOLED", "");
 
     expect(() => resolvePostgresUrlBoundary()).toThrow(

@@ -133,12 +133,8 @@
           "name": "admin_action_results_actor_admin_user_id_fk",
           "tableFrom": "admin_action_results",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "actor_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -304,12 +300,8 @@
           "name": "admin_invitations_invited_by_admin_user_id_fk",
           "tableFrom": "admin_invitations",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "invited_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -317,12 +309,8 @@
           "name": "admin_invitations_accepted_admin_user_id_fk",
           "tableFrom": "admin_invitations",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "accepted_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -496,12 +484,8 @@
           "name": "admin_sessions_admin_user_id_fk",
           "tableFrom": "admin_sessions",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -509,12 +493,8 @@
           "name": "admin_sessions_remediated_by_admin_user_id_fk",
           "tableFrom": "admin_sessions",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "remediated_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["remediated_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -703,12 +683,8 @@
           "name": "caller_key_rotations_caller_key_id_fk",
           "tableFrom": "caller_key_rotations",
           "tableTo": "caller_keys",
-          "columnsFrom": [
-            "caller_key_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caller_key_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -716,12 +692,8 @@
           "name": "caller_key_rotations_performed_by_admin_user_id_fk",
           "tableFrom": "caller_key_rotations",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "performed_by_admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performed_by_admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1112,12 +1084,8 @@
           "name": "provider_credentials_provider_id_fk",
           "tableFrom": "provider_credentials",
           "tableTo": "providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1297,12 +1265,8 @@
           "name": "providers_fallback_provider_id_fk",
           "tableFrom": "providers",
           "tableTo": "providers",
-          "columnsFrom": [
-            "fallback_provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fallback_provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1451,12 +1415,8 @@
           "name": "subtitle_download_requests_caller_key_id_fk",
           "tableFrom": "subtitle_download_requests",
           "tableTo": "caller_keys",
-          "columnsFrom": [
-            "caller_key_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caller_key_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1464,12 +1424,8 @@
           "name": "subtitle_download_requests_provider_id_fk",
           "tableFrom": "subtitle_download_requests",
           "tableTo": "providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1477,12 +1433,8 @@
           "name": "subtitle_download_requests_credential_id_fk",
           "tableFrom": "subtitle_download_requests",
           "tableTo": "provider_credentials",
-          "columnsFrom": [
-            "credential_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credential_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1652,12 +1604,8 @@
           "name": "subtitle_search_requests_caller_key_id_fk",
           "tableFrom": "subtitle_search_requests",
           "tableTo": "caller_keys",
-          "columnsFrom": [
-            "caller_key_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["caller_key_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1665,12 +1613,8 @@
           "name": "subtitle_search_requests_provider_id_fk",
           "tableFrom": "subtitle_search_requests",
           "tableTo": "providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1678,12 +1622,8 @@
           "name": "subtitle_search_requests_credential_id_fk",
           "tableFrom": "subtitle_search_requests",
           "tableTo": "provider_credentials",
-          "columnsFrom": [
-            "credential_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credential_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

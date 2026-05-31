@@ -211,22 +211,25 @@ export class ProviderRepository {
 
     try {
       provider = await this.db.transaction(async (tx: StorageDatabase) => {
-        const [insertedProvider] = await tx.insert(providers).values({
-          id: createProviderId(),
-          name,
-          type: input.type,
-          status: input.initialCredential ? "enabled" : "needs_config",
-          priority: 100,
-          weight: 100,
-          concurrencyLimit: 1,
-          rotationEnabled: true,
-          cooldownSeconds: 60,
-          fallbackProviderId: null,
-          lastHealthStatus: input.initialCredential ? "ready" : null,
-          lastErrorSummary: null,
-          createdAt,
-          updatedAt: createdAt,
-        } satisfies NewProvider).returning();
+        const [insertedProvider] = await tx
+          .insert(providers)
+          .values({
+            id: createProviderId(),
+            name,
+            type: input.type,
+            status: input.initialCredential ? "enabled" : "needs_config",
+            priority: 100,
+            weight: 100,
+            concurrencyLimit: 1,
+            rotationEnabled: true,
+            cooldownSeconds: 60,
+            fallbackProviderId: null,
+            lastHealthStatus: input.initialCredential ? "ready" : null,
+            lastErrorSummary: null,
+            createdAt,
+            updatedAt: createdAt,
+          } satisfies NewProvider)
+          .returning();
 
         if (!insertedProvider) {
           throw new AppError("UPSTREAM_FAILED", "创建 Provider 失败。");
