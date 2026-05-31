@@ -8,6 +8,7 @@ import {
   buildLocalTestDatabaseUrls,
   localTestPostgresBaseline,
 } from "../../src/server/storage/test-database";
+import { localRealPostgresTestFiles } from "../../src/server/storage/local-test-postgres-suite";
 
 type CommandName = "start" | "stop" | "reset" | "migrate" | "seed" | "prepare" | "test";
 
@@ -218,7 +219,7 @@ const runDatabaseTests = async () => {
 
     const result = spawnSync(
       "pnpm",
-      ["test", "tests/integration/storage/local-test-postgres-baseline.test.ts"],
+      ["test", ...localRealPostgresTestFiles],
       {
         env: {
           ...process.env,
