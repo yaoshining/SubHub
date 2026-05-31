@@ -1,0 +1,62 @@
+# 运行环境契约
+
+## 1. 目标
+
+本契约定义 SubHub 在 `002-migrate-neon-vercel` 中的运行环境校验、数据库 URL 责任边界与初始化门禁。它约束平台如何为当前部署注入唯一数据库目标，以及应用如何验证该身份。
+
+## 2. 环境解析规则
+
+### 2.1 校验输入
+
+- `VERCEL_ENV`
+- `VERCEL_GIT_COMMIT_REF`
+- `NODE_ENV`
+- 当前部署已注入的 `DATABASE_URL`
+- 当前部署已注入的 `DATABASE_URL_UNPOOLED`
+
+### 2.2 平台注入规则
+
+| 场景 | 平台注入的唯一数据库目标 |
+|------|------|
+| `main` -> Vercel Production | prod database |
+| `preview` 分支 -> Vercel Preview | staging database |
+| 其他 `preview/*`、`feature/*`、`agent/*` -> Vercel Preview | dev database |
+| 本地 `NODE_ENV=development` | dev database |
+
+应用不负责在多套数据库 URL 之间做主路由选择；若平台注入与当前部署身份不一致，应用必须以配置错误失败，不得回退到 SQLite 或其他默认库。
+
+## 3. 环境变量契约
+
+### 3.1 当前部署必需项
+
+- `DATABASE_URL`
+- `DATABASE_URL_UNPOOLED`
+- `APP_URL`
+- `PROVIDER_CREDENTIAL_ENCRYPTION_KEY`
+- `ADMIN_SESSION_SECRET`
+- `CALLER_KEY_SECRET`
+
+### 3.2 本地 development 可选真源
+
+- `DEV_DATABASE_URL`
+- `DEV_DATABASE_URL_UNPOOLED`
+
+本地 development 可以通过 `.env.development.local` 将 `DEV_DATABASE_URL` / `DEV_DATABASE_URL_UNPOOLED` 映射到运行时使用的 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`，但应用层最终仍只消费后一组变量。
+
+## 4. URL 使用边界
+
+- `DATABASE_URL`: 只允许应用运行时请求使用
+- `DATABASE_URL_UNPOOLED`: 只允许 migration、bootstrap、seed、SQLite 数据搬迁、cutover 校验脚本使用
+
+任何脚本或运行时若使用了错误 URL 类型，都应视为契约违规。
+
+## 5. 初始化门禁
+
+应用在启动前必须满足：
+
+- 目标环境已解析成功
+- 目标数据库 URL 完整
+- Postgres baseline migration 已应用
+- bootstrap 状态满足最小可运行要求
+
+若任一条件未满足，应用必须进入明确的不可用状态，不得假装可服务。
