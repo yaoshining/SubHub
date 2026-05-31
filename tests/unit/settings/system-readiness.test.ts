@@ -18,14 +18,14 @@ import { adminUsers } from "@/server/storage/schema";
 
 let tempDir: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-settings-service-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
+afterEach(async () => {
+  await closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });

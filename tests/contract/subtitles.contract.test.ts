@@ -30,14 +30,14 @@ const nextRequest = (url: string, key?: string) =>
 
 const readJson = async <T>(response: Response) => (await response.json()) as T;
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-subtitles-contract-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
+afterEach(async () => {
+  await closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });

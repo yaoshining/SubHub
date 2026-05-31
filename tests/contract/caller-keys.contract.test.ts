@@ -60,14 +60,14 @@ const createAdminSessionCookie = async () => {
   return setCookie?.split(";")[0] ?? "";
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-caller-key-contract-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
+afterEach(async () => {
+  await closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });

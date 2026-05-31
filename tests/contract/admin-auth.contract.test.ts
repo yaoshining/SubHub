@@ -44,14 +44,14 @@ const extractSessionCookie = (response: Response) => {
   return setCookie?.split(";")[0] ?? "";
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-admin-auth-contract-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
+afterEach(async () => {
+  await closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });

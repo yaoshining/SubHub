@@ -21,14 +21,14 @@ import {
 
 let tempDir: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-provider-service-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
+afterEach(async () => {
+  await closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });

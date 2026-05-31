@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
+import { loadEnvConfig } from "@next/env";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+
+loadEnvConfig(process.cwd());
 
 const createMemoryStorage = () => {
   const store = new Map<string, string>();
@@ -63,7 +66,7 @@ beforeAll(() => {
     value: sessionStorageMock,
   });
 
-  Object.assign(process.env, {
+  const envDefaults: NodeJS.ProcessEnv = {
     NODE_ENV: process.env.NODE_ENV ?? "test",
     APP_URL: process.env.APP_URL ?? "http://localhost:3000",
     DATABASE_URL:
@@ -72,12 +75,6 @@ beforeAll(() => {
     DATABASE_URL_UNPOOLED:
       process.env.DATABASE_URL_UNPOOLED ??
       "postgresql://direct-user@localhost:5432/subhub",
-    DATABASE_URL_TEST:
-      process.env.DATABASE_URL_TEST ??
-      "postgresql://test-runtime@localhost:5432/subhub_test",
-    DATABASE_URL_TEST_UNPOOLED:
-      process.env.DATABASE_URL_TEST_UNPOOLED ??
-      "postgresql://test-direct@localhost:5432/subhub_test",
     OPENSUBTITLES_API_URL:
       process.env.OPENSUBTITLES_API_URL ??
       "https://api.opensubtitles.com/api/v1",
@@ -88,7 +85,17 @@ beforeAll(() => {
       process.env.ADMIN_SESSION_SECRET ?? "test-admin-session-secret-32-byte",
     CALLER_KEY_SECRET:
       process.env.CALLER_KEY_SECRET ?? "test-caller-key-secret-at-least-32",
-  });
+  };
+
+  if (process.env.DATABASE_URL_TEST) {
+    envDefaults.DATABASE_URL_TEST = process.env.DATABASE_URL_TEST;
+  }
+
+  if (process.env.DATABASE_URL_TEST_UNPOOLED) {
+    envDefaults.DATABASE_URL_TEST_UNPOOLED = process.env.DATABASE_URL_TEST_UNPOOLED;
+  }
+
+  Object.assign(process.env, envDefaults);
 });
 
 afterEach(() => {

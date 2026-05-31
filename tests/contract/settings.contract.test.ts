@@ -80,15 +80,15 @@ const createAdminSessionCookie = async () => {
   return setCookie?.split(";")[0] ?? "";
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-settings-contract-"));
   setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.restoreAllMocks();
-  closeStorageClient();
+  await closeStorageClient();
   resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });

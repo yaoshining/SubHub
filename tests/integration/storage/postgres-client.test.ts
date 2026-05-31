@@ -46,6 +46,32 @@ describe("Postgres storage client integration boundary", () => {
     directEndMock.mockClear();
   });
 
+  it("maps legacy sqlite-style test override to dedicated test database urls", async () => {
+    vi.stubEnv("DATABASE_URL_TEST", "postgresql://test-runtime@localhost:5432/subhub_test");
+    vi.stubEnv(
+      "DATABASE_URL_TEST_UNPOOLED",
+      "postgresql://test-direct@localhost:5432/subhub_test",
+    );
+
+    const {
+      createStorageClient,
+      resetStorageDatabasePathForTesting,
+      setStorageDatabasePathForTesting,
+    } = await import("../../../src/server/storage/client.js");
+
+    setStorageDatabasePathForTesting("/tmp/subhub/test.sqlite");
+    const client = createStorageClient();
+
+    expect(client.runtimeUrl).toBe(
+      "postgresql://test-runtime@localhost:5432/subhub_test",
+    );
+    expect(client.directUrl).toBe(
+      "postgresql://test-direct@localhost:5432/subhub_test",
+    );
+
+    resetStorageDatabasePathForTesting();
+  });
+
   it("builds runtime storage from pooled URL and migration from unpooled URL", async () => {
     vi.stubEnv(
       "DATABASE_URL",
