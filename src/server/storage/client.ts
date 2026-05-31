@@ -8,10 +8,12 @@ import {
   type PostgresClientOptions,
 } from "./postgres-client";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type StorageDatabase = any;
 
 export type StorageClient = {
   db: StorageDatabase;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sqlite: any;
   runtimeUrl: string;
   directUrl: string;

@@ -5,7 +5,11 @@ import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { adminActionResults, adminSessions } from "@/server/storage/schema";
+import {
+  adminActionResults,
+  adminSessions,
+  type AdminActionResult,
+} from "@/server/storage/schema";
 import {
   closeStorageClient,
   getStorageClient,
@@ -71,13 +75,13 @@ describe("首个管理员认证流程", () => {
       .select()
       .from(adminActionResults)
       .orderBy(adminActionResults.createdAt);
-    expect(actions.map((action: any) => [action.actionType, action.result])).toEqual(
-      [
-        ["bootstrap_admin_created", "success"],
-        ["admin_login", "failed"],
-        ["admin_login", "success"],
-      ],
-    );
+    expect(
+      actions.map((action: AdminActionResult) => [action.actionType, action.result]),
+    ).toEqual([
+      ["bootstrap_admin_created", "success"],
+      ["admin_login", "failed"],
+      ["admin_login", "success"],
+    ]);
 
     const logout = await logoutRoute.POST(
       new NextRequest("http://localhost/api/admin/auth/logout", {

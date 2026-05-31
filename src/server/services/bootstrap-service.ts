@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { hashPassword } from "@/lib/auth/password";
 import { AppError } from "@/lib/errors";
 import { recordAdminActionResult } from "@/server/audit/action-results";
+import { isConstraintError } from "@/server/storage/database-errors";
 import {
   getStorageClient,
   type StorageDatabase,
@@ -34,12 +35,6 @@ const createAdminUserId = () =>
 
 export const normalizeAdminIdentifier = (identifier: string) =>
   identifier.trim().toLowerCase();
-
-const isSqliteConstraintError = (error: unknown) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  String(error.code).startsWith("SQLITE_CONSTRAINT");
 
 export async function getBootstrapStatus({
   db = getStorageClient().db,
@@ -95,13 +90,11 @@ export async function createInitialAdmin(
   let alreadyInitialized = false;
 
   try {
-    adminUser = db.transaction(
-      (tx: any) => {
-        const [existing] = tx
-          .select({ id: adminUsers.id })
-          .from(adminUsers)
-          .limit(1)
-          .all();
+    adminUser = await db.transaction(async (tx: StorageDatabase) => {
+      const [existing] = await tx
+        .select({ id: adminUsers.id })
+        .from(adminUsers)
+        .limit(1);
 
         if (existing) {
           throw new AppError(
@@ -111,29 +104,23 @@ export async function createInitialAdmin(
           );
         }
 
-        const [inserted] = tx
-          .insert(adminUsers)
-          .values({
-            id: createAdminUserId(),
-            identifier,
-            displayName,
-            passwordHash,
-            status: "active",
-            role: "admin",
-            createdAt,
-            updatedAt: createdAt,
-          })
-          .returning()
-          .all();
+      const [inserted] = await tx.insert(adminUsers).values({
+        id: createAdminUserId(),
+        identifier,
+        displayName,
+        passwordHash,
+        status: "active",
+        role: "admin",
+        createdAt,
+        updatedAt: createdAt,
+      }).returning();
 
-        return inserted;
-      },
-      { behavior: "immediate" },
-    );
+      return inserted;
+    });
   } catch (error) {
     if (
       (error instanceof AppError && error.code === "FORBIDDEN") ||
-      isSqliteConstraintError(error)
+      isConstraintError(error)
     ) {
       alreadyInitialized = true;
     } else {

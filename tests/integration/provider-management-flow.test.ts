@@ -4,7 +4,10 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { adminActionResults } from "@/server/storage/schema";
+import {
+  adminActionResults,
+  type AdminActionResult,
+} from "@/server/storage/schema";
 import {
   addProviderCredential,
   createProvider,
@@ -73,11 +76,13 @@ describe("Provider 管理闭环", () => {
       .db.select()
       .from(adminActionResults)
       .orderBy(adminActionResults.createdAt);
-    expect(actions.map((action: any) => action.actionType)).toEqual([
+    expect(actions.map((action: AdminActionResult) => action.actionType)).toEqual([
       "provider_enabled",
       "credential_isolated",
       "credential_restored",
     ]);
-    expect(actions.every((action: any) => action.result === "success")).toBe(true);
+    expect(
+      actions.every((action: AdminActionResult) => action.result === "success"),
+    ).toBe(true);
   });
 });
