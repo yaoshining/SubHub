@@ -12,6 +12,8 @@
 - 当前已完成 PGlite 最小试点验证，已通过 `tests/unit/providers/credential-pool.test.ts` 与 `tests/unit/caller-keys/caller-key-service.test.ts` 两组聚焦测试。
 - PGlite 当前仅作为快速数据库单测层的已验证选项，后续是否继续扩展覆盖面，属于增量优化，不是当前 feature 的强制交付项。
 - 当前阶段不要求将所有数据库测试迁移到 PGlite。
+- 本地真实数据库测试主线固定为 Docker Postgres，CI 真实数据库测试主线固定为 GitHub Actions Postgres service container。
+- Neon 不再作为本地或 CI 日常测试主库，只保留给 staging / preview / production / cutover / deploy verification。
 - 正式 Postgres test database、CI Postgres service、Neon staging / cutover / deploy verification 链路必须继续保留，不得被 PGlite 试点替代。
 
 **组织方式**: 任务按用户故事分组，同时在任务描述中标明所属迁移层：环境映射层、Postgres 接入层、SQLite 搬迁层、bootstrap / seed 层、部署与发布门禁层、测试与回归层、文档层。
@@ -37,14 +39,14 @@ To execute: `/speckit.git.commit`
 
 - 在同步 task issue 之前，必须先创建 002 主追踪 issue。
 - 在开始 Vercel 部署与 release gate 任务前，必须已准备好 Neon 的 prod / staging / dev 三类数据库，以及 Vercel Production / Preview 环境与分支覆盖能力。
-- 在开始数据库相关单测、集成测试、契约测试与 CI 真实数据库校验任务前，必须已准备好独立 `test` 数据库或 test branch，以及 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 的测试注入方式。
+- 在开始数据库相关单测、集成测试、契约测试与 CI 真实数据库校验任务前，必须已准备好本地 Docker Postgres 测试库、GitHub Actions Postgres service container 方案，以及 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 的统一测试注入方式。
 - 在执行 SQLite cutover 相关任务前，必须准备可恢复的 SQLite 备份或快照，并确认生产迁移窗口。
 
 ---
 
 ## 阶段 1: 初始化（共享基础设施）
 
-**目的**: 建立 002 的基础脚本、环境变量真源、测试脚手架和 Vercel/Neon 运行手册。
+**目的**: 建立 002 的基础脚本、环境变量真源、Docker Postgres / CI Postgres service 测试脚手架和 Vercel/Neon 运行手册。
 
 - [ ] T001 在 `package.json` 添加 `postgres`、`drizzle-orm/postgres-js` 依赖，以及 `db:bootstrap`、`db:seed:dev`、`db:seed:staging`、`db:precheck:cutover`、`db:import:sqlite`、`db:validate:cutover`，并补充 `db:prepare:test` / `db:reset:test` 等测试数据库脚本，同时将 `better-sqlite3` 从正式运行时依赖路径中移出
 - [ ] T002 在 `drizzle.config.ts` 将 drizzle-kit 配置切换到 `DATABASE_URL_UNPOOLED` 驱动的 Postgres 模式，并保持输出目录为 `src/server/storage/migrations/`
@@ -52,12 +54,12 @@ To execute: `/speckit.git.commit`
 - [ ] T004 [P] 在 `tests/unit/env/runtime-environment.test.ts` 编写环境映射层测试，覆盖 `main -> production`、`preview -> staging`、其他 `preview/*|feature/*|agent/* -> development`、本地 development -> dev、数据库相关测试 -> test，以及错误注入护栏
 - [ ] T005 [P] 在 `tests/contract/runtime/environment-contract.test.ts` 对照 `specs/002-migrate-neon-vercel/contracts/runtime-environment-contract.md` 编写环境变量契约测试，验证应用不在多套 URL 间自行路由，且数据库相关测试不会回落到 dev / staging / prod
 - [ ] T006 [P] 在 `.env.example` 创建运行时环境变量示例，仅保留 `DATABASE_URL`、`DATABASE_URL_UNPOOLED`、`APP_URL` 和必要 secrets 的单部署配置写法
-- [ ] T007 在 `tests/setup.ts` 建立 Postgres 测试数据库启动、清理、最小 fixture、reset 和 direct URL 测试注入逻辑，统一接入 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`，替换当前以 SQLite 文件为中心的测试初始化路径
-- [ ] T008 [P] 在 `docs/workflows/vercel-neon-environments.md` 记录 Vercel 环境变量分组、Preview 分支覆盖、Neon prod / staging / dev 数据库准备步骤，以及独立 `test` 数据库的准备、清理与重建约束，作为仓库内的环境映射操作手册
+- [ ] T007 在 `tests/setup.ts` 建立基于本地 Docker Postgres 的测试数据库启动、清理、最小 fixture、reset 和 direct URL 测试注入逻辑，统一接入 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`，替换当前以 SQLite 文件为中心的测试初始化路径，并为 CI Postgres service 复用同一套 prepare/reset 语义
+- [ ] T008 [P] 在 `docs/workflows/vercel-neon-environments.md` 记录 Vercel 环境变量分组、Preview 分支覆盖、Neon prod / staging / dev 数据库准备步骤，以及本地 Docker Postgres、GitHub Actions Postgres service 与独立 `test` 数据库的准备、清理与重建约束，作为仓库内的环境映射操作手册
 
-**检查点**: 仓库已有单一 URL 环境变量基线、Postgres 测试脚手架和 Vercel/Neon 环境说明，可继续推进正式接入。
+**检查点**: 仓库已有单一 URL 环境变量基线、Docker Postgres / CI Postgres service 测试脚手架和 Vercel/Neon 环境说明，可继续推进正式接入。
 
-补充说明：若后续引入更多 PGlite 覆盖，应优先落在支持显式 db 注入的 repository / service 测试上，并保持其定位为快速数据库单测层，而不是替换整个数据库测试体系。
+补充说明：若后续引入更多 PGlite 覆盖，应优先落在支持显式 db 注入的 repository / service 测试上，并保持其定位为快速数据库单测层，而不是替换以本地 Docker Postgres + GitHub Actions Postgres service 为主线的数据库测试体系。
 
 ---
 
