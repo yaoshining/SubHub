@@ -1,7 +1,7 @@
 ---
 description: "用于 SubHub 的产品需求澄清、范围收敛与 scope 分层判断：把模糊想法转为可验证、可交付、符合 Spec Kit 工作流的产品定义，并在实现前识别缺失决策、范围风险以及 mvp / post-mvp / future / stretch 归属。"
 name: "SubHub 产品经理"
-tools: [read, search, edit, github/*]
+tools: [read, search, edit, github/*, execute]
 argument-hint: "描述你的功能想法、用户场景、当前困惑与已知约束（可附 spec/plan/tasks 或 issue 上下文）"
 user-invocable: true
 handoffs:
