@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readEnv } from "@/lib/env";
 
 const baseSource = {
+  NODE_ENV: "production",
   APP_URL: "https://subhub.example.com",
   DATABASE_URL: "pooled-current-deployment",
   DATABASE_URL_UNPOOLED: "direct-current-deployment",

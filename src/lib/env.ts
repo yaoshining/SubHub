@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-const nodeEnvironmentSchema = z
-  .enum(["development", "test", "production"])
-  .default("development");
-
 const vercelEnvironmentSchema = z.enum([
   "production",
   "preview",
@@ -41,7 +37,7 @@ export type VercelEnvironment = z.infer<typeof vercelEnvironmentSchema> | "none"
 export type RuntimeTier = "production" | "staging" | "development";
 
 export type AppEnv = {
-  NODE_ENV: z.infer<typeof nodeEnvironmentSchema>;
+  NODE_ENV: z.infer<typeof rawEnvSchema>["NODE_ENV"];
   APP_URL: string;
   DATABASE_URL: string;
   DATABASE_URL_UNPOOLED: string;
