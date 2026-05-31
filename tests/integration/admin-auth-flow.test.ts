@@ -6,16 +6,17 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  adminActionResults,
-  adminSessions,
-  type AdminActionResult,
-} from "@/server/storage/schema";
-import {
   closeStorageClient,
   getStorageClient,
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+} from "../helpers/pglite-storage-client";
+
+import {
+  adminActionResults,
+  adminSessions,
+  type AdminActionResult,
+} from "@/server/storage/schema";
 import { proxy } from "@/proxy";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
@@ -32,13 +33,13 @@ const postJson = (url: string, body: unknown) =>
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-admin-auth-flow-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

@@ -5,13 +5,14 @@ import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { adminSessionCookieName } from "@/lib/auth/constants";
 import {
   closeStorageClient,
   getStorageClient,
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+} from "../helpers/pglite-storage-client";
+
+import { adminSessionCookieName } from "@/lib/auth/constants";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
 import * as bootstrapStatusRoute from "@/app/api/admin/bootstrap/status/route";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
@@ -46,13 +47,13 @@ const extractSessionCookie = (response: Response) => {
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-admin-auth-contract-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

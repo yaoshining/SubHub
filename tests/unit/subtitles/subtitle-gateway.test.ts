@@ -4,6 +4,13 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  closeStorageClient,
+  getStorageClient,
+  resetStorageDatabasePathForTesting,
+  setStorageDatabasePathForTesting,
+} from "../../helpers/pglite-storage-client";
+
 import { AppError } from "@/lib/errors";
 import {
   createProvider,
@@ -12,12 +19,6 @@ import {
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { searchSubtitles } from "@/server/subtitles/subtitle-gateway";
 import { downloadSubtitle } from "@/server/subtitles/subtitle-download";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 
 let tempDir: string;
 
@@ -46,13 +47,13 @@ const createReadyProvider = async () =>
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-subtitle-gateway-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

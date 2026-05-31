@@ -5,6 +5,13 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  closeStorageClient,
+  getStorageClient,
+  resetStorageDatabasePathForTesting,
+  setStorageDatabasePathForTesting,
+} from "../helpers/pglite-storage-client";
+
+import {
   adminActionResults,
   type AdminActionResult,
 } from "@/server/storage/schema";
@@ -16,23 +23,19 @@ import {
   updateProvider,
 } from "@/server/services/provider-service";
 import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+} from "@/server/services/provider-service";
 
 let tempDir: string;
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-provider-flow-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { StorageClient } from "@/server/storage/client";
 
 import {
   createAdminSession,
@@ -17,8 +18,7 @@ import {
   getStorageClient,
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
-  type StorageClient,
-} from "@/server/storage/client";
+} from "../../helpers/pglite-storage-client";
 import { adminSessions, adminUsers } from "@/server/storage/schema";
 
 const now = new Date("2026-05-26T00:00:00.000Z");
@@ -42,7 +42,7 @@ const insertAdminUser = async (
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-session-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   client = getStorageClient();
   await client.migrate();
   await insertAdminUser();
@@ -50,7 +50,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

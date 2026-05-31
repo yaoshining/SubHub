@@ -5,6 +5,13 @@ import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  closeStorageClient,
+  getStorageClient,
+  resetStorageDatabasePathForTesting,
+  setStorageDatabasePathForTesting,
+} from "../helpers/pglite-storage-client";
+
 import { adminSessionCookieName } from "@/lib/auth/constants";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
@@ -12,12 +19,6 @@ import * as callerKeysRoute from "@/app/api/admin/caller-keys/route";
 import * as rotateRoute from "@/app/api/admin/caller-keys/[keyId]/rotate/route";
 import * as suspendRoute from "@/app/api/admin/caller-keys/[keyId]/suspend/route";
 import * as usageRoute from "@/app/api/admin/caller-keys/[keyId]/usage/route";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 import { expectApiError } from "../helpers/api";
 
 let tempDir: string;
@@ -62,13 +63,13 @@ const createAdminSessionCookie = async () => {
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-caller-key-contract-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

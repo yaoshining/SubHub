@@ -6,6 +6,13 @@ import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  closeStorageClient,
+  getStorageClient,
+  resetStorageDatabasePathForTesting,
+  setStorageDatabasePathForTesting,
+} from "../helpers/pglite-storage-client";
+
 import { adminSessionCookieName } from "@/lib/auth/constants";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
@@ -14,12 +21,6 @@ import * as invitationsRoute from "@/app/api/admin/users/invitations/route";
 import * as suspendRoute from "@/app/api/admin/users/[userId]/suspend/route";
 import * as restoreRoute from "@/app/api/admin/users/[userId]/restore/route";
 import * as remediateRoute from "@/app/api/admin/sessions/[sessionId]/remediate/route";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 import { adminSessions, adminUsers } from "@/server/storage/schema";
 import { expectApiError } from "../helpers/api";
 
@@ -114,13 +115,13 @@ const seedBackupAdmin = async () => {
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-users-contract-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

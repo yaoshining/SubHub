@@ -4,13 +4,14 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { remediateAdminSession } from "@/server/services/admin-session-service";
 import {
   closeStorageClient,
   getStorageClient,
   resetStorageDatabasePathForTesting,
   setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+} from "../../helpers/pglite-storage-client";
+
+import { remediateAdminSession } from "@/server/services/admin-session-service";
 import {
   adminActionResults,
   adminSessions,
@@ -61,13 +62,13 @@ const seedSession = async () => {
 
 beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-admin-session-service-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
+  await setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
   await getStorageClient().migrate();
 });
 
 afterEach(async () => {
   await closeStorageClient();
-  resetStorageDatabasePathForTesting();
+  await resetStorageDatabasePathForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 
