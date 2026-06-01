@@ -3,12 +3,14 @@ const getErrorField = (error: unknown, field: "code" | "message"): string => {
     return "";
   }
 
-  if (field in error && error[field] !== undefined && error[field] !== null) {
-    return String(error[field]);
+  const err = error as Record<string, unknown>;
+
+  if (field in err && err[field] !== undefined && err[field] !== null) {
+    return String(err[field]);
   }
 
-  if ("cause" in error) {
-    return getErrorField(error.cause, field);
+  if ("cause" in err) {
+    return getErrorField(err.cause, field);
   }
 
   return "";

@@ -155,7 +155,7 @@ describeWhenLocalPostgresEnabled(
           invitedByAdminUserId: adminUser.id,
           now,
         }),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "VALIDATION_FAILED",
         target: "identifier",
       });

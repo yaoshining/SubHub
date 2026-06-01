@@ -142,7 +142,7 @@ describeWhenLocalPostgresEnabled(
           },
           { db: storageDb, now },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "AUTHENTICATION_REQUIRED",
       });
 
@@ -165,12 +165,17 @@ describeWhenLocalPostgresEnabled(
     });
 
     it("rejects login for suspended admin on the real Postgres path", async () => {
-      const [firstAdmin] = await directDb?.select().from(adminUsers).limit(1);
+      const admins = await directDb?.select().from(adminUsers).limit(1);
+      const firstAdmin = admins?.[0];
+
+      if (!firstAdmin) {
+        throw new Error("Expected at least one admin user");
+      }
 
       await directDb
         ?.update(adminUsers)
         .set({ status: "suspended", updatedAt: now.toISOString() })
-        .where(eq(adminUsers.id, firstAdmin!.id));
+        .where(eq(adminUsers.id, firstAdmin.id));
 
       await expect(
         loginAdmin(
@@ -180,7 +185,7 @@ describeWhenLocalPostgresEnabled(
           },
           { db: storageDb, now },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
 

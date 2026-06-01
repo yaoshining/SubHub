@@ -72,7 +72,7 @@ const containerRunning = () => {
     true,
   );
 
-  return result.status === 0 && result.stdout?.trim() === "true";
+  return result.status === 0 && String(result.stdout ?? "").trim() === "true";
 };
 
 const waitForContainerReady = async () => {

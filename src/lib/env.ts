@@ -23,6 +23,9 @@ const rawEnvSchema = z.object({
     .string()
     .url()
     .default("https://api.opensubtitles.com/api/v1"),
+  PROVIDER_CREDENTIAL_ENCRYPTION_KEY: z.string().min(32).optional(),
+  ADMIN_SESSION_SECRET: z.string().min(32).optional(),
+  CALLER_KEY_SECRET: z.string().min(32).optional(),
 });
 
 const productionSecrets = [
@@ -32,6 +35,32 @@ const productionSecrets = [
 ] as const;
 
 type EnvIssueReporter = (path: string, message: string) => void;
+
+const previewDevelopmentBranchPattern = /^(preview|feature|agent)\//;
+const testDatabaseUrl = "test-database-url";
+
+export type DeploymentProvider = "vercel" | "local";
+export type VercelEnvironment =
+  | z.infer<typeof vercelEnvironmentSchema>
+  | "none";
+export type RuntimeTier = "production" | "staging" | "development";
+
+export type AppEnv = {
+  NODE_ENV: z.infer<typeof rawEnvSchema>["NODE_ENV"];
+  APP_URL: string;
+  DATABASE_URL: string;
+  DATABASE_URL_UNPOOLED: string;
+  OPENSUBTITLES_API_URL: string;
+  PROVIDER_CREDENTIAL_ENCRYPTION_KEY?: string;
+  ADMIN_SESSION_SECRET?: string;
+  CALLER_KEY_SECRET?: string;
+  deploymentProvider: DeploymentProvider;
+  vercelEnvironment: VercelEnvironment;
+  gitBranch: string | null;
+  resolvedTier: RuntimeTier;
+  isPreviewDeployment: boolean;
+  requiresDirectMigrationGate: boolean;
+};
 
 const resolveRuntimeIdentity = (
   env: z.infer<typeof rawEnvSchema>,

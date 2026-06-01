@@ -133,7 +133,7 @@ describeWhenLocalPostgresEnabled(
           },
           { db: storageDb, now },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "FORBIDDEN",
         target: "bootstrap",
       });

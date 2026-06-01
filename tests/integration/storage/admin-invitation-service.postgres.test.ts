@@ -142,7 +142,7 @@ describeWhenLocalPostgresEnabled(
           },
           { db: storageDb, now, actorAdminUserId: adminUserId },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "VALIDATION_FAILED",
         target: "identifier",
       });

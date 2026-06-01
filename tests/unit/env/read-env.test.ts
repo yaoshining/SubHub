@@ -20,12 +20,6 @@ describe("readEnv", () => {
     expect(env.DATABASE_URL_UNPOOLED).toBe(
       "postgresql://direct-user@localhost:5432/subhub",
     );
-    expect(env.DATABASE_URL_TEST).toBe(
-      "postgresql://test-runtime@localhost:5432/subhub_test",
-    );
-    expect(env.DATABASE_URL_TEST_UNPOOLED).toBe(
-      "postgresql://test-direct@localhost:5432/subhub_test",
-    );
     expect(env).not.toHaveProperty("SQLITE_DATABASE_PATH");
   });
 

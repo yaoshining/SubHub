@@ -139,7 +139,7 @@ describeWhenLocalPostgresEnabled(
             },
           },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "UPSTREAM_FAILED",
         target: "provider",
       });
@@ -200,7 +200,7 @@ describeWhenLocalPostgresEnabled(
             },
           },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "UPSTREAM_FAILED",
         target: "provider",
       });
@@ -243,7 +243,7 @@ describeWhenLocalPostgresEnabled(
             },
           },
         }),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "UPSTREAM_FAILED",
         target: "provider",
       });
@@ -301,7 +301,7 @@ describeWhenLocalPostgresEnabled(
           { title: "Example" },
           { db: providerRepository["db"], now },
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "CALLER_KEY_SUSPENDED",
       });
 

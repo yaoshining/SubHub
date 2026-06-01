@@ -150,7 +150,7 @@ describeWhenLocalPostgresEnabled(
           },
           now,
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "VALIDATION_FAILED",
         target: "credential",
       });
@@ -164,7 +164,7 @@ describeWhenLocalPostgresEnabled(
           },
           now,
         ),
-      ).rejects.toMatchObject<AppError>({
+      ).rejects.toMatchObject({
         code: "VALIDATION_FAILED",
         target: "credential",
       });
