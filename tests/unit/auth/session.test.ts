@@ -25,9 +25,7 @@ const now = new Date("2026-05-26T00:00:00.000Z");
 let tempDir: string;
 let client: StorageClient;
 
-const insertAdminUser = async (
-  status: "active" | "suspended" = "active",
-) => {
+const insertAdminUser = async (status: "active" | "suspended" = "active") => {
   await client.db.insert(adminUsers).values({
     id: "admin_session_test",
     identifier: "admin-session-test@example.com",

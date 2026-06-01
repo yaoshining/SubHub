@@ -20,6 +20,8 @@ shell commands, and other important information, read the current plan:
 	- `pnpm install`
 	- `pnpm dev`
 	- `pnpm build`
+	- `pnpm format`
+	- `pnpm format:write`
 	- `pnpm lint`
 	- `pnpm typecheck`
 	- `pnpm test`
@@ -32,6 +34,13 @@ shell commands, and other important information, read the current plan:
 	- `pnpm db:check`
 - 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
 - `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
+
+## 代码格式约定（Prettier）
+
+- 当任务修改了仓库文件并准备提交、交付或结束实现时，默认应先执行 `pnpm format:write`，主动将受 Prettier 管理的文件收敛到仓库格式基线。
+- 未经用户明确要求，不要把“等 CI 里的 `pnpm format` 报错后再修”作为默认工作流。
+- 若本次改动未触及 `format:write` 覆盖范围之外的文件，默认应在本地完成格式化，再进入后续 lint、test、commit 或 PR 阶段。
+- 若格式化会改动与当前任务无关、且由用户正在处理的文件，应在输出中明确说明，而不是静默扩大改动范围。
 
 ## 数据库测试分层约定（PGlite / Postgres / Neon）
 

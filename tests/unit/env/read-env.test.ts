@@ -8,8 +8,7 @@ describe("readEnv", () => {
       NODE_ENV: "test",
       APP_URL: "http://localhost:3000",
       DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
-      DATABASE_URL_UNPOOLED:
-        "postgresql://direct-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
       DATABASE_URL_TEST: "postgresql://test-runtime@localhost:5432/subhub_test",
       DATABASE_URL_TEST_UNPOOLED:
         "postgresql://test-direct@localhost:5432/subhub_test",
@@ -36,8 +35,7 @@ describe("readEnv", () => {
         NODE_ENV: "test",
         APP_URL: "http://localhost:3000",
         DATABASE_URL: "not-a-url",
-        DATABASE_URL_UNPOOLED:
-          "postgresql://direct-user@localhost:5432/subhub",
+        DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
         DATABASE_URL_TEST:
           "postgresql://test-runtime@localhost:5432/subhub_test",
         DATABASE_URL_TEST_UNPOOLED:
@@ -52,8 +50,7 @@ describe("readEnv", () => {
         NODE_ENV: "test",
         APP_URL: "http://localhost:3000",
         DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
-        DATABASE_URL_UNPOOLED:
-          "postgresql://direct-user@localhost:5432/subhub",
+        DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
       }),
     ).toThrow();
   });

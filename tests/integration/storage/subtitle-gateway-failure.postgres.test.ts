@@ -34,203 +34,205 @@ const makeRequest = (key: string) =>
   });
 
 const makeDownloadRequest = (key: string) =>
-  new Request("http://localhost/api/subtitles/download?subtitleId=opensubtitles:provider:file_001", {
-    headers: { authorization: `Bearer ${key}` },
-  });
+  new Request(
+    "http://localhost/api/subtitles/download?subtitleId=opensubtitles:provider:file_001",
+    {
+      headers: { authorization: `Bearer ${key}` },
+    },
+  );
 
-describeWhenLocalPostgresEnabled("Subtitle gateway failure persistence on local Docker Postgres", () => {
-  const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-  const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
-  const now = new Date("2026-06-01T00:00:00.000Z");
+describeWhenLocalPostgresEnabled(
+  "Subtitle gateway failure persistence on local Docker Postgres",
+  () => {
+    const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
+    const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+    const now = new Date("2026-06-01T00:00:00.000Z");
 
-  let closeStorageClient: (() => Promise<void>) | undefined;
-  let closeDirectClient: (() => Promise<void>) | undefined;
-  let directDb:
-    | ReturnType<typeof createDirectPostgresClient>["db"]
-    | undefined;
-  let directSql:
-    | ReturnType<typeof createDirectPostgresClient>["sql"]
-    | undefined;
-  let providerRepository: ProviderRepository;
-  let callerKeyRepository: ReturnType<typeof createCallerKeyRepository>;
+    let closeStorageClient: (() => Promise<void>) | undefined;
+    let closeDirectClient: (() => Promise<void>) | undefined;
+    let directDb:
+      | ReturnType<typeof createDirectPostgresClient>["db"]
+      | undefined;
+    let directSql:
+      | ReturnType<typeof createDirectPostgresClient>["sql"]
+      | undefined;
+    let providerRepository: ProviderRepository;
+    let callerKeyRepository: ReturnType<typeof createCallerKeyRepository>;
 
-  const setupProviderWithCredential = async () => {
-    const provider = await providerRepository.createProvider(
-      {
-        name: "OpenSubtitles Primary",
-        type: "opensubtitles",
-        initialCredential: {
-          label: "primary",
-          secret: "opensubtitles-api-key",
-        },
-      },
-      now,
-    );
-    const credentialId = provider.credentials[0]!.id;
-    return { provider, credentialId };
-  };
-
-  const setupCallerKey = async () => {
-    return callerKeyRepository.createCallerKey(
-      {
-        callerName: "Jellyfin",
-        environment: "production",
-        scope: "subtitles:read",
-        quotaPolicy: "default",
-      },
-      now,
-    );
-  };
-
-  beforeAll(async () => {
-    Object.assign(process.env, testEnv);
-
-    const storageClient = createStorageClient({
-      runtimeDatabaseUrl: runtimeUrl,
-      directDatabaseUrl: directUrl,
-    });
-
-    await storageClient.migrate();
-
-    providerRepository = new ProviderRepository(storageClient.db);
-    callerKeyRepository = createCallerKeyRepository(storageClient.db);
-    closeStorageClient = () => storageClient.close();
-
-    const directClient = createDirectPostgresClient({
-      directDatabaseUrl: directUrl,
-    });
-
-    directDb = directClient.db;
-    directSql = directClient.sql;
-    closeDirectClient = () => directClient.close();
-  });
-
-  beforeEach(async () => {
-    await directSql?.unsafe(truncateSubtitleTablesSql);
-  });
-
-  afterAll(async () => {
-    await closeStorageClient?.();
-    await closeDirectClient?.();
-  });
-
-  it("persists credential cooldown and provider_failed search request on upstream failure", async () => {
-    const { provider, credentialId } = await setupProviderWithCredential();
-    const callerKey = await setupCallerKey();
-
-    await expect(
-      searchSubtitles(
-        makeRequest(callerKey.key),
-        { title: "Example" },
+    const setupProviderWithCredential = async () => {
+      const provider = await providerRepository.createProvider(
         {
-          db: providerRepository["db"],
-          now,
-          adapter: {
-            search: async () => {
-              throw new AppError(
-                "PROVIDER_CREDENTIAL_EXHAUSTED",
-                "429 限流",
-                "rate_limited",
-              );
-            },
+          name: "OpenSubtitles Primary",
+          type: "opensubtitles",
+          initialCredential: {
+            label: "primary",
+            secret: "opensubtitles-api-key",
           },
         },
-      ),
-    ).rejects.toMatchObject<AppError>({
-      code: "UPSTREAM_FAILED",
-      target: "provider",
-    });
+        now,
+      );
+      const credentialId = provider.credentials[0]!.id;
+      return { provider, credentialId };
+    };
 
-    const persistedCredential = await directDb
-      ?.select()
-      .from(providerCredentials)
-      .where(eq(providerCredentials.id, credentialId))
-      .then((rows) => rows[0]);
-
-    expect(persistedCredential).toBeDefined();
-    expect(persistedCredential?.status).toBe("cooldown");
-    expect(persistedCredential?.lastErrorSummary).toBe("429 限流");
-    expect(persistedCredential?.cooldownUntil).toBeDefined();
-
-    const persistedProvider = await directDb
-      ?.select()
-      .from(providers)
-      .where(eq(providers.id, provider.id))
-      .then((rows) => rows[0]);
-
-    expect(persistedProvider?.status).toBe("degraded");
-    expect(persistedProvider?.lastHealthStatus).toBe("degraded");
-
-    const requests = await directDb
-      ?.select()
-      .from(subtitleSearchRequests)
-      .where(eq(subtitleSearchRequests.callerKeyId, callerKey.callerKey.id));
-
-    expect(requests).toHaveLength(1);
-    expect(requests?.[0]).toMatchObject({
-      status: "provider_failed",
-      providerId: provider.id,
-      credentialId,
-      resultCount: 0,
-    });
-  });
-
-  it("persists credential exhaustion and provider degradation when quota is exhausted", async () => {
-    const { provider, credentialId } = await setupProviderWithCredential();
-    const callerKey = await setupCallerKey();
-
-    await expect(
-      searchSubtitles(
-        makeRequest(callerKey.key),
-        { title: "Example" },
+    const setupCallerKey = async () => {
+      return callerKeyRepository.createCallerKey(
         {
-          db: providerRepository["db"],
-          now,
-          adapter: {
-            search: async () => {
-              throw new AppError(
-                "PROVIDER_CREDENTIAL_EXHAUSTED",
-                "quota exhausted",
-                "authentication_failed",
-              );
+          callerName: "Jellyfin",
+          environment: "production",
+          scope: "subtitles:read",
+          quotaPolicy: "default",
+        },
+        now,
+      );
+    };
+
+    beforeAll(async () => {
+      Object.assign(process.env, testEnv);
+
+      const storageClient = createStorageClient({
+        runtimeDatabaseUrl: runtimeUrl,
+        directDatabaseUrl: directUrl,
+      });
+
+      await storageClient.migrate();
+
+      providerRepository = new ProviderRepository(storageClient.db);
+      callerKeyRepository = createCallerKeyRepository(storageClient.db);
+      closeStorageClient = () => storageClient.close();
+
+      const directClient = createDirectPostgresClient({
+        directDatabaseUrl: directUrl,
+      });
+
+      directDb = directClient.db;
+      directSql = directClient.sql;
+      closeDirectClient = () => directClient.close();
+    });
+
+    beforeEach(async () => {
+      await directSql?.unsafe(truncateSubtitleTablesSql);
+    });
+
+    afterAll(async () => {
+      await closeStorageClient?.();
+      await closeDirectClient?.();
+    });
+
+    it("persists credential cooldown and provider_failed search request on upstream failure", async () => {
+      const { provider, credentialId } = await setupProviderWithCredential();
+      const callerKey = await setupCallerKey();
+
+      await expect(
+        searchSubtitles(
+          makeRequest(callerKey.key),
+          { title: "Example" },
+          {
+            db: providerRepository["db"],
+            now,
+            adapter: {
+              search: async () => {
+                throw new AppError(
+                  "PROVIDER_CREDENTIAL_EXHAUSTED",
+                  "429 限流",
+                  "rate_limited",
+                );
+              },
             },
           },
-        },
-      ),
-    ).rejects.toMatchObject<AppError>({
-      code: "UPSTREAM_FAILED",
-      target: "provider",
+        ),
+      ).rejects.toMatchObject<AppError>({
+        code: "UPSTREAM_FAILED",
+        target: "provider",
+      });
+
+      const persistedCredential = await directDb
+        ?.select()
+        .from(providerCredentials)
+        .where(eq(providerCredentials.id, credentialId))
+        .then((rows) => rows[0]);
+
+      expect(persistedCredential).toBeDefined();
+      expect(persistedCredential?.status).toBe("cooldown");
+      expect(persistedCredential?.lastErrorSummary).toBe("429 限流");
+      expect(persistedCredential?.cooldownUntil).toBeDefined();
+
+      const persistedProvider = await directDb
+        ?.select()
+        .from(providers)
+        .where(eq(providers.id, provider.id))
+        .then((rows) => rows[0]);
+
+      expect(persistedProvider?.status).toBe("degraded");
+      expect(persistedProvider?.lastHealthStatus).toBe("degraded");
+
+      const requests = await directDb
+        ?.select()
+        .from(subtitleSearchRequests)
+        .where(eq(subtitleSearchRequests.callerKeyId, callerKey.callerKey.id));
+
+      expect(requests).toHaveLength(1);
+      expect(requests?.[0]).toMatchObject({
+        status: "provider_failed",
+        providerId: provider.id,
+        credentialId,
+        resultCount: 0,
+      });
     });
 
-    const persistedCredential = await directDb
-      ?.select()
-      .from(providerCredentials)
-      .where(eq(providerCredentials.id, credentialId))
-      .then((rows) => rows[0]);
+    it("persists credential exhaustion and provider degradation when quota is exhausted", async () => {
+      const { provider, credentialId } = await setupProviderWithCredential();
+      const callerKey = await setupCallerKey();
 
-    expect(persistedCredential?.status).toBe("exhausted");
-    expect(persistedCredential?.cooldownUntil).toBeNull();
+      await expect(
+        searchSubtitles(
+          makeRequest(callerKey.key),
+          { title: "Example" },
+          {
+            db: providerRepository["db"],
+            now,
+            adapter: {
+              search: async () => {
+                throw new AppError(
+                  "PROVIDER_CREDENTIAL_EXHAUSTED",
+                  "quota exhausted",
+                  "authentication_failed",
+                );
+              },
+            },
+          },
+        ),
+      ).rejects.toMatchObject<AppError>({
+        code: "UPSTREAM_FAILED",
+        target: "provider",
+      });
 
-    const persistedProvider = await directDb
-      ?.select()
-      .from(providers)
-      .where(eq(providers.id, provider.id))
-      .then((rows) => rows[0]);
+      const persistedCredential = await directDb
+        ?.select()
+        .from(providerCredentials)
+        .where(eq(providerCredentials.id, credentialId))
+        .then((rows) => rows[0]);
 
-    expect(persistedProvider?.status).toBe("degraded");
-    expect(persistedProvider?.lastHealthStatus).toBe("degraded");
-  });
+      expect(persistedCredential?.status).toBe("exhausted");
+      expect(persistedCredential?.cooldownUntil).toBeNull();
 
-  it("persists credential cooldown and provider_failed download request on download failure", async () => {
-    const { provider, credentialId } = await setupProviderWithCredential();
-    const callerKey = await setupCallerKey();
-    const subtitleRef = `opensubtitles:${provider.id}:file_001`;
+      const persistedProvider = await directDb
+        ?.select()
+        .from(providers)
+        .where(eq(providers.id, provider.id))
+        .then((rows) => rows[0]);
 
-    await expect(
-      downloadSubtitle(
-        makeDownloadRequest(callerKey.key),
-        subtitleRef,
-        {
+      expect(persistedProvider?.status).toBe("degraded");
+      expect(persistedProvider?.lastHealthStatus).toBe("degraded");
+    });
+
+    it("persists credential cooldown and provider_failed download request on download failure", async () => {
+      const { provider, credentialId } = await setupProviderWithCredential();
+      const callerKey = await setupCallerKey();
+      const subtitleRef = `opensubtitles:${provider.id}:file_001`;
+
+      await expect(
+        downloadSubtitle(makeDownloadRequest(callerKey.key), subtitleRef, {
           db: providerRepository["db"],
           now,
           adapter: {
@@ -242,98 +244,100 @@ describeWhenLocalPostgresEnabled("Subtitle gateway failure persistence on local 
               );
             },
           },
+        }),
+      ).rejects.toMatchObject<AppError>({
+        code: "UPSTREAM_FAILED",
+        target: "provider",
+      });
+
+      const persistedCredential = await directDb
+        ?.select()
+        .from(providerCredentials)
+        .where(eq(providerCredentials.id, credentialId))
+        .then((rows) => rows[0]);
+
+      expect(persistedCredential?.status).toBe("cooldown");
+      expect(persistedCredential?.lastErrorSummary).toBe("上游限流");
+
+      const persistedProvider = await directDb
+        ?.select()
+        .from(providers)
+        .where(eq(providers.id, provider.id))
+        .then((rows) => rows[0]);
+
+      expect(persistedProvider?.status).toBe("degraded");
+      expect(persistedProvider?.lastHealthStatus).toBe("degraded");
+
+      const downloadRequests = await directDb
+        ?.select()
+        .from(subtitleDownloadRequests)
+        .where(
+          eq(subtitleDownloadRequests.callerKeyId, callerKey.callerKey.id),
+        );
+
+      expect(downloadRequests).toHaveLength(1);
+      expect(downloadRequests?.[0]).toMatchObject({
+        status: "provider_failed",
+        subtitleRef,
+        providerId: provider.id,
+        credentialId,
+      });
+    });
+
+    it("records unauthorized search request without affecting provider or credential", async () => {
+      const { provider } = await setupProviderWithCredential();
+      const suspended = await callerKeyRepository.createCallerKey(
+        {
+          callerName: "SuspendedClient",
+          environment: "development",
+          scope: "subtitles:read",
+          quotaPolicy: "default",
         },
-      ),
-    ).rejects.toMatchObject<AppError>({
-      code: "UPSTREAM_FAILED",
-      target: "provider",
+        now,
+      );
+      await callerKeyRepository.suspendCallerKey(suspended.callerKey.id, now);
+
+      await expect(
+        searchSubtitles(
+          makeRequest(suspended.key),
+          { title: "Example" },
+          { db: providerRepository["db"], now },
+        ),
+      ).rejects.toMatchObject<AppError>({
+        code: "CALLER_KEY_SUSPENDED",
+      });
+
+      const persistedCredential = await directDb
+        ?.select()
+        .from(providerCredentials)
+        .where(eq(providerCredentials.providerId, provider.id));
+
+      expect(persistedCredential?.[0]?.status).toBe("active");
+      expect(persistedCredential?.[0]?.lastErrorAt).toBeNull();
+
+      const persistedProvider = await directDb
+        ?.select()
+        .from(providers)
+        .where(eq(providers.id, provider.id))
+        .then((rows) => rows[0]);
+
+      expect(persistedProvider?.status).toBe("enabled");
+      expect(persistedProvider?.lastHealthStatus).toBe("ready");
+
+      const requests = await directDb
+        ?.select()
+        .from(subtitleSearchRequests)
+        .where(eq(subtitleSearchRequests.status, "unauthorized"))
+        .limit(5);
+
+      expect(requests).toHaveLength(1);
+      expect(requests?.[0]).toMatchObject({
+        callerKeyId: null,
+        status: "unauthorized",
+        providerId: null,
+        credentialId: null,
+        resultCount: 0,
+      });
     });
-
-    const persistedCredential = await directDb
-      ?.select()
-      .from(providerCredentials)
-      .where(eq(providerCredentials.id, credentialId))
-      .then((rows) => rows[0]);
-
-    expect(persistedCredential?.status).toBe("cooldown");
-    expect(persistedCredential?.lastErrorSummary).toBe("上游限流");
-
-    const persistedProvider = await directDb
-      ?.select()
-      .from(providers)
-      .where(eq(providers.id, provider.id))
-      .then((rows) => rows[0]);
-
-    expect(persistedProvider?.status).toBe("degraded");
-    expect(persistedProvider?.lastHealthStatus).toBe("degraded");
-
-    const downloadRequests = await directDb
-      ?.select()
-      .from(subtitleDownloadRequests)
-      .where(eq(subtitleDownloadRequests.callerKeyId, callerKey.callerKey.id));
-
-    expect(downloadRequests).toHaveLength(1);
-    expect(downloadRequests?.[0]).toMatchObject({
-      status: "provider_failed",
-      subtitleRef,
-      providerId: provider.id,
-      credentialId,
-    });
-  });
-
-  it("records unauthorized search request without affecting provider or credential", async () => {
-    const { provider } = await setupProviderWithCredential();
-    const suspended = await callerKeyRepository.createCallerKey(
-      {
-        callerName: "SuspendedClient",
-        environment: "development",
-        scope: "subtitles:read",
-        quotaPolicy: "default",
-      },
-      now,
-    );
-    await callerKeyRepository.suspendCallerKey(suspended.callerKey.id, now);
-
-    await expect(
-      searchSubtitles(
-        makeRequest(suspended.key),
-        { title: "Example" },
-        { db: providerRepository["db"], now },
-      ),
-    ).rejects.toMatchObject<AppError>({
-      code: "CALLER_KEY_SUSPENDED",
-    });
-
-    const persistedCredential = await directDb
-      ?.select()
-      .from(providerCredentials)
-      .where(eq(providerCredentials.providerId, provider.id));
-
-    expect(persistedCredential?.[0]?.status).toBe("active");
-    expect(persistedCredential?.[0]?.lastErrorAt).toBeNull();
-
-    const persistedProvider = await directDb
-      ?.select()
-      .from(providers)
-      .where(eq(providers.id, provider.id))
-      .then((rows) => rows[0]);
-
-    expect(persistedProvider?.status).toBe("enabled");
-    expect(persistedProvider?.lastHealthStatus).toBe("ready");
-
-    const requests = await directDb
-      ?.select()
-      .from(subtitleSearchRequests)
-      .where(eq(subtitleSearchRequests.status, "unauthorized"))
-      .limit(5);
-
-    expect(requests).toHaveLength(1);
-    expect(requests?.[0]).toMatchObject({
-      callerKeyId: null,
-      status: "unauthorized",
-      providerId: null,
-      credentialId: null,
-      resultCount: 0,
-    });
-  });
-});
+  },
+);

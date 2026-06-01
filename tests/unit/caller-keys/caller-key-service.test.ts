@@ -54,7 +54,9 @@ describe("Caller Key service", () => {
       now: new Date("2026-04-15T12:00:00.000Z"),
     });
 
-    await expect(listCallerKeys({ db: harness.db, now })).resolves.toMatchObject({
+    await expect(
+      listCallerKeys({ db: harness.db, now }),
+    ).resolves.toMatchObject({
       total: 3,
       summary: {
         activeCount: 1,
@@ -66,12 +68,15 @@ describe("Caller Key service", () => {
   });
 
   it("创建 Caller Key 只返回一次明文并在存储层隐藏 hash", async () => {
-    const result = await createCallerKey({
-      callerName: "Jellyfin Home",
-      environment: "production",
-      scope: "subtitles:read",
-      quotaPolicy: "default",
-    }, { db: harness.db });
+    const result = await createCallerKey(
+      {
+        callerName: "Jellyfin Home",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { db: harness.db },
+    );
 
     expect(result.key).toMatch(/^subhub_live_/);
     expect(result.callerKey).toMatchObject({
@@ -89,12 +94,15 @@ describe("Caller Key service", () => {
   });
 
   it("轮换后旧 Key 立即失效，新 Key 可用且记录轮换结果", async () => {
-    const created = await createCallerKey({
-      callerName: "Kodi",
-      environment: "development",
-      scope: "subtitles:read",
-      quotaPolicy: "default",
-    }, { db: harness.db });
+    const created = await createCallerKey(
+      {
+        callerName: "Kodi",
+        environment: "development",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { db: harness.db },
+    );
 
     const rotated = await rotateCallerKey(created.callerKey.id, {
       db: harness.db,
@@ -134,12 +142,15 @@ describe("Caller Key service", () => {
   });
 
   it("停用 Key 后立即拒绝新请求", async () => {
-    const created = await createCallerKey({
-      callerName: "Plex",
-      environment: "staging",
-      scope: "subtitles:read",
-      quotaPolicy: "default",
-    }, { db: harness.db });
+    const created = await createCallerKey(
+      {
+        callerName: "Plex",
+        environment: "staging",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { db: harness.db },
+    );
 
     await suspendCallerKey(created.callerKey.id, { db: harness.db });
 

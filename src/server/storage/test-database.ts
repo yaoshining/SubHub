@@ -17,13 +17,8 @@ export type LocalTestDatabaseUrls = {
 const encode = (value: string) => encodeURIComponent(value);
 
 export const buildLocalTestDatabaseUrls = (): LocalTestDatabaseUrls => {
-  const {
-    host,
-    hostPort,
-    databaseName,
-    username,
-    password,
-  } = localTestPostgresBaseline;
+  const { host, hostPort, databaseName, username, password } =
+    localTestPostgresBaseline;
   const auth = `${encode(username)}:${encode(password)}`;
   const databasePath = encode(databaseName);
   const baseUrl = `postgresql://${auth}@${host}:${hostPort}/${databasePath}`;
@@ -49,4 +44,5 @@ export const withLocalTestDatabaseEnvDefaults = (
 
 export const applyLocalTestDatabaseEnvDefaults = (
   target: NodeJS.ProcessEnv = process.env,
-): NodeJS.ProcessEnv => Object.assign(target, withLocalTestDatabaseEnvDefaults(target));
+): NodeJS.ProcessEnv =>
+  Object.assign(target, withLocalTestDatabaseEnvDefaults(target));

@@ -18,9 +18,8 @@ describeWhenLocalPostgresEnabled("local Docker Postgres test database", () => {
   beforeAll(async () => {
     Object.assign(process.env, testEnv);
 
-    const { createStorageClient } = await import(
-      "../../../src/server/storage/client.js"
-    );
+    const { createStorageClient } =
+      await import("../../../src/server/storage/client.js");
 
     const client = createStorageClient({
       runtimeDatabaseUrl: runtimeUrl,
@@ -36,9 +35,8 @@ describeWhenLocalPostgresEnabled("local Docker Postgres test database", () => {
   });
 
   it("migrates schema into the dedicated local test database", async () => {
-    const { createDirectPostgresClient } = await import(
-      "../../../src/server/storage/postgres-client.js"
-    );
+    const { createDirectPostgresClient } =
+      await import("../../../src/server/storage/postgres-client.js");
 
     const directClient = createDirectPostgresClient({
       directDatabaseUrl: directUrl,

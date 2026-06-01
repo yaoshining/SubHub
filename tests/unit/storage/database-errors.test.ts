@@ -12,7 +12,8 @@ describe("database error helpers", () => {
       message: "Failed query: insert into providers ...",
       cause: {
         code: "23505",
-        message: "duplicate key value violates unique constraint \"providers_type_name_unique\"",
+        message:
+          'duplicate key value violates unique constraint "providers_type_name_unique"',
       },
     };
 

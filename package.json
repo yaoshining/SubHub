@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "format": "prettier --check package.json tsconfig.json next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
+    "format:write": "prettier --write package.json tsconfig.json next.config.ts postcss.config.mjs components.json tailwind.config.ts eslint.config.mjs vitest.config.ts orval.config.ts src tests docs/api/openapi.yaml",
     "lint": "eslint src tests next.config.ts tailwind.config.ts vitest.config.ts orval.config.ts --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
@@ -23,8 +24,8 @@
     "db:seed:test": "tsx scripts/db/local-test-postgres.ts seed",
     "db:prepare:test": "tsx scripts/db/local-test-postgres.ts prepare",
     "db:check": "drizzle-kit check --config drizzle.config.ts && pnpm db:drift && pnpm typecheck && pnpm test tests/unit/storage/postgres-schema.test.ts tests/unit/storage/runtime-url-boundary.test.ts tests/integration/storage/postgres-client.test.ts",
-    "db:drift": "tmpdir=$(mktemp -d) && cp -R src/server/storage/migrations/meta \"$tmpdir/meta\" && drizzle-kit generate --config drizzle.config.ts --out \"$tmpdir\" --name drift_check --prefix none >/tmp/subhub-drizzle-drift.log && if [ -f \"$tmpdir/drift_check.sql\" ]; then cat /tmp/subhub-drizzle-drift.log; echo 'Drizzle schema 与已提交 migration 存在漂移，请运行 pnpm db:generate 并提交 migration。'; rm -rf \"$tmpdir\"; exit 1; fi; rm -rf \"$tmpdir\""
-    ,"test:db": "tsx scripts/db/local-test-postgres.ts test"
+    "db:drift": "tmpdir=$(mktemp -d) && cp -R src/server/storage/migrations/meta \"$tmpdir/meta\" && drizzle-kit generate --config drizzle.config.ts --out \"$tmpdir\" --name drift_check --prefix none >/tmp/subhub-drizzle-drift.log && if [ -f \"$tmpdir/drift_check.sql\" ]; then cat /tmp/subhub-drizzle-drift.log; echo 'Drizzle schema 与已提交 migration 存在漂移，请运行 pnpm db:generate 并提交 migration。'; rm -rf \"$tmpdir\"; exit 1; fi; rm -rf \"$tmpdir\"",
+    "test:db": "tsx scripts/db/local-test-postgres.ts test"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",

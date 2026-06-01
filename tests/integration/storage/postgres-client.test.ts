@@ -122,7 +122,11 @@ describe("Postgres storage client integration boundary", () => {
   it("does not expose legacy sqlite-style test override helpers on the production storage client", async () => {
     const storageModule = await import("../../../src/server/storage/client.js");
 
-    expect(storageModule).not.toHaveProperty("setStorageDatabasePathForTesting");
-    expect(storageModule).not.toHaveProperty("resetStorageDatabasePathForTesting");
+    expect(storageModule).not.toHaveProperty(
+      "setStorageDatabasePathForTesting",
+    );
+    expect(storageModule).not.toHaveProperty(
+      "resetStorageDatabasePathForTesting",
+    );
   });
 });

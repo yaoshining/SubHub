@@ -29,9 +29,11 @@ const buildStorageClient = (
   directUrl: `pglite:${databasePathLabel}`,
   migrate: async () => undefined,
   transaction: async (callback) =>
-    (harness.db as {
-      transaction: <T>(runner: (tx: unknown) => Promise<T> | T) => Promise<T>;
-    }).transaction(async (tx) => callback(tx as StorageDatabase)),
+    (
+      harness.db as {
+        transaction: <T>(runner: (tx: unknown) => Promise<T> | T) => Promise<T>;
+      }
+    ).transaction(async (tx) => callback(tx as StorageDatabase)),
   close: async () => {
     await closePGliteStorageForTesting();
   },
@@ -64,9 +66,9 @@ export const resetPGliteStorageForTesting = async () => {
 };
 
 vi.mock("@/server/storage/client", async () => {
-  const actual = await vi.importActual<typeof import("@/server/storage/client")>(
-    "@/server/storage/client",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/server/storage/client")
+  >("@/server/storage/client");
 
   return {
     ...actual,

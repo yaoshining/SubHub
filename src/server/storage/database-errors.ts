@@ -1,7 +1,4 @@
-const getErrorField = (
-  error: unknown,
-  field: "code" | "message",
-): string => {
+const getErrorField = (error: unknown, field: "code" | "message"): string => {
   if (typeof error !== "object" || error === null) {
     return "";
   }

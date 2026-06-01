@@ -31,7 +31,10 @@ const productionSecrets = [
   "CALLER_KEY_SECRET",
 ] as const;
 
-const testDatabaseUrls = ["DATABASE_URL_TEST", "DATABASE_URL_TEST_UNPOOLED"] as const;
+const testDatabaseUrls = [
+  "DATABASE_URL_TEST",
+  "DATABASE_URL_TEST_UNPOOLED",
+] as const;
 
 type EnvIssueReporter = (path: string, message: string) => void;
 
