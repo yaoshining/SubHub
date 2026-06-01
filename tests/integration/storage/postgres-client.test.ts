@@ -1,3 +1,10 @@
+// 本文件位于 tests/integration/storage/，但本质是 mock / 静态装配边界校验，不是真实数据库集成测试。
+// 运行时依赖 vi.mock("postgres") / vi.mock("drizzle-orm/postgres-js")，不会连接任何真实数据库。
+// 团队后续若要继续维护，请明确：
+//   1. 它的职责是验证 createStorageClient / resolvePostgresUrlBoundary 的 URL 映射与装配路径；
+//   2. 它不进入 pnpm test:db 主线；不要因为它在 integration/storage 目录就误以为是 live DB 测试。
+// 真实 Docker Postgres 路径下的 live smoke 见 storage-client-smoke.postgres.test.ts。
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   directEndMock,
