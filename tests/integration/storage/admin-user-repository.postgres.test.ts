@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { AppError } from "@/lib/errors";
 import { AdminUserRepository } from "@/server/users/admin-user-repository";
 import { createStorageClient } from "@/server/storage/client";
 import { createDirectPostgresClient } from "@/server/storage/postgres-client";

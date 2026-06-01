@@ -2,7 +2,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { eq } from "drizzle-orm";
 
-import { AppError } from "@/lib/errors";
 import {
   createInitialAdmin,
   getBootstrapStatus,

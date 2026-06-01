@@ -2,7 +2,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { eq } from "drizzle-orm";
 
-import { AppError } from "@/lib/errors";
 import { loginAdmin, logoutAdmin } from "@/server/services/auth-service";
 import { createInitialAdmin } from "@/server/services/bootstrap-service";
 import { createStorageClient } from "@/server/storage/client";
