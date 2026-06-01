@@ -10,6 +10,9 @@ describe("local real Postgres test suite", () => {
       "tests/integration/storage/provider-repository.postgres.test.ts",
       "tests/integration/storage/caller-key-repository.postgres.test.ts",
       "tests/integration/storage/subtitle-gateway-failure.postgres.test.ts",
+      "tests/integration/storage/bootstrap-service.postgres.test.ts",
+      "tests/integration/storage/admin-invitation-service.postgres.test.ts",
+      "tests/integration/storage/auth-service.postgres.test.ts",
     ]);
   });
 });
