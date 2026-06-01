@@ -7,6 +7,8 @@ describe("local real Postgres test suite", () => {
     expect(localRealPostgresTestFiles).toEqual([
       "tests/integration/storage/local-test-postgres-baseline.test.ts",
       "tests/integration/storage/admin-user-repository.postgres.test.ts",
+      "tests/integration/storage/provider-repository.postgres.test.ts",
+      "tests/integration/storage/caller-key-repository.postgres.test.ts",
     ]);
   });
 });

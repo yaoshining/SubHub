@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 
 import { CallerKeyRepository } from "@/server/caller-keys/caller-key-repository";
+import { ProviderRepository } from "@/server/providers/provider-repository";
 import { createStorageClient } from "@/server/storage/client";
 import { createDirectPostgresClient } from "@/server/storage/postgres-client";
 import {
@@ -232,5 +233,126 @@ describeWhenLocalPostgresEnabled("CallerKeyRepository on local Docker Postgres",
           download.subtitleRef === "opensubtitles:provider_001:file_old",
       ),
     ).toBe(false);
+  });
+
+  it("records subtitle search and download rows with real foreign-key associations", async () => {
+    const now = new Date("2026-06-01T00:00:00.000Z");
+    const providerRepository = new ProviderRepository(repository["db"]);
+    const callerKey = await repository.createCallerKey(
+      {
+        callerName: "Kodi",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      now,
+    );
+    const provider = await providerRepository.createProvider(
+      {
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      },
+      now,
+    );
+    const credentialId = provider.credentials[0]!.id;
+
+    const searchRequest = await repository.recordSearchRequest({
+      callerKeyId: callerKey.callerKey.id,
+      mediaTitle: "Example",
+      mediaYear: 2024,
+      season: 1,
+      episode: 2,
+      language: "zh-CN",
+      status: "success",
+      resultCount: 3,
+      providerId: provider.id,
+      credentialId,
+      durationMs: 120,
+      createdAt: now.toISOString(),
+    });
+    const downloadRequest = await repository.recordDownloadRequest({
+      callerKeyId: callerKey.callerKey.id,
+      subtitleRef: `opensubtitles:${provider.id}:file_001`,
+      providerId: provider.id,
+      credentialId,
+      status: "success",
+      contentType: "application/x-subrip",
+      durationMs: 80,
+      createdAt: new Date(now.getTime() + 1_000).toISOString(),
+    });
+
+    expect(searchRequest).toMatchObject({
+      callerKeyId: callerKey.callerKey.id,
+      providerId: provider.id,
+      credentialId,
+      status: "success",
+      resultCount: 3,
+    });
+    expect(downloadRequest).toMatchObject({
+      callerKeyId: callerKey.callerKey.id,
+      providerId: provider.id,
+      credentialId,
+      status: "success",
+      contentType: "application/x-subrip",
+    });
+
+    const persistedSearches = await directDb?.select().from(subtitleSearchRequests);
+    const persistedDownloads = await directDb?.select().from(subtitleDownloadRequests);
+
+    expect(persistedSearches).toEqual([
+      expect.objectContaining({
+        id: searchRequest.id,
+        callerKeyId: callerKey.callerKey.id,
+        providerId: provider.id,
+        credentialId,
+      }),
+    ]);
+    expect(persistedDownloads).toEqual([
+      expect.objectContaining({
+        id: downloadRequest.id,
+        callerKeyId: callerKey.callerKey.id,
+        providerId: provider.id,
+        credentialId,
+      }),
+    ]);
+  });
+
+  it("rejects subtitle request rows that violate real Postgres foreign-key constraints", async () => {
+    await expect(
+      repository.recordSearchRequest({
+        callerKeyId: "missing-caller-key",
+        mediaTitle: "Invalid search",
+        mediaYear: 2024,
+        season: 1,
+        episode: 1,
+        language: "zh-CN",
+        status: "success",
+        resultCount: 1,
+        providerId: null,
+        credentialId: null,
+        durationMs: 120,
+        createdAt: "2026-06-01T00:00:00.000Z",
+      }),
+    ).rejects.toMatchObject({ cause: { code: "23503" } });
+
+    await expect(
+      repository.recordDownloadRequest({
+        callerKeyId: null,
+        subtitleRef: "opensubtitles:missing-provider:file_001",
+        providerId: "missing-provider",
+        credentialId: "missing-credential",
+        status: "success",
+        contentType: "application/x-subrip",
+        durationMs: 80,
+        createdAt: "2026-06-01T00:00:01.000Z",
+      }),
+    ).rejects.toMatchObject({ cause: { code: "23503" } });
+
+    expect(await directDb?.select().from(subtitleSearchRequests)).toEqual([]);
+    expect(await directDb?.select().from(subtitleDownloadRequests)).toEqual([]);
   });
 });
