@@ -6,8 +6,8 @@ describe("非生产运行环境 smoke", () => {
   it("staging Preview 与本地 development 都能解析出单一 URL 对", () => {
     const stagingPreview = readEnv({
       NODE_ENV: "production",
-      APP_URL: "https://preview.subhub.example.com",
       VERCEL_ENV: "preview",
+      VERCEL_URL: "preview-subhub-example.vercel.app",
       VERCEL_GIT_COMMIT_REF: "preview",
       DATABASE_URL: "staging-pooled-url",
       DATABASE_URL_UNPOOLED: "staging-direct-url",
@@ -28,6 +28,9 @@ describe("非生产运行环境 smoke", () => {
     });
 
     expect(stagingPreview.resolvedTier).toBe("staging");
+    expect(stagingPreview.APP_URL).toBe(
+      "https://preview-subhub-example.vercel.app",
+    );
     expect(stagingPreview.DATABASE_URL).toBe("staging-pooled-url");
     expect(localDevelopment.resolvedTier).toBe("development");
     expect(localDevelopment.DATABASE_URL_UNPOOLED).toBe("dev-direct-url");

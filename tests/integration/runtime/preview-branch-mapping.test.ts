@@ -4,8 +4,8 @@ import { readEnv } from "@/lib/env";
 
 const baseSource = {
   NODE_ENV: "production",
-  APP_URL: "https://preview.subhub.example.com",
   VERCEL_ENV: "preview",
+  VERCEL_URL: "preview-subhub-example.vercel.app",
   DATABASE_URL: "preview-pooled-url",
   DATABASE_URL_UNPOOLED: "preview-direct-url",
   PROVIDER_CREDENTIAL_ENCRYPTION_KEY: "provider-credential-secret-at-least-32",
@@ -28,6 +28,7 @@ describe("Preview 分支映射集成", () => {
     expect(env.resolvedTier).toBe(resolvedTier);
     expect(env.isPreviewDeployment).toBe(true);
     expect(env.deploymentProvider).toBe("vercel");
+    expect(env.APP_URL).toBe("https://preview-subhub-example.vercel.app");
   });
 
   it("缺少或使用不支持的 Preview 分支名时快速失败", () => {

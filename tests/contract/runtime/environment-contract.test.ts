@@ -27,8 +27,8 @@ describe("运行环境契约", () => {
   it("在 Vercel Preview 里只消费当前部署注入的 URL 对，而不是读取额外 tier 变量", () => {
     const env = readEnv({
       NODE_ENV: "production",
-      APP_URL: "https://preview.subhub.example.com",
       VERCEL_ENV: "preview",
+      VERCEL_URL: "preview-subhub-example.vercel.app",
       VERCEL_GIT_COMMIT_REF: "preview",
       DATABASE_URL: "staging-pooled-url",
       DATABASE_URL_UNPOOLED: "staging-direct-url",
@@ -43,6 +43,7 @@ describe("运行环境契约", () => {
     expect(env.DATABASE_URL).toBe("staging-pooled-url");
     expect(env.DATABASE_URL_UNPOOLED).toBe("staging-direct-url");
     expect(env.resolvedTier).toBe("staging");
+    expect(env.APP_URL).toBe("https://preview-subhub-example.vercel.app");
   });
 
   it("要求 .env.example 保持单部署 URL 写法，不暴露 prod/staging 多套路由变量", async () => {

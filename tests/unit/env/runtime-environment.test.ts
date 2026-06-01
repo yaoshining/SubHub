@@ -38,7 +38,9 @@ describe("readEnv 运行环境映射", () => {
       ...baseSource,
       NODE_ENV: "production",
       VERCEL_ENV: "preview",
+      VERCEL_URL: "preview-subhub-example.vercel.app",
       VERCEL_GIT_COMMIT_REF: "preview",
+      APP_URL: undefined,
     });
 
     expect(env).toMatchObject({
@@ -48,6 +50,7 @@ describe("readEnv 运行环境映射", () => {
       resolvedTier: "staging",
       isPreviewDeployment: true,
       requiresDirectMigrationGate: true,
+      APP_URL: "https://preview-subhub-example.vercel.app",
     });
   });
 
@@ -58,7 +61,9 @@ describe("readEnv 运行环境映射", () => {
         ...baseSource,
         NODE_ENV: "production",
         VERCEL_ENV: "preview",
+        VERCEL_URL: "preview-subhub-example.vercel.app",
         VERCEL_GIT_COMMIT_REF: gitBranch,
+        APP_URL: undefined,
       });
 
       expect(env).toMatchObject({
@@ -89,6 +94,19 @@ describe("readEnv 运行环境映射", () => {
         VERCEL_GIT_COMMIT_REF: "bugfix/unsupported",
       }),
     ).toThrowError(/preview.*feature.*agent/);
+  });
+
+  it("Preview 在未显式提供 APP_URL 时通过 VERCEL_URL 推导访问地址", () => {
+    const env = readEnv({
+      ...baseSource,
+      NODE_ENV: "production",
+      VERCEL_ENV: "preview",
+      VERCEL_URL: "dynamic-preview-subhub.vercel.app",
+      VERCEL_GIT_COMMIT_REF: "preview",
+      APP_URL: undefined,
+    });
+
+    expect(env.APP_URL).toBe("https://dynamic-preview-subhub.vercel.app");
   });
 
   it("在 test 环境下忽略 VERCEL_* 部署身份并走本地回退", () => {
