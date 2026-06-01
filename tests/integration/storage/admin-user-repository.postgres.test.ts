@@ -9,7 +9,7 @@ import {
   adminUsers,
 } from "@/server/storage/schema";
 import {
-  buildLocalTestDatabaseUrls,
+  resolveTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
 } from "@/server/storage/test-database";
 
@@ -23,7 +23,7 @@ describeWhenLocalPostgresEnabled(
   "AdminUserRepository on local Docker Postgres",
   () => {
     const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-    const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+    const { runtimeUrl, directUrl } = resolveTestDatabaseUrls();
 
     const now = new Date("2026-06-01T00:00:00.000Z");
     const adminUser = {

@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
-  buildLocalTestDatabaseUrls,
   localTestPostgresBaseline,
+  resolveTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
 } from "@/server/storage/test-database";
 
@@ -11,7 +11,7 @@ const describeWhenLocalPostgresEnabled =
 
 describeWhenLocalPostgresEnabled("local Docker Postgres test database", () => {
   const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-  const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+  const { runtimeUrl, directUrl } = resolveTestDatabaseUrls();
 
   let closeStorageClient: (() => Promise<void>) | undefined;
 

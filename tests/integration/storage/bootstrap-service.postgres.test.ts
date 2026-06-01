@@ -10,7 +10,7 @@ import { createStorageClient } from "@/server/storage/client";
 import { createDirectPostgresClient } from "@/server/storage/postgres-client";
 import { adminActionResults, adminUsers } from "@/server/storage/schema";
 import {
-  buildLocalTestDatabaseUrls,
+  resolveTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
 } from "@/server/storage/test-database";
 
@@ -24,7 +24,7 @@ describeWhenLocalPostgresEnabled(
   "Bootstrap service on local Docker Postgres",
   () => {
     const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-    const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+    const { runtimeUrl, directUrl } = resolveTestDatabaseUrls();
     const now = new Date("2026-06-01T00:00:00.000Z");
 
     let closeStorageClient: (() => Promise<void>) | undefined;

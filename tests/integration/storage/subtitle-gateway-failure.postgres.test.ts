@@ -16,7 +16,7 @@ import {
   providers,
 } from "@/server/storage/schema";
 import {
-  buildLocalTestDatabaseUrls,
+  resolveTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
 } from "@/server/storage/test-database";
 
@@ -43,7 +43,7 @@ describeWhenLocalPostgresEnabled(
   "Subtitle gateway failure persistence on local Docker Postgres",
   () => {
     const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-    const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+    const { runtimeUrl, directUrl } = resolveTestDatabaseUrls();
     const now = new Date("2026-06-01T00:00:00.000Z");
 
     let closeStorageClient: (() => Promise<void>) | undefined;

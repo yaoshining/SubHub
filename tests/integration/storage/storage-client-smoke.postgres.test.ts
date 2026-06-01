@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { createStorageClient } from "@/server/storage/client";
 import { createDirectPostgresClient } from "@/server/storage/postgres-client";
 import {
-  buildLocalTestDatabaseUrls,
+  resolveTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
 } from "@/server/storage/test-database";
 import { adminUsers } from "@/server/storage/schema";
@@ -20,7 +20,7 @@ describeWhenLocalPostgresEnabled(
   "StorageClient smoke on local Docker Postgres",
   () => {
     const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-    const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+    const { runtimeUrl, directUrl } = resolveTestDatabaseUrls();
 
     let closeDirectClient: (() => Promise<void>) | undefined;
     let directSql:

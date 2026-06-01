@@ -37,3 +37,47 @@ jobs:
         run: pnpm test
       - name: API 契约链路检查
         run: pnpm api:check
+
+  test-db:
+    name: 数据库集成测试
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: subhub_test
+          POSTGRES_USER: subhub_test
+          POSTGRES_PASSWORD: subhub_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL_TEST: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+      DATABASE_URL_TEST_UNPOOLED: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 准备测试数据库（reset + migrate）
+        run: pnpm db:prepare:ci
+      - name: 运行数据库集成测试
+        run: pnpm test:db:ci

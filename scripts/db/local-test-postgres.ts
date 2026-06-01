@@ -10,7 +10,14 @@ import {
 } from "../../src/server/storage/test-database";
 import { localRealPostgresTestFiles } from "../../src/server/storage/local-test-postgres-suite";
 
-type CommandName = "start" | "stop" | "reset" | "migrate" | "seed" | "prepare" | "test";
+type CommandName =
+  | "start"
+  | "stop"
+  | "reset"
+  | "migrate"
+  | "seed"
+  | "prepare"
+  | "test";
 
 const [command] = process.argv.slice(2) as [CommandName | undefined];
 
@@ -44,7 +51,9 @@ const ensureDockerAvailable = () => {
   const result = run("docker", ["--version"], true);
 
   if (result.status !== 0) {
-    throw new Error("未检测到可用的 docker 命令，无法启动本地 test Postgres 容器。");
+    throw new Error(
+      "未检测到可用的 docker 命令，无法启动本地 test Postgres 容器。",
+    );
   }
 };
 
@@ -98,7 +107,9 @@ const waitForContainerReady = async () => {
     await delay(1000);
   }
 
-  throw new Error("本地 test Postgres 容器已启动，但数据库未在预期时间内就绪。");
+  throw new Error(
+    "本地 test Postgres 容器已启动，但数据库未在预期时间内就绪。",
+  );
 };
 
 const ensureContainerRunning = async () => {
@@ -131,12 +142,17 @@ const start = async () => {
       localTestPostgresBaseline.image,
     ]);
   } else if (!containerRunning()) {
-    requireSuccess("docker", ["start", localTestPostgresBaseline.containerName]);
+    requireSuccess("docker", [
+      "start",
+      localTestPostgresBaseline.containerName,
+    ]);
   }
 
   await waitForContainerReady();
 
-  console.log(`本地 test Postgres 已就绪: ${localTestPostgresBaseline.containerName}`);
+  console.log(
+    `本地 test Postgres 已就绪: ${localTestPostgresBaseline.containerName}`,
+  );
   console.log(`DATABASE_URL_TEST=${runtimeUrl}`);
   console.log(`DATABASE_URL_TEST_UNPOOLED=${directUrl}`);
 };
@@ -165,7 +181,11 @@ const remove = async () => {
     return;
   }
 
-  requireSuccess("docker", ["rm", "-f", localTestPostgresBaseline.containerName]);
+  requireSuccess("docker", [
+    "rm",
+    "-f",
+    localTestPostgresBaseline.containerName,
+  ]);
 };
 
 const reset = async () => {
@@ -201,7 +221,9 @@ const migrate = async () => {
 
 const seed = async () => {
   await ensureContainerRunning();
-  console.log("当前本地 test database 未定义额外 seed，跳过。若后续需要 fixture，请在 db:seed:test 中增量补充。");
+  console.log(
+    "当前本地 test database 未定义额外 seed，跳过。若后续需要 fixture，请在 db:seed:test 中增量补充。",
+  );
 };
 
 const prepare = async () => {

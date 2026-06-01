@@ -13,7 +13,7 @@ import {
   subtitleSearchRequests,
 } from "@/server/storage/schema";
 import {
-  buildLocalTestDatabaseUrls,
+  resolveTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
 } from "@/server/storage/test-database";
 
@@ -27,7 +27,7 @@ describeWhenLocalPostgresEnabled(
   "CallerKeyRepository on local Docker Postgres",
   () => {
     const testEnv = withLocalTestDatabaseEnvDefaults(process.env);
-    const { runtimeUrl, directUrl } = buildLocalTestDatabaseUrls();
+    const { runtimeUrl, directUrl } = resolveTestDatabaseUrls();
 
     let repository: CallerKeyRepository;
     let closeStorageClient: (() => Promise<void>) | undefined;
