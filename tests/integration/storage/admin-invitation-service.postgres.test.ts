@@ -10,10 +10,7 @@ import {
 import { createInitialAdmin } from "@/server/services/bootstrap-service";
 import { createStorageClient } from "@/server/storage/client";
 import { createDirectPostgresClient } from "@/server/storage/postgres-client";
-import {
-  adminActionResults,
-  adminInvitations,
-} from "@/server/storage/schema";
+import { adminActionResults, adminInvitations } from "@/server/storage/schema";
 import {
   buildLocalTestDatabaseUrls,
   withLocalTestDatabaseEnvDefaults,
