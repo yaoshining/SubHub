@@ -14,8 +14,6 @@ import {
   subtitleSearchRequests,
   subtitleDownloadRequests,
   providers,
-  callerKeys,
-  callerKeyRotations,
 } from "@/server/storage/schema";
 import {
   buildLocalTestDatabaseUrls,
