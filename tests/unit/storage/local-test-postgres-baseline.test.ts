@@ -28,9 +28,10 @@ describe("local Docker Postgres test baseline", () => {
   });
 
   it("fills DATABASE_URL_TEST defaults without mutating existing explicit values", () => {
-    const env = withLocalTestDatabaseEnvDefaults(
-      { DATABASE_URL_TEST: "postgresql://custom-runtime@127.0.0.1:9999/custom_test" } as unknown as NodeJS.ProcessEnv,
-    );
+    const env = withLocalTestDatabaseEnvDefaults({
+      DATABASE_URL_TEST:
+        "postgresql://custom-runtime@127.0.0.1:9999/custom_test",
+    } as unknown as NodeJS.ProcessEnv);
 
     expect(env.DATABASE_URL_TEST).toBe(
       "postgresql://custom-runtime@127.0.0.1:9999/custom_test",
