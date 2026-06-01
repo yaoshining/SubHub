@@ -21,7 +21,7 @@ const describeWhenLocalPostgresEnabled =
   process.env.RUN_POSTGRES_TESTS === "true" ? describe : describe.skip;
 
 const truncateCallerKeyTablesSql =
-  'TRUNCATE TABLE "subtitle_download_requests", "subtitle_search_requests", "caller_key_rotations", "caller_keys" RESTART IDENTITY CASCADE';
+  'TRUNCATE TABLE "subtitle_download_requests", "subtitle_search_requests", "caller_key_rotations", "caller_keys", "provider_credentials", "providers" RESTART IDENTITY CASCADE';
 
 describeWhenLocalPostgresEnabled("CallerKeyRepository on local Docker Postgres", () => {
   const testEnv = withLocalTestDatabaseEnvDefaults(process.env);

@@ -219,7 +219,7 @@ const runDatabaseTests = async () => {
 
     const result = spawnSync(
       "pnpm",
-      ["test", ...localRealPostgresTestFiles],
+      ["test", "--no-file-parallelism", ...localRealPostgresTestFiles],
       {
         env: {
           ...process.env,
