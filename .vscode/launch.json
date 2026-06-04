@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "pnpm run dev -- --inspect",
+            "command": "pnpm run dev --inspect",
             "name": "Next.js: debug server-side",
             "request": "launch",
             "type": "node-terminal"

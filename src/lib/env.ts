@@ -10,7 +10,7 @@ const rawEnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
-  APP_URL: z.string().url().default("http://localhost:3000"),
+  APP_URL: z.string().url().optional(),
   DATABASE_URL: z.string().min(1).optional(),
   DATABASE_URL_UNPOOLED: z.string().min(1).optional(),
   DATABASE_URL_TEST: z.string().min(1).optional(),
@@ -19,6 +19,7 @@ const rawEnvSchema = z.object({
   DEV_DATABASE_URL_UNPOOLED: z.string().min(1).optional(),
   VERCEL_ENV: vercelEnvironmentSchema.optional(),
   VERCEL_GIT_COMMIT_REF: z.string().trim().min(1).optional(),
+  VERCEL_URL: z.string().trim().min(1).optional(),
   OPENSUBTITLES_API_URL: z
     .string()
     .url()
@@ -61,6 +62,12 @@ export type AppEnv = {
   isPreviewDeployment: boolean;
   requiresDirectMigrationGate: boolean;
 };
+
+const previewDevelopmentBranchPattern = /^(preview|feature|agent)\//;
+const testDatabaseUrl = "test-database-url";
+const defaultLocalAppUrl = "http://localhost:3000";
+
+type EnvIssueReporter = (path: string, message: string) => void;
 
 const resolveRuntimeIdentity = (
   env: z.infer<typeof rawEnvSchema>,
@@ -266,6 +273,39 @@ const resolveDatabaseUrls = (
   };
 };
 
+const resolveAppUrl = (
+  env: z.infer<typeof rawEnvSchema>,
+  runtimeIdentity: NonNullable<ReturnType<typeof resolveRuntimeIdentity>>,
+  reportIssue: EnvIssueReporter,
+) => {
+  if (env.APP_URL) {
+    return env.APP_URL;
+  }
+
+  if (
+    env.NODE_ENV === "test" ||
+    runtimeIdentity.deploymentProvider === "local" ||
+    runtimeIdentity.vercelEnvironment === "development"
+  ) {
+    return defaultLocalAppUrl;
+  }
+
+  if (runtimeIdentity.vercelEnvironment === "preview") {
+    if (!env.VERCEL_URL) {
+      reportIssue(
+        "VERCEL_URL",
+        "Vercel Preview 部署在未显式提供 APP_URL 时必须提供 VERCEL_URL。",
+      );
+      return null;
+    }
+
+    return `https://${env.VERCEL_URL}`;
+  }
+
+  reportIssue("APP_URL", "Production 部署必须显式提供 APP_URL。");
+  return null;
+};
+
 const envSchema = rawEnvSchema.superRefine((env, ctx) => {
   const reportIssue: EnvIssueReporter = (path, message) => {
     ctx.addIssue({
@@ -275,8 +315,12 @@ const envSchema = rawEnvSchema.superRefine((env, ctx) => {
     });
   };
 
-  resolveRuntimeIdentity(env, reportIssue);
+  const runtimeIdentity = resolveRuntimeIdentity(env, reportIssue);
   resolveDatabaseUrls(env, reportIssue);
+
+  if (runtimeIdentity) {
+    resolveAppUrl(env, runtimeIdentity, reportIssue);
+  }
 
   if (env.NODE_ENV !== "production") {
     return;
@@ -297,14 +341,16 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
   const env = envSchema.parse(source);
   const runtimeIdentity = resolveRuntimeIdentity(env, () => undefined);
   const databaseUrls = resolveDatabaseUrls(env, () => undefined);
+  const appUrl =
+    runtimeIdentity && resolveAppUrl(env, runtimeIdentity, () => undefined);
 
-  if (!runtimeIdentity || !databaseUrls) {
+  if (!runtimeIdentity || !databaseUrls || !appUrl) {
     throw new Error("运行环境解析失败：环境变量未通过预期校验。");
   }
 
   return {
     NODE_ENV: env.NODE_ENV,
-    APP_URL: env.APP_URL,
+    APP_URL: appUrl,
     DATABASE_URL: databaseUrls.DATABASE_URL,
     DATABASE_URL_UNPOOLED: databaseUrls.DATABASE_URL_UNPOOLED,
     OPENSUBTITLES_API_URL: env.OPENSUBTITLES_API_URL,
