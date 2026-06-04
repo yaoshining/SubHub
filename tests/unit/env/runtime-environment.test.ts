@@ -56,27 +56,24 @@ describe("readEnv 运行环境映射", () => {
     "fix/runtime-guard",
     "chore/docs-sync",
     "renovate/pnpm-10",
-  ])(
-    "将 %s 解析为 development tier",
-    (gitBranch) => {
-      const env = readEnv({
-        ...createVercelPreviewEnv({
-          DATABASE_URL: "pooled-current-deployment",
-          DATABASE_URL_UNPOOLED: "direct-current-deployment",
-          APP_URL: undefined,
-        }),
-        VERCEL_GIT_COMMIT_REF: gitBranch,
-      });
+  ])("将 %s 解析为 development tier", (gitBranch) => {
+    const env = readEnv({
+      ...createVercelPreviewEnv({
+        DATABASE_URL: "pooled-current-deployment",
+        DATABASE_URL_UNPOOLED: "direct-current-deployment",
+        APP_URL: undefined,
+      }),
+      VERCEL_GIT_COMMIT_REF: gitBranch,
+    });
 
-      expect(env).toMatchObject({
-        deploymentProvider: "vercel",
-        vercelEnvironment: "preview",
-        gitBranch,
-        resolvedTier: "development",
-        isPreviewDeployment: true,
-      });
-    },
-  );
+    expect(env).toMatchObject({
+      deploymentProvider: "vercel",
+      vercelEnvironment: "preview",
+      gitBranch,
+      resolvedTier: "development",
+      isPreviewDeployment: true,
+    });
+  });
 
   it("在部署身份冲突时明确失败", () => {
     expect(() =>

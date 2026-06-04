@@ -30,7 +30,9 @@ describe("运行环境契约", () => {
       readFile(join(repositoryRoot, ".github/copilot-instructions.md"), "utf8"),
     ]);
 
-    expect(runtimeMapping).toContain("`preview` | `Preview` | staging database");
+    expect(runtimeMapping).toContain(
+      "`preview` | `Preview` | staging database",
+    );
 
     for (const prefix of previewWhitelist) {
       expect(runtimeMapping).toContain(`- \`${prefix}\``);
