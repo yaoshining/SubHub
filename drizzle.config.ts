@@ -1,10 +1,7 @@
 import { defineConfig } from "drizzle-kit";
+import { resolveDirectDbUrl } from "./src/lib/db-url";
 
-const databaseUrl = process.env.DATABASE_URL_UNPOOLED;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL_UNPOOLED 未配置，无法生成或检查 Postgres migration。");
-}
+const databaseUrl = resolveDirectDbUrl();
 
 export default defineConfig({
   dialect: "postgresql",

@@ -92,13 +92,11 @@ describe("Postgres runtime URL boundary", () => {
     );
     vi.stubEnv("DATABASE_URL_UNPOOLED", "");
 
-    expect(() => resolvePostgresUrlBoundary()).toThrow(
-      "DATABASE_URL_UNPOOLED 未配置。",
-    );
+    expect(() => resolvePostgresUrlBoundary()).toThrow(/DATABASE_URL/);
     expect(() =>
       createDirectPostgresClient({
         directDatabaseUrl: "file:.subhub/subhub.sqlite",
       }),
-    ).toThrow("DATABASE_URL_UNPOOLED 必须是 Postgres URL。");
+    ).toThrow("必须是 Postgres URL");
   });
 });
