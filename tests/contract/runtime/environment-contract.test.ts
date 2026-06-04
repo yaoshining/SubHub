@@ -26,12 +26,14 @@ describe("运行环境契约", () => {
   });
 
   it("在 Vercel Preview 里只消费当前部署注入的 URL 对，而不是读取额外 tier 变量", () => {
-    const env = readEnv(createVercelPreviewEnv({
-      DATABASE_URL: "staging-pooled-url",
-      DATABASE_URL_UNPOOLED: "staging-direct-url",
-      DEV_DATABASE_URL: "dev-pooled-url",
-      DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
-    }));
+    const env = readEnv(
+      createVercelPreviewEnv({
+        DATABASE_URL: "staging-pooled-url",
+        DATABASE_URL_UNPOOLED: "staging-direct-url",
+        DEV_DATABASE_URL: "dev-pooled-url",
+        DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
+      }),
+    );
 
     expect(env.DATABASE_URL).toBe("staging-pooled-url");
     expect(env.DATABASE_URL_UNPOOLED).toBe("staging-direct-url");

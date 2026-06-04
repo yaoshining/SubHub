@@ -7,8 +7,8 @@ describe("readEnv 本地 development 护栏", () => {
   it("将 DEV_DATABASE_URL / DEV_DATABASE_URL_UNPOOLED 映射为运行时单一 URL 对", () => {
     const env = readEnv(
       createLocalDevelopmentEnv({
-      DEV_DATABASE_URL: "dev-pooled-url",
-      DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
+        DEV_DATABASE_URL: "dev-pooled-url",
+        DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
       }),
     );
 
@@ -25,9 +25,9 @@ describe("readEnv 本地 development 护栏", () => {
   it("在 vercel dev 场景下仍然使用 DEV_* 真源", () => {
     const env = readEnv(
       createLocalDevelopmentEnv({
-      VERCEL_ENV: "development",
-      DEV_DATABASE_URL: "dev-pooled-url",
-      DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
+        VERCEL_ENV: "development",
+        DEV_DATABASE_URL: "dev-pooled-url",
+        DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
       }),
     );
 
@@ -44,8 +44,8 @@ describe("readEnv 本地 development 护栏", () => {
     expect(() =>
       readEnv(
         createLocalDevelopmentEnv({
-        DATABASE_URL: "prod-pooled-url",
-        DATABASE_URL_UNPOOLED: "prod-direct-url",
+          DATABASE_URL: "prod-pooled-url",
+          DATABASE_URL_UNPOOLED: "prod-direct-url",
         }),
       ),
     ).toThrowError(/DEV_DATABASE_URL/);
@@ -55,8 +55,8 @@ describe("readEnv 本地 development 护栏", () => {
     expect(() =>
       readEnv(
         createLocalDevelopmentEnv({
-        DEV_DATABASE_URL: undefined,
-        DATABASE_URL_UNPOOLED: "prod-direct-url",
+          DEV_DATABASE_URL: undefined,
+          DATABASE_URL_UNPOOLED: "prod-direct-url",
         }),
       ),
     ).toThrowError(/DATABASE_URL_UNPOOLED/);
@@ -66,7 +66,7 @@ describe("readEnv 本地 development 护栏", () => {
     expect(() =>
       readEnv(
         createLocalDevelopmentEnv({
-        DEV_DATABASE_URL: "dev-pooled-url",
+          DEV_DATABASE_URL: "dev-pooled-url",
           DEV_DATABASE_URL_UNPOOLED: undefined,
         }),
       ),

@@ -28,7 +28,9 @@ describe("isDevEnvironment", () => {
 
   it("Vercel development 返回 true", () => {
     expect(
-      isDevEnvironment(createLocalDevelopmentEnv({ VERCEL_ENV: "development" })),
+      isDevEnvironment(
+        createLocalDevelopmentEnv({ VERCEL_ENV: "development" }),
+      ),
     ).toBe(true);
   });
 
@@ -82,11 +84,13 @@ describe("isDevEnvironment", () => {
 
 describe("resolveDbUrls — 本地 development", () => {
   it("使用 DEV_DATABASE_URL / DEV_DATABASE_URL_UNPOOLED", () => {
-    const result = resolveDbUrls(createLocalDevelopmentEnv({
-      DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub_dev",
-      DEV_DATABASE_URL_UNPOOLED:
-        "postgresql://dev@localhost:5432/subhub_dev_direct",
-    }));
+    const result = resolveDbUrls(
+      createLocalDevelopmentEnv({
+        DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub_dev",
+        DEV_DATABASE_URL_UNPOOLED:
+          "postgresql://dev@localhost:5432/subhub_dev_direct",
+      }),
+    );
 
     expect(result).toEqual({
       pooledUrl: "postgresql://dev@localhost:5432/subhub_dev",
@@ -111,31 +115,37 @@ describe("resolveDbUrls — 本地 development", () => {
 
   it("本地 dev 缺少 DEV_DATABASE_URL 时抛出含 DEV_DATABASE_URL 的错误", () => {
     expect(() =>
-      resolveDbUrls(createLocalDevelopmentEnv({
-        DEV_DATABASE_URL: undefined,
-        DEV_DATABASE_URL_UNPOOLED: "postgresql://dev@localhost:5432/direct",
-      })),
+      resolveDbUrls(
+        createLocalDevelopmentEnv({
+          DEV_DATABASE_URL: undefined,
+          DEV_DATABASE_URL_UNPOOLED: "postgresql://dev@localhost:5432/direct",
+        }),
+      ),
     ).toThrow(/DEV_DATABASE_URL/);
   });
 
   it("本地 dev 缺少 DEV_DATABASE_URL_UNPOOLED 时抛出含 DEV_DATABASE_URL_UNPOOLED 的错误", () => {
     expect(() =>
-      resolveDbUrls(createLocalDevelopmentEnv({
-        DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub",
-        DEV_DATABASE_URL_UNPOOLED: undefined,
-      })),
+      resolveDbUrls(
+        createLocalDevelopmentEnv({
+          DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub",
+          DEV_DATABASE_URL_UNPOOLED: undefined,
+        }),
+      ),
     ).toThrow(/DEV_DATABASE_URL_UNPOOLED/);
   });
 });
 
 describe("resolveDbUrls — Vercel development", () => {
   it("VERCEL_ENV=development 也使用 DEV_DATABASE_URL*", () => {
-    const result = resolveDbUrls(createLocalDevelopmentEnv({
-      VERCEL_ENV: "development",
-      DEV_DATABASE_URL: "postgresql://dev@localhost:5432/vercel_dev",
-      DEV_DATABASE_URL_UNPOOLED:
-        "postgresql://dev@localhost:5432/vercel_dev_direct",
-    }));
+    const result = resolveDbUrls(
+      createLocalDevelopmentEnv({
+        VERCEL_ENV: "development",
+        DEV_DATABASE_URL: "postgresql://dev@localhost:5432/vercel_dev",
+        DEV_DATABASE_URL_UNPOOLED:
+          "postgresql://dev@localhost:5432/vercel_dev_direct",
+      }),
+    );
 
     expect(result).toEqual({
       pooledUrl: "postgresql://dev@localhost:5432/vercel_dev",
@@ -146,11 +156,13 @@ describe("resolveDbUrls — Vercel development", () => {
 
 describe("resolveDbUrls — Vercel production / preview", () => {
   it("production 使用 DATABASE_URL / DATABASE_URL_UNPOOLED", () => {
-    const result = resolveDbUrls(createVercelProductionEnv({
-      DATABASE_URL: "postgresql://prod@neon.tech:5432/subhub",
-      DATABASE_URL_UNPOOLED:
-        "postgresql://prod@neon.tech:5432/subhub?sslmode=require",
-    }));
+    const result = resolveDbUrls(
+      createVercelProductionEnv({
+        DATABASE_URL: "postgresql://prod@neon.tech:5432/subhub",
+        DATABASE_URL_UNPOOLED:
+          "postgresql://prod@neon.tech:5432/subhub?sslmode=require",
+      }),
+    );
 
     expect(result).toEqual({
       pooledUrl: "postgresql://prod@neon.tech:5432/subhub",
@@ -159,11 +171,13 @@ describe("resolveDbUrls — Vercel production / preview", () => {
   });
 
   it("preview 使用 DATABASE_URL / DATABASE_URL_UNPOOLED", () => {
-    const result = resolveDbUrls(createVercelPreviewEnv({
-      DATABASE_URL: "postgresql://preview@neon.tech:5432/subhub_preview",
-      DATABASE_URL_UNPOOLED:
-        "postgresql://preview@neon.tech:5432/subhub_preview_direct",
-    }));
+    const result = resolveDbUrls(
+      createVercelPreviewEnv({
+        DATABASE_URL: "postgresql://preview@neon.tech:5432/subhub_preview",
+        DATABASE_URL_UNPOOLED:
+          "postgresql://preview@neon.tech:5432/subhub_preview_direct",
+      }),
+    );
 
     expect(result).toEqual({
       pooledUrl: "postgresql://preview@neon.tech:5432/subhub_preview",
@@ -173,20 +187,24 @@ describe("resolveDbUrls — Vercel production / preview", () => {
 
   it("production 缺少 DATABASE_URL 时抛出明确错误", () => {
     expect(() =>
-      resolveDbUrls(createVercelProductionEnv({
-        DATABASE_URL: undefined,
-        DATABASE_URL_UNPOOLED: "postgresql://prod@neon.tech:5432/direct",
-      })),
+      resolveDbUrls(
+        createVercelProductionEnv({
+          DATABASE_URL: undefined,
+          DATABASE_URL_UNPOOLED: "postgresql://prod@neon.tech:5432/direct",
+        }),
+      ),
     ).toThrow(/DATABASE_URL/);
   });
 });
 
 describe("resolveDbUrls — test 环境", () => {
   it("NODE_ENV=test 使用 DATABASE_URL（可为占位符）", () => {
-    const result = resolveDbUrls(createLocalTestEnv({
-      DATABASE_URL: "postgresql://test@localhost:5432/subhub_test",
-      DATABASE_URL_UNPOOLED: "postgresql://test@localhost:5432/subhub_test",
-    }));
+    const result = resolveDbUrls(
+      createLocalTestEnv({
+        DATABASE_URL: "postgresql://test@localhost:5432/subhub_test",
+        DATABASE_URL_UNPOOLED: "postgresql://test@localhost:5432/subhub_test",
+      }),
+    );
 
     expect(result.pooledUrl).toBe(
       "postgresql://test@localhost:5432/subhub_test",
@@ -234,13 +252,15 @@ describe("真源一致性回归测试", () => {
     // 正确行为：resolveDbUrls 应该忽略 DATABASE_URL，只用 DEV_*
     // 若 DEV_* 未设置，应报错，而不是静默 fallback 到 DATABASE_URL
     expect(() =>
-      resolveDbUrls(createLocalDevelopmentEnv({
-        DEV_DATABASE_URL: undefined,
-        DEV_DATABASE_URL_UNPOOLED: undefined,
-        DATABASE_URL: "postgresql://prod@neon.tech:5432/subhub", // 误设的生产 URL
-        DATABASE_URL_UNPOOLED: "postgresql://prod@neon.tech:5432/direct",
-        // 无 DEV_* 变量
-      })),
+      resolveDbUrls(
+        createLocalDevelopmentEnv({
+          DEV_DATABASE_URL: undefined,
+          DEV_DATABASE_URL_UNPOOLED: undefined,
+          DATABASE_URL: "postgresql://prod@neon.tech:5432/subhub", // 误设的生产 URL
+          DATABASE_URL_UNPOOLED: "postgresql://prod@neon.tech:5432/direct",
+          // 无 DEV_* 变量
+        }),
+      ),
     ).toThrow(/DEV_DATABASE_URL/);
   });
 

@@ -1,10 +1,10 @@
+type EnvOverrides = Partial<NodeJS.ProcessEnv>;
+
 const productionSecrets = {
   PROVIDER_CREDENTIAL_ENCRYPTION_KEY: "provider-credential-secret-at-least-32",
   ADMIN_SESSION_SECRET: "admin-session-secret-at-least-32",
   CALLER_KEY_SECRET: "caller-key-secret-at-least-32-chars",
-} satisfies NodeJS.ProcessEnv;
-
-type EnvOverrides = Partial<NodeJS.ProcessEnv>;
+} satisfies EnvOverrides;
 
 export const createLocalDevelopmentEnv = (
   overrides: EnvOverrides = {},
@@ -53,7 +53,6 @@ export const createLocalTestEnv = (
   DATABASE_URL: "postgresql://test@localhost:5432/subhub_test",
   DATABASE_URL_UNPOOLED: "postgresql://test@localhost:5432/subhub_test",
   DATABASE_URL_TEST: "postgresql://test@localhost:5432/subhub_test",
-  DATABASE_URL_TEST_UNPOOLED:
-    "postgresql://test@localhost:5432/subhub_test",
+  DATABASE_URL_TEST_UNPOOLED: "postgresql://test@localhost:5432/subhub_test",
   ...overrides,
 });
