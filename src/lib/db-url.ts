@@ -87,7 +87,6 @@ export function isDevEnvironment(env: RawEnvSource = process.env): boolean {
  * @throws 当所需变量缺失或不合法时抛出明确错误
  */
 export function resolveDbUrls(env: RawEnvSource = process.env): DbUrlPair {
-  console.log("isDevEnvironment", isDevEnvironment(env));
   if (isDevEnvironment(env)) {
     const pooledUrl = env.DEV_DATABASE_URL;
     const directUrl = env.DEV_DATABASE_URL_UNPOOLED;

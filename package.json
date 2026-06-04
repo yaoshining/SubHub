@@ -16,7 +16,7 @@
     "api:docs": "next build",
     "api:check": "pnpm api:spec && pnpm api:client && pnpm api:docs",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "db:migrate": "tsx -e \"import { getStorageClient } from './src/server/storage/client.ts'; void (async () => { const client = getStorageClient(); try { await client.migrate(); } finally { await client.close(); } })();\"",
+    "db:migrate": "tsx scripts/db/migrate.ts",
     "db:start:test": "tsx scripts/db/local-test-postgres.ts start",
     "db:stop:test": "tsx scripts/db/local-test-postgres.ts stop",
     "db:reset:test": "tsx scripts/db/local-test-postgres.ts reset",
@@ -32,6 +32,7 @@
   "dependencies": {
     "@fontsource/inter": "5.2.8",
     "@fontsource/space-grotesk": "5.2.10",
+    "@next/env": "^16.2.7",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
     "@radix-ui/react-avatar": "1.1.11",

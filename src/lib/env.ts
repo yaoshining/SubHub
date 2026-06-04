@@ -35,11 +35,6 @@ const productionSecrets = [
   "CALLER_KEY_SECRET",
 ] as const;
 
-type EnvIssueReporter = (path: string, message: string) => void;
-
-const previewDevelopmentBranchPattern = /^(preview|feature|agent)\//;
-const testDatabaseUrl = "test-database-url";
-
 export type DeploymentProvider = "vercel" | "local";
 export type VercelEnvironment =
   | z.infer<typeof vercelEnvironmentSchema>
