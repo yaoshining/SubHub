@@ -8,6 +8,7 @@ import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
+import { isConstraintError } from "@/server/storage/database-errors";
 import {
   callerKeyRotations,
   callerKeys,
@@ -103,12 +104,6 @@ const sanitizeCallerKey = (callerKey: CallerKey): SanitizedCallerKey => ({
   lastRotatedAt: callerKey.lastRotatedAt,
   revealUntil: callerKey.revealUntil,
 });
-
-const isSqliteConstraintError = (error: unknown) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  String(error.code).startsWith("SQLITE_CONSTRAINT");
 
 export class CallerKeyRepository {
   constructor(private readonly db = getStorageClient().db) {}
@@ -242,7 +237,7 @@ export class CallerKeyRepository {
 
       return { callerKey: sanitizeCallerKey(callerKey), key };
     } catch (error) {
-      if (isSqliteConstraintError(error)) {
+      if (isConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "Caller Key 配置不符合约束。",
@@ -280,8 +275,8 @@ export class CallerKeyRepository {
     const revealUntil = new Date(now.getTime() + revealWindowMs).toISOString();
     const displayParts = createDisplayParts(key);
 
-    const result = this.db.transaction((tx) => {
-      const [rotated] = tx
+    const result = await this.db.transaction(async (tx: StorageDatabase) => {
+      const [rotated] = await tx
         .update(callerKeys)
         .set({
           status: "rotated",
@@ -291,8 +286,7 @@ export class CallerKeyRepository {
           revealTokenHash: null,
         })
         .where(and(eq(callerKeys.id, keyId), eq(callerKeys.status, "active")))
-        .returning()
-        .all();
+        .returning();
 
       if (!rotated) {
         throw new AppError(
@@ -302,7 +296,7 @@ export class CallerKeyRepository {
         );
       }
 
-      const [created] = tx
+      const [created] = await tx
         .insert(callerKeys)
         .values({
           id: createCallerKeyId(),
@@ -320,14 +314,13 @@ export class CallerKeyRepository {
           revealUntil,
           revealTokenHash: null,
         } satisfies NewCallerKey)
-        .returning()
-        .all();
+        .returning();
 
       if (!created) {
         throw new AppError("UPSTREAM_FAILED", "创建轮换后 Caller Key 失败。");
       }
 
-      const [rotation] = tx
+      const [rotation] = await tx
         .insert(callerKeyRotations)
         .values({
           id: createRotationId(),
@@ -339,8 +332,7 @@ export class CallerKeyRepository {
           createdAt: rotatedAt,
           performedByAdminUserId,
         } satisfies NewCallerKeyRotation)
-        .returning()
-        .all();
+        .returning();
 
       if (!rotation) {
         throw new AppError("UPSTREAM_FAILED", "记录 Caller Key 轮换失败。");

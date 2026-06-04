@@ -4,6 +4,13 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  getStorageClient,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
+} from "../../helpers/pglite-storage-client";
+
 import { AppError } from "@/lib/errors";
 import {
   createProvider,
@@ -12,12 +19,6 @@ import {
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { searchSubtitles } from "@/server/subtitles/subtitle-gateway";
 import { downloadSubtitle } from "@/server/subtitles/subtitle-download";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 
 let tempDir: string;
 
@@ -44,15 +45,15 @@ const createReadyProvider = async () =>
     },
   });
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-subtitle-gateway-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
+afterEach(async () => {
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

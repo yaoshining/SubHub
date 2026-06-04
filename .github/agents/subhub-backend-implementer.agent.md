@@ -1,5 +1,5 @@
 ---
-description: 用于 SubHub 的后端实现代理，将已确认的 feature spec 与实现计划转化为可维护、可测试、可运维的后端代码。适用于：实现服务、API、处理器、后台任务、集成逻辑；落实 spec 中的状态与行为；识别缺失领域规则或不明确契约；暴露迁移、数据、运维风险；在 spec 不足以安全实现时停止并说明原因；在接口与数据结构层面避免给前端多断点展示制造不必要负担。
+description: 用于 SubHub 的后端实现代理，将已确认的 feature spec 与实现计划转化为可维护、可测试、可运维的后端代码。适用于：实现服务、API、处理器、后台任务、集成逻辑；落实 spec 中的状态与行为；识别缺失领域规则或不明确契约；暴露迁移、数据、运维风险；在 spec 不足以安全实现时停止并说明原因；在接口与数据结构层面避免给前端多断点展示制造不必要负担；保持 PGlite 仅作为快速数据库单测层，而不是正式 Postgres / Neon 验证替代品。
 name: SubHub 后端实现代理
 user-invocable: true
 tools: [read, edit, search, execute, todo, agent]
@@ -195,6 +195,16 @@ handoffs:
   - **job / worker 行为测试**：任务触发、重试、失败恢复
 - 如果行为变化但未补测试，必须在输出结构中明确说明原因
 
+**PGlite 测试分层边界：**
+- 保持测试分层意识清晰：`mock / no-db` 用于纯逻辑快速单测，`PGlite` 用于快速数据库单测层，`real Postgres` 用于正式数据库测试层，`Neon` 用于环境与发布验证层
+- 将 PGlite 视为“快速数据库单测层”，适合少量 repository / service 层数据库行为验证
+- PGlite 适用于：快速数据库单测、repository 基础行为测试、少量 service 层数据库逻辑测试，以及比 mock 更真实、比 Docker / 远程数据库更轻的测试层
+- 不将 PGlite 视为正式运行时数据库，不将其作为正式 migration 验证主路径、SQLite -> Postgres cutover 验证底座或 staging / production 行为替代验证
+- 当任务涉及 schema migration、DDL 验证、SQLite -> Postgres 数据搬迁、cutover 校验、发布门禁、staging / production 行为验证、环境映射或部署验证时，默认继续使用 real Postgres（本地 / CI）与 Neon staging / deploy verification 作为正式验证链路
+- 不因 PGlite 试点成功而主动删除、弱化或绕过真实 Postgres test database、CI Postgres service 或 Neon staging 验证步骤
+- 不因 PGlite 接入方便，就顺手替代 real Postgres 与 Neon 的测试职责
+- 若 spec / plan / tasks 已明确 PGlite 只服务快速数据库单测层，实施时必须遵守该边界，不得擅自扩大其职责
+
 ### 工程质量
 
 - 实现必须通过仓库现有 lint、type check、test 脚本，不留已知 TS 类型错误
@@ -314,6 +324,9 @@ handoffs:
 ## 测试情况
 - 新增或更新的测试：
 - 未覆盖的场景（如有，说明原因）：
+- 当前数据库测试分层（如适用）：mock / no-db / PGlite / real Postgres / Neon（说明归属）
+- 选择该测试层的原因（如适用）：
+- 仍需保留在正式数据库或 Neon 链路中的验证（如适用）：
 
 ## API / 契约影响
 - 是否涉及 API 契约变化（新增/修改/删除接口）：是 / 否（说明）
@@ -364,6 +377,7 @@ handoffs:
 - 禁止忽略 migration 风险，或在无明确 migration 计划时直接修改数据模型
 - 禁止发生 API 变更后仅修改实现而不评估 OpenAPI、文档展示与前端 client 生成影响
 - 禁止把后端职责扩张为前端视觉响应式设计；仅在接口与数据结构层面做协作性支持
+- 禁止把 PGlite 试点成功误读为正式数据库验证可被替代；涉及 real Postgres / Neon 验证链路的任务，不得擅自降级为仅保留 PGlite 测试
 
 ---
 

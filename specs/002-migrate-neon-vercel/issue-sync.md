@@ -116,7 +116,7 @@
 
 **建议职责**
 
-- 固化 `preview -> staging`、其他 Preview 分支与本地 development -> dev 的映射。
+- 固化 `preview -> staging`、命中仓库级 Preview 分支白名单的普通 Preview 分支与本地 development -> dev 的映射，并明确非白名单 Preview 分支直接失败。
 - 将环境选路责任保持在 Vercel 注入层，应用仅做校验与失败护栏。
 
 **建议 labels**

@@ -6,15 +6,16 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  getStorageClient,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
+} from "../../helpers/pglite-storage-client";
+
+import {
   createAdminInvitation,
   revokeAdminInvitation,
 } from "@/server/services/admin-invitation-service";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 import { adminActionResults, adminUsers } from "@/server/storage/schema";
 
 let tempDir: string;
@@ -37,15 +38,15 @@ const seedAdmin = async () => {
   return admin;
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-admin-invitation-service-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
+afterEach(async () => {
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

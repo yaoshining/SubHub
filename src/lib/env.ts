@@ -13,6 +13,8 @@ const rawEnvSchema = z.object({
   APP_URL: z.string().url().optional(),
   DATABASE_URL: z.string().min(1).optional(),
   DATABASE_URL_UNPOOLED: z.string().min(1).optional(),
+  DATABASE_URL_TEST: z.string().min(1).optional(),
+  DATABASE_URL_TEST_UNPOOLED: z.string().min(1).optional(),
   DEV_DATABASE_URL: z.string().min(1).optional(),
   DEV_DATABASE_URL_UNPOOLED: z.string().min(1).optional(),
   VERCEL_ENV: vercelEnvironmentSchema.optional(),
@@ -56,7 +58,8 @@ export type AppEnv = {
   requiresDirectMigrationGate: boolean;
 };
 
-const previewDevelopmentBranchPattern = /^(preview|feature|agent)\//;
+const previewDevelopmentBranchPattern =
+  /^(preview|feature|agent|copilot|fix|chore|renovate)\//;
 const testDatabaseUrl = "test-database-url";
 const defaultLocalAppUrl = "http://localhost:3000";
 
@@ -131,7 +134,7 @@ const resolveRuntimeIdentity = (
 
     reportIssue(
       "VERCEL_GIT_COMMIT_REF",
-      "Vercel Preview 仅支持 preview、preview/*、feature/* 或 agent/* 分支映射。",
+      "Vercel Preview 仅支持 preview，或命中 preview/*、feature/*、agent/*、copilot/*、fix/*、chore/*、renovate/* 白名单前缀的分支映射。",
     );
     return null;
   }

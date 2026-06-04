@@ -1,11 +1,59 @@
 import "@testing-library/jest-dom/vitest";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
-let testDatabaseDirectory: string | undefined;
+import { applyLocalTestDatabaseEnvDefaults } from "@/server/storage/test-database";
+
+const loadLocalEnvFile = (filePath: string) => {
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf("=");
+
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+
+    if (!key || process.env[key] !== undefined) {
+      continue;
+    }
+
+    let value = line.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+};
+
+const loadTestEnvFiles = () => {
+  const rootDir = process.cwd();
+
+  for (const name of [".env.test.local", ".env.local", ".env.test", ".env"]) {
+    loadLocalEnvFile(join(rootDir, name));
+  }
+};
+
+loadTestEnvFiles();
 
 const createMemoryStorage = () => {
   const store = new Map<string, string>();
@@ -36,7 +84,7 @@ const localStorageMock = createMemoryStorage();
 const sessionStorageMock = createMemoryStorage();
 
 beforeAll(() => {
-  testDatabaseDirectory = mkdtempSync(join(tmpdir(), "subhub-test-db-"));
+  applyLocalTestDatabaseEnvDefaults(process.env);
 
   if (!HTMLElement.prototype.setPointerCapture) {
     HTMLElement.prototype.setPointerCapture = vi.fn();
@@ -70,13 +118,15 @@ beforeAll(() => {
     value: sessionStorageMock,
   });
 
-  Object.assign(process.env, {
+  const envDefaults: NodeJS.ProcessEnv = {
     NODE_ENV: process.env.NODE_ENV ?? "test",
     APP_URL: process.env.APP_URL ?? "http://localhost:3000",
-    DATABASE_URL: process.env.DATABASE_URL ?? "test-database-url",
+    DATABASE_URL:
+      process.env.DATABASE_URL ??
+      "postgresql://runtime-user@localhost:5432/subhub",
     DATABASE_URL_UNPOOLED:
-      process.env.DATABASE_URL_UNPOOLED ?? "test-database-url-unpooled",
-    SQLITE_DATABASE_PATH: join(testDatabaseDirectory, "subhub-test.sqlite"),
+      process.env.DATABASE_URL_UNPOOLED ??
+      "postgresql://direct-user@localhost:5432/subhub",
     OPENSUBTITLES_API_URL:
       process.env.OPENSUBTITLES_API_URL ??
       "https://api.opensubtitles.com/api/v1",
@@ -87,7 +137,11 @@ beforeAll(() => {
       process.env.ADMIN_SESSION_SECRET ?? "test-admin-session-secret-32-byte",
     CALLER_KEY_SECRET:
       process.env.CALLER_KEY_SECRET ?? "test-caller-key-secret-at-least-32",
-  });
+    DATABASE_URL_TEST: process.env.DATABASE_URL_TEST,
+    DATABASE_URL_TEST_UNPOOLED: process.env.DATABASE_URL_TEST_UNPOOLED,
+  };
+
+  Object.assign(process.env, envDefaults);
 });
 
 afterEach(() => {
@@ -99,7 +153,5 @@ afterEach(() => {
 });
 
 afterAll(() => {
-  if (testDatabaseDirectory && existsSync(testDatabaseDirectory)) {
-    rmSync(testDatabaseDirectory, { recursive: true, force: true });
-  }
+  return undefined;
 });

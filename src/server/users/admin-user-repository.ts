@@ -7,6 +7,7 @@ import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
+import { isUniqueConstraintError } from "@/server/storage/database-errors";
 import {
   adminInvitations,
   adminSessions,
@@ -62,17 +63,18 @@ export type CreateInvitationInput = Pick<
 
 const invitationTtlMs = 7 * 24 * 60 * 60 * 1000;
 
+const normalizeTimestamp = (value: string | null | undefined) => {
+  if (!value) {
+    return value ?? null;
+  }
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+};
+
 const createInvitationId = () =>
   `invite_${randomBytes(16).toString("base64url")}`;
-
-const isSqliteUniqueConstraintError = (error: unknown) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  (String((error as { code?: unknown }).code) === "SQLITE_CONSTRAINT_UNIQUE" ||
-    String((error as { message?: unknown }).message).includes(
-      "UNIQUE constraint failed",
-    ));
 
 const toMember = (user: AdminUser): AdminMember => ({
   id: user.id,
@@ -80,7 +82,7 @@ const toMember = (user: AdminUser): AdminMember => ({
   displayName: user.displayName,
   status: user.status,
   rolePreset: user.role,
-  lastActiveAt: user.lastLoginAt,
+  lastActiveAt: normalizeTimestamp(user.lastLoginAt),
 });
 
 export const toAdminInvitationSummary = (
@@ -91,9 +93,9 @@ export const toAdminInvitationSummary = (
   status: invitation.status,
   rolePreset: invitation.rolePreset,
   accessPreset: invitation.accessPreset,
-  expiresAt: invitation.expiresAt,
-  createdAt: invitation.createdAt,
-  updatedAt: invitation.updatedAt,
+  expiresAt: normalizeTimestamp(invitation.expiresAt) ?? invitation.expiresAt,
+  createdAt: normalizeTimestamp(invitation.createdAt) ?? invitation.createdAt,
+  updatedAt: normalizeTimestamp(invitation.updatedAt) ?? invitation.updatedAt,
 });
 
 const toSessionAttentionSummary = (
@@ -103,7 +105,7 @@ const toSessionAttentionSummary = (
   memberId: session.adminUserId,
   status: "needs_attention",
   reason: session.attentionReason,
-  lastSeenAt: session.lastSeenAt,
+  lastSeenAt: normalizeTimestamp(session.lastSeenAt),
   deviceLabel: session.deviceLabel,
 });
 
@@ -116,18 +118,18 @@ export class AdminUserRepository {
         .select()
         .from(adminUsers)
         .orderBy(desc(adminUsers.updatedAt))
-        .then((rows) => rows.map(toMember)),
+        .then((rows: AdminUser[]) => rows.map(toMember)),
       this.db
         .select()
         .from(adminInvitations)
         .orderBy(desc(adminInvitations.createdAt))
-        .then((rows) => rows.map(toAdminInvitationSummary)),
+        .then((rows: AdminInvitation[]) => rows.map(toAdminInvitationSummary)),
       this.db
         .select()
         .from(adminSessions)
         .where(eq(adminSessions.status, "needs_attention"))
         .orderBy(desc(adminSessions.lastSeenAt))
-        .then((rows) => rows.map(toSessionAttentionSummary)),
+        .then((rows: AdminSession[]) => rows.map(toSessionAttentionSummary)),
     ]);
 
     return { members, invitations, sessionsNeedingAttention };
@@ -169,63 +171,58 @@ export class AdminUserRepository {
 
     let invitation: AdminInvitation | undefined;
     try {
-      invitation = this.db.transaction(
-        (tx) => {
-          tx.update(adminInvitations)
-            .set({ status: "expired", updatedAt: nowIso })
-            .where(
-              and(
-                eq(adminInvitations.status, "pending"),
-                lte(adminInvitations.expiresAt, nowIso),
-              ),
-            )
-            .run();
+      invitation = await this.db.transaction(async (tx: StorageDatabase) => {
+        await tx
+          .update(adminInvitations)
+          .set({ status: "expired", updatedAt: nowIso })
+          .where(
+            and(
+              eq(adminInvitations.status, "pending"),
+              lte(adminInvitations.expiresAt, nowIso),
+            ),
+          );
 
-          const [existingPending] = tx
-            .select()
-            .from(adminInvitations)
-            .where(
-              and(
-                eq(adminInvitations.identifier, input.identifier),
-                eq(adminInvitations.status, "pending"),
-              ),
-            )
-            .limit(1)
-            .all();
+        const [existingPending] = await tx
+          .select()
+          .from(adminInvitations)
+          .where(
+            and(
+              eq(adminInvitations.identifier, input.identifier),
+              eq(adminInvitations.status, "pending"),
+            ),
+          )
+          .limit(1);
 
-          if (existingPending) {
-            throw new AppError(
-              "VALIDATION_FAILED",
-              "该成员标识已存在待接受邀请。",
-              "identifier",
-            );
-          }
+        if (existingPending) {
+          throw new AppError(
+            "VALIDATION_FAILED",
+            "该成员标识已存在待接受邀请。",
+            "identifier",
+          );
+        }
 
-          const [created] = tx
-            .insert(adminInvitations)
-            .values({
-              id: createInvitationId(),
-              identifier: input.identifier,
-              status: "pending",
-              rolePreset: input.rolePreset,
-              accessPreset: input.accessPreset,
-              invitedByAdminUserId: input.invitedByAdminUserId,
-              acceptedAdminUserId: null,
-              expiresAt,
-              acceptedAt: null,
-              revokedAt: null,
-              createdAt: nowIso,
-              updatedAt: nowIso,
-            } satisfies NewAdminInvitation)
-            .returning()
-            .all();
+        const [created] = await tx
+          .insert(adminInvitations)
+          .values({
+            id: createInvitationId(),
+            identifier: input.identifier,
+            status: "pending",
+            rolePreset: input.rolePreset,
+            accessPreset: input.accessPreset,
+            invitedByAdminUserId: input.invitedByAdminUserId,
+            acceptedAdminUserId: null,
+            expiresAt,
+            acceptedAt: null,
+            revokedAt: null,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          } satisfies NewAdminInvitation)
+          .returning();
 
-          return created;
-        },
-        { behavior: "immediate" },
-      );
+        return created;
+      });
     } catch (error) {
-      if (isSqliteUniqueConstraintError(error)) {
+      if (isUniqueConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "该成员标识已存在待接受邀请。",
@@ -274,39 +271,35 @@ export class AdminUserRepository {
     await this.requireAdminUser(userId);
     const updatedAt = now.toISOString();
 
-    const user = this.db.transaction(
-      (tx) => {
-        const [updated] = tx
-          .update(adminUsers)
-          .set({ status: "suspended", updatedAt })
-          .where(eq(adminUsers.id, userId))
-          .returning()
-          .all();
+    const user = await this.db.transaction(async (tx: StorageDatabase) => {
+      const [updated] = await tx
+        .update(adminUsers)
+        .set({ status: "suspended", updatedAt })
+        .where(eq(adminUsers.id, userId))
+        .returning();
 
-        tx.update(adminSessions)
-          .set({ status: "revoked" })
-          .where(
-            and(
-              eq(adminSessions.adminUserId, userId),
-              eq(adminSessions.status, "active"),
-            ),
-          )
-          .run();
+      await tx
+        .update(adminSessions)
+        .set({ status: "revoked" })
+        .where(
+          and(
+            eq(adminSessions.adminUserId, userId),
+            eq(adminSessions.status, "active"),
+          ),
+        );
 
-        tx.update(adminSessions)
-          .set({ status: "revoked" })
-          .where(
-            and(
-              eq(adminSessions.adminUserId, userId),
-              eq(adminSessions.status, "needs_attention"),
-            ),
-          )
-          .run();
+      await tx
+        .update(adminSessions)
+        .set({ status: "revoked" })
+        .where(
+          and(
+            eq(adminSessions.adminUserId, userId),
+            eq(adminSessions.status, "needs_attention"),
+          ),
+        );
 
-        return updated;
-      },
-      { behavior: "immediate" },
-    );
+      return updated;
+    });
 
     if (!user) {
       throw new AppError("VALIDATION_FAILED", "后台成员不存在。", "userId");

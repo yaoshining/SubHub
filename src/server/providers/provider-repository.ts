@@ -8,6 +8,11 @@ import {
   type StorageDatabase,
 } from "@/server/storage/client";
 import {
+  isConstraintError,
+  isForeignKeyConstraintError,
+  isUniqueConstraintError,
+} from "@/server/storage/database-errors";
+import {
   providerCredentials,
   providers,
   type NewProvider,
@@ -71,27 +76,6 @@ const createProviderId = () =>
 const createCredentialId = () =>
   `cred_${randomBytes(16).toString("base64url")}`;
 
-const isSqliteConstraintError = (error: unknown) =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  String(error.code).startsWith("SQLITE_CONSTRAINT");
-
-const isSqliteUniqueConstraintError = (error: unknown) =>
-  isSqliteConstraintError(error) &&
-  (String((error as { code?: unknown }).code) === "SQLITE_CONSTRAINT_UNIQUE" ||
-    String((error as { message?: unknown }).message).includes(
-      "UNIQUE constraint failed",
-    ));
-
-const isSqliteForeignKeyConstraintError = (error: unknown) =>
-  isSqliteConstraintError(error) &&
-  (String((error as { code?: unknown }).code) ===
-    "SQLITE_CONSTRAINT_FOREIGNKEY" ||
-    String((error as { message?: unknown }).message).includes(
-      "FOREIGN KEY constraint failed",
-    ));
-
 export const sanitizeProviderCredential = (
   credential: ProviderCredential,
 ): SanitizedProviderCredential => ({
@@ -145,7 +129,7 @@ export class ProviderRepository {
       .select()
       .from(providers)
       .orderBy(providers.priority, providers.name);
-    const providerIds = providerRows.map((provider) => provider.id);
+    const providerIds = providerRows.map((provider: Provider) => provider.id);
     const credentialRows =
       providerIds.length > 0
         ? await this.db
@@ -163,7 +147,7 @@ export class ProviderRepository {
       }
     }
 
-    return providerRows.map((provider) =>
+    return providerRows.map((provider: Provider) =>
       addCredentialSummary(
         provider,
         credentialsByProviderId.get(provider.id) ?? [],
@@ -226,8 +210,8 @@ export class ProviderRepository {
     let provider: Provider | undefined;
 
     try {
-      provider = this.db.transaction((tx) => {
-        const [insertedProvider] = tx
+      provider = await this.db.transaction(async (tx: StorageDatabase) => {
+        const [insertedProvider] = await tx
           .insert(providers)
           .values({
             id: createProviderId(),
@@ -245,15 +229,15 @@ export class ProviderRepository {
             createdAt,
             updatedAt: createdAt,
           } satisfies NewProvider)
-          .returning()
-          .all();
+          .returning();
 
         if (!insertedProvider) {
           throw new AppError("UPSTREAM_FAILED", "创建 Provider 失败。");
         }
 
         if (input.initialCredential) {
-          tx.insert(providerCredentials)
+          await tx
+            .insert(providerCredentials)
             .values(
               this.buildCredentialInsert(
                 insertedProvider.id,
@@ -261,24 +245,24 @@ export class ProviderRepository {
                 createdAt,
               ),
             )
-            .run();
+            .returning();
         }
 
         return insertedProvider;
       });
     } catch (error) {
-      if (isSqliteUniqueConstraintError(error)) {
+      if (isUniqueConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "同类型 Provider 名称或凭据已存在。",
           "name",
         );
       }
-      if (isSqliteConstraintError(error)) {
+      if (isConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "Provider 配置不符合约束。",
-          isSqliteForeignKeyConstraintError(error)
+          isForeignKeyConstraintError(error)
             ? "fallbackProviderId"
             : "provider",
         );
@@ -334,18 +318,18 @@ export class ProviderRepository {
         .set(values)
         .where(eq(providers.id, providerId));
     } catch (error) {
-      if (isSqliteUniqueConstraintError(error)) {
+      if (isUniqueConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "同类型 Provider 名称已存在。",
           "name",
         );
       }
-      if (isSqliteConstraintError(error)) {
+      if (isConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "Provider 策略参数不符合约束。",
-          isSqliteForeignKeyConstraintError(error)
+          isForeignKeyConstraintError(error)
             ? "fallbackProviderId"
             : "provider",
         );
@@ -408,7 +392,7 @@ export class ProviderRepository {
 
       return sanitizeProviderCredential(credential);
     } catch (error) {
-      if (isSqliteConstraintError(error)) {
+      if (isConstraintError(error)) {
         throw new AppError(
           "VALIDATION_FAILED",
           "同一 Provider 下凭据标签或密钥已存在。",

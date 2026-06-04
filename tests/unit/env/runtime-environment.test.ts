@@ -1,25 +1,20 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  createLocalTestEnv,
+  createVercelPreviewEnv,
+  createVercelProductionEnv,
+} from "../../helpers/env-scenarios";
 import { readEnv } from "@/lib/env";
-
-const baseSource = {
-  NODE_ENV: "production",
-  APP_URL: "https://subhub.example.com",
-  DATABASE_URL: "pooled-current-deployment",
-  DATABASE_URL_UNPOOLED: "direct-current-deployment",
-  PROVIDER_CREDENTIAL_ENCRYPTION_KEY: "provider-credential-secret-at-least-32",
-  ADMIN_SESSION_SECRET: "admin-session-secret-at-least-32",
-  CALLER_KEY_SECRET: "caller-key-secret-at-least-32-chars",
-} satisfies NodeJS.ProcessEnv;
 
 describe("readEnv 运行环境映射", () => {
   it("将 main -> Production 解析为 production tier", () => {
-    const env = readEnv({
-      ...baseSource,
-      NODE_ENV: "production",
-      VERCEL_ENV: "production",
-      VERCEL_GIT_COMMIT_REF: "main",
-    });
+    const env = readEnv(
+      createVercelProductionEnv({
+        DATABASE_URL: "pooled-current-deployment",
+        DATABASE_URL_UNPOOLED: "direct-current-deployment",
+      }),
+    );
 
     expect(env).toMatchObject({
       deploymentProvider: "vercel",
@@ -34,14 +29,13 @@ describe("readEnv 运行环境映射", () => {
   });
 
   it("将 preview 分支的 Preview 部署解析为 staging tier", () => {
-    const env = readEnv({
-      ...baseSource,
-      NODE_ENV: "production",
-      VERCEL_ENV: "preview",
-      VERCEL_URL: "preview-subhub-example.vercel.app",
-      VERCEL_GIT_COMMIT_REF: "preview",
-      APP_URL: undefined,
-    });
+    const env = readEnv(
+      createVercelPreviewEnv({
+        DATABASE_URL: "pooled-current-deployment",
+        DATABASE_URL_UNPOOLED: "direct-current-deployment",
+        APP_URL: undefined,
+      }),
+    );
 
     expect(env).toMatchObject({
       deploymentProvider: "vercel",
@@ -54,67 +48,74 @@ describe("readEnv 运行环境映射", () => {
     });
   });
 
-  it.each(["preview/task-002", "feature/issue-65", "agent/copilot-env-guard"])(
-    "将 %s 解析为 development tier",
-    (gitBranch) => {
-      const env = readEnv({
-        ...baseSource,
-        NODE_ENV: "production",
-        VERCEL_ENV: "preview",
-        VERCEL_URL: "preview-subhub-example.vercel.app",
-        VERCEL_GIT_COMMIT_REF: gitBranch,
+  it.each([
+    "preview/task-002",
+    "feature/issue-65",
+    "agent/copilot-env-guard",
+    "copilot/issue-72",
+    "fix/runtime-guard",
+    "chore/docs-sync",
+    "renovate/pnpm-10",
+  ])("将 %s 解析为 development tier", (gitBranch) => {
+    const env = readEnv({
+      ...createVercelPreviewEnv({
+        DATABASE_URL: "pooled-current-deployment",
+        DATABASE_URL_UNPOOLED: "direct-current-deployment",
         APP_URL: undefined,
-      });
+      }),
+      VERCEL_GIT_COMMIT_REF: gitBranch,
+    });
 
-      expect(env).toMatchObject({
-        deploymentProvider: "vercel",
-        vercelEnvironment: "preview",
-        gitBranch,
-        resolvedTier: "development",
-        isPreviewDeployment: true,
-      });
-    },
-  );
+    expect(env).toMatchObject({
+      deploymentProvider: "vercel",
+      vercelEnvironment: "preview",
+      gitBranch,
+      resolvedTier: "development",
+      isPreviewDeployment: true,
+    });
+  });
 
   it("在部署身份冲突时明确失败", () => {
     expect(() =>
       readEnv({
-        ...baseSource,
-        NODE_ENV: "production",
-        VERCEL_ENV: "production",
+        ...createVercelProductionEnv({
+          DATABASE_URL: "pooled-current-deployment",
+          DATABASE_URL_UNPOOLED: "direct-current-deployment",
+        }),
         VERCEL_GIT_COMMIT_REF: "preview",
       }),
     ).toThrowError(/main 分支/);
 
     expect(() =>
       readEnv({
-        ...baseSource,
-        NODE_ENV: "production",
-        VERCEL_ENV: "preview",
+        ...createVercelPreviewEnv({
+          DATABASE_URL: "pooled-current-deployment",
+          DATABASE_URL_UNPOOLED: "direct-current-deployment",
+        }),
         VERCEL_GIT_COMMIT_REF: "bugfix/unsupported",
       }),
-    ).toThrowError(/preview.*feature.*agent/);
+    ).toThrowError(/preview.*feature.*agent.*copilot.*fix.*chore.*renovate/);
   });
 
   it("Preview 在未显式提供 APP_URL 时通过 VERCEL_URL 推导访问地址", () => {
-    const env = readEnv({
-      ...baseSource,
-      NODE_ENV: "production",
-      VERCEL_ENV: "preview",
-      VERCEL_URL: "dynamic-preview-subhub.vercel.app",
-      VERCEL_GIT_COMMIT_REF: "preview",
-      APP_URL: undefined,
-    });
+    const env = readEnv(
+      createVercelPreviewEnv({
+        VERCEL_URL: "dynamic-preview-subhub.vercel.app",
+        APP_URL: undefined,
+      }),
+    );
 
     expect(env.APP_URL).toBe("https://dynamic-preview-subhub.vercel.app");
   });
 
   it("在 test 环境下忽略 VERCEL_* 部署身份并走本地回退", () => {
-    const env = readEnv({
-      ...baseSource,
-      NODE_ENV: "test",
-      VERCEL_ENV: "preview",
-    });
+    const env = readEnv(
+      createLocalTestEnv({
+        DATABASE_URL: "pooled-current-deployment",
+        DATABASE_URL_UNPOOLED: "direct-current-deployment",
+        VERCEL_ENV: "preview",
+      }),
+    );
 
     expect(env).toMatchObject({
       deploymentProvider: "local",

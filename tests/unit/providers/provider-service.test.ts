@@ -5,6 +5,12 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  getStorageClient,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
+} from "../../helpers/pglite-storage-client";
+import {
   createProvider,
   disableProvider,
   enableProvider,
@@ -12,24 +18,18 @@ import {
   restoreProviderCredential,
   updateProvider,
 } from "@/server/services/provider-service";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 
 let tempDir: string;
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-provider-service-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
+afterEach(async () => {
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

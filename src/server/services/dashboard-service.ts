@@ -9,6 +9,8 @@ import {
   callerKeys,
   providerCredentials,
   providers,
+  type AdminActionResult,
+  type Provider,
 } from "@/server/storage/schema";
 import {
   getSystemReadiness,
@@ -89,7 +91,7 @@ export async function getDashboardSummary({
     .from(providers)
     .orderBy(providers.priority, providers.name)
     .limit(dashboardProviderSnapshotLimit);
-  const providerIds = providerRows.map((provider) => provider.id);
+  const providerIds = providerRows.map((provider: Provider) => provider.id);
   const credentialRows =
     providerIds.length > 0
       ? await db
@@ -148,7 +150,7 @@ export async function getDashboardSummary({
     );
   }
 
-  const providerItems = providerRows.map((provider) => {
+  const providerItems = providerRows.map((provider: Provider) => {
     const activeCredentialCount =
       activeCredentialCountByProvider.get(provider.id) ?? 0;
 
@@ -224,7 +226,7 @@ export async function getDashboardSummary({
       hitRate: null,
       coverage: "not_available",
     },
-    recentIssues: failedActions.map((action) => ({
+    recentIssues: failedActions.map((action: AdminActionResult) => ({
       id: action.id,
       targetType: action.targetType,
       targetId: action.targetId,

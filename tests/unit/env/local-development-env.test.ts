@@ -1,22 +1,16 @@
 import { describe, expect, it } from "vitest";
 
+import { createLocalDevelopmentEnv } from "../../helpers/env-scenarios";
 import { readEnv } from "@/lib/env";
-
-const baseSource = {
-  NODE_ENV: "development",
-  APP_URL: "http://localhost:3000",
-  PROVIDER_CREDENTIAL_ENCRYPTION_KEY: "provider-credential-secret-at-least-32",
-  ADMIN_SESSION_SECRET: "admin-session-secret-at-least-32",
-  CALLER_KEY_SECRET: "caller-key-secret-at-least-32-chars",
-} satisfies NodeJS.ProcessEnv;
 
 describe("readEnv 本地 development 护栏", () => {
   it("将 DEV_DATABASE_URL / DEV_DATABASE_URL_UNPOOLED 映射为运行时单一 URL 对", () => {
-    const env = readEnv({
-      ...baseSource,
-      DEV_DATABASE_URL: "dev-pooled-url",
-      DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
-    });
+    const env = readEnv(
+      createLocalDevelopmentEnv({
+        DEV_DATABASE_URL: "dev-pooled-url",
+        DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
+      }),
+    );
 
     expect(env).toMatchObject({
       deploymentProvider: "local",
@@ -29,12 +23,13 @@ describe("readEnv 本地 development 护栏", () => {
   });
 
   it("在 vercel dev 场景下仍然使用 DEV_* 真源", () => {
-    const env = readEnv({
-      ...baseSource,
-      VERCEL_ENV: "development",
-      DEV_DATABASE_URL: "dev-pooled-url",
-      DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
-    });
+    const env = readEnv(
+      createLocalDevelopmentEnv({
+        VERCEL_ENV: "development",
+        DEV_DATABASE_URL: "dev-pooled-url",
+        DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
+      }),
+    );
 
     expect(env).toMatchObject({
       deploymentProvider: "vercel",
@@ -47,29 +42,34 @@ describe("readEnv 本地 development 护栏", () => {
 
   it("在本地 development 直接注入 DATABASE_URL 时阻断误连", () => {
     expect(() =>
-      readEnv({
-        ...baseSource,
-        DATABASE_URL: "prod-pooled-url",
-        DATABASE_URL_UNPOOLED: "prod-direct-url",
-      }),
+      readEnv(
+        createLocalDevelopmentEnv({
+          DATABASE_URL: "prod-pooled-url",
+          DATABASE_URL_UNPOOLED: "prod-direct-url",
+        }),
+      ),
     ).toThrowError(/DEV_DATABASE_URL/);
   });
 
   it("在本地 development 仅注入 DATABASE_URL_UNPOOLED 时也会精确阻断", () => {
     expect(() =>
-      readEnv({
-        ...baseSource,
-        DATABASE_URL_UNPOOLED: "prod-direct-url",
-      }),
+      readEnv(
+        createLocalDevelopmentEnv({
+          DEV_DATABASE_URL: undefined,
+          DATABASE_URL_UNPOOLED: "prod-direct-url",
+        }),
+      ),
     ).toThrowError(/DATABASE_URL_UNPOOLED/);
   });
 
   it("在本地 development 缺少 DEV_* 真源时失败", () => {
     expect(() =>
-      readEnv({
-        ...baseSource,
-        DEV_DATABASE_URL: "dev-pooled-url",
-      }),
+      readEnv(
+        createLocalDevelopmentEnv({
+          DEV_DATABASE_URL: "dev-pooled-url",
+          DEV_DATABASE_URL_UNPOOLED: undefined,
+        }),
+      ),
     ).toThrowError(/DEV_DATABASE_URL_UNPOOLED/);
   });
 });

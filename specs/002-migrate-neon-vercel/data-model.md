@@ -15,8 +15,9 @@
 **验证规则**:
 - `main` 必须解析为 `production`
 - `preview` 分支必须解析为 `staging`
-- 其他 `preview/*`、`feature/*`、`agent/*` 分支必须解析为 `development`
+- 其他命中仓库级 Preview 分支白名单的分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` 必须解析为 `development`
 - 本地 development 必须解析为 `development`
+- 不在仓库级 Preview 分支白名单内的 Preview 部署必须直接失败
 - 若无法解析唯一 tier，系统必须失败而不是回退到默认数据库
 
 ## DatabaseTarget

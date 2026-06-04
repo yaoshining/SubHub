@@ -2,7 +2,7 @@
 
 ## Decision: 使用分支感知的三层环境解析，而不是手工切库
 
-**Rationale**: 当前 feature 已固定环境映射：`main` -> production、`preview` -> staging、其他 preview/feature/agent 分支 + 本地 development -> dev。由于 Vercel 的 `preview` 环境同时承载 staging 分支和其他非生产分支，运行时必须结合 `VERCEL_ENV` 与 `VERCEL_GIT_COMMIT_REF` 自动解析目标数据库，避免维护者通过手工改连来切环境。
+**Rationale**: 当前 feature 依赖的仓库级环境映射真源为 `docs/runtime/environment-mapping.md`：`main` -> production、`preview` -> staging、命中仓库级 Preview 分支白名单的普通 Preview 分支（`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`）+ 本地 development -> dev。由于 Vercel 的 `preview` 环境同时承载 staging 分支和其他非生产分支，运行时必须结合 `VERCEL_ENV` 与 `VERCEL_GIT_COMMIT_REF` 自动解析目标数据库，并对非白名单 Preview 分支直接失败，避免维护者通过手工改连来切环境。
 
 **Alternatives considered**:
 - 为每个非生产分支单独维护一套数据库 URL：当前范围过重，不符合本期“只保留 PR 独立数据库 branch 扩展空间”的约束。

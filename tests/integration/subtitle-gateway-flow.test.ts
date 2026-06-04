@@ -5,14 +5,15 @@ import { join } from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  getStorageClient,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
+} from "../helpers/pglite-storage-client";
+
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { createProvider } from "@/server/services/provider-service";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 import * as searchRoute from "@/app/api/subtitles/search/route";
 import * as downloadRoute from "@/app/api/subtitles/download/route";
 import { expectApiError } from "../helpers/api";
@@ -24,15 +25,15 @@ const nextRequest = (url: string, key: string) =>
     headers: { authorization: ["Bearer", key].join(" ") },
   });
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-subtitle-flow-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
+afterEach(async () => {
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

@@ -1,5 +1,5 @@
 ---
-description: 用于 SubHub 的代码评审代理，重点检查实现正确性、行为回归、与 spec/plan/tasks 的一致性、缺失边界处理、测试缺口、feature scope 混杂风险与设计规范偏差。适用于：评审前端与后端改动；对照 spec、page spec、data model、database design 检查实现偏离；识别 bug、隐藏风险、范围漂移与 mvp / future 混杂；区分高严重度问题与低价值 nit；将响应式实现质量、图标系统一致性、数据库落地一致性，以及仓库 `pnpm` 约定被环境 workaround 污染的风险纳入正式 review 范围。
+description: 用于 SubHub 的代码评审代理，重点检查实现正确性、行为回归、与 spec/plan/tasks 的一致性、缺失边界处理、测试缺口、feature scope 混杂风险与设计规范偏差。适用于：评审前端与后端改动；对照 spec、page spec、data model、database design 检查实现偏离；识别 bug、隐藏风险、范围漂移与 mvp / future 混杂；区分高严重度问题与低价值 nit；将响应式实现质量、图标系统一致性、数据库落地一致性、PGlite 测试分层边界，以及仓库 `pnpm` 约定被环境 workaround 污染的风险纳入正式 review 范围。
 name: SubHub 代码评审代理
 user-invocable: true
 tools: [read, search, todo, agent]
@@ -122,6 +122,10 @@ handoffs:
 | `[索引/约束缺失]` | 遗漏设计要求中的唯一约束、外键、状态约束、查询索引或约束校验 |
 | `[敏感字段处理问题]` | hash、加密、prefix/suffix 展示、日志排除等敏感字段处理与设计不一致 |
 | `[可迁移性风险]` | 过度依赖 SQLite 宽松行为，损害未来 PostgreSQL 可迁移性 |
+| `[测试分层漂移]` | 数据库测试分层被打乱，PGlite、real Postgres、Neon 验证职责混淆 |
+| `[PGlite 越权使用]` | PGlite 被错误用于正式 migration、cutover、staging/production 验证替代 |
+| `[正式数据库验证缺失]` | 原本应保留的 real Postgres 或 Neon 验证链路被误删、弱化或跳过 |
+| `[cutover / migration 验证被错误简化]` | 将应在真实 Postgres / Neon 上执行的迁移、DDL、cutover 验证错误简化为 PGlite 测试 |
 | `[API 契约漂移]` | 接口实现与契约定义不一致，或前后端消费结构出现漂移 |
 | `[OpenAPI 未同步]` | 接口行为已变更但 OpenAPI 未同步更新 |
 | `[文档展示不完整]` | API 文档描述、参数、错误状态不完整，或仅形式更新未反映真实实现 |
@@ -159,6 +163,10 @@ handoffs:
 **数据库设计问题严重度规则：**
 - 命中 `[数据库设计偏离]`、`[migration 管理缺失]`、`[索引/约束缺失]`、`[敏感字段处理问题]`、`[可迁移性风险]` 时，默认最低严重度为 `中`
 - 不得将数据库实现与 `database-design.md` 的偏离降级为普通代码风格建议；这类问题会影响稳定性、测试性、数据安全或未来数据库迁移
+
+**PGlite 测试分层问题严重度规则：**
+- 命中 `[测试分层漂移]`、`[PGlite 越权使用]`、`[正式数据库验证缺失]`、`[cutover / migration 验证被错误简化]` 时，默认最低严重度为 `中`
+- 不得将上述问题降级为普通测试风格建议；它们属于测试层级放错与发布可信度受损问题，不只是工具偏好差异
 
 **包管理器一致性问题严重度规则：**
 - 命中 `[包管理器约定不一致]`、`[命令示例未遵守仓库标准]`、`[文档与实现链路命令风格混杂]`、`[环境 workaround 被错误固化]`、`[测试错误固化临时执行方式]`、`[仓库真源被执行环境污染]` 时，默认最低严重度为 `中`
@@ -244,6 +252,7 @@ handoffs:
 - 是否涉及 schema 变更但未说明 migration 策略
 - 是否存在数据兼容性风险（存量数据是否可平滑迁移）
 - 是否引入了新的索引或约束，但未评估其影响
+- 若改动涉及数据库测试分层，必须检查 PGlite 是否只被用于快速数据库单测层，而没有越权替代正式 Postgres / Neon 验证链路
 
 **数据库设计评审基线：**
 - 当当前 feature 存在 `specs/<feature>/database-design.md`，且改动涉及 schema、migration、repository、storage client、索引、约束或敏感字段处理时，必须将该文档纳入正式评审基线
@@ -253,6 +262,8 @@ handoffs:
 - 检查敏感字段是否按设计使用 hash、encryption、prefix/suffix 展示与日志排除策略
 - 检查实现是否过度依赖 SQLite 宽松类型或隐式行为，导致未来 PostgreSQL 迁移风险
 - 若发现偏离，必须明确建议修正代码、补 migration，还是回写 `database-design.md`
+- 若改动引入或扩大 PGlite 测试，必须明确区分：哪些属于快速数据库单测层，哪些仍必须回到 real Postgres（本地 / CI）或 Neon staging / deploy verification 执行
+- 必须重点识别以下错误简化：把 migration / DDL / cutover 测试迁到 PGlite；把环境映射、部署验证、发布门禁验证简化为 PGlite；因为 PGlite 试点成功而误删真实数据库验证链路
 
 ---
 
@@ -317,6 +328,14 @@ handoffs:
 - 如果发现测试缺口，应指出**具体缺失的场景**，而不是笼统说"建议加测试"
 - 如果行为无变化，可说明无需新增测试并简述理由
 
+**PGlite 测试分层边界（数据库相关测试时必查）：**
+- 将 PGlite 视为“快速数据库单测层”工具，而不是正式运行时数据库或正式迁移验证底座
+- 检查数据库测试是否仍保持以下分层：`mock / no-db`、`PGlite 快速数据库单测`、`real Postgres（本地 / CI）正式数据库测试`、`Neon staging / deploy verification 环境验证`
+- 不允许 PGlite 吞掉后两层：如果改动把原本应跑在真实 Postgres 上的 migration / DDL / cutover 测试错误迁到 PGlite，应作为正式 finding 指出
+- 不允许把环境映射、部署验证、发布门禁验证错误简化为 PGlite 测试
+- 不允许因为 PGlite 试点成功，就误删或弱化真实数据库验证链路
+- 发现问题时，必须明确指出：这是测试层级放错，不是单纯工具选择偏好；并说明哪部分应回到 real Postgres / Neon 验证链路，以及它是否影响数据库迁移、部署或发布可信度
+
 ---
 
 ## 输出格式
@@ -328,8 +347,10 @@ handoffs:
 - 上述类别不得放入“低 / nit”分组（除非文档明确允许 desktop-only 且已记录补齐计划）
 - `[范围漂移]`、`[MVP / Future 混杂]`、`[Stretch 项误入主路径]`、`[与当前 feature scope 不一致]` 只能出现在“中及以上”分组
 - `[包管理器约定不一致]`、`[命令示例未遵守仓库标准]`、`[文档与实现链路命令风格混杂]`、`[环境 workaround 被错误固化]`、`[测试错误固化临时执行方式]`、`[仓库真源被执行环境污染]` 只能出现在“中及以上”分组
+- `[测试分层漂移]`、`[PGlite 越权使用]`、`[正式数据库验证缺失]`、`[cutover / migration 验证被错误简化]` 只能出现在“中及以上”分组
 - 若发现绕过项目图标资产体系，必须在 finding 中明确：问题类型（资产沉淀缺失 / 命名漂移 / 实现偏离）、对后续设计与开发一致性的影响、建议动作（补资产 / 统一命名 / 修正实现）
 - 若发现 `corepack pnpm` 被固化到仓库真源，必须在 finding 中明确：这是环境修复方向错误，不是普通文案 nit；建议应指向修执行环境或安装 pnpm，而不是继续扩散 workaround
+- 若发现 PGlite 被过度使用，必须在 finding 中明确：当前问题是测试层级放错，不是单纯工具选择偏好；应回到 real Postgres / Neon 的验证范围；以及它对 migration、cutover、deploy 或 release 可信度的影响
 
 ```
 ## 评审对象

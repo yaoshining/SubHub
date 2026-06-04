@@ -85,7 +85,7 @@ describe("API 契约链路基础", () => {
     expect(packageJson.scripts["db:check"]).toContain("pnpm db:drift");
     expect(packageJson.scripts["db:check"]).toContain("pnpm typecheck");
     expect(packageJson.scripts["db:check"]).toContain(
-      "pnpm test tests/unit/storage/schema.test.ts",
+      "pnpm test tests/unit/storage/postgres-schema.test.ts",
     );
     expect(packageJson.scripts["db:check"]).not.toContain("corepack pnpm");
   });
@@ -97,7 +97,7 @@ describe("API 契约链路基础", () => {
     expect(packageJson.scripts["db:check"]).toContain("pnpm db:drift");
     expect(packageJson.scripts["db:check"]).toContain("pnpm typecheck");
     expect(packageJson.scripts["db:check"]).toContain(
-      "pnpm test tests/unit/storage/schema.test.ts",
+      "pnpm test tests/unit/storage/postgres-schema.test.ts",
     );
   });
 

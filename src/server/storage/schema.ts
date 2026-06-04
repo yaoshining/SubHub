@@ -1,13 +1,15 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   foreignKey,
   index,
   integer,
-  sqliteTable,
+  pgTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 export const adminUserStatuses = ["active", "suspended"] as const;
 export const adminRoles = ["admin", "operator"] as const;
@@ -92,7 +94,10 @@ const quoteSqlString = (value: string) => `'${value.replaceAll("'", "''")}'`;
 const inSet = (column: unknown, values: readonly string[]) =>
   sql`${column} in (${sql.raw(values.map(quoteSqlString).join(", "))})`;
 
-export const adminUsers = sqliteTable(
+const timestamptz = (name: string) =>
+  timestamp(name, { withTimezone: true, mode: "string" });
+
+export const adminUsers = pgTable(
   "admin_users",
   {
     id: text("id").primaryKey(),
@@ -101,9 +106,9 @@ export const adminUsers = sqliteTable(
     passwordHash: text("password_hash").notNull(),
     status: text("status", { enum: adminUserStatuses }).notNull(),
     role: text("role", { enum: adminRoles }).notNull(),
-    createdAt: text("created_at").notNull(),
-    updatedAt: text("updated_at").notNull(),
-    lastLoginAt: text("last_login_at"),
+    createdAt: timestamptz("created_at").notNull(),
+    updatedAt: timestamptz("updated_at").notNull(),
+    lastLoginAt: timestamptz("last_login_at"),
   },
   (table) => [
     uniqueIndex("admin_users_identifier_unique").on(table.identifier),
@@ -112,7 +117,7 @@ export const adminUsers = sqliteTable(
   ],
 );
 
-export const adminInvitations = sqliteTable(
+export const adminInvitations = pgTable(
   "admin_invitations",
   {
     id: text("id").primaryKey(),
@@ -122,11 +127,11 @@ export const adminInvitations = sqliteTable(
     accessPreset: text("access_preset").notNull(),
     invitedByAdminUserId: text("invited_by_admin_user_id").notNull(),
     acceptedAdminUserId: text("accepted_admin_user_id"),
-    expiresAt: text("expires_at").notNull(),
-    acceptedAt: text("accepted_at"),
-    revokedAt: text("revoked_at"),
-    createdAt: text("created_at").notNull(),
-    updatedAt: text("updated_at").notNull(),
+    expiresAt: timestamptz("expires_at").notNull(),
+    acceptedAt: timestamptz("accepted_at"),
+    revokedAt: timestamptz("revoked_at"),
+    createdAt: timestamptz("created_at").notNull(),
+    updatedAt: timestamptz("updated_at").notNull(),
   },
   (table) => [
     uniqueIndex("admin_invitations_pending_identifier_unique")
@@ -165,19 +170,19 @@ export const adminInvitations = sqliteTable(
   ],
 );
 
-export const adminSessions = sqliteTable(
+export const adminSessions = pgTable(
   "admin_sessions",
   {
     id: text("id").primaryKey(),
     adminUserId: text("admin_user_id").notNull(),
     sessionTokenHash: text("session_token_hash").notNull(),
     status: text("status", { enum: adminSessionStatuses }).notNull(),
-    createdAt: text("created_at").notNull(),
-    expiresAt: text("expires_at").notNull(),
-    lastSeenAt: text("last_seen_at"),
+    createdAt: timestamptz("created_at").notNull(),
+    expiresAt: timestamptz("expires_at").notNull(),
+    lastSeenAt: timestamptz("last_seen_at"),
     deviceLabel: text("device_label"),
     attentionReason: text("attention_reason"),
-    remediatedAt: text("remediated_at"),
+    remediatedAt: timestamptz("remediated_at"),
     remediatedByAdminUserId: text("remediated_by_admin_user_id"),
   },
   (table) => [
@@ -210,7 +215,7 @@ export const adminSessions = sqliteTable(
   ],
 );
 
-export const providers = sqliteTable(
+export const providers = pgTable(
   "providers",
   {
     id: text("id").primaryKey(),
@@ -220,15 +225,13 @@ export const providers = sqliteTable(
     priority: integer("priority").notNull().default(100),
     weight: integer("weight").notNull().default(100),
     concurrencyLimit: integer("concurrency_limit").notNull().default(1),
-    rotationEnabled: integer("rotation_enabled", { mode: "boolean" })
-      .notNull()
-      .default(true),
+    rotationEnabled: boolean("rotation_enabled").notNull().default(true),
     cooldownSeconds: integer("cooldown_seconds").notNull().default(60),
     fallbackProviderId: text("fallback_provider_id"),
     lastHealthStatus: text("last_health_status"),
     lastErrorSummary: text("last_error_summary"),
-    createdAt: text("created_at").notNull(),
-    updatedAt: text("updated_at").notNull(),
+    createdAt: timestamptz("created_at").notNull(),
+    updatedAt: timestamptz("updated_at").notNull(),
   },
   (table) => [
     uniqueIndex("providers_type_name_unique").on(table.type, table.name),
@@ -236,10 +239,6 @@ export const providers = sqliteTable(
     index("providers_status_priority_idx").on(table.status, table.priority),
     check("providers_type_check", inSet(table.type, providerTypes)),
     check("providers_status_check", inSet(table.status, providerStatuses)),
-    check(
-      "providers_rotation_enabled_check",
-      sql`${table.rotationEnabled} in (0, 1)`,
-    ),
     foreignKey({
       columns: [table.fallbackProviderId],
       foreignColumns: [table.id],
@@ -248,7 +247,7 @@ export const providers = sqliteTable(
   ],
 );
 
-export const providerCredentials = sqliteTable(
+export const providerCredentials = pgTable(
   "provider_credentials",
   {
     id: text("id").primaryKey(),
@@ -260,12 +259,12 @@ export const providerCredentials = sqliteTable(
     displaySuffix: text("display_suffix"),
     status: text("status", { enum: providerCredentialStatuses }).notNull(),
     remainingQuota: integer("remaining_quota"),
-    lastUsedAt: text("last_used_at"),
-    lastErrorAt: text("last_error_at"),
+    lastUsedAt: timestamptz("last_used_at"),
+    lastErrorAt: timestamptz("last_error_at"),
     lastErrorSummary: text("last_error_summary"),
-    cooldownUntil: text("cooldown_until"),
-    createdAt: text("created_at").notNull(),
-    updatedAt: text("updated_at").notNull(),
+    cooldownUntil: timestamptz("cooldown_until"),
+    createdAt: timestamptz("created_at").notNull(),
+    updatedAt: timestamptz("updated_at").notNull(),
   },
   (table) => [
     uniqueIndex("provider_credentials_provider_id_label_unique").on(
@@ -298,7 +297,7 @@ export const providerCredentials = sqliteTable(
   ],
 );
 
-export const callerKeys = sqliteTable(
+export const callerKeys = pgTable(
   "caller_keys",
   {
     id: text("id").primaryKey(),
@@ -310,11 +309,11 @@ export const callerKeys = sqliteTable(
     keyPrefix: text("key_prefix"),
     keySuffix: text("key_suffix"),
     status: text("status", { enum: callerKeyStatuses }).notNull(),
-    createdAt: text("created_at").notNull(),
-    updatedAt: text("updated_at").notNull(),
-    lastUsedAt: text("last_used_at"),
-    lastRotatedAt: text("last_rotated_at"),
-    revealUntil: text("reveal_until"),
+    createdAt: timestamptz("created_at").notNull(),
+    updatedAt: timestamptz("updated_at").notNull(),
+    lastUsedAt: timestamptz("last_used_at"),
+    lastRotatedAt: timestamptz("last_rotated_at"),
+    revealUntil: timestamptz("reveal_until"),
     revealTokenHash: text("reveal_token_hash"),
   },
   (table) => [
@@ -333,7 +332,7 @@ export const callerKeys = sqliteTable(
   ],
 );
 
-export const callerKeyRotations = sqliteTable(
+export const callerKeyRotations = pgTable(
   "caller_key_rotations",
   {
     id: text("id").primaryKey(),
@@ -342,7 +341,7 @@ export const callerKeyRotations = sqliteTable(
     newKeySuffix: text("new_key_suffix"),
     result: text("result", { enum: callerKeyRotationResults }).notNull(),
     reason: text("reason"),
-    createdAt: text("created_at").notNull(),
+    createdAt: timestamptz("created_at").notNull(),
     performedByAdminUserId: text("performed_by_admin_user_id"),
   },
   (table) => [
@@ -367,7 +366,7 @@ export const callerKeyRotations = sqliteTable(
   ],
 );
 
-export const subtitleSearchRequests = sqliteTable(
+export const subtitleSearchRequests = pgTable(
   "subtitle_search_requests",
   {
     id: text("id").primaryKey(),
@@ -382,7 +381,7 @@ export const subtitleSearchRequests = sqliteTable(
     providerId: text("provider_id"),
     credentialId: text("credential_id"),
     durationMs: integer("duration_ms"),
-    createdAt: text("created_at").notNull(),
+    createdAt: timestamptz("created_at").notNull(),
   },
   (table) => [
     index("subtitle_search_requests_caller_key_id_created_at_idx").on(
@@ -419,7 +418,7 @@ export const subtitleSearchRequests = sqliteTable(
   ],
 );
 
-export const subtitleDownloadRequests = sqliteTable(
+export const subtitleDownloadRequests = pgTable(
   "subtitle_download_requests",
   {
     id: text("id").primaryKey(),
@@ -430,7 +429,7 @@ export const subtitleDownloadRequests = sqliteTable(
     status: text("status", { enum: subtitleDownloadStatuses }).notNull(),
     contentType: text("content_type"),
     durationMs: integer("duration_ms"),
-    createdAt: text("created_at").notNull(),
+    createdAt: timestamptz("created_at").notNull(),
   },
   (table) => [
     index("subtitle_download_requests_caller_key_id_created_at_idx").on(
@@ -467,7 +466,7 @@ export const subtitleDownloadRequests = sqliteTable(
   ],
 );
 
-export const adminActionResults = sqliteTable(
+export const adminActionResults = pgTable(
   "admin_action_results",
   {
     id: text("id").primaryKey(),
@@ -477,7 +476,7 @@ export const adminActionResults = sqliteTable(
     targetId: text("target_id"),
     result: text("result", { enum: adminActionResultStatuses }).notNull(),
     message: text("message"),
-    createdAt: text("created_at").notNull(),
+    createdAt: timestamptz("created_at").notNull(),
   },
   (table) => [
     index("admin_action_results_actor_admin_user_id_created_at_idx").on(

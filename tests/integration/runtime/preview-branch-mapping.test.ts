@@ -19,6 +19,10 @@ describe("Preview 分支映射集成", () => {
     ["preview/issue-65", "development"],
     ["feature/issue-65", "development"],
     ["agent/copilot-issue-65", "development"],
+    ["copilot/issue-72", "development"],
+    ["fix/runtime-guard", "development"],
+    ["chore/docs-sync", "development"],
+    ["renovate/pnpm-10", "development"],
   ] as const)("%s 解析为 %s", (gitBranch, resolvedTier) => {
     const env = readEnv({
       ...baseSource,
@@ -43,6 +47,6 @@ describe("Preview 分支映射集成", () => {
         ...baseSource,
         VERCEL_GIT_COMMIT_REF: "release/next",
       }),
-    ).toThrowError(/preview.*feature.*agent/);
+    ).toThrowError(/preview.*feature.*agent.*copilot.*fix.*chore.*renovate/);
   });
 });

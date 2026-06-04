@@ -20,6 +20,8 @@ shell commands, and other important information, read the current plan:
 	- `pnpm install`
 	- `pnpm dev`
 	- `pnpm build`
+	- `pnpm format`
+	- `pnpm format:write`
 	- `pnpm lint`
 	- `pnpm typecheck`
 	- `pnpm test`
@@ -32,6 +34,32 @@ shell commands, and other important information, read the current plan:
 	- `pnpm db:check`
 - 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
 - `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
+
+## 代码格式约定（Prettier）
+
+- 当任务修改了仓库文件并准备提交、交付或结束实现时，默认应先执行 `pnpm format:write`，主动将受 Prettier 管理的文件收敛到仓库格式基线。
+- 未经用户明确要求，不要把“等 CI 里的 `pnpm format` 报错后再修”作为默认工作流。
+- 若本次改动未触及 `format:write` 覆盖范围之外的文件，默认应在本地完成格式化，再进入后续 lint、test、commit 或 PR 阶段。
+- 若格式化会改动与当前任务无关、且由用户正在处理的文件，应在输出中明确说明，而不是静默扩大改动范围。
+
+## 数据库测试分层约定（PGlite / Postgres / Neon）
+
+- 本仓库数据库测试默认应保持分层意识：`mock / no-db` 用于纯逻辑快速单测，`PGlite` 用于快速数据库单测层，`real Postgres` 用于正式数据库测试层，`Neon staging / deploy verification` 用于环境与发布验证层。
+- `PGlite` 的定位是“快速数据库单测层”，适用于少量 repository 基础行为测试与少量 service 层数据库逻辑测试；它比 mock 更真实，但不替代真实 Postgres / Neon 验证链路。
+- 未经用户明确要求，不应把 `PGlite` 视为正式运行时数据库，也不应将其作为正式 migration 验证主路径、SQLite -> Postgres cutover 验证底座、staging / production 行为替代验证或发布门禁替代验证。
+- 当任务涉及 schema migration、DDL 验证、SQLite -> Postgres 数据搬迁、cutover 校验、环境映射、部署验证、发布门禁、staging / production 行为验证时，应优先保留并使用真实 Postgres 测试数据库（本地或 CI）或 Neon staging / deploy verification。
+- 不要因为 `PGlite` 接入方便或试点成功，就顺手删除、弱化或绕过真实 Postgres test database、CI Postgres service 或 Neon staging 验证步骤。
+- 当输出实现方案、测试建议、评审结论或任务说明时，如涉及数据库测试，应尽量明确：当前测试属于哪一层、为什么选择 `PGlite` 或真实 Postgres，以及哪些验证仍需留在正式数据库或 Neon 环境中。
+
+## 运行时环境映射与 Preview 分支白名单约定（Vercel / Neon）
+
+- 仓库级运行时环境映射真源固定为 `docs/runtime/environment-mapping.md`。
+- `main / preview / development / 普通 Preview 分支白名单` 的映射规则，属于仓库级运行约定，而不是单个 feature spec 的局部规则。
+- 后续实现、测试、review、脚本、agent 输出、部署配置与文档说明，凡涉及运行时环境映射、数据库目标、`VERCEL_ENV`、`VERCEL_GIT_COMMIT_REF` 或 Preview 分支放行判断，默认都应引用 `docs/runtime/environment-mapping.md`。
+- `preview` 精确分支固定映射到 `Preview -> staging database`；普通 Preview 分支只有命中白名单前缀时，才允许映射到 `Preview -> dev database`。
+- 当前正式白名单前缀为：`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`。
+- 非白名单 Preview 分支必须直接报错；不允许静默映射到 dev，也不允许任意 Preview 分支自动放行。
+- 不应在单个 feature spec、plan、tasks、脚本说明或 review 结论中，各自再发明一套分支映射规则；如需新增或调整白名单，必须先更新仓库级真源，再同步下游引用。
 
 ## 版本约定
 

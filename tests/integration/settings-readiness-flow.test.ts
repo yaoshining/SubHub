@@ -7,6 +7,13 @@ import { screen } from "@testing-library/react";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  getStorageClient,
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
+} from "../helpers/pglite-storage-client";
+
 import { SettingsClient } from "@/app/(admin)/settings/settings-client";
 import { adminSessionCookieName } from "@/lib/auth/constants";
 import type { SettingsStatus } from "@/lib/api/settings";
@@ -15,12 +22,6 @@ import * as loginRoute from "@/app/api/admin/auth/login/route";
 import * as settingsStatusRoute from "@/app/api/admin/settings/status/route";
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { createProvider } from "@/server/services/provider-service";
-import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
 import { renderWithTheme } from "../helpers/ui";
 
 let tempDir: string;
@@ -64,15 +65,15 @@ const createAdminSessionCookie = async () => {
   return setCookie?.split(";")[0] ?? "";
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-settings-flow-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
+afterEach(async () => {
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 

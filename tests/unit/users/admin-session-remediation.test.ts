@@ -4,13 +4,14 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { remediateAdminSession } from "@/server/services/admin-session-service";
 import {
-  closeStorageClient,
   getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+  closePGliteStorageForTesting,
+  initializePGliteStorageForTesting,
+  resetPGliteStorageForTesting,
+} from "../../helpers/pglite-storage-client";
+
+import { remediateAdminSession } from "@/server/services/admin-session-service";
 import {
   adminActionResults,
   adminSessions,
@@ -18,6 +19,9 @@ import {
 } from "@/server/storage/schema";
 
 let tempDir: string;
+
+const toIsoString = (value: string | null) =>
+  value ? new Date(value).toISOString() : null;
 
 const seedSession = async () => {
   const db = getStorageClient().db;
@@ -56,15 +60,15 @@ const seedSession = async () => {
   });
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   tempDir = mkdtempSync(join(tmpdir(), "subhub-admin-session-service-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+  await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
+  await getStorageClient().migrate();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
+afterEach(async () => {
+  await closePGliteStorageForTesting();
+  await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
 });
 
@@ -91,9 +95,9 @@ describe("Admin session remediation service", () => {
     expect(session).toMatchObject({
       id: "session_attention",
       status: "revoked",
-      remediatedAt: "2026-05-28T12:00:00.000Z",
       remediatedByAdminUserId: "admin_owner",
     });
+    expect(toIsoString(session.remediatedAt)).toBe("2026-05-28T12:00:00.000Z");
 
     const actions = await getStorageClient()
       .db.select()
@@ -130,9 +134,9 @@ describe("Admin session remediation service", () => {
     expect(session).toMatchObject({
       id: "session_attention",
       status: "remediated",
-      remediatedAt: "2026-05-28T12:05:00.000Z",
       remediatedByAdminUserId: "admin_owner",
     });
+    expect(toIsoString(session.remediatedAt)).toBe("2026-05-28T12:05:00.000Z");
   });
 
   it("拒绝处置非 needs_attention 会话，避免扩展为完整风控平台", async () => {

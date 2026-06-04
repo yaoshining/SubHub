@@ -1,7 +1,3 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { requireCallerKey } from "@/server/api/caller-key-auth";
@@ -14,29 +10,23 @@ import {
 } from "@/server/services/caller-key-service";
 import { createCallerKeyRepository } from "@/server/caller-keys/caller-key-repository";
 import {
-  closeStorageClient,
-  getStorageClient,
-  resetStorageDatabasePathForTesting,
-  setStorageDatabasePathForTesting,
-} from "@/server/storage/client";
+  type PGliteTestHarness,
+  createPGliteTestHarness,
+} from "../../helpers/pglite-storage";
 
-let tempDir: string;
+let harness: PGliteTestHarness;
 
 const bearerRequest = (key: string) =>
   new Request("http://localhost/api/subtitles/search?title=Example", {
     headers: { authorization: ["Bearer", key].join(" ") },
   });
 
-beforeEach(() => {
-  tempDir = mkdtempSync(join(tmpdir(), "subhub-caller-key-service-"));
-  setStorageDatabasePathForTesting(join(tempDir, "test.sqlite"));
-  getStorageClient().migrate();
+beforeEach(async () => {
+  harness = await createPGliteTestHarness();
 });
 
-afterEach(() => {
-  closeStorageClient();
-  resetStorageDatabasePathForTesting();
-  rmSync(tempDir, { recursive: true, force: true });
+afterEach(async () => {
+  await harness.close();
 });
 
 describe("Caller Key service", () => {
@@ -49,20 +39,24 @@ describe("Caller Key service", () => {
         scope: "subtitles:read",
         quotaPolicy: "default",
       },
-      { now },
+      { db: harness.db, now },
     );
 
     const firstRotation = await rotateCallerKey(created.callerKey.id, {
+      db: harness.db,
       actorAdminUserId: null,
       now: new Date("2026-05-10T12:00:00.000Z"),
     });
 
     await rotateCallerKey(firstRotation.callerKey.id, {
+      db: harness.db,
       actorAdminUserId: null,
       now: new Date("2026-04-15T12:00:00.000Z"),
     });
 
-    await expect(listCallerKeys({ now })).resolves.toMatchObject({
+    await expect(
+      listCallerKeys({ db: harness.db, now }),
+    ).resolves.toMatchObject({
       total: 3,
       summary: {
         activeCount: 1,
@@ -74,12 +68,15 @@ describe("Caller Key service", () => {
   });
 
   it("创建 Caller Key 只返回一次明文并在存储层隐藏 hash", async () => {
-    const result = await createCallerKey({
-      callerName: "Jellyfin Home",
-      environment: "production",
-      scope: "subtitles:read",
-      quotaPolicy: "default",
-    });
+    const result = await createCallerKey(
+      {
+        callerName: "Jellyfin Home",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { db: harness.db },
+    );
 
     expect(result.key).toMatch(/^subhub_live_/);
     expect(result.callerKey).toMatchObject({
@@ -92,19 +89,23 @@ describe("Caller Key service", () => {
     expect(result.callerKey).not.toHaveProperty("keyHash");
 
     await expect(
-      requireCallerKey({ request: bearerRequest(result.key) }),
+      requireCallerKey({ request: bearerRequest(result.key), db: harness.db }),
     ).resolves.toMatchObject({ id: result.callerKey.id, status: "active" });
   });
 
   it("轮换后旧 Key 立即失效，新 Key 可用且记录轮换结果", async () => {
-    const created = await createCallerKey({
-      callerName: "Kodi",
-      environment: "development",
-      scope: "subtitles:read",
-      quotaPolicy: "default",
-    });
+    const created = await createCallerKey(
+      {
+        callerName: "Kodi",
+        environment: "development",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { db: harness.db },
+    );
 
     const rotated = await rotateCallerKey(created.callerKey.id, {
+      db: harness.db,
       actorAdminUserId: null,
     });
 
@@ -117,12 +118,12 @@ describe("Caller Key service", () => {
       newKeySuffix: rotated.callerKey.keySuffix,
     });
     await expect(
-      requireCallerKey({ request: bearerRequest(created.key) }),
+      requireCallerKey({ request: bearerRequest(created.key), db: harness.db }),
     ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
     await expect(
-      requireCallerKey({ request: bearerRequest(rotated.key) }),
+      requireCallerKey({ request: bearerRequest(rotated.key), db: harness.db }),
     ).resolves.toMatchObject({ id: rotated.callerKey.id });
-    await expect(listCallerKeys()).resolves.toMatchObject({
+    await expect(listCallerKeys({ db: harness.db })).resolves.toMatchObject({
       items: expect.arrayContaining([
         expect.objectContaining({
           id: created.callerKey.id,
@@ -133,22 +134,28 @@ describe("Caller Key service", () => {
       total: 2,
     });
     await expect(
-      rotateCallerKey(created.callerKey.id, { actorAdminUserId: null }),
+      rotateCallerKey(created.callerKey.id, {
+        db: harness.db,
+        actorAdminUserId: null,
+      }),
     ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
   });
 
   it("停用 Key 后立即拒绝新请求", async () => {
-    const created = await createCallerKey({
-      callerName: "Plex",
-      environment: "staging",
-      scope: "subtitles:read",
-      quotaPolicy: "default",
-    });
+    const created = await createCallerKey(
+      {
+        callerName: "Plex",
+        environment: "staging",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      },
+      { db: harness.db },
+    );
 
-    await suspendCallerKey(created.callerKey.id);
+    await suspendCallerKey(created.callerKey.id, { db: harness.db });
 
     await expect(
-      requireCallerKey({ request: bearerRequest(created.key) }),
+      requireCallerKey({ request: bearerRequest(created.key), db: harness.db }),
     ).rejects.toMatchObject({ code: "CALLER_KEY_SUSPENDED" });
   });
 
@@ -161,12 +168,13 @@ describe("Caller Key service", () => {
         scope: "subtitles:read",
         quotaPolicy: "default",
       },
-      { now },
+      { db: harness.db, now },
     );
-    const repository = createCallerKeyRepository();
+    const repository = createCallerKeyRepository(harness.db);
 
     await requireCallerKey({
       request: bearerRequest(created.key),
+      db: harness.db,
       now: new Date("2026-05-28T00:01:00.000Z"),
     });
     await Promise.all(
@@ -230,15 +238,18 @@ describe("Caller Key service", () => {
       createdAt: "2026-05-26T23:59:59.000Z",
     });
     await rotateCallerKey(created.callerKey.id, {
+      db: harness.db,
       actorAdminUserId: null,
       now: new Date("2026-05-28T00:02:00.000Z"),
     });
 
-    await expect(
-      getCallerKeyUsage(created.callerKey.id, { now }),
-    ).resolves.toMatchObject({
+    const usageSummary = await getCallerKeyUsage(created.callerKey.id, {
+      db: harness.db,
+      now,
+    });
+
+    expect(usageSummary).toMatchObject({
       callerKeyId: created.callerKey.id,
-      lastUsedAt: "2026-05-28T00:01:00.000Z",
       searchCount: 21,
       downloadCount: 21,
       recentSearches: expect.arrayContaining([
@@ -255,15 +266,16 @@ describe("Caller Key service", () => {
           contentType: "application/x-subrip",
         }),
       ]),
-      recentRotations: [
-        expect.objectContaining({
-          callerKeyId: created.callerKey.id,
-          result: "success",
-        }),
-      ],
     });
-
-    const usageSummary = await getCallerKeyUsage(created.callerKey.id, { now });
+    expect(Date.parse(usageSummary.lastUsedAt ?? "")).toBe(
+      Date.parse("2026-05-28T00:01:00.000Z"),
+    );
+    expect(usageSummary.recentRotations).toEqual([
+      expect.objectContaining({
+        callerKeyId: created.callerKey.id,
+        result: "success",
+      }),
+    ]);
     expect(usageSummary.recentSearches).toHaveLength(20);
     expect(usageSummary.recentDownloads).toHaveLength(20);
     expect(
