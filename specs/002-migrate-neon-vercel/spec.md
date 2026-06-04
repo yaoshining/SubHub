@@ -69,7 +69,7 @@
 
 ### 用户故事 2 - Preview 与 Development 具有稳定且可区分的环境映射 (Priority: P2)
 
-作为维护者，我希望 `preview` 分支、其他 feature/agent 分支以及本地 development 都有清晰且稳定的数据库映射策略，从而避免 preview、dev 和 production 串库。
+作为维护者，我希望仓库级 `preview` 分支、普通 Preview 分支白名单以及本地 development 都有清晰且稳定的数据库映射策略，从而避免 preview、dev 和 production 串库。
 
 **优先级原因**: 一旦环境映射不清晰，迁移 feature 会引入最高等级的运行风险，即使 production 可部署也不能安全协作。
 
@@ -78,7 +78,7 @@
 **验收场景**:
 
 1. **Given** `preview` 分支触发部署，**When** 系统解析环境目标，**Then** 它只连接 staging 数据库而不访问 production 或 dev 数据库。
-2. **Given** 其他 `preview/*`、`feature/*`、`agent/*` 分支触发 Preview 部署，**When** 系统解析环境目标，**Then** 它默认连接 dev 数据库。
+2. **Given** 其他命中仓库级 Preview 分支白名单的分支（`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`）触发 Preview 部署，**When** 系统解析环境目标，**Then** 它默认连接 dev 数据库。
 3. **Given** 本地 development 运行，**When** 开发者启动应用并执行数据库相关流程，**Then** 本地实例默认连接 dev 数据库，而不是回退到生产数据库或继续把 SQLite 视为正式基线。
 4. **Given** 数据库相关单测、集成测试、契约测试或 CI 真实数据库校验运行，**When** 测试解析数据库目标，**Then** 它只连接独立 `test` 数据库，而不复用 dev、staging 或 production 数据库。
 
@@ -118,7 +118,8 @@
 
 ### 边界场景
 
-- 当 `main`、`preview`、其他功能分支或本地 development 的数据库映射发生冲突时，系统必须拒绝以不明确目标继续运行。
+- 当 `main`、`preview`、普通 Preview 白名单分支或本地 development 的数据库映射发生冲突时，系统必须拒绝以不明确目标继续运行。
+- 当 Preview 部署分支不在仓库级白名单内时，系统必须直接报错，而不是静默回落到 dev 数据库。
 - 当 Vercel 环境变量缺失、名称错误或引用了错误环境数据库时，系统必须明确暴露配置失败，而不是静默回退。
 - 当 Postgres migration 已部分执行但验证失败时，系统必须明确阻止应用将该环境视为健康可用。
 - 当 production 迁移尚未执行完成时，应用不得以“仅读模式”或“局部可用”误导维护者进入不一致状态。
@@ -138,8 +139,8 @@
 - **FR-001**: 系统 MUST 将当前 MVP 的正式运行数据库基线从 SQLite 切换为 Neon Postgres。
 - **FR-002**: 系统 MUST 将当前 MVP 的正式部署目标收敛到 Vercel，并以此作为 production 与 preview 的标准部署模型。
 - **FR-003**: 系统 MUST 保持 `001-mvp-admin-console` 已定义的产品功能、页面、用户流程、数据语义和对外 API 范围不变。
-- **FR-004**: 系统 MUST 建立清晰的环境映射：`main` 对应 Production 与 prod database，`preview` 分支对应 Preview 与 staging database，其他 `preview/*`、`feature/*`、`agent/*` 等分支对应 Preview 与 dev database，本地 development 对应 dev database；数据库相关测试与 CI 真实数据库校验使用独立 `test` 数据库，但不作为新的应用部署环境主路由。
-- **FR-005**: 系统 MUST 优先通过 Vercel 环境变量与环境分组管理 production、staging 和 dev 的数据库映射，不得依赖部署后手工改连。
+- **FR-004**: 系统 MUST 遵循仓库级环境映射真源 `docs/runtime/environment-mapping.md`：`main` 对应 Production 与 prod database，`preview` 分支对应 Preview 与 staging database，本地 development 对应 dev database；普通 Preview 分支只有命中仓库级白名单时，才允许映射到 Preview 与 dev database；数据库相关测试与 CI 真实数据库校验使用独立 `test` 数据库，但不作为新的应用部署环境主路由。
+- **FR-005**: 系统 MUST 优先通过 Vercel 环境变量与环境分组管理 production、staging 和 dev 的数据库映射，并与仓库级 Preview 分支白名单保持一致，不得依赖部署后手工改连。
 - **FR-006**: 系统 MUST 明确定义 production、staging、dev 和 test 四类数据库的职责边界，并防止不同环境在无明确授权时串用同一数据目标。
 - **FR-007**: 系统 MUST 将当前 SQLite + Drizzle 的 schema 语义、核心约束与数据库访问约定迁移到适配 Neon Postgres 的正式方案。
 - **FR-008**: 系统 MUST 明确需要改造的数据库相关边界，至少包括 schema 真源、migration 目录、数据库 client、Drizzle 配置、环境变量读取与数据库 URL 解析。
@@ -156,6 +157,7 @@
 - **FR-019**: 系统 MUST 将“未来每个 PR 自动创建独立 Neon database branch”标记为可扩展方向，而不是当前 feature 的强制交付范围。
 - **FR-020**: 系统 MUST 保证当前三层环境模型在未来扩展到 PR 独立数据库 branch 时仍可兼容，不得把当前环境命名、数据库解析或初始化流程写死为不可扩展结构。
 - **FR-021**: 系统 MUST 定义当环境映射错误、数据库连接异常、migration 失败或初始化不完整时的可识别失败结果，使维护者可以明确判断环境不可运行。
+- **FR-021A**: 系统 MUST 对不在仓库级 Preview 分支白名单内的 Preview 部署直接失败；不得静默映射到 dev，也不得对任意 Preview 分支自动放行。
 - **FR-022**: 系统 MUST 定义本 feature 与 `001-mvp-admin-console` 的边界：001 继续定义产品范围，002 只定义运行底座迁移，不得在 002 中新增产品能力要求。
 - **FR-023**: 系统 MUST 约束数据库相关单测、集成测试、契约测试与 CI 中需要真实数据库行为验证的测试默认连接 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`；本地真实数据库测试默认连接本地 Docker Postgres，CI 真实数据库测试默认连接 GitHub Actions Postgres service，并在测试前完成 schema 建立与最小 fixture 准备。
 - **FR-024**: 系统 MUST 允许测试流程在结束后执行清理、重建或 reset，使 `test` 数据库保持干净、隔离、可重复的运行基线；测试不得依赖 dev、staging 或 production 中的历史脏数据。
@@ -191,7 +193,7 @@
 
 - **SC-001**: `main` 分支对应的 production 部署可在完成必要 migration 与初始化后稳定运行现有 MVP，且管理后台与对外 API 的核心路径无功能回退。
 - **SC-002**: `preview` 分支对应的 Preview 部署可稳定连接 staging 数据库运行，并能完成发布前验证而不访问 production 或 dev 数据库。
-- **SC-003**: 其他 `preview/*`、`feature/*`、`agent/*` 分支以及本地 development 可稳定连接 dev 数据库运行，且 100% 不会因默认配置误连 production 数据库。
+- **SC-003**: 其他命中仓库级 Preview 分支白名单的分支（`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`）以及本地 development 可稳定连接 dev 数据库运行，且 100% 不会因默认配置误连 production 数据库；非白名单 Preview 分支 100% 会被明确阻断。
 - **SC-004**: 当前 SQLite 基线中的核心持久化对象可按定义迁移到 Neon Postgres，迁移后关键对象数量、状态语义和基本可用性校验通过率达到 100%。
 - **SC-005**: production migration 流程具备清晰执行责任与前后校验步骤，维护者可在一次发布窗口内明确判断“可继续发布”或“必须中止切换”。
 - **SC-006**: 迁移完成后，现有 MVP 的登录、Dashboard、Providers、Provider Detail、API Keys、Users、Settings、统一字幕查询与下载主路径均可在至少一个 production、一个 staging 和一个 dev 环境完成验证。
@@ -202,7 +204,7 @@
 - `001-mvp-admin-console` 的产品范围、页面职责、数据模型语义和 API 契约范围在本 feature 期间保持稳定，不作为本 spec 的修改对象。
 - 当前仓库继续以 Next.js + TypeScript、pnpm、OpenAPI / Orval / Scalar、Drizzle ORM + drizzle-kit 为基础技术栈。
 - Neon Postgres 是当前阶段的正式数据库路线，Vercel 是当前阶段的正式部署平台；本 spec 不再比较替代路线。
-- `preview` 分支是长期 staging / preview 验证入口，其他功能分支默认共享 dev 数据库，而不是各自拥有独立数据库分支。
+- 仓库级运行时环境映射与 Preview 分支白名单真源为 `docs/runtime/environment-mapping.md`；`preview` 分支是长期 staging / preview 验证入口，其他命中白名单的普通 Preview 分支默认共享 dev 数据库，而不是各自拥有独立数据库分支。
 - 数据库相关测试默认使用统一的 `test` 数据库语义，并通过 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 接入；本地日常真实数据库测试对应本地 Docker Postgres，CI 日常真实数据库测试对应 GitHub Actions Postgres service；当前阶段不引入共享远程 test branch，也不要求每次 PR 或每次测试动态创建临时数据库 branch。
 - PGlite 最小试点已证明其适合少量 repository / service 层快速数据库单测，但该结论不改变“本地 Docker Postgres + GitHub Actions Postgres service”作为日常真实数据库测试主线，以及 Neon 作为运行时环境验证与发布验证层的地位。
 - 未来可能引入每个 PR 独立数据库 branch，但当前阶段只要求为其保留扩展空间，不要求在本 feature 中交付自动化能力。

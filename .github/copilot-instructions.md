@@ -51,6 +51,16 @@ shell commands, and other important information, read the current plan:
 - 不要因为 `PGlite` 接入方便或试点成功，就顺手删除、弱化或绕过真实 Postgres test database、CI Postgres service 或 Neon staging 验证步骤。
 - 当输出实现方案、测试建议、评审结论或任务说明时，如涉及数据库测试，应尽量明确：当前测试属于哪一层、为什么选择 `PGlite` 或真实 Postgres，以及哪些验证仍需留在正式数据库或 Neon 环境中。
 
+## 运行时环境映射与 Preview 分支白名单约定（Vercel / Neon）
+
+- 仓库级运行时环境映射真源固定为 `docs/runtime/environment-mapping.md`。
+- `main / preview / development / 普通 Preview 分支白名单` 的映射规则，属于仓库级运行约定，而不是单个 feature spec 的局部规则。
+- 后续实现、测试、review、脚本、agent 输出、部署配置与文档说明，凡涉及运行时环境映射、数据库目标、`VERCEL_ENV`、`VERCEL_GIT_COMMIT_REF` 或 Preview 分支放行判断，默认都应引用 `docs/runtime/environment-mapping.md`。
+- `preview` 精确分支固定映射到 `Preview -> staging database`；普通 Preview 分支只有命中白名单前缀时，才允许映射到 `Preview -> dev database`。
+- 当前正式白名单前缀为：`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`。
+- 非白名单 Preview 分支必须直接报错；不允许静默映射到 dev，也不允许任意 Preview 分支自动放行。
+- 不应在单个 feature spec、plan、tasks、脚本说明或 review 结论中，各自再发明一套分支映射规则；如需新增或调整白名单，必须先更新仓库级真源，再同步下游引用。
+
 ## 版本约定
 
 - 仓库版本约定主真源为 `docs/releases/versioning.md`。

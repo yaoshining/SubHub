@@ -1,5 +1,7 @@
 # Neon Postgres + Vercel 运行时迁移 - Quickstart
 
+说明：本 quickstart 只提供 002 的执行入口与操作提示。运行时环境映射与 Preview 分支白名单的仓库级真源以 `docs/runtime/environment-mapping.md` 为准；若本文件与仓库级真源冲突，应优先回收本文件中的局部表述。
+
 ## 1. 前置条件
 
 - 已存在 `specs/002-migrate-neon-vercel/spec.md` 与 `plan.md`
@@ -47,7 +49,8 @@
 说明：
 
 - `preview` 分支对应的 Preview 部署，应通过 Vercel 分支覆盖注入 staging 的 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`
-- 其他 Preview 分支，应通过默认 Preview 环境注入 dev 的 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`
+- 其他命中仓库级 Preview 分支白名单的分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`，应通过默认 Preview 环境注入 dev 的 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`
+- 非白名单 Preview 分支必须直接失败，不允许静默映射到 dev
 
 ### 2.3 本地 Development
 

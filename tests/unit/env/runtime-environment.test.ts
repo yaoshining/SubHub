@@ -48,7 +48,15 @@ describe("readEnv 运行环境映射", () => {
     });
   });
 
-  it.each(["preview/task-002", "feature/issue-65", "agent/copilot-env-guard"])(
+  it.each([
+    "preview/task-002",
+    "feature/issue-65",
+    "agent/copilot-env-guard",
+    "copilot/issue-72",
+    "fix/runtime-guard",
+    "chore/docs-sync",
+    "renovate/pnpm-10",
+  ])(
     "将 %s 解析为 development tier",
     (gitBranch) => {
       const env = readEnv({
@@ -89,7 +97,7 @@ describe("readEnv 运行环境映射", () => {
         }),
         VERCEL_GIT_COMMIT_REF: "bugfix/unsupported",
       }),
-    ).toThrowError(/preview.*feature.*agent/);
+    ).toThrowError(/preview.*feature.*agent.*copilot.*fix.*chore.*renovate/);
   });
 
   it("Preview 在未显式提供 APP_URL 时通过 VERCEL_URL 推导访问地址", () => {

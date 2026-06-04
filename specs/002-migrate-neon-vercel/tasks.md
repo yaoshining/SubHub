@@ -47,16 +47,16 @@ To execute: `/speckit.git.commit`
 
 ## 阶段 1: 初始化（共享基础设施）
 
-**目的**: 建立 002 的基础脚本、环境变量真源、Docker Postgres / CI Postgres service 测试脚手架和 Vercel/Neon 运行手册。
+**目的**: 建立 002 的基础脚本、环境变量真源、Docker Postgres / CI Postgres service 测试脚手架，以及对仓库级运行时环境映射真源的实现依赖。
 
 - [ ] T001 在 `package.json` 添加 `postgres`、`drizzle-orm/postgres-js` 依赖，以及 `db:bootstrap`、`db:seed:dev`、`db:seed:staging`、`db:precheck:cutover`、`db:import:sqlite`、`db:validate:cutover`，并补充 `db:prepare:test` / `db:reset:test` 等测试数据库脚本；如项目决定脚本化容器生命周期，还应补充 `db:test:start` / `db:test:stop` 或等价命令，同时将 `better-sqlite3` 从正式运行时依赖路径中移出
 - [ ] T002 在 `drizzle.config.ts` 将 drizzle-kit 配置切换到 `DATABASE_URL_UNPOOLED` 驱动的 Postgres 模式，并保持输出目录为 `src/server/storage/migrations/`
-- [ ] T003 在 `src/lib/env.ts` 落地环境映射层的单一 `DATABASE_URL` / `DATABASE_URL_UNPOOLED` 读取、`VERCEL_ENV` / `VERCEL_GIT_COMMIT_REF` 部署身份校验和 greenfield / cutover 模式开关，并补充 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 的测试专用语义
-- [ ] T004 [P] 在 `tests/unit/env/runtime-environment.test.ts` 编写环境映射层测试，覆盖 `main -> production`、`preview -> staging`、其他 `preview/*|feature/*|agent/* -> development`、本地 development -> dev、数据库相关测试 -> test，以及错误注入护栏
+- [ ] T003 在 `src/lib/env.ts` 落地环境映射层的单一 `DATABASE_URL` / `DATABASE_URL_UNPOOLED` 读取、`VERCEL_ENV` / `VERCEL_GIT_COMMIT_REF` 部署身份校验和 greenfield / cutover 模式开关，并以 `docs/runtime/environment-mapping.md` 作为仓库级规则真源；同时补充 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 的测试专用语义
+- [ ] T004 [P] 在 `tests/unit/env/runtime-environment.test.ts` 编写环境映射层测试，覆盖 `main -> production`、`preview -> staging`、普通 Preview 白名单分支 `preview/*|feature/*|agent/*|copilot/*|fix/*|chore/*|renovate/* -> development`、本地 development -> dev、数据库相关测试 -> test，以及非白名单 Preview 分支直接失败的护栏
 - [ ] T005 [P] 在 `tests/contract/runtime/environment-contract.test.ts` 对照 `specs/002-migrate-neon-vercel/contracts/runtime-environment-contract.md` 编写环境变量契约测试，验证应用不在多套 URL 间自行路由，且数据库相关测试不会回落到 dev / staging / prod
 - [ ] T006 [P] 在 `.env.example` 创建运行时环境变量示例，仅保留 `DATABASE_URL`、`DATABASE_URL_UNPOOLED`、`APP_URL` 和必要 secrets 的单部署配置写法
 - [ ] T007 在 `tests/setup.ts` 建立基于本地 Docker Postgres 的测试数据库启动、可用性检查、最小 fixture、reset、测试后清理和 direct URL 测试注入逻辑，统一接入 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`，替换当前以 SQLite 文件为中心的测试初始化路径，并为 CI Postgres service 复用同一套 prepare/reset 语义；实现必须支持“容器常驻 + 测试前 reset”或“测试前启动、测试后停止/删除”的受控策略之一
-- [ ] T008 [P] 在 `docs/workflows/vercel-neon-environments.md` 记录 Vercel 环境变量分组、Preview 分支覆盖、Neon prod / staging / dev 数据库准备步骤，以及本地 Docker Postgres、GitHub Actions Postgres service 与独立 `test` 数据库的准备、可用性检查、清理与重建约束，作为仓库内的环境映射操作手册；文档必须明确允许的本地容器生命周期策略与禁止长期依赖脏状态的原则
+- [ ] T008 [P] 在 `docs/runtime/environment-mapping.md` 建立仓库级运行时环境映射与 Preview 分支白名单真源，并在 `docs/workflows/vercel-neon-environments.md` 记录对应的 Vercel 环境变量分组、Preview 分支覆盖、Neon prod / staging / dev 数据库准备步骤，以及本地 Docker Postgres、GitHub Actions Postgres service 与独立 `test` 数据库的准备、可用性检查、清理与重建约束；运行手册必须引用仓库级真源，且文档必须明确允许的本地容器生命周期策略与禁止长期依赖脏状态的原则
 
 **检查点**: 仓库已有单一 URL 环境变量基线、Docker Postgres / CI Postgres service 测试脚手架、本地容器生命周期规范和 Vercel/Neon 环境说明，可继续推进正式接入。
 
@@ -113,21 +113,21 @@ To execute: `/speckit.git.commit`
 
 ## 阶段 4: 用户故事 2 - Preview 与 Development 具有稳定且可区分的环境映射 (Priority: P2)
 
-**目标**: `preview` 分支稳定使用 staging database，其他 Preview 分支与本地 development 稳定使用 dev database，且环境切换主路由由 Vercel 环境变量完成。
+**目标**: `preview` 分支稳定使用 staging database，命中仓库级 Preview 分支白名单的其他 Preview 分支与本地 development 稳定使用 dev database，且环境切换主路由由 Vercel 环境变量完成。
 
-**独立测试**: 在 `preview` 分支、其他 Preview 分支和本地 development 三种情况下，应用都只消费当前部署唯一注入的 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`，并在身份不匹配时明确失败。
+**独立测试**: 在 `preview` 分支、命中仓库级白名单的其他 Preview 分支、非白名单 Preview 分支和本地 development 四种情况下，应用都只消费当前部署唯一注入的 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`，并在身份不匹配或白名单不匹配时明确失败。
 
 ### 用户故事 2 的测试 (REQUIRED) ⚠️
 
-- [ ] T029 [P] [US2] 在 `tests/integration/runtime/preview-branch-mapping.test.ts` 编写环境映射测试，覆盖 `preview` 分支 -> staging、其他 Preview 分支 -> dev 的部署身份校验
+- [ ] T029 [P] [US2] 在 `tests/integration/runtime/preview-branch-mapping.test.ts` 编写环境映射测试，覆盖 `preview` 分支 -> staging、普通 Preview 白名单分支 `preview/*|feature/*|agent/*|copilot/*|fix/*|chore/*|renovate/* -> dev`，以及非白名单 Preview 分支直接失败的部署身份校验
 - [ ] T030 [P] [US2] 在 `tests/smoke/nonproduction-runtime.smoke.test.ts` 编写 staging / dev 非生产 smoke test，验证后台与对外 API 在 Preview / 本地 development 的基本可用性
 - [ ] T031 [P] [US2] 在 `tests/unit/env/local-development-env.test.ts` 编写本地 development 环境测试，验证 `.env.development.local` 到 `DATABASE_URL` / `DATABASE_URL_UNPOOLED` 的映射和 prod 误连阻断
 
 ### 用户故事 2 的实现
 
 - [ ] T032 [US2] 在 `src/lib/env.ts` 完成环境映射层的 Vercel Preview / local development 身份护栏，确保应用只校验当前注入 URL 与部署身份，不再在 prod / staging / dev 多套 URL 中自行路由
-- [ ] T033 [US2] 在 `docs/workflows/vercel-neon-environments.md`、`specs/002-migrate-neon-vercel/quickstart.md`、`specs/002-migrate-neon-vercel/contracts/runtime-environment-contract.md` 写清 Vercel Preview 分支覆盖、staging / dev 唯一 URL 注入和本地 development 配置方式
-- [ ] T034 [US2] 在 `.github/workflows/deploy-smoke.yml` 为 `preview` 分支与其他 Preview 分支增加 staging / dev 分层 smoke gate，确保非生产部署可用性验证不串用 prod 数据库
+- [ ] T033 [US2] 在 `docs/workflows/vercel-neon-environments.md`、`specs/002-migrate-neon-vercel/quickstart.md`、`specs/002-migrate-neon-vercel/contracts/runtime-environment-contract.md` 写清对 `docs/runtime/environment-mapping.md` 的引用关系、Vercel Preview 分支覆盖、staging / dev 唯一 URL 注入、本地 development 配置方式，以及非白名单 Preview 分支的失败语义
+- [ ] T034 [US2] 在 `.github/workflows/deploy-smoke.yml` 为 `preview` 分支与命中仓库级 Preview 分支白名单的普通 Preview 分支增加 staging / dev 分层 smoke gate，确保非生产部署可用性验证不串用 prod 数据库，并对非白名单 Preview 分支直接阻断
 - [ ] T035 [US2] 在 `.github/workflows/ci.yml` 增加环境映射与 URL 护栏校验步骤，使映射回归在合并前被阻断
 - [ ] T036 [US2] 在 `.env.example` 收敛生产 / Preview / development 的单部署 URL 说明，并移除任何暗示应用内多库选路的变量命名
 - [ ] T037 [US2] 运行 `pnpm test -- tests/unit/env/runtime-environment.test.ts tests/unit/env/local-development-env.test.ts tests/integration/runtime/preview-branch-mapping.test.ts tests/smoke/nonproduction-runtime.smoke.test.ts` 并修复 `src/lib/env.ts`、`.env.example`、`.github/workflows/`、`specs/002-migrate-neon-vercel/` 中被触达文件

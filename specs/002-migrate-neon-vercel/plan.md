@@ -2,7 +2,7 @@
 
 **分支**: `002-migrate-neon-vercel` | **日期**: 2026-05-31 | **规格**: `specs/002-migrate-neon-vercel/spec.md`
 
-**输入**: 来自 `specs/002-migrate-neon-vercel/spec.md` 的功能规格，以及 `specs/001-mvp-admin-console/spec.md`、`specs/001-mvp-admin-console/plan.md`、`specs/001-mvp-admin-console/tasks.md`、`specs/001-mvp-admin-console/data-model.md`、`specs/001-mvp-admin-console/database-design.md`、`docs/decisions/neon-vercel-runtime.md`、`DESIGN.md`、`.github/copilot-instructions.md`
+**输入**: 来自 `specs/002-migrate-neon-vercel/spec.md` 的功能规格，以及 `specs/001-mvp-admin-console/spec.md`、`specs/001-mvp-admin-console/plan.md`、`specs/001-mvp-admin-console/tasks.md`、`specs/001-mvp-admin-console/data-model.md`、`specs/001-mvp-admin-console/database-design.md`、`docs/decisions/neon-vercel-runtime.md`、`docs/runtime/environment-mapping.md`、`DESIGN.md`、`.github/copilot-instructions.md`
 
 **说明**: 本计划只定义基础设施与运行环境迁移路径，不新增产品功能。`001-mvp-admin-console` 继续定义后台页面、统一字幕 API、数据语义与 UX 边界；`002-migrate-neon-vercel` 只负责把现有 MVP 从 SQLite + 单机运行基线迁移到 Neon Postgres + Vercel 的可运行、可发布、可回归方案。
 
@@ -68,7 +68,7 @@
 
 **目标平台**:
 - Vercel Production：`main`
-- Vercel Preview：`preview` 分支与其他 `preview/*`、`feature/*`、`agent/*` 分支
+- Vercel Preview：`preview` 分支，以及命中仓库级 Preview 分支白名单的普通 Preview 分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`
 - 本地 Development：`pnpm dev`
 
 **项目类型**: Next.js 全栈 Web 应用 + 对外 HTTP API 网关；当前 feature 只调整运行底座，不改变应用形态。
@@ -217,12 +217,8 @@ tests/
 ### 1. 环境解析与配置层
 
 - 扩展 `src/lib/env.ts`，从当前只识别 SQLite 文件路径，升级为读取当前部署已注入的唯一 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`，并对部署身份做校验。
-- 运行环境映射固定为：
-  - `main` -> `Production` -> `prod database`
-  - `preview` 分支 -> `Preview` -> `staging database`
-  - 其他 `preview/*`、`feature/*`、`agent/*` 分支 -> `Preview` -> `dev database`
-  - 本地 development -> `Development` -> `dev database`
-- 环境切换的主路由选择由 Vercel 环境变量分组与 Preview 分支覆盖完成：Production 只注入 prod URL；`preview` 分支对应的 Preview 只注入 staging URL；其他 Preview 分支只注入 dev URL；本地 development 只配置 dev URL。
+- 运行环境映射与 Preview 分支白名单以仓库级真源 `docs/runtime/environment-mapping.md` 为准：`main` -> `Production` -> `prod database`，`preview` -> `Preview` -> `staging database`，本地 development -> `Development` -> `dev database`，其他 Preview 部署仅当分支命中白名单前缀 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` 时，才允许进入 `Preview -> dev database`。
+- 环境切换的主路由选择由 Vercel 环境变量分组与 Preview 分支覆盖完成：Production 只注入 prod URL；`preview` 分支对应的 Preview 只注入 staging URL；命中仓库级白名单的普通 Preview 分支只注入 dev URL；本地 development 只配置 dev URL；非白名单 Preview 分支必须直接报错，不允许静默映射到 dev。
 - 应用层只使用 `VERCEL_ENV`、`VERCEL_GIT_COMMIT_REF`、`NODE_ENV` 与当前注入的单一 URL 对进行身份校验、未就绪护栏和错误提示，不负责在 prod/staging/dev 多套 URL 之间做主路由选择。
 
 ### 1.5 测试数据库策略

@@ -1,12 +1,14 @@
 # Vercel / Neon 环境映射手册
 
+本文档是运行手册；仓库级规则真源以 `docs/runtime/environment-mapping.md` 为准。若本文档与仓库级真源冲突，应优先回收本文档中的旧表述。
+
 ## 环境映射
 
 | 场景 | 部署环境 | 数据库 tier | 平台注入 |
 | --- | --- | --- | --- |
 | `main` | Vercel Production | prod | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
 | `preview` | Vercel Preview | staging | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
-| `preview/*`、`feature/*`、`agent/*` | Vercel Preview | dev | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
+| 普通 Preview 白名单分支：`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` | Vercel Preview | dev | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
 | 本地 `NODE_ENV=development` | local | dev | `DEV_DATABASE_URL` + `DEV_DATABASE_URL_UNPOOLED` |
 
 应用层只校验部署身份与当前注入的单一 URL 对，不在 prod / staging / dev 多套数据库 URL 之间自行路由。
@@ -19,7 +21,7 @@
    - 注入 prod 的 `DATABASE_URL_UNPOOLED`
 2. **Preview**
    - 默认给 `preview` 分支注入 staging URL 对
-   - 为其他 `preview/*`、`feature/*`、`agent/*` 分支覆盖为 dev URL 对
+   - 仅为命中仓库级白名单的普通 Preview 分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` 覆盖为 dev URL 对
 3. **Development**
    - 本地通过 `.env.development.local` 提供 `DEV_DATABASE_URL`
    - 本地通过 `.env.development.local` 提供 `DEV_DATABASE_URL_UNPOOLED`
@@ -40,7 +42,8 @@ CALLER_KEY_SECRET=replace-with-at-least-32-chars
 ## 护栏
 
 - `VERCEL_ENV=production` 时，`VERCEL_GIT_COMMIT_REF` 必须是 `main`
-- `VERCEL_ENV=preview` 时，`VERCEL_GIT_COMMIT_REF` 必须是 `preview`、`preview/*`、`feature/*` 或 `agent/*`
+- `VERCEL_ENV=preview` 时，`VERCEL_GIT_COMMIT_REF` 必须是 `preview`，或命中仓库级白名单前缀 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`
+- 非白名单 Preview 分支必须直接失败，不允许静默映射到 dev
 - 缺少 `DATABASE_URL` / `DATABASE_URL_UNPOOLED` 时，实例必须失败
 - 本地 development 缺少 `DEV_DATABASE_URL` / `DEV_DATABASE_URL_UNPOOLED` 时，实例必须失败
 - 运行时请求使用 pooled `DATABASE_URL`

@@ -4,6 +4,8 @@
 
 本契约定义 SubHub 在 `002-migrate-neon-vercel` 中的运行环境校验、数据库 URL 责任边界与初始化门禁。它约束平台如何为当前部署注入唯一数据库目标，以及应用如何验证该身份。
 
+仓库级运行时环境映射与 Preview 分支白名单真源以 `docs/runtime/environment-mapping.md` 为准；本契约是 002 对该仓库级规则的实现约束，不单独发明另一套映射规则。
+
 补充说明：本契约同时定义数据库相关测试如何接入独立 `test` 数据库语义，但 `test` 不构成新的产品部署环境层。
 
 ## 2. 环境解析规则
@@ -24,12 +26,14 @@
 |------|------|
 | `main` -> Vercel Production | prod database |
 | `preview` 分支 -> Vercel Preview | staging database |
-| 其他 `preview/*`、`feature/*`、`agent/*` -> Vercel Preview | dev database |
+| 其他命中仓库级 Preview 分支白名单的分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` -> Vercel Preview | dev database |
 | 本地 `NODE_ENV=development` | dev database |
 
 数据库相关测试与 CI 真实数据库校验不走上述应用运行主路由；它们必须显式连接独立 `test` 数据库。
 
 应用不负责在多套数据库 URL 之间做主路由选择；若平台注入与当前部署身份不一致，应用必须以配置错误失败，不得回退到 SQLite 或其他默认库。
+
+额外护栏：若 `VERCEL_ENV=preview` 但 `VERCEL_GIT_COMMIT_REF` 未命中仓库级 Preview 分支白名单，应用必须直接失败，不得静默映射到 dev database。
 
 ## 3. 环境变量契约
 
