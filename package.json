@@ -16,7 +16,7 @@
     "api:docs": "next build",
     "api:check": "pnpm api:spec && pnpm api:client && pnpm api:docs",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "db:migrate": "tsx -e \"import { getStorageClient } from './src/server/storage/client.ts'; const client = getStorageClient(); await client.migrate(); await client.close();\"",
+    "db:migrate": "tsx -e \"import { getStorageClient } from './src/server/storage/client.ts'; void (async () => { const client = getStorageClient(); try { await client.migrate(); } finally { await client.close(); } })();\"",
     "db:start:test": "tsx scripts/db/local-test-postgres.ts start",
     "db:stop:test": "tsx scripts/db/local-test-postgres.ts stop",
     "db:reset:test": "tsx scripts/db/local-test-postgres.ts reset",
