@@ -2,6 +2,7 @@ import postgres, { type Sql } from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 import {
+  type DbUrlEnvSource,
   resolveDbUrls,
   resolveDirectDbUrl,
   resolvePooledDbUrl,
@@ -27,6 +28,7 @@ export type PostgresResolvedUrlBoundary = {
 export type PostgresClientOptions = {
   runtimeDatabaseUrl?: string;
   directDatabaseUrl?: string;
+  env?: DbUrlEnvSource;
 };
 
 export type PostgresClient = {
@@ -36,14 +38,18 @@ export type PostgresClient = {
   close: () => Promise<void>;
 };
 
-export const resolveRuntimeDatabaseUrl = (runtimeDatabaseUrl?: string) => {
-  const url = runtimeDatabaseUrl ?? resolvePooledDbUrl();
+export const resolveRuntimeDatabaseUrl = (
+  options: Pick<PostgresClientOptions, "runtimeDatabaseUrl" | "env"> = {},
+) => {
+  const url = options.runtimeDatabaseUrl ?? resolvePooledDbUrl(options.env);
   assertPostgresUrl("pooled database URL", url);
   return url;
 };
 
-export const resolveDirectDatabaseUrl = (directDatabaseUrl?: string) => {
-  const url = directDatabaseUrl ?? resolveDirectDbUrl();
+export const resolveDirectDatabaseUrl = (
+  options: Pick<PostgresClientOptions, "directDatabaseUrl" | "env"> = {},
+) => {
+  const url = options.directDatabaseUrl ?? resolveDirectDbUrl(options.env);
   assertPostgresUrl("direct database URL", url);
   return url;
 };
@@ -53,11 +59,11 @@ export const resolvePostgresUrlBoundary = (
 ): PostgresResolvedUrlBoundary => {
   if (options.runtimeDatabaseUrl || options.directDatabaseUrl) {
     return {
-      runtimeUrl: resolveRuntimeDatabaseUrl(options.runtimeDatabaseUrl),
-      directUrl: resolveDirectDatabaseUrl(options.directDatabaseUrl),
+      runtimeUrl: resolveRuntimeDatabaseUrl(options),
+      directUrl: resolveDirectDatabaseUrl(options),
     };
   }
-  const { pooledUrl, directUrl } = resolveDbUrls();
+  const { pooledUrl, directUrl } = resolveDbUrls(options.env);
   assertPostgresUrl("pooled database URL", pooledUrl);
   assertPostgresUrl("direct database URL", directUrl);
   return { runtimeUrl: pooledUrl, directUrl };
@@ -70,9 +76,9 @@ const createPostgresSqlClient = (url: string, max: number) =>
   });
 
 export const createRuntimePostgresClient = (
-  options: Pick<PostgresClientOptions, "runtimeDatabaseUrl"> = {},
+  options: Pick<PostgresClientOptions, "runtimeDatabaseUrl" | "env"> = {},
 ): PostgresClient => {
-  const url = resolveRuntimeDatabaseUrl(options.runtimeDatabaseUrl);
+  const url = resolveRuntimeDatabaseUrl(options);
   const sql = createPostgresSqlClient(url, pooledRuntimeMaxConnections);
 
   return {
@@ -84,9 +90,9 @@ export const createRuntimePostgresClient = (
 };
 
 export const createDirectPostgresClient = (
-  options: Pick<PostgresClientOptions, "directDatabaseUrl"> = {},
+  options: Pick<PostgresClientOptions, "directDatabaseUrl" | "env"> = {},
 ): PostgresClient => {
-  const url = resolveDirectDatabaseUrl(options.directDatabaseUrl);
+  const url = resolveDirectDatabaseUrl(options);
   const sql = createPostgresSqlClient(url, directRuntimeMaxConnections);
 
   return {

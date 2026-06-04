@@ -30,7 +30,7 @@ export type DbUrlPair = {
   directUrl: string;
 };
 
-type RawEnvSource = Partial<
+export type DbUrlEnvSource = Partial<
   Pick<
     NodeJS.ProcessEnv,
     | "NODE_ENV"
@@ -50,18 +50,20 @@ type RawEnvSource = Partial<
  * 1. VERCEL_ENV=development → 强制 dev
  * 2. VERCEL_ENV=production|preview → 强制 production/preview
  * 3. NODE_ENV=test → 强制 test（视为 production/preview 分支，使用 DATABASE_URL*）
- * 4. 用户注入了 DEV_DATABASE_URL*（且未注入 DATABASE_URL*）→ dev
- * 5. 用户注入了 DATABASE_URL*（且未注入 DEV_DATABASE_URL*）→ production/preview
- * 6. 两者都注入：dev 优先（用户本地跑脚本时即使 .env.production.local
+ * 4. 显式 NODE_ENV=development 且无 VERCEL_ENV → 强制 local development
+ * 5. 用户注入了 DEV_DATABASE_URL*（且未注入 DATABASE_URL*）→ dev
+ * 6. 用户注入了 DATABASE_URL*（且未注入 DEV_DATABASE_URL*）→ production/preview
+ * 7. 两者都注入：dev 优先（用户本地跑脚本时即使 .env.production.local
  *    漏出 DATABASE_URL，DEV_* 注入也代表用户明确要 dev 行为）
- * 7. 两者都未注入：回退到 NODE_ENV 判断
+ * 8. 两者都未注入：回退到 NODE_ENV 判断
  */
-export function isDevEnvironment(env: RawEnvSource = process.env): boolean {
+export function isDevEnvironment(env: DbUrlEnvSource = process.env): boolean {
   if (env.VERCEL_ENV === "development") return true;
   if (env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview") {
     return false;
   }
   if (env.NODE_ENV === "test") return false;
+  if (env.NODE_ENV === "development") return true;
 
   const hasDev = Boolean(env.DEV_DATABASE_URL || env.DEV_DATABASE_URL_UNPOOLED);
   const hasProd = Boolean(env.DATABASE_URL || env.DATABASE_URL_UNPOOLED);
@@ -70,8 +72,7 @@ export function isDevEnvironment(env: RawEnvSource = process.env): boolean {
   if (hasProd && !hasDev) return false;
   if (hasDev && hasProd) return true; // dev 优先：本地脚本场景
 
-  // 两者都未注入：回退到 NODE_ENV 判断
-  return env.NODE_ENV === "development";
+  return false;
 }
 
 /**
@@ -83,7 +84,7 @@ export function isDevEnvironment(env: RawEnvSource = process.env): boolean {
  * @param env - 环境变量来源，默认为 process.env
  * @throws 当所需变量缺失或不合法时抛出明确错误
  */
-export function resolveDbUrls(env: RawEnvSource = process.env): DbUrlPair {
+export function resolveDbUrls(env: DbUrlEnvSource = process.env): DbUrlPair {
   if (isDevEnvironment(env)) {
     const pooledUrl = env.DEV_DATABASE_URL;
     const directUrl = env.DEV_DATABASE_URL_UNPOOLED;
@@ -128,7 +129,7 @@ export function resolveDbUrls(env: RawEnvSource = process.env): DbUrlPair {
  * 解析 pooled（运行时）数据库 URL。
  * 对于需要单独获取 pooled URL 的场景使用此函数。
  */
-export function resolvePooledDbUrl(env: RawEnvSource = process.env): string {
+export function resolvePooledDbUrl(env: DbUrlEnvSource = process.env): string {
   return resolveDbUrls(env).pooledUrl;
 }
 
@@ -136,6 +137,6 @@ export function resolvePooledDbUrl(env: RawEnvSource = process.env): string {
  * 解析 direct（unpooled）数据库 URL。
  * 主要用于 migration、schema 检查等需要直连的场景。
  */
-export function resolveDirectDbUrl(env: RawEnvSource = process.env): string {
+export function resolveDirectDbUrl(env: DbUrlEnvSource = process.env): string {
   return resolveDbUrls(env).directUrl;
 }

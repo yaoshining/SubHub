@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { createVercelPreviewEnv } from "../../helpers/env-scenarios";
 import { readEnv } from "@/lib/env";
 
 const repositoryRoot = process.cwd();
@@ -25,20 +26,12 @@ describe("运行环境契约", () => {
   });
 
   it("在 Vercel Preview 里只消费当前部署注入的 URL 对，而不是读取额外 tier 变量", () => {
-    const env = readEnv({
-      NODE_ENV: "production",
-      VERCEL_ENV: "preview",
-      VERCEL_URL: "preview-subhub-example.vercel.app",
-      VERCEL_GIT_COMMIT_REF: "preview",
+    const env = readEnv(createVercelPreviewEnv({
       DATABASE_URL: "staging-pooled-url",
       DATABASE_URL_UNPOOLED: "staging-direct-url",
       DEV_DATABASE_URL: "dev-pooled-url",
       DEV_DATABASE_URL_UNPOOLED: "dev-direct-url",
-      PROVIDER_CREDENTIAL_ENCRYPTION_KEY:
-        "provider-credential-secret-at-least-32",
-      ADMIN_SESSION_SECRET: "admin-session-secret-at-least-32",
-      CALLER_KEY_SECRET: "caller-key-secret-at-least-32-chars",
-    });
+    }));
 
     expect(env.DATABASE_URL).toBe("staging-pooled-url");
     expect(env.DATABASE_URL_UNPOOLED).toBe("staging-direct-url");

@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createLocalTestEnv } from "../../helpers/env-scenarios";
+
 const { drizzleMock, postgresMock } = vi.hoisted(() => ({
   postgresMock: vi.fn((url: string, options: unknown) => ({
     end: vi.fn().mockResolvedValue(undefined),
@@ -28,36 +31,27 @@ describe("Postgres runtime URL boundary", () => {
   beforeEach(() => {
     postgresMock.mockClear();
     drizzleMock.mockClear();
-    vi.unstubAllEnvs();
   });
 
   it("resolves pooled runtime URL and unpooled direct URL from dedicated env vars", () => {
-    vi.stubEnv(
-      "DATABASE_URL",
-      "postgresql://runtime-user@localhost:5432/subhub",
-    );
-    vi.stubEnv(
-      "DATABASE_URL_UNPOOLED",
-      "postgresql://direct-user@localhost:5432/subhub",
-    );
+    const env = createLocalTestEnv({
+      DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
+    });
 
-    expect(resolvePostgresUrlBoundary()).toEqual({
+    expect(resolvePostgresUrlBoundary({ env })).toEqual({
       runtimeUrl: "postgresql://runtime-user@localhost:5432/subhub",
       directUrl: "postgresql://direct-user@localhost:5432/subhub",
     });
   });
 
   it("creates runtime client only from DATABASE_URL", () => {
-    vi.stubEnv(
-      "DATABASE_URL",
-      "postgresql://runtime-user@localhost:5432/subhub",
-    );
-    vi.stubEnv(
-      "DATABASE_URL_UNPOOLED",
-      "postgresql://direct-user@localhost:5432/subhub",
-    );
+    const env = createLocalTestEnv({
+      DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
+    });
 
-    createRuntimePostgresClient();
+    createRuntimePostgresClient({ env });
 
     expect(postgresMock).toHaveBeenCalledWith(
       "postgresql://runtime-user@localhost:5432/subhub",
@@ -67,16 +61,12 @@ describe("Postgres runtime URL boundary", () => {
   });
 
   it("creates direct client only from DATABASE_URL_UNPOOLED", () => {
-    vi.stubEnv(
-      "DATABASE_URL",
-      "postgresql://runtime-user@localhost:5432/subhub",
-    );
-    vi.stubEnv(
-      "DATABASE_URL_UNPOOLED",
-      "postgresql://direct-user@localhost:5432/subhub",
-    );
+    const env = createLocalTestEnv({
+      DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
+    });
 
-    createDirectPostgresClient();
+    createDirectPostgresClient({ env });
 
     expect(postgresMock).toHaveBeenCalledWith(
       "postgresql://direct-user@localhost:5432/subhub",
@@ -86,13 +76,12 @@ describe("Postgres runtime URL boundary", () => {
   });
 
   it("fails fast when unpooled migration URL is missing or not postgres", () => {
-    vi.stubEnv(
-      "DATABASE_URL",
-      "postgresql://runtime-user@localhost:5432/subhub",
-    );
-    vi.stubEnv("DATABASE_URL_UNPOOLED", "");
+    const env = createLocalTestEnv({
+      DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "",
+    });
 
-    expect(() => resolvePostgresUrlBoundary()).toThrow(/DATABASE_URL/);
+    expect(() => resolvePostgresUrlBoundary({ env })).toThrow(/DATABASE_URL/);
     expect(() =>
       createDirectPostgresClient({
         directDatabaseUrl: "file:.subhub/subhub.sqlite",
