@@ -3,6 +3,19 @@ import { ZodError } from "zod";
 
 import { AppError, type AppErrorCode, toApiErrorResponse } from "@/lib/errors";
 
+const noStoreHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+};
+
+const mergeNoStoreHeaders = (headers?: ResponseInit["headers"]) => ({
+  ...noStoreHeaders,
+  ...(headers instanceof Headers ? Object.fromEntries(headers.entries()) : headers),
+});
+
 const statusByErrorCode: Record<AppErrorCode, number> = {
   AUTHENTICATION_REQUIRED: 401,
   FORBIDDEN: 403,
@@ -28,21 +41,21 @@ export function getHttpStatusForError(code: AppErrorCode) {
 export function apiSuccess<T>(data: T, init: ResponseInit = {}) {
   return NextResponse.json<ApiSuccessResponse<T>>(
     { data },
-    { status: init.status ?? 200, headers: init.headers },
+    { status: init.status ?? 200, headers: mergeNoStoreHeaders(init.headers) },
   );
 }
 
 export function apiNoContent(init: ResponseInit = {}) {
   return new NextResponse(null, {
     status: init.status ?? 204,
-    headers: init.headers,
+    headers: mergeNoStoreHeaders(init.headers),
   });
 }
 
 export function apiError(error: AppError, init: ResponseInit = {}) {
   return NextResponse.json(toApiErrorResponse(error), {
     status: init.status ?? getHttpStatusForError(error.code),
-    headers: init.headers,
+    headers: mergeNoStoreHeaders(init.headers),
   });
 }
 
