@@ -86,6 +86,45 @@ describe("Postgres runtime URL boundary", () => {
       createDirectPostgresClient({
         directDatabaseUrl: "file:.subhub/subhub.sqlite",
       }),
-    ).toThrow("必须是 Postgres URL");
+    ).toThrow("DATABASE_URL_UNPOOLED 必须是 Postgres URL。");
+  });
+
+  it("treats empty or whitespace-only runtime/direct URLs as unconfigured", () => {
+    expect(() =>
+      resolvePostgresUrlBoundary({
+        runtimeDatabaseUrl: "",
+        directDatabaseUrl: "postgresql://direct-user@localhost:5432/subhub",
+      }),
+    ).toThrow("DATABASE_URL 未配置。");
+
+    expect(() =>
+      resolvePostgresUrlBoundary({
+        runtimeDatabaseUrl: "   ",
+        directDatabaseUrl: "postgresql://direct-user@localhost:5432/subhub",
+      }),
+    ).toThrow("DATABASE_URL 未配置。");
+
+    expect(() =>
+      resolvePostgresUrlBoundary({
+        runtimeDatabaseUrl: "postgresql://runtime-user@localhost:5432/subhub",
+        directDatabaseUrl: "   ",
+      }),
+    ).toThrow("DATABASE_URL_UNPOOLED 未配置。");
+  });
+
+  it("treats non-empty invalid runtime/direct URLs as invalid postgres URLs", () => {
+    expect(() =>
+      resolvePostgresUrlBoundary({
+        runtimeDatabaseUrl: "mysql://runtime-user@localhost:5432/subhub",
+        directDatabaseUrl: "postgresql://direct-user@localhost:5432/subhub",
+      }),
+    ).toThrow("DATABASE_URL 必须是 Postgres URL。");
+
+    expect(() =>
+      resolvePostgresUrlBoundary({
+        runtimeDatabaseUrl: "postgresql://runtime-user@localhost:5432/subhub",
+        directDatabaseUrl: "mysql://direct-user@localhost:5432/subhub",
+      }),
+    ).toThrow("DATABASE_URL_UNPOOLED 必须是 Postgres URL。");
   });
 });

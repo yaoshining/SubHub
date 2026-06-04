@@ -42,6 +42,11 @@ export type DbUrlEnvSource = Partial<
   >
 >;
 
+const normalizeDatabaseUrl = (value: string | null | undefined) => {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+};
+
 /**
  * 判断当前是否属于 development 环境（本地 dev 或 Vercel dev）。
  * 此时应使用 DEV_DATABASE_URL / DEV_DATABASE_URL_UNPOOLED 而非 DATABASE_URL*。
@@ -58,6 +63,13 @@ export type DbUrlEnvSource = Partial<
  * 8. 两者都未注入：回退到 NODE_ENV 判断
  */
 export function isDevEnvironment(env: DbUrlEnvSource = process.env): boolean {
+  const devDatabaseUrl = normalizeDatabaseUrl(env.DEV_DATABASE_URL);
+  const devDatabaseUrlUnpooled = normalizeDatabaseUrl(
+    env.DEV_DATABASE_URL_UNPOOLED,
+  );
+  const databaseUrl = normalizeDatabaseUrl(env.DATABASE_URL);
+  const databaseUrlUnpooled = normalizeDatabaseUrl(env.DATABASE_URL_UNPOOLED);
+
   if (env.VERCEL_ENV === "development") return true;
   if (env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview") {
     return false;
@@ -65,8 +77,8 @@ export function isDevEnvironment(env: DbUrlEnvSource = process.env): boolean {
   if (env.NODE_ENV === "test") return false;
   if (env.NODE_ENV === "development") return true;
 
-  const hasDev = Boolean(env.DEV_DATABASE_URL || env.DEV_DATABASE_URL_UNPOOLED);
-  const hasProd = Boolean(env.DATABASE_URL || env.DATABASE_URL_UNPOOLED);
+  const hasDev = Boolean(devDatabaseUrl || devDatabaseUrlUnpooled);
+  const hasProd = Boolean(databaseUrl || databaseUrlUnpooled);
 
   if (hasDev && !hasProd) return true;
   if (hasProd && !hasDev) return false;
@@ -86,8 +98,8 @@ export function isDevEnvironment(env: DbUrlEnvSource = process.env): boolean {
  */
 export function resolveDbUrls(env: DbUrlEnvSource = process.env): DbUrlPair {
   if (isDevEnvironment(env)) {
-    const pooledUrl = env.DEV_DATABASE_URL;
-    const directUrl = env.DEV_DATABASE_URL_UNPOOLED;
+    const pooledUrl = normalizeDatabaseUrl(env.DEV_DATABASE_URL);
+    const directUrl = normalizeDatabaseUrl(env.DEV_DATABASE_URL_UNPOOLED);
 
     if (!pooledUrl) {
       throw new Error(
@@ -107,8 +119,8 @@ export function resolveDbUrls(env: DbUrlEnvSource = process.env): DbUrlPair {
   }
 
   // Vercel production / preview、test、及其他非 dev 环境：使用 DATABASE_URL*
-  const pooledUrl = env.DATABASE_URL;
-  const directUrl = env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL;
+  const pooledUrl = normalizeDatabaseUrl(env.DATABASE_URL);
+  const directUrl = normalizeDatabaseUrl(env.DATABASE_URL_UNPOOLED);
 
   if (!pooledUrl) {
     throw new Error(

@@ -151,6 +151,13 @@ describeWhenLocalPostgresEnabled(
       expect(() =>
         createStorageClient({
           runtimeDatabaseUrl: runtimeUrl,
+          directDatabaseUrl: "   ",
+        }),
+      ).toThrow("DATABASE_URL_UNPOOLED 未配置。");
+
+      expect(() =>
+        createStorageClient({
+          runtimeDatabaseUrl: runtimeUrl,
           directDatabaseUrl: "file:.subhub/subhub.sqlite",
         }),
       ).toThrow("DATABASE_URL_UNPOOLED 必须是 Postgres URL。");

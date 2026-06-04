@@ -12,11 +12,25 @@ import { schema } from "./schema";
 const pooledRuntimeMaxConnections = 10;
 const directRuntimeMaxConnections = 1;
 
+const normalizeDatabaseUrl = (value: string | null | undefined) => {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+};
+
 const assertPostgresUrl = (label: string, value: string) => {
   if (!/^postgres(ql)?:\/\//.test(value)) {
     throw new Error(`${label} 必须是 Postgres URL。`);
   }
 };
+
+const hasExplicitDatabaseUrlOption = (
+  options: Pick<
+    PostgresClientOptions,
+    "runtimeDatabaseUrl" | "directDatabaseUrl"
+  >,
+) =>
+  Object.prototype.hasOwnProperty.call(options, "runtimeDatabaseUrl") ||
+  Object.prototype.hasOwnProperty.call(options, "directDatabaseUrl");
 
 export type PostgresDatabase = PostgresJsDatabase<typeof schema>;
 
@@ -41,31 +55,53 @@ export type PostgresClient = {
 export const resolveRuntimeDatabaseUrl = (
   options: Pick<PostgresClientOptions, "runtimeDatabaseUrl" | "env"> = {},
 ) => {
-  const url = options.runtimeDatabaseUrl ?? resolvePooledDbUrl(options.env);
-  assertPostgresUrl("pooled database URL", url);
+  if (Object.prototype.hasOwnProperty.call(options, "runtimeDatabaseUrl")) {
+    const url = normalizeDatabaseUrl(options.runtimeDatabaseUrl);
+
+    if (!url) {
+      throw new Error("DATABASE_URL 未配置。");
+    }
+
+    assertPostgresUrl("DATABASE_URL", url);
+    return url;
+  }
+
+  const url = resolvePooledDbUrl(options.env);
+  assertPostgresUrl("DATABASE_URL", url);
   return url;
 };
 
 export const resolveDirectDatabaseUrl = (
   options: Pick<PostgresClientOptions, "directDatabaseUrl" | "env"> = {},
 ) => {
-  const url = options.directDatabaseUrl ?? resolveDirectDbUrl(options.env);
-  assertPostgresUrl("direct database URL", url);
+  if (Object.prototype.hasOwnProperty.call(options, "directDatabaseUrl")) {
+    const url = normalizeDatabaseUrl(options.directDatabaseUrl);
+
+    if (!url) {
+      throw new Error("DATABASE_URL_UNPOOLED 未配置。");
+    }
+
+    assertPostgresUrl("DATABASE_URL_UNPOOLED", url);
+    return url;
+  }
+
+  const url = resolveDirectDbUrl(options.env);
+  assertPostgresUrl("DATABASE_URL_UNPOOLED", url);
   return url;
 };
 
 export const resolvePostgresUrlBoundary = (
   options: PostgresClientOptions = {},
 ): PostgresResolvedUrlBoundary => {
-  if (options.runtimeDatabaseUrl || options.directDatabaseUrl) {
+  if (hasExplicitDatabaseUrlOption(options)) {
     return {
       runtimeUrl: resolveRuntimeDatabaseUrl(options),
       directUrl: resolveDirectDatabaseUrl(options),
     };
   }
   const { pooledUrl, directUrl } = resolveDbUrls(options.env);
-  assertPostgresUrl("pooled database URL", pooledUrl);
-  assertPostgresUrl("direct database URL", directUrl);
+  assertPostgresUrl("DATABASE_URL", pooledUrl);
+  assertPostgresUrl("DATABASE_URL_UNPOOLED", directUrl);
   return { runtimeUrl: pooledUrl, directUrl };
 };
 
