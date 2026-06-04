@@ -6,7 +6,7 @@
  * postgres-client.ts、drizzle.config.ts、数据库脚本共用的唯一规则，
  * 防止未来再次出现各自手写 fallback 的漂移。
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   isDevEnvironment,
@@ -63,7 +63,8 @@ describe("isDevEnvironment", () => {
     expect(
       isDevEnvironment({
         DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub",
-        DEV_DATABASE_URL_UNPOOLED: "postgresql://dev@localhost:5432/subhub_direct",
+        DEV_DATABASE_URL_UNPOOLED:
+          "postgresql://dev@localhost:5432/subhub_direct",
         DATABASE_URL: "postgresql://prod@neon.tech:5432/subhub",
         DATABASE_URL_UNPOOLED: "postgresql://prod@neon.tech:5432/subhub_direct",
       }),
@@ -82,7 +83,8 @@ describe("resolveDbUrls — 本地 development", () => {
     const result = resolveDbUrls({
       NODE_ENV: "development",
       DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub_dev",
-      DEV_DATABASE_URL_UNPOOLED: "postgresql://dev@localhost:5432/subhub_dev_direct",
+      DEV_DATABASE_URL_UNPOOLED:
+        "postgresql://dev@localhost:5432/subhub_dev_direct",
     });
 
     expect(result).toEqual({
@@ -96,7 +98,8 @@ describe("resolveDbUrls — 本地 development", () => {
     // 误判环境。修复后应正确走 DEV_* 分支。
     const result = resolveDbUrls({
       DEV_DATABASE_URL: "postgresql://dev@localhost:5432/subhub_dev",
-      DEV_DATABASE_URL_UNPOOLED: "postgresql://dev@localhost:5432/subhub_dev_direct",
+      DEV_DATABASE_URL_UNPOOLED:
+        "postgresql://dev@localhost:5432/subhub_dev_direct",
     });
 
     expect(result).toEqual({
@@ -130,7 +133,8 @@ describe("resolveDbUrls — Vercel development", () => {
       NODE_ENV: "development",
       VERCEL_ENV: "development",
       DEV_DATABASE_URL: "postgresql://dev@localhost:5432/vercel_dev",
-      DEV_DATABASE_URL_UNPOOLED: "postgresql://dev@localhost:5432/vercel_dev_direct",
+      DEV_DATABASE_URL_UNPOOLED:
+        "postgresql://dev@localhost:5432/vercel_dev_direct",
     });
 
     expect(result).toEqual({
@@ -146,7 +150,8 @@ describe("resolveDbUrls — Vercel production / preview", () => {
       NODE_ENV: "production",
       VERCEL_ENV: "production",
       DATABASE_URL: "postgresql://prod@neon.tech:5432/subhub",
-      DATABASE_URL_UNPOOLED: "postgresql://prod@neon.tech:5432/subhub?sslmode=require",
+      DATABASE_URL_UNPOOLED:
+        "postgresql://prod@neon.tech:5432/subhub?sslmode=require",
     });
 
     expect(result).toEqual({
@@ -189,8 +194,12 @@ describe("resolveDbUrls — test 环境", () => {
       DATABASE_URL_UNPOOLED: "postgresql://test@localhost:5432/subhub_test",
     });
 
-    expect(result.pooledUrl).toBe("postgresql://test@localhost:5432/subhub_test");
-    expect(result.directUrl).toBe("postgresql://test@localhost:5432/subhub_test");
+    expect(result.pooledUrl).toBe(
+      "postgresql://test@localhost:5432/subhub_test",
+    );
+    expect(result.directUrl).toBe(
+      "postgresql://test@localhost:5432/subhub_test",
+    );
   });
 });
 
@@ -252,6 +261,8 @@ describe("真源一致性回归测试", () => {
     });
 
     expect(result.pooledUrl).toBe("postgresql://prod@neon.tech:5432/prod");
-    expect(result.directUrl).toBe("postgresql://prod@neon.tech:5432/prod_direct");
+    expect(result.directUrl).toBe(
+      "postgresql://prod@neon.tech:5432/prod_direct",
+    );
   });
 });

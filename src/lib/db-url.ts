@@ -58,10 +58,7 @@ type RawEnvSource = Partial<
  */
 export function isDevEnvironment(env: RawEnvSource = process.env): boolean {
   if (env.VERCEL_ENV === "development") return true;
-  if (
-    env.VERCEL_ENV === "production" ||
-    env.VERCEL_ENV === "preview"
-  ) {
+  if (env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview") {
     return false;
   }
   if (env.NODE_ENV === "test") return false;

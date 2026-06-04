@@ -1,7 +1,11 @@
 import postgres, { type Sql } from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-import { resolveDbUrls, resolveDirectDbUrl, resolvePooledDbUrl } from "@/lib/db-url";
+import {
+  resolveDbUrls,
+  resolveDirectDbUrl,
+  resolvePooledDbUrl,
+} from "@/lib/db-url";
 import { schema } from "./schema";
 
 const pooledRuntimeMaxConnections = 10;

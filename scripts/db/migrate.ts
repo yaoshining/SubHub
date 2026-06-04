@@ -1,8 +1,8 @@
-import { loadEnvConfig } from '@next/env'
+import { loadEnvConfig } from "@next/env";
 import { getStorageClient } from "../../src/server/storage/client";
 
-const projectDir = process.cwd()
-loadEnvConfig(projectDir)
+const projectDir = process.cwd();
+loadEnvConfig(projectDir);
 
 const main = async () => {
   const client = getStorageClient();
