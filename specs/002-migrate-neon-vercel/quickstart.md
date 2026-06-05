@@ -101,11 +101,23 @@
 3. 对目标环境执行 migration：`pnpm db:migrate`
 4. 执行 bootstrap：`pnpm db:bootstrap`
 
+说明：
+
+- `pnpm db:bootstrap` 默认只校验并输出当前环境的 bootstrap 状态
+- 若是上线前 greenfield 场景，且数据库内仍无管理员，可临时设置 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true`，并同时提供 `INITIAL_ADMIN_IDENTIFIER`、`INITIAL_ADMIN_DISPLAY_NAME`、`INITIAL_ADMIN_PASSWORD` 后再次执行 `pnpm db:bootstrap`
+- 一旦已有管理员，或完成受控导入后，必须关闭 `ALLOW_INITIAL_ADMIN_BOOTSTRAP`
+
 ## 4. 非生产 seed
 
 - dev：`pnpm db:seed:dev`
 - staging：`pnpm db:seed:staging`
 - production：禁止执行 seed
+
+当前最小 seed 规则：
+
+- dev / staging seed 只写入可识别、可重复覆盖的 non-production 占位数据
+- seed 使用固定前缀 ID，可通过 reset / truncate / 删除这些固定记录清理
+- seed 不负责创建管理员；首个管理员初始化与 seed 分离
 
 ## 5. 测试数据库准备与重置
 
@@ -173,7 +185,7 @@ CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 
 ### production
 
 1. 运行 production migration workflow
-2. 执行 bootstrap
-3. 如当前环境尚无管理员，执行首个管理员初始化
+2. 执行 `pnpm db:bootstrap`
+3. 如当前环境尚无管理员，临时开启 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 并提供 `INITIAL_ADMIN_*` 后再执行一次 `pnpm db:bootstrap`
 4. 发布/确认 `main` 对应 Production 部署
 5. 执行 production smoke test

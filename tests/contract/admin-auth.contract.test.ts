@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { NextRequest } from "next/server";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   getStorageClient,
@@ -113,6 +113,21 @@ describe("管理员初始化与认证 API 契约", () => {
     ]);
     const users = await getStorageClient().db.query.adminUsers.findMany();
     expect(users).toHaveLength(1);
+  });
+
+  it("在非 test 环境未显式允许时拒绝首个管理员初始化", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("ALLOW_INITIAL_ADMIN_BOOTSTRAP", "false");
+
+    const response = await bootstrapRoute.POST(
+      jsonRequest("http://localhost/api/admin/bootstrap", {
+        identifier: "Admin@Example.com",
+        displayName: "Admin",
+        password: "CorrectHorse42!",
+      }),
+    );
+
+    await expectApiError(response, "FORBIDDEN");
   });
 
   it("完成登录、当前用户查询、Dashboard summary 与登出契约", async () => {

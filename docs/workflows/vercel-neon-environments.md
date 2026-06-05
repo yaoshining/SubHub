@@ -48,3 +48,13 @@ CALLER_KEY_SECRET=replace-with-at-least-32-chars
 - 本地 development 缺少 `DEV_DATABASE_URL` / `DEV_DATABASE_URL_UNPOOLED` 时，实例必须失败
 - 运行时请求使用 pooled `DATABASE_URL`
 - migration / bootstrap / cutover 使用 direct `DATABASE_URL_UNPOOLED`
+- 只有显式设置 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 时，才允许执行首个管理员初始化；已有管理员后必须关闭
+- `pnpm db:seed:dev` / `pnpm db:seed:staging` 只允许写入 non-production 占位数据，production 永不执行 seed
+
+## 上线前最小初始化顺序
+
+1. 对目标环境执行 `pnpm db:migrate`
+2. 执行 `pnpm db:bootstrap`，确认 `schemaReady` / `bootstrapReady`
+3. 若是 greenfield 且无管理员，临时启用 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 与 `INITIAL_ADMIN_*` 后再次执行 `pnpm db:bootstrap`
+4. dev / staging 如需样例数据，再执行 `pnpm db:seed:dev` 或 `pnpm db:seed:staging`
+5. production 路径到此为止；不得再执行任意 seed

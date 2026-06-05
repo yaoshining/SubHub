@@ -97,6 +97,9 @@
 - production 必须是 `seedState = not_applicable`
 - staging / development 允许 `seedState = applied`
 - 任一状态未完成时，实例不得标记为可用
+- `adminInitializationState = required` 只表示当前仍处于无管理员的 greenfield 阶段；只有显式允许首个管理员初始化时，才允许转为 `completed`
+- 当已存在管理员（无论来源于首个初始化还是受控导入）时，后续重复初始化必须被拒绝
+- 当前阶段的 bootstrap 状态可以由受控脚本即时计算并输出，不强制要求另建持久化状态表
 
 ## ReleaseCutover
 

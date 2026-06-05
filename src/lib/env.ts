@@ -35,6 +35,8 @@ const productionSecrets = [
   "CALLER_KEY_SECRET",
 ] as const;
 
+const initialAdminBootstrapEnabledValues = new Set(["1", "true", "yes", "on"]);
+
 export type DeploymentProvider = "vercel" | "local";
 export type VercelEnvironment =
   | z.infer<typeof vercelEnvironmentSchema>
@@ -361,3 +363,14 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
     requiresDirectMigrationGate: runtimeIdentity.requiresDirectMigrationGate,
   };
 }
+
+export const isInitialAdminBootstrapAllowed = (
+  source: NodeJS.ProcessEnv = process.env,
+) => {
+  if (source.NODE_ENV === "test") {
+    return true;
+  }
+
+  const raw = source.ALLOW_INITIAL_ADMIN_BOOTSTRAP?.trim().toLowerCase();
+  return raw ? initialAdminBootstrapEnabledValues.has(raw) : false;
+};
