@@ -47,9 +47,9 @@
 - `PGlite`：用于快速数据库单测层，覆盖少量 repository / service 层数据库行为，作为比 mock 更真实、比真实 Postgres 更快的测试层。
 - `本地 Docker Postgres`：作为本地真实数据库测试主线，负责本地 migration、integration、contract、db tests，以及 reset / migrate / seed / 验证闭环。
 - `GitHub Actions Postgres service`：作为 CI 真实数据库测试主线，负责每次 CI run 的临时干净数据库、migration、integration、contract 与 db tests。
-- `Neon`：仅用于 staging / preview / production / cutover / 部署验证层，负责环境映射、发布前验证、正式部署验证与生产切换。
+- `Neon`：仅用于 staging / preview / production / 部署验证层，负责环境映射、发布前验证与正式部署验证。
 
-当前结论：PGlite 已完成最小试点验证，可作为 SubHub 的“快速数据库单测层”，但它只服务于快速数据库单测，不作为正式运行时数据库，不作为 SQLite -> Postgres cutover 验证底座，也不替代本地 Docker Postgres、GitHub Actions Postgres service 或 Neon staging / deploy verification 链路。Neon 不再作为本地或 CI 日常测试主库，以避免远程网络波动、共享数据与环境污染影响测试稳定性。
+当前结论：PGlite 已完成最小试点验证，可作为 SubHub 的“快速数据库单测层”，但它只服务于快速数据库单测，不作为正式运行时数据库，也不替代本地 Docker Postgres、GitHub Actions Postgres service 或 Neon staging / deploy verification 链路。Neon 不再作为本地或 CI 日常测试主库，以避免远程网络波动、共享数据与环境污染影响测试稳定性。
 
 ### 用户故事 1 - 生产环境可稳定运行当前 MVP (Priority: P1)
 
@@ -84,19 +84,19 @@
 
 ---
 
-### 用户故事 3 - 现有 SQLite 基线可有序迁移到 Neon Postgres (Priority: P3)
+### 用户故事 3 - SQLite 历史数据迁移不纳入当前 002 交付范围 (Priority: P3)
 
-作为维护者，我希望现有 SQLite + Drizzle 的 schema 语义、关键持久化数据和运行约定可以迁移到 Neon Postgres，并为 Postgres 建立独立且可维护的 migration 基线，从而把当前 MVP 从单机存储基线切换到正式云数据库，而不丢失已有可运营对象。
+作为维护者，我希望 002 迁移线明确以 Neon Postgres 作为唯一正式数据基线，而不是继续为 SQLite 历史数据导入、cutover 或回滚设计实施目标，从而让当前阶段聚焦正式接入、初始化与环境治理。
 
-**优先级原因**: 没有可重复执行的迁移路径，就无法把 001 的既有成果安全带入新的运行底座。
+**优先级原因**: 当前项目尚未正式上线，SQLite 只是 MVP 早期临时实现基线；若继续把历史数据迁移写成活跃交付目标，会放大范围并误导后续实现。
 
-**独立测试**: 对当前 SQLite 基线执行 schema 对齐、数据迁移、迁移后校验和回滚预案检查，可独立验证数据库迁移能力。
+**独立测试**: `spec.md`、`plan.md`、`tasks.md`、`quickstart.md` 与相关 issue 边界一致表达：当前不要求将 SQLite 历史数据迁入正式环境，Postgres baseline 独立成立。
 
 **验收场景**:
 
-1. **Given** 当前仓库已有 SQLite schema 与迁移历史，**When** 团队准备切换到 Neon Postgres，**Then** 系统有一条明确、可重复、可验证的 Postgres schema 建立与切换路径，而不是要求原样复用 SQLite 时代的 migration 历史。
-2. **Given** 现有管理数据已存在于 SQLite，**When** 执行迁移，**Then** 管理员、成员邀请、后台会话、Provider、ProviderCredential、CallerKey、CallerKeyRotation、请求记录摘要和动作结果都能按既有语义迁移到 Postgres。
-3. **Given** 迁移过程中发现结构或数据不兼容，**When** 迁移校验失败，**Then** 系统中止切换并保留明确的问题定位与恢复路径。
+1. **Given** 当前仓库仍保留 SQLite 历史实现痕迹，**When** 维护者查看 002 迁移线文档，**Then** 文档会明确说明这些内容只作为历史实现参考，而不是当前正式交付输入。
+2. **Given** 团队准备推进 v0.2.0 的 Neon / Vercel 迁移，**When** 拆分 issue、plan 或 tasks，**Then** 不再把 SQLite 数据导入、cutover 校验或回滚编排作为必须完成的实施目标。
+3. **Given** Postgres schema baseline 与运行时接入已经建立，**When** 维护者评估当前是否具备上线前基础条件，**Then** 不需要以“先完成 SQLite 历史数据迁移”为前提才判定主线成立。
 
 ---
 
@@ -144,8 +144,8 @@
 - **FR-006**: 系统 MUST 明确定义 production、staging、dev 和 test 四类数据库的职责边界，并防止不同环境在无明确授权时串用同一数据目标。
 - **FR-007**: 系统 MUST 将当前 SQLite + Drizzle 的 schema 语义、核心约束与数据库访问约定迁移到适配 Neon Postgres 的正式方案。
 - **FR-008**: 系统 MUST 明确需要改造的数据库相关边界，至少包括 schema 真源、migration 目录、数据库 client、Drizzle 配置、环境变量读取与数据库 URL 解析。
-- **FR-009**: 系统 MUST 为当前已持久化的核心管理数据定义迁移范围，至少覆盖管理员、成员邀请、后台会话、Provider、ProviderCredential、CallerKey、CallerKeyRotation、SubtitleSearchRequest、SubtitleDownloadRequest 和 AdminActionResult。
-- **FR-010**: 系统 MUST 定义从 SQLite 到 Neon Postgres 的迁移策略，包括 Postgres 基线 schema / migration 建立、数据搬迁、迁移后校验和切换前检查，而不是把 SQLite 时代的 migration 历史作为 1:1 迁移目标。
+- **FR-009**: 系统 MUST 将当前正式交付基线建立在独立的 Postgres schema / migration / bootstrap 路径上，不以 SQLite 历史数据导入为前置条件。
+- **FR-010**: 系统 MUST 明确 SQLite 历史数据迁移不属于当前 002 的正式交付范围；Postgres 基线独立建立，且不把 SQLite 时代的 migration 历史作为 1:1 迁移目标。
 - **FR-011**: 系统 MUST 定义 bootstrap、seed 和管理员初始化在新环境下的职责边界，明确哪些是首次环境初始化必需步骤，哪些属于可选测试或演示数据。
 - **FR-012**: 系统 MUST 定义 production 环境中 migration 的执行策略，并明确它与应用部署、发布确认和回滚判断之间的顺序关系。
 - **FR-013**: 系统 MUST 为 pooled 与 unpooled 数据库 URL 定义明确使用边界，使运行时请求路径、迁移流程和运维脚本不会误用同一连接类型。
@@ -162,7 +162,7 @@
 - **FR-023**: 系统 MUST 约束数据库相关单测、集成测试、契约测试与 CI 中需要真实数据库行为验证的测试默认连接 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`；本地真实数据库测试默认连接本地 Docker Postgres，CI 真实数据库测试默认连接 GitHub Actions Postgres service，并在测试前完成 schema 建立与最小 fixture 准备。
 - **FR-024**: 系统 MUST 允许测试流程在结束后执行清理、重建或 reset，使 `test` 数据库保持干净、隔离、可重复的运行基线；测试不得依赖 dev、staging 或 production 中的历史脏数据。
 - **FR-025**: 系统 MUST 将当前阶段的测试数据库策略收敛为单一的 `test` 数据库语义：本地日常真实数据库测试走本地 Docker Postgres，CI 日常真实数据库测试走 GitHub Actions Postgres service；不得再并行引入共享远程 test branch、共享远程 test database 或每次 PR 动态创建临时数据库 branch 作为另一条日常主线。
-- **FR-026**: 系统 MAY 在数据库相关单测中使用 PGlite 作为快速数据库单测层，但该层 MUST 与正式 Postgres / Neon 验证链路隔离，不得替代本地 Docker Postgres、GitHub Actions Postgres service、Neon staging、cutover 或 deploy verification。
+- **FR-026**: 系统 MAY 在数据库相关单测中使用 PGlite 作为快速数据库单测层，但该层 MUST 与正式 Postgres / Neon 验证链路隔离，不得替代本地 Docker Postgres、GitHub Actions Postgres service、Neon staging 或 deploy verification。
 - **FR-027**: 系统 MUST 明确 Neon 不再作为本地或 CI 日常数据库测试主库；本地与 CI 日常测试必须优先走本地 Docker Postgres 与 GitHub Actions Postgres service，不得默认连接 dev、staging、prod 或其他共享远程数据库。
 - **FR-028**: 系统 MUST 为本地 Docker Postgres 测试容器定义受控生命周期规则：测试前必须确认容器可用并完成 reset / migrate / 必要 seed；测试后必须至少通过 reset database、truncate / reseed、stop container 或 remove container 之一恢复到可重复的干净基线，但不机械要求每次都销毁容器。
 - **FR-029**: 系统 MUST 明确本地真实数据库测试的核心要求是“数据库测试状态干净、隔离、可重复”，而不是固定容器销毁策略；允许采用“容器常驻 + 测试前 reset”或“测试前启动、测试后停止/删除”等方式，但不得完全交由个人习惯决定。
@@ -170,13 +170,13 @@
 ### 非功能需求 *(mandatory)*
 
 - **NFR-001 (代码质量)**: Feature MUST 要求运行时迁移相关改动继续遵循 `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm db:generate`、`pnpm db:migrate`、`pnpm db:check`、`pnpm api:check` 等门禁，并在正式实现前明确最小执行矩阵。
-- **NFR-002 (测试)**: Feature MUST 要求至少覆盖环境映射、数据库 URL 解析、Postgres schema/migration、SQLite 数据迁移校验、bootstrap 流程、production/preview/development 可用性验证、本地 Docker Postgres 与 GitHub Actions Postgres service 的真实数据库测试主线、独立 `test` 数据库隔离与 reset 策略、容器可用性与测试后清理规则，以及现有 MVP 回归验证。
+- **NFR-002 (测试)**: Feature MUST 要求至少覆盖环境映射、数据库 URL 解析、Postgres schema/migration、bootstrap 流程、production/preview/development 可用性验证、本地 Docker Postgres 与 GitHub Actions Postgres service 的真实数据库测试主线、独立 `test` 数据库隔离与 reset 策略、容器可用性与测试后清理规则，以及现有 MVP 回归验证。
 - **NFR-003 (UX 一致性)**: Feature MUST 要求迁移后对管理员和外部调用方的可见行为保持与 `001-mvp-admin-console` 一致；若运行时错误暴露方式变化，必须保持错误语义清晰、可识别且不改变产品任务路径。
 - **NFR-004 (性能)**: Feature MUST 要求迁移到 Neon Postgres 后，现有 MVP 核心路径性能不低于 001 所定义的基线，且数据库切换不得导致明显的请求挂起或后台页面长时间不可用。
 - **NFR-005 (设计保真)**: Feature MUST 声明本次迁移不改变 `DESIGN.md`、共享布局和 page specs 的功能边界；若需要页面提示或状态文案调整，只能作为基础设施迁移的最小表现层变化。
 - **NFR-006 (并行隔离)**: Feature MUST 绑定当前 active feature 目录 `specs/002-migrate-neon-vercel`，并确认该 worktree 当前只跟踪 002 基础设施迁移 feature。
 - **NFR-007 (Issue 同步范围)**: 后续 tasks 或 issue 同步 MUST 仅面向 `specs/002-migrate-neon-vercel`，不得与 `specs/001-mvp-admin-console` 混批。
-- **NFR-008 (测试分层边界)**: Feature MUST 保持测试分层清晰：PGlite 仅用于快速数据库单测层；本地 Docker Postgres 是本地真实数据库测试主线；GitHub Actions Postgres service 是 CI 真实数据库测试主线；Neon 仅保留给 staging / preview / production / cutover / deploy / release gate 验证。
+- **NFR-008 (测试分层边界)**: Feature MUST 保持测试分层清晰：PGlite 仅用于快速数据库单测层；本地 Docker Postgres 是本地真实数据库测试主线；GitHub Actions Postgres service 是 CI 真实数据库测试主线；Neon 仅保留给 staging / preview / production / deploy / release gate 验证。
 - **NFR-009 (本地测试生命周期)**: Feature MUST 保证本地 Docker Postgres 测试容器的使用规范可执行、可文档化、可重复；不允许形成“长期脏测试库”“手动随缘清理”或“默认复用共享数据库”的隐式习惯。
 
 ### 关键实体 *(如功能涉及数据请填写)*
@@ -185,7 +185,7 @@
 - **数据库目标**: 描述 prod、staging、dev、test 四类 Neon 数据库的职责边界、使用场景与禁止串用规则。
 - **迁移动作**: 描述一次 schema 变更或数据迁移的执行单元，包含目标环境、执行时机、校验要求和失败处理边界。
 - **初始化状态**: 描述一个数据库环境是否已完成必需的 schema 建立、bootstrap、管理员初始化与最小可运行条件检查。
-- **发布切换窗口**: 描述从旧 SQLite 基线切换到 Neon Postgres + Vercel 正式路线时的受控发布阶段、验证动作和回退判断。
+- **发布准备状态**: 描述从 Postgres schema baseline、bootstrap 到生产可用性验证之间的受控发布阶段、验证动作和阻断条件。
 
 ## 成功标准 *(mandatory)*
 
@@ -194,7 +194,7 @@
 - **SC-001**: `main` 分支对应的 production 部署可在完成必要 migration 与初始化后稳定运行现有 MVP，且管理后台与对外 API 的核心路径无功能回退。
 - **SC-002**: `preview` 分支对应的 Preview 部署可稳定连接 staging 数据库运行，并能完成发布前验证而不访问 production 或 dev 数据库。
 - **SC-003**: 其他命中仓库级 Preview 分支白名单的分支（`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`）以及本地 development 可稳定连接 dev 数据库运行，且 100% 不会因默认配置误连 production 数据库；非白名单 Preview 分支 100% 会被明确阻断。
-- **SC-004**: 当前 SQLite 基线中的核心持久化对象可按定义迁移到 Neon Postgres，迁移后关键对象数量、状态语义和基本可用性校验通过率达到 100%。
+- **SC-004**: 002 迁移线相关文档、任务与 issue 边界 100% 不再把“SQLite 历史数据迁移到 Neon”视为当前正式交付要求。
 - **SC-005**: production migration 流程具备清晰执行责任与前后校验步骤，维护者可在一次发布窗口内明确判断“可继续发布”或“必须中止切换”。
 - **SC-006**: 迁移完成后，现有 MVP 的登录、Dashboard、Providers、Provider Detail、API Keys、Users、Settings、统一字幕查询与下载主路径均可在至少一个 production、一个 staging 和一个 dev 环境完成验证。
 - **SC-007**: 数据库相关单测、集成测试、契约测试与 CI 真实数据库校验 100% 使用独立 `test` 数据库运行，不复用 dev、staging 或 production，且测试执行前后都可通过 reset、重建或受控容器生命周期操作恢复干净基线。
@@ -208,7 +208,7 @@
 - 数据库相关测试默认使用统一的 `test` 数据库语义，并通过 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 接入；本地日常真实数据库测试对应本地 Docker Postgres，CI 日常真实数据库测试对应 GitHub Actions Postgres service；当前阶段不引入共享远程 test branch，也不要求每次 PR 或每次测试动态创建临时数据库 branch。
 - PGlite 最小试点已证明其适合少量 repository / service 层快速数据库单测，但该结论不改变“本地 Docker Postgres + GitHub Actions Postgres service”作为日常真实数据库测试主线，以及 Neon 作为运行时环境验证与发布验证层的地位。
 - 未来可能引入每个 PR 独立数据库 branch，但当前阶段只要求为其保留扩展空间，不要求在本 feature 中交付自动化能力。
-- 当前已有 SQLite 数据可能需要迁移到 Postgres；若某些历史数据不满足结构约束，迁移流程必须显式暴露问题，而不是静默跳过。
+- SQLite 相关资产只作为历史实现参考；当前 002 feature 不以导入这些历史数据作为正式交付前提。
 - 当前 feature 可以引入运行时和部署层面的必要环境变量调整，但不应重塑产品层认证模型、权限模型或页面信息架构。
 
 ## 页面规范更新

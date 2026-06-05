@@ -9,9 +9,9 @@
 - 已准备本地 Docker Postgres，作为本地真实数据库测试主线
 - 已准备统一的 `test` 数据库语义：本地映射到 Docker Postgres 测试库，CI 映射到 GitHub Actions Postgres service container
 - 已准备 Vercel 项目与 Production / Preview / Development 环境
-- 当前仓库仍保留 SQLite 源数据或可恢复备份
+- 当前仓库可能仍保留 SQLite 历史实现资产，但它们不属于当前正式交付前置条件
 
-说明：Neon 不再作为本地或 CI 日常测试主库。日常真实数据库测试默认走本地 Docker Postgres 与 GitHub Actions Postgres service；Neon 仅保留给 staging / preview / production / cutover / 部署验证。
+说明：Neon 不再作为本地或 CI 日常测试主库。日常真实数据库测试默认走本地 Docker Postgres 与 GitHub Actions Postgres service；Neon 仅保留给 staging / preview / production / 部署验证。
 
 本地 Docker Postgres 最小基线：
 
@@ -101,21 +101,13 @@
 3. 对目标环境执行 migration：`pnpm db:migrate`
 4. 执行 bootstrap：`pnpm db:bootstrap`
 
-## 4. 可选：从 SQLite 导入历史数据
-
-1. 准备 SQLite 备份
-2. 执行导入：`pnpm db:import:sqlite`
-3. 执行迁移后校验：`pnpm db:validate:cutover`
-
-说明：SQLite 读取能力应由迁移专用脚本或一次性导入工具承载，不进入正式 Vercel 运行时部署链路。
-
-## 5. 非生产 seed
+## 4. 非生产 seed
 
 - dev：`pnpm db:seed:dev`
 - staging：`pnpm db:seed:staging`
 - production：禁止执行 seed
 
-## 6. 测试数据库准备与重置
+## 5. 测试数据库准备与重置
 
 数据库相关测试执行前，应保证 `test` 数据库具备以下条件：
 
@@ -147,11 +139,11 @@
 - 常驻容器路径：启动一次 Docker Postgres `test` 容器，后续每次测试前执行 prepare / reset，测试后按需保留容器，但不得跳过下一次测试前的干净基线恢复
 - 按需容器路径：测试前启动 Docker Postgres `test` 容器并完成 prepare / reset，测试后执行 stop 或 remove；下一次测试仍需重新回到干净基线
 
-补充：本地快速数据库单测可使用 PGlite，但正式 migration 验证、Postgres schema / migration、SQLite cutover 与部署验证仍必须走“本地 Docker Postgres / GitHub Actions Postgres service + Neon 验证层”路线。
+补充：本地快速数据库单测可使用 PGlite，但正式 migration 验证、Postgres schema / migration 与部署验证仍必须走“本地 Docker Postgres / GitHub Actions Postgres service + Neon 验证层”路线。
 
 CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 应通过 Postgres service container 获取每次 run 的临时干净数据库，不依赖共享远程测试库。
 
-## 7. 验证
+## 6. 验证
 
 执行：
 
@@ -170,7 +162,7 @@ CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 
 - Settings 就绪状态
 - 统一字幕查询与下载主路径
 
-## 8. 发布顺序
+## 7. 发布顺序
 
 ### staging / preview
 
@@ -180,9 +172,8 @@ CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 
 
 ### production
 
-1. 确认当前是 **greenfield production** 还是 **SQLite cutover production**
-2. 运行 production migration workflow
-3. 若为 greenfield：执行 bootstrap + 首个管理员初始化
-4. 若为 cutover：执行 SQLite 数据导入 + cutover 校验，不触发首个管理员初始化
-5. 发布/确认 `main` 对应 Production 部署
-6. 执行 production smoke test
+1. 运行 production migration workflow
+2. 执行 bootstrap
+3. 如当前环境尚无管理员，执行首个管理员初始化
+4. 发布/确认 `main` 对应 Production 部署
+5. 执行 production smoke test
