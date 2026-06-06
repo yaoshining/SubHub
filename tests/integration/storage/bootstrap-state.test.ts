@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   inspectBootstrapState,
+  resetBootstrapRuntimeMarkersForTesting,
   runBootstrap,
 } from "@/server/storage/bootstrap";
 import { createStorageClient } from "@/server/storage/client";
@@ -52,6 +53,7 @@ describeWhenLocalPostgresEnabled(
     });
 
     beforeEach(async () => {
+      resetBootstrapRuntimeMarkersForTesting();
       await directSql?.unsafe(resetBootstrapTablesSql);
     });
 

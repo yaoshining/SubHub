@@ -13,6 +13,7 @@ import {
 import {
   applyManagedSeed,
   inspectBootstrapState,
+  resetBootstrapRuntimeMarkersForTesting,
   runBootstrap,
 } from "@/server/storage/bootstrap";
 import { providers } from "@/server/storage/schema";
@@ -22,6 +23,7 @@ let tempDir: string;
 describe("storage/bootstrap", () => {
   beforeEach(async () => {
     tempDir = mkdtempSync(join(tmpdir(), "subhub-bootstrap-unit-"));
+    resetBootstrapRuntimeMarkersForTesting();
     await initializePGliteStorageForTesting(join(tempDir, "test.sqlite"));
   });
 

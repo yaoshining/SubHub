@@ -20,6 +20,30 @@ export type BootstrapMode = "production" | "staging" | "development";
 export type SeedState = "not_applicable" | "pending" | "applied";
 export type AdminInitializationState = "migrated" | "required" | "completed";
 
+/**
+ * 三态语义（与 `specs/002-migrate-neon-vercel/data-model.md` 的 `BootstrapState`
+ * 保持一致，但当前实现不持久化"已 bootstrap 初始化"标记）：
+ *
+ * - `required`：数据库中没有任何管理员，处于 greenfield 阶段；只有显式允许
+ *   首个管理员初始化时，才允许进入后续状态。
+ * - `migrated`：数据库中已存在管理员（来源可能是首次 bootstrap 或受控导入），
+ *   但当前进程未通过 `runBootstrap` 触发 `createInitialAdmin`。
+ *   当前实现凭 `adminUsersCount > 0` 推断，因此**不能**用来严格区分
+ *   "bootstrap 创建"与"受控导入"。
+ * - `completed`：当前进程已通过 `runBootstrap` 显式完成首次管理员初始化。
+ *   该结论仅在**同一进程内**可稳定复现（基于进程内标志）；跨进程再次
+ *   `inspectBootstrapState` 时会回落为 `migrated`，直到未来引入持久化标记。
+ *
+ * 如需在外部 `inspectBootstrapState`（无 override）下也能稳定拿到
+ * `completed`，必须引入持久化标记（schema 列 / 元数据表 / 配置项等），
+ * 不应继续依赖 `adminUsersCount` 隐式推断。
+ */
+let hasInitializedInitialAdminInProcess = false;
+
+export const resetBootstrapRuntimeMarkersForTesting = () => {
+  hasInitializedInitialAdminInProcess = false;
+};
+
 export type BootstrapState = {
   schemaReady: boolean;
   bootstrapReady: boolean;
@@ -82,6 +106,24 @@ const resolveAdminUsersCount = async (db: StorageDatabase) => {
   return Number(row?.count ?? 0);
 };
 
+const resolveAdminInitializationState = ({
+  adminUsersCount,
+  hasInitializedInitialAdminInProcess,
+}: {
+  adminUsersCount: number;
+  hasInitializedInitialAdminInProcess: boolean;
+}): AdminInitializationState => {
+  if (adminUsersCount === 0) {
+    return "required";
+  }
+
+  if (hasInitializedInitialAdminInProcess) {
+    return "completed";
+  }
+
+  return "migrated";
+};
+
 const buildBootstrapState = ({
   mode,
   now,
@@ -100,7 +142,10 @@ const buildBootstrapState = ({
   const schemaReady = missingTables.length === 0;
   const adminInitializationState =
     adminInitializationStateOverride ??
-    (adminUsersCount > 0 ? "migrated" : "required");
+    resolveAdminInitializationState({
+      adminUsersCount,
+      hasInitializedInitialAdminInProcess,
+    });
   const seedState =
     seedStateOverride ?? (mode === "production" ? "not_applicable" : "pending");
 
@@ -178,6 +223,7 @@ export const runBootstrap = async ({
         allowBootstrap: true,
       });
       createdInitialAdmin = true;
+      hasInitializedInitialAdminInProcess = true;
       adminInitializationStateOverride = "completed";
     }
   }
