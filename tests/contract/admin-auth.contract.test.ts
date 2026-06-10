@@ -119,15 +119,19 @@ describe("管理员初始化与认证 API 契约", () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("ALLOW_INITIAL_ADMIN_BOOTSTRAP", "false");
 
-    const response = await bootstrapRoute.POST(
-      jsonRequest("http://localhost/api/admin/bootstrap", {
-        identifier: "Admin@Example.com",
-        displayName: "Admin",
-        password: "CorrectHorse42!",
-      }),
-    );
+    try {
+      const response = await bootstrapRoute.POST(
+        jsonRequest("http://localhost/api/admin/bootstrap", {
+          identifier: "Admin@Example.com",
+          displayName: "Admin",
+          password: "CorrectHorse42!",
+        }),
+      );
 
-    await expectApiError(response, "FORBIDDEN");
+      await expectApiError(response, "FORBIDDEN");
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("完成登录、当前用户查询、Dashboard summary 与登出契约", async () => {

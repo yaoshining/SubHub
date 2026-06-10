@@ -22,27 +22,17 @@ export type AdminInitializationState = "migrated" | "required" | "completed";
 
 /**
  * 三态语义（与 `specs/002-migrate-neon-vercel/data-model.md` 的 `BootstrapState`
- * 保持一致，但当前实现不持久化"已 bootstrap 初始化"标记）：
+ * 保持一致）：
  *
  * - `required`：数据库中没有任何管理员，处于 greenfield 阶段；只有显式允许
  *   首个管理员初始化时，才允许进入后续状态。
- * - `migrated`：数据库中已存在管理员（来源可能是首次 bootstrap 或受控导入），
- *   但当前进程未通过 `runBootstrap` 触发 `createInitialAdmin`。
- *   当前实现凭 `adminUsersCount > 0` 推断，因此**不能**用来严格区分
- *   "bootstrap 创建"与"受控导入"。
- * - `completed`：当前进程已通过 `runBootstrap` 显式完成首次管理员初始化。
- *   该结论仅在**同一进程内**可稳定复现（基于进程内标志）；跨进程再次
- *   `inspectBootstrapState` 时会回落为 `migrated`，直到未来引入持久化标记。
- *
- * 如需在外部 `inspectBootstrapState`（无 override）下也能稳定拿到
- * `completed`，必须引入持久化标记（schema 列 / 元数据表 / 配置项等），
- * 不应继续依赖 `adminUsersCount` 隐式推断。
+ * - `migrated`：保留值，当前实现不使用；仅在引入明确持久化来源标记后才会启用，
+ *   用于区分"受控导入"与"bootstrap 创建"的管理员来源。
+ * - `completed`：数据库中已存在管理员，无论管理员来源是当前进程的首次 bootstrap
+ *   还是历史 bootstrap / 受控导入。
  */
-let hasInitializedInitialAdminInProcess = false;
 
-export const resetBootstrapRuntimeMarkersForTesting = () => {
-  hasInitializedInitialAdminInProcess = false;
-};
+export const resetBootstrapRuntimeMarkersForTesting = () => {};
 
 export type BootstrapState = {
   schemaReady: boolean;
@@ -106,22 +96,29 @@ const resolveAdminUsersCount = async (db: StorageDatabase) => {
   return Number(row?.count ?? 0);
 };
 
+const resolveSeedProviderExists = async (
+  db: StorageDatabase,
+  mode: Exclude<BootstrapMode, "production">,
+): Promise<boolean> => {
+  const seedProviderId = `seed_provider_${mode}_opensubtitles`;
+  const [row] = await db
+    .select({ id: providers.id })
+    .from(providers)
+    .where(eq(providers.id, seedProviderId))
+    .limit(1);
+  return Boolean(row);
+};
+
 const resolveAdminInitializationState = ({
   adminUsersCount,
-  hasInitializedInitialAdminInProcess,
 }: {
   adminUsersCount: number;
-  hasInitializedInitialAdminInProcess: boolean;
 }): AdminInitializationState => {
   if (adminUsersCount === 0) {
     return "required";
   }
 
-  if (hasInitializedInitialAdminInProcess) {
-    return "completed";
-  }
-
-  return "migrated";
+  return "completed";
 };
 
 const buildBootstrapState = ({
@@ -144,7 +141,6 @@ const buildBootstrapState = ({
     adminInitializationStateOverride ??
     resolveAdminInitializationState({
       adminUsersCount,
-      hasInitializedInitialAdminInProcess,
     });
   const seedState =
     seedStateOverride ?? (mode === "production" ? "not_applicable" : "pending");
@@ -177,15 +173,24 @@ export const inspectBootstrapState = async ({
   adminInitializationStateOverride?: AdminInitializationState;
 }): Promise<BootstrapInspection> => {
   const missingTables = await resolveMissingBootstrapTables(db);
-  const adminUsersCount =
-    missingTables.length === 0 ? await resolveAdminUsersCount(db) : 0;
+  const schemaReady = missingTables.length === 0;
+  const adminUsersCount = schemaReady ? await resolveAdminUsersCount(db) : 0;
+
+  let resolvedSeedStateOverride = seedStateOverride;
+  if (!resolvedSeedStateOverride && mode !== "production" && schemaReady) {
+    const seedExists = await resolveSeedProviderExists(
+      db,
+      mode as Exclude<BootstrapMode, "production">,
+    );
+    resolvedSeedStateOverride = seedExists ? "applied" : "pending";
+  }
 
   return buildBootstrapState({
     mode,
     now,
     missingTables,
     adminUsersCount,
-    seedStateOverride,
+    seedStateOverride: resolvedSeedStateOverride,
     adminInitializationStateOverride,
   });
 };
@@ -216,16 +221,13 @@ export const runBootstrap = async ({
       );
     }
 
-    if (inspected.adminUsersCount === 0) {
-      await createInitialAdmin(initialAdminInput, {
-        db,
-        now,
-        allowBootstrap: true,
-      });
-      createdInitialAdmin = true;
-      hasInitializedInitialAdminInProcess = true;
-      adminInitializationStateOverride = "completed";
-    }
+    await createInitialAdmin(initialAdminInput, {
+      db,
+      now,
+      allowBootstrap: true,
+    });
+    createdInitialAdmin = true;
+    adminInitializationStateOverride = "completed";
   }
 
   const nextState = await inspectBootstrapState({
@@ -296,6 +298,8 @@ export const applyManagedSeed = async ({
       .update(providers)
       .set({
         name: seedProvider.name,
+        type: seedProvider.type,
+        fallbackProviderId: seedProvider.fallbackProviderId,
         status: seedProvider.status,
         priority: seedProvider.priority,
         weight: seedProvider.weight,
