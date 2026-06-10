@@ -32,6 +32,12 @@ export type AdminInitializationState = "migrated" | "required" | "completed";
  *   还是历史 bootstrap / 受控导入。
  */
 
+/**
+ * 保留此函数以维持测试辅助层的向后兼容性。
+ * 原先用于重置进程级 `hasInitializedInitialAdminInProcess` 标志，
+ * 但该标志已随 adminInitializationState 语义简化而移除；
+ * 若未来再次引入进程级标记，此函数应恢复对应的重置逻辑。
+ */
 export const resetBootstrapRuntimeMarkersForTesting = () => {};
 
 export type BootstrapState = {
