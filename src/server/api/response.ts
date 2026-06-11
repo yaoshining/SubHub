@@ -13,7 +13,9 @@ const noStoreHeaders = {
 
 const mergeNoStoreHeaders = (headers?: ResponseInit["headers"]) => ({
   ...noStoreHeaders,
-  ...(headers instanceof Headers ? Object.fromEntries(headers.entries()) : headers),
+  ...(headers instanceof Headers
+    ? Object.fromEntries(headers.entries())
+    : headers),
 });
 
 const statusByErrorCode: Record<AppErrorCode, number> = {
