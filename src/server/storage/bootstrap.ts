@@ -148,6 +148,9 @@ const buildBootstrapState = ({
     resolveAdminInitializationState({
       adminUsersCount,
     });
+  const bootstrapReady =
+    schemaReady &&
+    (mode !== "production" || adminInitializationState !== "required");
   const seedState =
     seedStateOverride ?? (mode === "production" ? "not_applicable" : "pending");
 
@@ -157,7 +160,7 @@ const buildBootstrapState = ({
     adminUsersCount,
     state: {
       schemaReady,
-      bootstrapReady: schemaReady,
+      bootstrapReady,
       seedState,
       adminInitializationState,
       lastValidatedAt: now.toISOString(),

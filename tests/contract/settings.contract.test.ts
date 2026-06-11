@@ -50,13 +50,21 @@ const mockedDegradedReadiness: Awaited<
   activeProviderCount: 0,
   activeCallerKeyCount: 0,
   gatewayReady: false,
+  runtimeGateRequired: true,
+  runtimeReady: false,
+  schemaReady: true,
+  bootstrapReady: true,
+  adminInitializationState: "completed",
+  directUrlReady: false,
+  directUrlError: "direct url unavailable",
+  blockingReasons: ["direct_url_unreachable"],
   missingConditions: ["provider", "caller_key"],
   lastCheckedAt: "2026-05-30T12:00:00.000Z",
   partialErrors: [
     {
-      target: "environment",
+      target: "runtime",
       code: "UPSTREAM_FAILED",
-      message: "environment unavailable",
+      message: "runtime unavailable",
     },
   ],
 };
@@ -132,6 +140,14 @@ describe("Settings status API 契约", () => {
         activeProviderCount: number;
         activeCallerKeyCount: number;
         gatewayReady: boolean;
+        runtimeGateRequired: boolean;
+        runtimeReady: boolean;
+        schemaReady: boolean;
+        bootstrapReady: boolean;
+        adminInitializationState: string;
+        directUrlReady: boolean;
+        directUrlError: string | null;
+        blockingReasons: string[];
         missingConditions: string[];
         lastCheckedAt: string;
         partialErrors: Array<{
@@ -150,6 +166,14 @@ describe("Settings status API 契约", () => {
       activeProviderCount: 1,
       activeCallerKeyCount: 1,
       gatewayReady: true,
+      runtimeGateRequired: false,
+      runtimeReady: true,
+      schemaReady: true,
+      bootstrapReady: true,
+      adminInitializationState: "completed",
+      directUrlReady: true,
+      directUrlError: null,
+      blockingReasons: [],
       missingConditions: [],
       partialErrors: [],
     });

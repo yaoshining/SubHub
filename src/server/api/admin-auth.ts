@@ -6,6 +6,7 @@ import {
   type AdminSessionWithUser,
 } from "@/lib/auth/session";
 import type { StorageDatabase } from "@/server/storage/client";
+import { assertProductionRuntimeReady } from "@/server/services/runtime-readiness-service";
 
 export type AdminApiAuthOptions = {
   request: NextRequest | Request;
@@ -34,6 +35,8 @@ export async function requireAdminApiSession({
   requireHighRiskClearance = false,
   touchLastSeen = true,
 }: AdminApiAuthOptions): Promise<AdminSessionWithUser> {
+  await assertProductionRuntimeReady({ db });
+
   const token =
     "cookies" in request && typeof request.cookies.get === "function"
       ? request.cookies.get(adminSessionCookieName)?.value

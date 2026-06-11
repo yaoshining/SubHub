@@ -12,6 +12,7 @@ export type ReadinessPartialErrorTarget =
 export const ReadinessPartialErrorTarget = {
   environment: "environment",
   version: "version",
+  runtime: "runtime",
   admin: "admin",
   provider: "provider",
   caller_key: "caller_key",

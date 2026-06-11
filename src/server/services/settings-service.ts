@@ -7,6 +7,12 @@ import {
   type StorageDatabase,
 } from "@/server/storage/client";
 import {
+  getRuntimeReadinessStatus,
+  type RuntimeReadinessStatus,
+  type RuntimeBlockingReason,
+} from "@/server/services/runtime-readiness-service";
+import type { AdminInitializationState } from "@/server/storage/bootstrap";
+import {
   adminUsers,
   callerKeys,
   providerCredentials,
@@ -16,6 +22,7 @@ import {
 export type SystemReadinessPartialErrorTarget =
   | "environment"
   | "version"
+  | "runtime"
   | "admin"
   | "provider"
   | "caller_key";
@@ -33,6 +40,14 @@ export type SystemReadiness = {
   activeProviderCount: number;
   activeCallerKeyCount: number;
   gatewayReady: boolean;
+  runtimeGateRequired: boolean;
+  runtimeReady: boolean;
+  schemaReady: boolean;
+  bootstrapReady: boolean;
+  adminInitializationState: AdminInitializationState;
+  directUrlReady: boolean;
+  directUrlError: string | null;
+  blockingReasons: RuntimeBlockingReason[];
   missingConditions: Array<"admin" | "provider" | "caller_key">;
   lastCheckedAt: string;
   partialErrors: SystemReadinessPartialError[];
@@ -49,6 +64,26 @@ const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
   "provider",
   "caller_key",
 ]);
+
+const buildRuntimeStatusFallback = (
+  now: Date,
+  runtimeGateRequired: boolean,
+): RuntimeReadinessStatus => ({
+  initialized: false,
+  mode: runtimeGateRequired ? "production" : "development",
+  schemaReady: !runtimeGateRequired,
+  bootstrapReady: !runtimeGateRequired,
+  seedState: runtimeGateRequired ? "not_applicable" : "pending",
+  adminInitializationState: "required",
+  missingTables: [],
+  adminUsersCount: 0,
+  runtimeGateRequired,
+  directUrlReady: !runtimeGateRequired,
+  directUrlError: null,
+  runtimeReady: !runtimeGateRequired,
+  blockingReasons: runtimeGateRequired ? ["bootstrap_not_ready"] : [],
+  lastCheckedAt: now.toISOString(),
+});
 
 async function countRows(
   query: Promise<Array<{ value: number }>>,
@@ -95,16 +130,30 @@ export async function getSystemReadiness({
   now = new Date(),
 }: SettingsServiceOptions = {}): Promise<SystemReadiness> {
   const partialErrors: SystemReadinessPartialError[] = [];
+  const runtimeGateRequiredByEnv = (() => {
+    try {
+      return readEnv().resolvedTier === "production";
+    } catch {
+      return false;
+    }
+  })();
 
   const [
     environment,
     version,
+    runtimeStatus,
     adminInitialized,
     activeProviderCount,
     activeCallerKeyCount,
   ] = await Promise.all([
     readSignal("environment", readEnvironment, "unknown", partialErrors),
     readSignal("version", readVersion, defaultAppVersion, partialErrors),
+    readSignal(
+      "runtime",
+      () => getRuntimeReadinessStatus({ db, now }),
+      buildRuntimeStatusFallback(now, runtimeGateRequiredByEnv),
+      partialErrors,
+    ),
     readSignal(
       "admin",
       async () => {
@@ -175,7 +224,19 @@ export async function getSystemReadiness({
     adminInitialized,
     activeProviderCount,
     activeCallerKeyCount,
-    gatewayReady: missingConditions.length === 0 && !hasReadinessPartialErrors,
+    gatewayReady:
+      missingConditions.length === 0 &&
+      !hasReadinessPartialErrors &&
+      runtimeStatus.runtimeReady,
+    runtimeGateRequired: runtimeStatus.runtimeGateRequired,
+    runtimeReady: runtimeStatus.runtimeReady,
+    schemaReady: runtimeStatus.schemaReady,
+    bootstrapReady: runtimeStatus.bootstrapReady,
+    adminInitializationState:
+      runtimeStatus.adminInitializationState,
+    directUrlReady: runtimeStatus.directUrlReady,
+    directUrlError: runtimeStatus.directUrlError,
+    blockingReasons: runtimeStatus.blockingReasons,
     missingConditions,
     lastCheckedAt: now.toISOString(),
     partialErrors,
