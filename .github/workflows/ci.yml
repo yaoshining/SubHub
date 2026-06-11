@@ -35,11 +35,6 @@ jobs:
         run: pnpm typecheck
       - name: 单元测试
         run: pnpm test
-      - name: 数据库 schema / migration 漂移校验
-        env:
-          DATABASE_URL: ******localhost:5432/subhub_ci_check
-          DATABASE_URL_UNPOOLED: ******localhost:5432/subhub_ci_check
-        run: pnpm db:check
       - name: 环境映射与 URL 护栏校验
         run: >-
           pnpm test --
@@ -72,8 +67,10 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL_TEST: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
-      DATABASE_URL_TEST_UNPOOLED: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+      DATABASE_URL: ******localhost:5432/subhub_test
+      DATABASE_URL_UNPOOLED: ******localhost:5432/subhub_test
+      DATABASE_URL_TEST: ******localhost:5432/subhub_test
+      DATABASE_URL_TEST_UNPOOLED: ******localhost:5432/subhub_test
 
     steps:
       - name: 检出代码
@@ -91,6 +88,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: 准备测试数据库（reset + migrate）
         run: pnpm db:prepare:ci
+      - name: 数据库 schema / migration 漂移校验
+        run: pnpm db:check
       - name: migration 后最小校验
         run: >-
           pnpm test --
