@@ -1,0 +1,69 @@
+name: Deploy Smoke Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 当前部署所属环境
+        required: true
+        default: staging
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      app_url:
+        description: 当前部署可访问的应用地址
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      target:
+        description: 当前部署所属环境
+        required: true
+        type: string
+      app_url:
+        description: 当前部署可访问的应用地址
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-smoke-${{ inputs.target }}-${{ inputs.app_url }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: deploy smoke gate
+    runs-on: ubuntu-latest
+    env:
+      DEPLOYMENT_TIER: ${{ inputs.target }}
+      APP_URL: ${{ inputs.app_url }}
+    steps:
+      - name: 校验输入
+        run: |
+          if [ "${DEPLOYMENT_TIER}" != "development" ] && [ "${DEPLOYMENT_TIER}" != "staging" ] && [ "${DEPLOYMENT_TIER}" != "production" ]; then
+            echo "deploy smoke 只允许 development、staging、production。"
+            exit 1
+          fi
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 执行最小 deploy smoke gate
+        run: pnpm deploy:smoke --base-url="${APP_URL}" --tier="${DEPLOYMENT_TIER}"
+      - name: 记录当前阶段边界
+        run: |
+          echo "当前 deploy smoke 仅覆盖最小可达性与公开接口检查。"
+          echo "最终 readiness / promotion 阻断条件等待 #64 收敛后再接入。"

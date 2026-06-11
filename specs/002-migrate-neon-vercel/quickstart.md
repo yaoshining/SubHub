@@ -56,8 +56,8 @@
 
 在 `.env.development.local` 配置：
 
-- `DATABASE_URL`
-- `DATABASE_URL_UNPOOLED`
+- `DEV_DATABASE_URL`
+- `DEV_DATABASE_URL_UNPOOLED`
 - `APP_URL=http://localhost:3000`
 - `PROVIDER_CREDENTIAL_ENCRYPTION_KEY`
 - `ADMIN_SESSION_SECRET`
@@ -179,13 +179,26 @@ CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 
 ### staging / preview
 
 1. 推送 `preview` 分支
-2. 运行 staging migration workflow
-3. 验证 Preview 部署与 smoke test
+2. 先运行 `.github/workflows/db-migrate.yml` 的 `staging` migration gate
+3. 再执行 Vercel Preview 部署
+4. 运行 `.github/workflows/deploy-smoke.yml`，以 `target=staging` 或命中白名单分支时的 `target=development` 做最小 smoke gate
+
+说明：
+
+- 普通 Preview 白名单分支不进入 production migration gate
+- 当前阶段 deploy smoke 只覆盖最小可达性与公开接口校验；最终 readiness 阻断条件等待 #64 收敛后再接入
 
 ### production
 
-1. 运行 production migration workflow
-2. 执行 `pnpm db:bootstrap`
-3. 如当前环境尚无管理员，临时开启 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 并提供 `INITIAL_ADMIN_*` 后再执行一次 `pnpm db:bootstrap`
-4. 发布/确认 `main` 对应 Production 部署
-5. 执行 production smoke test
+1. 先运行 `.github/workflows/db-migrate.yml` 的 `production` migration gate（该 workflow 会先完成 staging migration job，再进入 production job）
+2. `db-migrate.yml` 内显式执行 `pnpm db:migrate`
+3. `db-migrate.yml` 内显式执行 `pnpm db:bootstrap`
+4. 如当前环境尚无管理员，临时开启 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 并提供 `INITIAL_ADMIN_*` 后，再受控执行一次 `pnpm db:bootstrap`
+5. 发布/确认 `main` 对应 Production 部署
+6. 运行 `.github/workflows/deploy-smoke.yml`，以 `target=production` 执行最小 smoke gate
+
+说明：
+
+- Vercel build / start 不应隐式执行 production migration
+- 当前阶段只收敛 migration / bootstrap / 最小 smoke 的顺序边界
+- production readiness 的最终阻断语义仍等待 #64 明确后再接入

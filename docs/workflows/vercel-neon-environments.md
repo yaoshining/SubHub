@@ -58,3 +58,39 @@ CALLER_KEY_SECRET=replace-with-at-least-32-chars
 3. 若是 greenfield 且无管理员，临时启用 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 与 `INITIAL_ADMIN_*` 后再次执行 `pnpm db:bootstrap`
 4. dev / staging 如需样例数据，再执行 `pnpm db:seed:dev` 或 `pnpm db:seed:staging`
 5. production 路径到此为止；不得再执行任意 seed
+
+## GitHub Actions migration / deploy gate 入口
+
+- `.github/workflows/db-migrate.yml`
+  - 当前阶段只收敛最小 migration gate
+  - 只允许 `staging` 与 `production`
+  - `production` 触发时，必须先完成 `staging` migration job，再进入 production job
+  - migration 与 bootstrap 都由 GitHub Actions 显式调用；Vercel build / start 不承担 migration 职责
+  - migration 使用 `DATABASE_URL_UNPOOLED` 直连边界，不把 pooled 运行时 URL 当成正式 migration 主路径
+- `.github/workflows/deploy-smoke.yml`
+  - 当前阶段只提供最小 deploy smoke gate
+  - 支持 `development` / `staging` / `production`
+  - 仅检查最小公开入口可达性与 bootstrap 状态接口形状，不在本阶段写死最终 readiness / promotion 阻断语义
+- `.github/workflows/ci.yml`
+  - 至少覆盖 `pnpm typecheck`、`pnpm test`、`pnpm db:check`
+  - 覆盖环境映射护栏、URL 边界护栏与 migration 后最小数据库校验
+
+## 当前阶段的最小执行边界
+
+- staging migration 必须先于 production migration
+- preview / dev 不在本阶段复用 production migration gate；它们只进入各自的非生产 smoke / 护栏路径
+- production migration 失败、bootstrap 基线校验失败或 deploy smoke 失败时，必须阻断后续人工 promotion
+- 当前阶段只阻断“migration / bootstrap / 最小 smoke”失败，不在本文件内重新定义 #64 的 production readiness 语义
+
+## GitHub environment / secret 最小约定
+
+- `staging` 与 `production` GitHub environment 都应提供：
+  - `DATABASE_URL`
+  - `DATABASE_URL_UNPOOLED`
+  - `PROVIDER_CREDENTIAL_ENCRYPTION_KEY`
+  - `ADMIN_SESSION_SECRET`
+  - `CALLER_KEY_SECRET`
+- `staging` 与 `production` GitHub environment 变量应至少提供：
+  - `APP_URL`
+
+说明：`APP_URL` 供 `pnpm db:bootstrap` 与 deploy smoke 读取；Preview 动态 URL 由调用 `deploy-smoke.yml` 的上游流程显式传入，不在本阶段写死为单一路径。

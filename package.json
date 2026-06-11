@@ -15,6 +15,7 @@
     "api:client": "orval --config orval.config.ts --clean src/lib/api/generated --formatter prettier",
     "api:docs": "next build",
     "api:check": "pnpm api:spec && pnpm api:client && pnpm api:docs",
+    "deploy:smoke": "tsx scripts/deploy/deploy-smoke.ts",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "tsx scripts/db/migrate.ts",
     "db:bootstrap": "tsx scripts/db/bootstrap.ts",
