@@ -62,7 +62,7 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
       - name: 执行最小 deploy smoke gate
-        run: pnpm deploy:smoke --base-url="${APP_URL}" --tier="${DEPLOYMENT_TIER}"
+        run: pnpm deploy:smoke -- --base-url="${APP_URL}" --tier="${DEPLOYMENT_TIER}"
       - name: 记录当前阶段边界
         run: |
           echo "当前 deploy smoke 仅覆盖最小可达性与公开接口检查。"

@@ -29,8 +29,10 @@ const main = async () => {
   }
 };
 
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error("数据库 migration 失败：", message);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("数据库 migration 失败：", message);
+    process.exit(1);
+  });
+}

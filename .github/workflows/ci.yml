@@ -42,7 +42,7 @@ jobs:
         run: pnpm db:check
       - name: 环境映射与 URL 护栏校验
         run: >-
-          pnpm test
+          pnpm test --
           tests/unit/env/runtime-environment.test.ts
           tests/integration/runtime/preview-branch-mapping.test.ts
           tests/unit/storage/runtime-url-boundary.test.ts
@@ -93,7 +93,7 @@ jobs:
         run: pnpm db:prepare:ci
       - name: migration 后最小校验
         run: >-
-          pnpm test
+          pnpm test --
           tests/unit/storage/postgres-schema.test.ts
           tests/integration/storage/postgres-client.test.ts
       - name: 运行数据库集成测试
