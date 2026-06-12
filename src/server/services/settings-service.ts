@@ -134,7 +134,9 @@ export async function getSystemReadiness({
     try {
       return readEnv().resolvedTier === "production";
     } catch {
-      // readEnv 失败时根据 VERCEL_ENV 兜底判断，避免 production 被误判为非 production
+      // readEnv() 解析失败（如环境变量缺失/不合法）时，以 VERCEL_ENV 作为最保守
+      // 兜底判断，确保 production 部署不会因 readEnv 异常而被误判为非 production。
+      // 注意：此处不检查 VERCEL_GIT_COMMIT_REF，仅用于 fallback 的 gate 方向判断。
       return process.env.VERCEL_ENV === "production";
     }
   })();

@@ -53,49 +53,57 @@ const resolveBootstrapMode = (env: AppEnv): BootstrapMode => {
   }
 };
 
-type DirectUrlProbeCache = {
-  directUrl: string;
-  checkedAt: number;
-  error: Error | null;
-};
+type ProbeResult = { ok: true } | { ok: false; error: Error };
+let probeCache: { result: ProbeResult; expiresAt: number } | null = null;
+let probePending: Promise<ProbeResult> | null = null;
+const PROBE_CACHE_TTL_MS = 30_000;
 
-const PROBE_CACHE_TTL_MS = 30_000; // 30 秒 TTL，避免高频路径每次新建连接
-
-let directUrlProbeCache: DirectUrlProbeCache | null = null;
-
-const defaultDirectUrlProbe = async (directUrl: string) => {
+const defaultDirectUrlProbe = async (directUrl: string): Promise<void> => {
   const now = Date.now();
-
-  if (
-    directUrlProbeCache !== null &&
-    directUrlProbeCache.directUrl === directUrl &&
-    now - directUrlProbeCache.checkedAt < PROBE_CACHE_TTL_MS
-  ) {
-    if (directUrlProbeCache.error !== null) {
-      throw directUrlProbeCache.error;
+  if (probeCache !== null && now < probeCache.expiresAt) {
+    if (!probeCache.result.ok) {
+      throw probeCache.result.error;
     }
     return;
   }
 
-  const client = createDirectPostgresClient({
-    directDatabaseUrl: directUrl,
-  });
-
-  let probeError: Error | null = null;
-
-  try {
-    await client.sql`select 1`;
-  } catch (error) {
-    probeError = error instanceof Error ? error : new Error(String(error));
-  } finally {
-    await client.close();
+  // 复用进行中的 probe promise，避免并发请求同时建立多个连接
+  if (probePending !== null) {
+    const result = await probePending;
+    if (!result.ok) throw result.error;
+    return;
   }
 
-  directUrlProbeCache = { directUrl, checkedAt: now, error: probeError };
+  const executeProbe = async (): Promise<ProbeResult> => {
+    const client = createDirectPostgresClient({
+      directDatabaseUrl: directUrl,
+    });
 
-  if (probeError !== null) {
-    throw probeError;
-  }
+    let probeResult: ProbeResult;
+    try {
+      await client.sql`select 1`;
+      probeResult = { ok: true };
+    } catch (err) {
+      probeResult = {
+        ok: false,
+        error: err instanceof Error ? err : new Error(String(err)),
+      };
+    } finally {
+      await client.close();
+    }
+
+    probeCache = {
+      result: probeResult,
+      expiresAt: Date.now() + PROBE_CACHE_TTL_MS,
+    };
+    probePending = null;
+    return probeResult;
+  };
+
+  // 在第一个 await 之前同步赋值，确保后续并发调用能复用此 promise
+  probePending = executeProbe();
+  const result = await probePending;
+  if (!result.ok) throw result.error;
 };
 
 const buildBlockingReasons = (status: {
@@ -152,8 +160,10 @@ export async function getRuntimeReadinessStatus({
       await directUrlProbe(env.DATABASE_URL_UNPOOLED);
     } catch (error) {
       directUrlReady = false;
-      // 详细错误仅记录服务端日志，对外返回脱敏文案，避免泄露主机名/端口等内部信息
-      console.error("[runtime-readiness] Direct URL probe failed:", error);
+      console.error(
+        "[RuntimeReadiness] DATABASE_URL_UNPOOLED probe failed:",
+        error,
+      );
       directUrlError = "DATABASE_URL_UNPOOLED 连通性校验失败。";
     }
   }
