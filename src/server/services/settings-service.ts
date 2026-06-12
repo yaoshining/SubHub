@@ -134,7 +134,8 @@ export async function getSystemReadiness({
     try {
       return readEnv().resolvedTier === "production";
     } catch {
-      return false;
+      // readEnv 失败时根据 VERCEL_ENV 兜底判断，避免 production 被误判为非 production
+      return process.env.VERCEL_ENV === "production";
     }
   })();
 
@@ -232,8 +233,7 @@ export async function getSystemReadiness({
     runtimeReady: runtimeStatus.runtimeReady,
     schemaReady: runtimeStatus.schemaReady,
     bootstrapReady: runtimeStatus.bootstrapReady,
-    adminInitializationState:
-      runtimeStatus.adminInitializationState,
+    adminInitializationState: runtimeStatus.adminInitializationState,
     directUrlReady: runtimeStatus.directUrlReady,
     directUrlError: runtimeStatus.directUrlError,
     blockingReasons: runtimeStatus.blockingReasons,

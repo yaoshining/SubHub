@@ -53,15 +53,48 @@ const resolveBootstrapMode = (env: AppEnv): BootstrapMode => {
   }
 };
 
+type DirectUrlProbeCache = {
+  directUrl: string;
+  checkedAt: number;
+  error: Error | null;
+};
+
+const PROBE_CACHE_TTL_MS = 30_000; // 30 秒 TTL，避免高频路径每次新建连接
+
+let directUrlProbeCache: DirectUrlProbeCache | null = null;
+
 const defaultDirectUrlProbe = async (directUrl: string) => {
+  const now = Date.now();
+
+  if (
+    directUrlProbeCache !== null &&
+    directUrlProbeCache.directUrl === directUrl &&
+    now - directUrlProbeCache.checkedAt < PROBE_CACHE_TTL_MS
+  ) {
+    if (directUrlProbeCache.error !== null) {
+      throw directUrlProbeCache.error;
+    }
+    return;
+  }
+
   const client = createDirectPostgresClient({
     directDatabaseUrl: directUrl,
   });
 
+  let probeError: Error | null = null;
+
   try {
     await client.sql`select 1`;
+  } catch (error) {
+    probeError = error instanceof Error ? error : new Error(String(error));
   } finally {
     await client.close();
+  }
+
+  directUrlProbeCache = { directUrl, checkedAt: now, error: probeError };
+
+  if (probeError !== null) {
+    throw probeError;
   }
 };
 
@@ -119,10 +152,9 @@ export async function getRuntimeReadinessStatus({
       await directUrlProbe(env.DATABASE_URL_UNPOOLED);
     } catch (error) {
       directUrlReady = false;
-      directUrlError =
-        error instanceof Error
-          ? error.message
-          : "DATABASE_URL_UNPOOLED 连通性校验失败。";
+      // 详细错误仅记录服务端日志，对外返回脱敏文案，避免泄露主机名/端口等内部信息
+      console.error("[runtime-readiness] Direct URL probe failed:", error);
+      directUrlError = "DATABASE_URL_UNPOOLED 连通性校验失败。";
     }
   }
 
