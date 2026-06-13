@@ -65,5 +65,7 @@ jobs:
         run: pnpm deploy:smoke -- --base-url="${APP_URL}" --tier="${DEPLOYMENT_TIER}"
       - name: 记录当前阶段边界
         run: |
-          echo "当前 deploy smoke 仅覆盖最小可达性与公开接口检查。"
-          echo "最终 readiness / promotion 阻断条件等待 #64 收敛后再接入。"
+          echo "当前 deploy smoke 已按 #70 接入 #64 的 readiness 信号："
+          echo "  - production tier 必须 runtimeReady=true，否则 deploy gate 阻断；"
+          echo "  - staging / development tier 仅 inspect data.initialized 最小字段；"
+          echo "  - 本期不实现自动 rollback 与多阶段自动 promotion pipeline。"

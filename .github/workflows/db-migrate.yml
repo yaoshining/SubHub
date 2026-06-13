@@ -82,7 +82,8 @@ jobs:
       - name: 记录当前阶段边界
         run: |
           echo "staging migration gate 已完成。"
-          echo "本 workflow 当前只收敛 migration / bootstrap 顺序边界，不写死 #64 的 readiness 最终判定。"
+          echo "本 workflow 当前只收敛 migration / bootstrap 顺序边界，不在本阶段重新定义 readiness 规则。"
+          echo "staging tier 不会强制阻断 readiness gate；如需最终阻断请执行 production gate。"
 
   production-migrate:
     name: production migration gate
@@ -120,7 +121,12 @@ jobs:
         run: pnpm db:migrate
       - name: 执行 production bootstrap 基线校验
         run: pnpm db:bootstrap
+      - name: 消费 #64 readiness 信号（仅 inspect，不在本 workflow 内重新定义 readiness 规则）
+        run: pnpm db:readiness
+      - name: production readiness gate 强制阻断
+        run: pnpm db:readiness -- --enforce
       - name: 记录当前阶段边界
         run: |
           echo "production migration gate 已完成。"
-          echo "当前只负责阻断 migration / bootstrap 失败，不在本阶段定义最终 readiness gate。"
+          echo "本 workflow 已消费 #64 readiness 信号，并在 production 阶段按 blocking reasons 强制阻断。"
+          echo "本期不引入自动 rollback 或多阶段自动 promotion pipeline。"

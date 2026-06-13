@@ -12,10 +12,94 @@ const allowedTiers = new Set<DeployTier>([
   "production",
 ]);
 
+type BootstrapStatusPayload = {
+  data?: {
+    initialized?: boolean;
+    runtimeReady?: boolean;
+    runtimeGateRequired?: boolean;
+    schemaReady?: boolean;
+    bootstrapReady?: boolean;
+    adminInitializationState?: "required" | "completed" | "migrated";
+    directUrlReady?: boolean;
+    blockingReasons?: string[];
+  };
+};
+
+/**
+ * #70 接入点：production tier 必须消费 #64 已落地的 readiness 信号。
+ * 不重新定义 readiness 判定，只消费 `runtimeReady` / `blockingReasons` /
+ * `schemaReady` / `bootstrapReady` / `adminInitializationState` 字段；
+ * 非 production tier 保留对 `data.initialized` 的最小检查。
+ */
+const requireProductionRuntimeReadiness = (
+  payload: BootstrapStatusPayload,
+  tier: DeployTier,
+) => {
+  if (tier !== "production") {
+    if (typeof payload.data?.initialized !== "boolean") {
+      throw new Error(
+        "bootstrap 状态入口 smoke 失败：响应未返回 data.initialized 布尔值。",
+      );
+    }
+    return;
+  }
+
+  const data = payload.data;
+  if (!data) {
+    throw new Error(
+      "production bootstrap 状态入口 smoke 失败：响应缺少 data 字段。",
+    );
+  }
+
+  const requiredBooleanFields = [
+    "initialized",
+    "runtimeReady",
+    "runtimeGateRequired",
+    "schemaReady",
+    "bootstrapReady",
+    "directUrlReady",
+  ] as const;
+
+  for (const field of requiredBooleanFields) {
+    if (typeof data[field] !== "boolean") {
+      throw new Error(
+        `production bootstrap 状态入口 smoke 失败：响应缺少 data.${field} 布尔值。`,
+      );
+    }
+  }
+
+  if (
+    data.adminInitializationState !== "required" &&
+    data.adminInitializationState !== "completed" &&
+    data.adminInitializationState !== "migrated"
+  ) {
+    throw new Error(
+      "production bootstrap 状态入口 smoke 失败：响应未返回 data.adminInitializationState 合法值。",
+    );
+  }
+
+  if (data.runtimeGateRequired !== true) {
+    throw new Error(
+      "production bootstrap 状态入口 smoke 失败：production tier 必须 runtimeGateRequired=true。",
+    );
+  }
+
+  if (!data.runtimeReady) {
+    const reasons = (data.blockingReasons ?? []).join(", ") || "(无)";
+    throw new Error(
+      `production runtime readiness 未通过，deploy gate 阻断：${reasons}。`,
+    );
+  }
+};
+
 type SmokeCheck = {
   path: string;
   label: string;
-  validate: (response: Response, bodyText: string) => Promise<void> | void;
+  validate: (
+    response: Response,
+    bodyText: string,
+    tier: DeployTier,
+  ) => Promise<void> | void;
 };
 
 const normalizeBaseUrl = (value: string) => value.replace(/\/+$/, "");
@@ -96,18 +180,11 @@ const smokeChecks: SmokeCheck[] = [
   {
     path: "/api/admin/bootstrap/status",
     label: "bootstrap 状态入口",
-    validate: async (response, bodyText) => {
+    validate: async (response, bodyText, tier) => {
       await requireOk(response, bodyText, "bootstrap 状态入口");
 
-      const payload = JSON.parse(bodyText) as {
-        data?: { initialized?: boolean };
-      };
-
-      if (typeof payload.data?.initialized !== "boolean") {
-        throw new Error(
-          "bootstrap 状态入口 smoke 失败：响应未返回 data.initialized 布尔值。",
-        );
-      }
+      const payload = JSON.parse(bodyText) as BootstrapStatusPayload;
+      requireProductionRuntimeReadiness(payload, tier);
     },
   },
 ];
@@ -128,7 +205,7 @@ export const runDeploySmoke = async ({
     });
     const bodyText = await response.text();
 
-    await check.validate(response, bodyText);
+    await check.validate(response, bodyText, tier);
     console.log(`✓ ${tier} deploy smoke: ${check.label}`);
   }
 };
