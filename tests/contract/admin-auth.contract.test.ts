@@ -60,8 +60,16 @@ afterEach(async () => {
 describe("管理员初始化与认证 API 契约", () => {
   it("返回初始化状态并拒绝重复初始化", async () => {
     const initialStatus = await bootstrapStatusRoute.GET();
-    await expect(readJson(initialStatus)).resolves.toEqual({
-      data: { initialized: false },
+    await expect(readJson(initialStatus)).resolves.toMatchObject({
+      data: {
+        initialized: false,
+        mode: "development",
+        schemaReady: true,
+        bootstrapReady: true,
+        adminInitializationState: "required",
+        runtimeGateRequired: false,
+        runtimeReady: true,
+      },
     });
 
     const bootstrap = await bootstrapRoute.POST(

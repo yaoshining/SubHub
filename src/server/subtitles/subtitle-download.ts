@@ -16,6 +16,7 @@ import {
   type StorageDatabase,
 } from "@/server/storage/client";
 import type { CallerKey, Provider } from "@/server/storage/schema";
+import { assertProductionRuntimeReady } from "@/server/services/runtime-readiness-service";
 
 export type SubtitleDownloadResult = OpenSubtitlesDownloadResult & {
   subtitleRef: string;
@@ -117,6 +118,7 @@ export async function downloadSubtitle(
 ): Promise<SubtitleDownloadResult> {
   const db = options.db ?? getStorageClient().db;
   const now = options.now ?? new Date();
+  await assertProductionRuntimeReady({ db, now });
   const startedAt = Date.now();
   const repository = createCallerKeyRepository(db);
   let callerKey: CallerKey | undefined;

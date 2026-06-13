@@ -881,9 +881,72 @@ components:
       type: object
       required:
         - initialized
+        - mode
+        - schemaReady
+        - bootstrapReady
+        - seedState
+        - adminInitializationState
+        - missingTables
+        - adminUsersCount
+        - runtimeGateRequired
+        - directUrlReady
+        - runtimeReady
+        - blockingReasons
+        - lastCheckedAt
       properties:
         initialized:
           type: boolean
+        mode:
+          type: string
+          enum:
+            - production
+            - staging
+            - development
+        schemaReady:
+          type: boolean
+        bootstrapReady:
+          type: boolean
+        seedState:
+          type: string
+          enum:
+            - not_applicable
+            - pending
+            - applied
+        adminInitializationState:
+          type: string
+          enum:
+            - migrated
+            - required
+            - completed
+        missingTables:
+          type: array
+          items:
+            type: string
+        adminUsersCount:
+          type: integer
+          minimum: 0
+        runtimeGateRequired:
+          type: boolean
+        directUrlReady:
+          type: boolean
+        directUrlError:
+          type:
+            - string
+            - "null"
+        runtimeReady:
+          type: boolean
+        blockingReasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - direct_url_unreachable
+              - schema_not_ready
+              - bootstrap_not_ready
+              - admin_initialization_required
+        lastCheckedAt:
+          type: string
+          format: date-time
     BootstrapStatusResponse:
       type: object
       required:
@@ -1911,6 +1974,14 @@ components:
         - activeProviderCount
         - activeCallerKeyCount
         - gatewayReady
+        - runtimeGateRequired
+        - runtimeReady
+        - schemaReady
+        - bootstrapReady
+        - adminInitializationState
+        - directUrlReady
+        - directUrlError
+        - blockingReasons
         - missingConditions
         - lastCheckedAt
         - partialErrors
@@ -1929,6 +2000,35 @@ components:
           minimum: 0
         gatewayReady:
           type: boolean
+        runtimeGateRequired:
+          type: boolean
+        runtimeReady:
+          type: boolean
+        schemaReady:
+          type: boolean
+        bootstrapReady:
+          type: boolean
+        adminInitializationState:
+          type: string
+          enum:
+            - migrated
+            - required
+            - completed
+        directUrlReady:
+          type: boolean
+        directUrlError:
+          type:
+            - string
+            - "null"
+        blockingReasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - direct_url_unreachable
+              - schema_not_ready
+              - bootstrap_not_ready
+              - admin_initialization_required
         missingConditions:
           type: array
           items:
@@ -1956,6 +2056,7 @@ components:
           enum:
             - environment
             - version
+            - runtime
             - admin
             - provider
             - caller_key
