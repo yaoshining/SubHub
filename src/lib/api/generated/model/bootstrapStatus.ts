@@ -5,7 +5,26 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
  * OpenAPI spec version: 0.1.0
  */
+import type { BootstrapStatusAdminInitializationState } from "./bootstrapStatusAdminInitializationState";
+import type { BootstrapStatusBlockingReasonsItem } from "./bootstrapStatusBlockingReasonsItem";
+import type { BootstrapStatusMode } from "./bootstrapStatusMode";
+import type { BootstrapStatusSeedState } from "./bootstrapStatusSeedState";
 
 export interface BootstrapStatus {
   initialized: boolean;
+  mode: BootstrapStatusMode;
+  schemaReady: boolean;
+  bootstrapReady: boolean;
+  seedState: BootstrapStatusSeedState;
+  adminInitializationState: BootstrapStatusAdminInitializationState;
+  missingTables: string[];
+  /** @minimum 0 */
+  adminUsersCount: number;
+  runtimeGateRequired: boolean;
+  directUrlReady: boolean;
+  /** @nullable */
+  directUrlError?: string | null;
+  runtimeReady: boolean;
+  blockingReasons: BootstrapStatusBlockingReasonsItem[];
+  lastCheckedAt: string;
 }

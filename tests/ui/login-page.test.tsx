@@ -10,6 +10,7 @@ import {
   loginAdminUser,
 } from "@/lib/api/admin-auth";
 import { AppError } from "@/lib/errors";
+import type { BootstrapStatus } from "@/lib/api/admin-auth";
 
 vi.mock("@/lib/api/admin-auth", () => ({
   bootstrapInitialAdmin: vi.fn(),
@@ -36,11 +37,28 @@ const createDeferred = <T,>() => {
   return { promise, resolve, reject };
 };
 
+const createBootstrapStatus = (initialized: boolean): BootstrapStatus => ({
+  initialized,
+  mode: "development",
+  schemaReady: true,
+  bootstrapReady: true,
+  seedState: "pending",
+  adminInitializationState: initialized ? "completed" : "required",
+  missingTables: [],
+  adminUsersCount: initialized ? 1 : 0,
+  runtimeGateRequired: false,
+  directUrlReady: true,
+  directUrlError: null,
+  runtimeReady: true,
+  blockingReasons: [],
+  lastCheckedAt: "2026-06-11T00:00:00.000Z",
+});
+
 describe("Login 页面体验", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setMockRouter();
-    mockedFetchBootstrapStatus.mockResolvedValue({ initialized: true });
+    mockedFetchBootstrapStatus.mockResolvedValue(createBootstrapStatus(true));
   });
 
   it("默认登录态不显示后台 Shell，并展示 SSO / 2FA 未启用提示", async () => {
@@ -133,7 +151,7 @@ describe("Login 页面体验", () => {
       adminUserId: string;
       status: "active";
     }>();
-    mockedFetchBootstrapStatus.mockResolvedValue({ initialized: false });
+    mockedFetchBootstrapStatus.mockResolvedValue(createBootstrapStatus(false));
     mockedBootstrapInitialAdmin.mockReturnValue(deferred.promise);
 
     renderWithTheme(<LoginClient returnTo="/dashboard" />);

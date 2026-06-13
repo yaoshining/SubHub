@@ -74,7 +74,7 @@ describeWhenLocalPostgresEnabled(
         adminUsersCount: 0,
         state: {
           schemaReady: true,
-          bootstrapReady: true,
+          bootstrapReady: false,
           seedState: "not_applicable",
           adminInitializationState: "required",
         },

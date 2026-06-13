@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ReadinessPartialError } from "./readinessPartialError";
+import type { ReadinessSummaryAdminInitializationState } from "./readinessSummaryAdminInitializationState";
+import type { ReadinessSummaryBlockingReasonsItem } from "./readinessSummaryBlockingReasonsItem";
 import type { ReadinessSummaryMissingConditionsItem } from "./readinessSummaryMissingConditionsItem";
 
 export interface ReadinessSummary {
@@ -17,6 +19,15 @@ export interface ReadinessSummary {
   /** @minimum 0 */
   activeCallerKeyCount: number;
   gatewayReady: boolean;
+  runtimeGateRequired: boolean;
+  runtimeReady: boolean;
+  schemaReady: boolean;
+  bootstrapReady: boolean;
+  adminInitializationState: ReadinessSummaryAdminInitializationState;
+  directUrlReady: boolean;
+  /** @nullable */
+  directUrlError: string | null;
+  blockingReasons: ReadinessSummaryBlockingReasonsItem[];
   missingConditions: ReadinessSummaryMissingConditionsItem[];
   lastCheckedAt: string;
   partialErrors: ReadinessPartialError[];

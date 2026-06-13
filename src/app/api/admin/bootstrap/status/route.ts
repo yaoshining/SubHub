@@ -1,11 +1,11 @@
 import { apiErrorFromUnknown, apiSuccess } from "@/server/api/response";
-import { getBootstrapStatus } from "@/server/services/bootstrap-service";
+import { getRuntimeReadinessStatus } from "@/server/services/runtime-readiness-service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    return apiSuccess(await getBootstrapStatus());
+    return apiSuccess(await getRuntimeReadinessStatus());
   } catch (error) {
     return apiErrorFromUnknown(error);
   }
