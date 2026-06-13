@@ -67,10 +67,12 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
-      DATABASE_URL_UNPOOLED: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
-      DATABASE_URL_TEST: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
-      DATABASE_URL_TEST_UNPOOLED: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
+      # 与 `services.postgres.env` 字面量一一对应；job 顶层 env 不允许使用
+      # `job.*` 表达式，只能直接 inline 字面量。
+      DATABASE_URL: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+      DATABASE_URL_UNPOOLED: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+      DATABASE_URL_TEST: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+      DATABASE_URL_TEST_UNPOOLED: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
 
     steps:
       - name: 检出代码
