@@ -67,10 +67,10 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: ******localhost:5432/subhub_test
-      DATABASE_URL_UNPOOLED: ******localhost:5432/subhub_test
-      DATABASE_URL_TEST: ******localhost:5432/subhub_test
-      DATABASE_URL_TEST_UNPOOLED: ******localhost:5432/subhub_test
+      DATABASE_URL: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
+      DATABASE_URL_UNPOOLED: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
+      DATABASE_URL_TEST: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
+      DATABASE_URL_TEST_UNPOOLED: postgresql://${{ job.services.postgres.env.POSTGRES_USER }}:${{ job.services.postgres.env.POSTGRES_PASSWORD }}@localhost:5432/${{ job.services.postgres.env.POSTGRES_DB }}
 
     steps:
       - name: 检出代码
