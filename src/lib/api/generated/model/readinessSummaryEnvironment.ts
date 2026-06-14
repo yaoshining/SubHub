@@ -6,11 +6,13 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type BootstrapStatusMode =
-  (typeof BootstrapStatusMode)[keyof typeof BootstrapStatusMode];
+export type ReadinessSummaryEnvironment =
+  (typeof ReadinessSummaryEnvironment)[keyof typeof ReadinessSummaryEnvironment];
 
-export const BootstrapStatusMode = {
+export const ReadinessSummaryEnvironment = {
   production: "production",
   staging: "staging",
   development: "development",
+  test: "test",
+  unknown: "unknown",
 } as const;

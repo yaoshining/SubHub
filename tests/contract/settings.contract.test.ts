@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 
 import {
   getStorageClient,
@@ -45,7 +46,7 @@ const mockedDegradedReadiness: Awaited<
   ReturnType<typeof settingsService.getSystemReadiness>
 > = {
   environment: "production",
-  version: "0.1.0",
+  version: packageJson.version,
   adminInitialized: true,
   activeProviderCount: 0,
   activeCallerKeyCount: 0,
@@ -161,7 +162,7 @@ describe("Settings status API 契约", () => {
     expect(response.status).toBe(200);
     expect(payload.data).toMatchObject({
       environment: "test",
-      version: "0.1.0",
+      version: packageJson.version,
       adminInitialized: true,
       activeProviderCount: 1,
       activeCallerKeyCount: 1,

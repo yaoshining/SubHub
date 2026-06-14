@@ -109,9 +109,9 @@ CALLER_KEY_SECRET=replace-with-at-least-32-chars
 | 目的 | 入口脚本 | 对应 `pnpm` 脚本 | URL 边界 |
 | --- | --- | --- | --- |
 | schema migration | `scripts/db/migrate.ts` | `pnpm db:migrate` | `DATABASE_URL_UNPOOLED`（直连） |
-| bootstrap / 首个管理员初始化 | `scripts/db/bootstrap.ts` | `pnpm db:bootstrap` | `DATABASE_URL_UNPOOLED`（直连） |
-| dev seed | `scripts/db/seed-dev.ts` | `pnpm db:seed:dev` | `DATABASE_URL_UNPOOLED`（直连） |
-| staging seed | `scripts/db/seed-staging.ts` | `pnpm db:seed:staging` | `DATABASE_URL_UNPOOLED`（直连） |
+| bootstrap / 首个管理员初始化 | `scripts/db/bootstrap.ts` | `pnpm db:bootstrap` | 运行时读写使用 `DATABASE_URL`（pooled），direct 校验 / migration 边界使用 `DATABASE_URL_UNPOOLED` |
+| dev seed | `scripts/db/seed-dev.ts` | `pnpm db:seed:dev` | 运行时读写使用 `DATABASE_URL`（pooled），direct 校验 / migration 边界使用 `DATABASE_URL_UNPOOLED` |
+| staging seed | `scripts/db/seed-staging.ts` | `pnpm db:seed:staging` | 运行时读写使用 `DATABASE_URL`（pooled），direct 校验 / migration 边界使用 `DATABASE_URL_UNPOOLED` |
 | 运行时 readiness 探针 | `scripts/db/readiness.ts` | 由 deploy smoke 显式调用 | `DATABASE_URL`（pooled） |
 
 > 说明：所有脚本都通过 `src/lib/env.ts` 的 `readEnv()` 解析运行时身份；任何脚本若尝试在 dev / staging / prod 多套 URL 间自行路由，应视为脚本误用。

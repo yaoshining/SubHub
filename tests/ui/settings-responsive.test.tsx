@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 
 import { SettingsClient } from "@/app/(admin)/settings/settings-client";
 import type { SettingsStatus } from "@/lib/api/settings";
@@ -11,7 +12,7 @@ vi.mock("@/lib/api/settings", () => ({
 
 const settingsStatus: SettingsStatus = {
   environment: "production",
-  version: "0.1.0",
+  version: packageJson.version,
   adminInitialized: true,
   activeProviderCount: 1,
   activeCallerKeyCount: 1,

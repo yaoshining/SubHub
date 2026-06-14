@@ -3,15 +3,16 @@
  * Do not edit manually.
  * SubHub API
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { ReadinessPartialError } from "./readinessPartialError";
 import type { ReadinessSummaryAdminInitializationState } from "./readinessSummaryAdminInitializationState";
 import type { ReadinessSummaryBlockingReasonsItem } from "./readinessSummaryBlockingReasonsItem";
+import type { ReadinessSummaryEnvironment } from "./readinessSummaryEnvironment";
 import type { ReadinessSummaryMissingConditionsItem } from "./readinessSummaryMissingConditionsItem";
 
 export interface ReadinessSummary {
-  environment: string;
+  environment: ReadinessSummaryEnvironment;
   version: string;
   adminInitialized: boolean;
   /** @minimum 0 */

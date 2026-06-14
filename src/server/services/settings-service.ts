@@ -1,7 +1,8 @@
 import { and, count, countDistinct, eq } from "drizzle-orm";
+import packageJson from "../../../package.json";
 
 import type { AppErrorCode } from "@/lib/errors";
-import { readEnv } from "@/lib/env";
+import { readEnv, type RuntimeTier } from "@/lib/env";
 import {
   getStorageClient,
   type StorageDatabase,
@@ -34,7 +35,7 @@ export type SystemReadinessPartialError = {
 };
 
 export type SystemReadiness = {
-  environment: string;
+  environment: ReadinessEnvironment;
   version: string;
   adminInitialized: boolean;
   activeProviderCount: number;
@@ -58,7 +59,8 @@ export type SettingsServiceOptions = {
   now?: Date;
 };
 
-const defaultAppVersion = "0.1.0";
+const defaultAppVersion = packageJson.version;
+type ReadinessEnvironment = RuntimeTier | "test" | "unknown";
 const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
   "admin",
   "provider",
@@ -118,7 +120,10 @@ async function readSignal<T>(
   }
 }
 
-const readEnvironment = () => readEnv().NODE_ENV;
+const readEnvironment = (): Exclude<ReadinessEnvironment, "unknown"> => {
+  const env = readEnv();
+  return env.NODE_ENV === "test" ? "test" : env.resolvedTier;
+};
 
 const readVersion = () =>
   process.env.NEXT_PUBLIC_APP_VERSION ??
