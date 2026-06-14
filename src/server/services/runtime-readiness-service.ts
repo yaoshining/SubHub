@@ -57,7 +57,6 @@ type ProbeResult = { ok: true } | { ok: false; error: Error };
 let probeCache: { result: ProbeResult; expiresAt: number } | null = null;
 let probePending: Promise<ProbeResult> | null = null;
 const PROBE_CACHE_TTL_MS = 30_000;
-
 type StatusCacheEntry = { result: RuntimeReadinessStatus; expiresAt: number };
 let statusCache: StatusCacheEntry | null = null;
 let statusPending: Promise<RuntimeReadinessStatus> | null = null;
@@ -170,10 +169,7 @@ async function computeRuntimeReadinessStatus({
       await directUrlProbe(env.DATABASE_URL_UNPOOLED);
     } catch (error) {
       directUrlReady = false;
-      console.error(
-        "[RuntimeReadiness] DATABASE_URL_UNPOOLED probe failed:",
-        error,
-      );
+      console.error("[RuntimeReadiness] DATABASE_URL_UNPOOLED probe failed:", error);
       directUrlError = "DATABASE_URL_UNPOOLED 连通性校验失败。";
     }
   }
@@ -215,6 +211,7 @@ export async function getRuntimeReadinessStatus(
   };
 
   const useCache =
+    resolved.env.resolvedTier === "production" &&
     options.db === undefined &&
     options.now === undefined &&
     options.env === undefined &&

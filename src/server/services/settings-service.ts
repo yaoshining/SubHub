@@ -62,10 +62,10 @@ export type SettingsServiceOptions = {
 const defaultAppVersion = packageJson.version;
 type ReadinessEnvironment = RuntimeTier | "test" | "unknown";
 const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
+  "runtime",
   "admin",
   "provider",
   "caller_key",
-  "runtime",
 ]);
 
 const buildRuntimeStatusFallback = (
@@ -85,7 +85,11 @@ const buildRuntimeStatusFallback = (
   directUrlError: null,
   runtimeReady: !runtimeGateRequired,
   blockingReasons: runtimeGateRequired
-    ? ["direct_url_unreachable", "schema_not_ready", "bootstrap_not_ready"]
+    ? [
+        "direct_url_unreachable",
+        "schema_not_ready",
+        "admin_initialization_required",
+      ]
     : [],
   lastCheckedAt: now.toISOString(),
 });
