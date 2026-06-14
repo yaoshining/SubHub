@@ -15,14 +15,15 @@ import {
  *   仍是规则真源。
  * - 不充当 release orchestration 或自动 rollback 入口。
  * - 仅消费 `RuntimeReadinessStatus.blockingReasons` 与 `runtimeReady` 字段，不引入并行字符串字面量。
- * - 仅在 `resolvedTier === "production"` 时启用 migration gate 阻断；
- *   staging / development 仍允许 inspect，但默认不阻断 deploy smoke。
+ * - 仅在 `resolvedTier === "production"` 时支持 `--enforce` 标志；
+ *   非 production tier 传入 `--enforce` 会被显式拒绝（退出非零）。
+ * - staging / development 仍允许 inspect 状态，但默认 `enforce=false`，不阻断 deploy smoke。
  */
 export type ReadinessGateTier = "production" | "staging" | "development";
 
 export type ReadinessGateInput = {
   tier: ReadinessGateTier;
-  /** 是否把任何 blocking reason 视为必须失败；非 production tier 默认为 false。 */
+  /** 是否把任何 blocking reason 视为必须失败；仅在 production tier CLI 执行时支持；非 production 传入 --enforce 会被拒绝。 */
   enforce?: boolean;
 };
 
