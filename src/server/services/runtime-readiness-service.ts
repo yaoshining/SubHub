@@ -169,7 +169,10 @@ async function computeRuntimeReadinessStatus({
       await directUrlProbe(env.DATABASE_URL_UNPOOLED);
     } catch (error) {
       directUrlReady = false;
-      console.error("[RuntimeReadiness] DATABASE_URL_UNPOOLED probe failed:", error);
+      console.error(
+        "[RuntimeReadiness] DATABASE_URL_UNPOOLED probe failed:",
+        error,
+      );
       directUrlError = "DATABASE_URL_UNPOOLED 连通性校验失败。";
     }
   }
