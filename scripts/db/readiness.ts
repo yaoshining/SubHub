@@ -182,9 +182,6 @@ if (
   process.argv[1] &&
   import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"))
 ) {
-  const projectDir = process.cwd();
-  loadEnvConfig(projectDir);
-
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error("readiness gate 执行失败：", message);
