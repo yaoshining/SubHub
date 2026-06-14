@@ -43,6 +43,15 @@ const isProduction = (tier: ReadinessGateTier) => tier === "production";
 const parseEnforceFlag = (argv: readonly string[]) =>
   argv.includes("--enforce") || argv.includes("--enforce=true");
 
+export const assertValidReadinessGateInput = ({
+  tier,
+  enforce,
+}: ReadinessGateInput) => {
+  if (enforce && tier !== "production") {
+    throw new Error("--enforce 仅支持 production tier。");
+  }
+};
+
 export const evaluateReadinessGate = (
   status: RuntimeReadinessStatus,
   { tier, enforce = isProduction(tier) }: ReadinessGateInput,
@@ -96,6 +105,7 @@ const main = async () => {
   const env = readEnv();
   const tier = env.resolvedTier;
   const enforce = parseEnforceFlag(process.argv.slice(2));
+  assertValidReadinessGateInput({ tier, enforce });
 
   if (enforce && !isProduction(tier)) {
     console.error(
@@ -172,6 +182,9 @@ if (
   process.argv[1] &&
   import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"))
 ) {
+  const projectDir = process.cwd();
+  loadEnvConfig(projectDir);
+
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error("readiness gate 执行失败：", message);

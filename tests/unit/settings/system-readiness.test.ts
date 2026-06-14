@@ -17,6 +17,7 @@ import { createCallerKey } from "@/server/services/caller-key-service";
 import { createProvider } from "@/server/services/provider-service";
 import { getSystemReadiness } from "@/server/services/settings-service";
 import * as envModule from "@/lib/env";
+import * as runtimeReadinessService from "@/server/services/runtime-readiness-service";
 import { adminUsers } from "@/server/storage/schema";
 
 let tempDir: string;
@@ -194,6 +195,68 @@ describe("SystemReadiness 聚合", () => {
       expect(readiness.environment).toBe("staging");
       expect(readiness.runtimeGateRequired).toBe(false);
     } finally {
+      readEnvSpy.mockRestore();
+    }
+  });
+
+  it("production 下 runtime 读数失败时使用保守 fallback 并标记 runtime partial error", async () => {
+    const readEnvSpy = vi.spyOn(envModule, "readEnv").mockReturnValue({
+      NODE_ENV: "production",
+      APP_URL: "https://subhub.example.com",
+      DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
+      OPENSUBTITLES_API_URL: "https://api.opensubtitles.com/api/v1",
+      deploymentProvider: "vercel",
+      vercelEnvironment: "production",
+      gitBranch: "main",
+      resolvedTier: "production",
+      isPreviewDeployment: false,
+      requiresDirectMigrationGate: true,
+    });
+
+    const fakeDb = {
+      select: () => ({
+        from: () => ({
+          limit: async () => [{ id: "admin_1" }],
+          innerJoin: () => ({
+            where: async () => [{ value: 1 }],
+          }),
+          where: async () => [{ value: 1 }],
+        }),
+      }),
+    } as unknown as StorageDatabase;
+    const runtimeSpy = vi
+      .spyOn(runtimeReadinessService, "getRuntimeReadinessStatus")
+      .mockRejectedValue(new Error("runtime status unavailable"));
+
+    try {
+      const readiness = await getSystemReadiness({
+        db: fakeDb,
+        now: new Date("2026-05-30T12:00:00.000Z"),
+      });
+
+      expect(readiness).toMatchObject({
+        gatewayReady: false,
+        runtimeGateRequired: true,
+        runtimeReady: false,
+        schemaReady: false,
+        bootstrapReady: false,
+        directUrlReady: false,
+        blockingReasons: [
+          "direct_url_unreachable",
+          "schema_not_ready",
+          "admin_initialization_required",
+        ],
+        partialErrors: [
+          expect.objectContaining({
+            target: "runtime",
+            code: "UPSTREAM_FAILED",
+            message: "runtime status unavailable",
+          }),
+        ],
+      });
+    } finally {
+      runtimeSpy.mockRestore();
       readEnvSpy.mockRestore();
     }
   });

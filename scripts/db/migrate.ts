@@ -31,6 +31,9 @@ if (
   process.argv[1] &&
   import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"))
 ) {
+  const projectDir = process.cwd();
+  loadEnvConfig(projectDir);
+
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error("数据库 migration 失败：", message);

@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { RuntimeReadinessStatus } from "@/server/services/runtime-readiness-service";
 
-import { evaluateReadinessGate } from "../../../scripts/db/readiness";
+import {
+  assertValidReadinessGateInput,
+  evaluateReadinessGate,
+} from "../../../scripts/db/readiness";
 
 const buildReadinessStatus = (
   overrides: Partial<RuntimeReadinessStatus> = {},
@@ -102,6 +105,15 @@ describe("readiness gate script boundary", () => {
     expect(
       evaluateReadinessGate(status, { tier: "development", enforce: true }).ok,
     ).toBe(false);
+  });
+
+  it("非 production tier 显式 --enforce 时直接拒绝", () => {
+    expect(() =>
+      assertValidReadinessGateInput({ tier: "staging", enforce: true }),
+    ).toThrow("--enforce 仅支持 production tier。");
+    expect(() =>
+      assertValidReadinessGateInput({ tier: "development", enforce: true }),
+    ).toThrow("--enforce 仅支持 production tier。");
   });
 
   it("不会重新引入任何 #64 之外的 readiness 判定字符串", () => {
