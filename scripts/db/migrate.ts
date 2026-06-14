@@ -12,7 +12,6 @@ export const resolveMigrationClientOptions = ({
 });
 
 const main = async () => {
-  loadEnvConfig(process.cwd());
   const directDatabaseUrl = resolveDirectDbUrl();
   const client = createStorageClient(
     resolveMigrationClientOptions({
@@ -31,6 +30,7 @@ if (
   process.argv[1] &&
   import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"))
 ) {
+  loadEnvConfig(process.cwd());
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error("数据库 migration 失败：", message);
