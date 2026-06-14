@@ -14,7 +14,11 @@ import {
 
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { createProvider } from "@/server/services/provider-service";
-import { getSystemReadiness } from "@/server/services/settings-service";
+import {
+  getSystemReadiness,
+  readAppVersion,
+  resolveReadinessEnvironment,
+} from "@/server/services/settings-service";
 import { adminUsers } from "@/server/storage/schema";
 
 let tempDir: string;
@@ -32,6 +36,26 @@ afterEach(async () => {
 });
 
 describe("SystemReadiness 聚合", () => {
+  it("运行层级优先使用 resolvedTier，并为 test 保留专用环境值", () => {
+    expect(
+      resolveReadinessEnvironment({
+        NODE_ENV: "production",
+        resolvedTier: "staging",
+      }),
+    ).toBe("staging");
+
+    expect(
+      resolveReadinessEnvironment({
+        NODE_ENV: "test",
+        resolvedTier: "development",
+      }),
+    ).toBe("test");
+  });
+
+  it("默认版本读数回退到 package.json 的 0.2.0，而不是 0.1.0", () => {
+    expect(readAppVersion()).toBe("0.2.0");
+  });
+
   it("在管理员、Provider 与 Caller Key 都缺失时返回未就绪原因", async () => {
     const readiness = await getSystemReadiness({
       now: new Date("2026-05-30T09:00:00.000Z"),
@@ -39,7 +63,7 @@ describe("SystemReadiness 聚合", () => {
 
     expect(readiness).toMatchObject({
       environment: "test",
-      version: "0.1.0",
+      version: "0.2.0",
       adminInitialized: false,
       activeProviderCount: 0,
       activeCallerKeyCount: 0,
@@ -83,7 +107,7 @@ describe("SystemReadiness 聚合", () => {
 
     expect(readiness).toMatchObject({
       environment: "test",
-      version: "0.1.0",
+      version: "0.2.0",
       adminInitialized: true,
       activeProviderCount: 1,
       activeCallerKeyCount: 1,
@@ -128,7 +152,7 @@ describe("SystemReadiness 聚合", () => {
 
     expect(readiness).toMatchObject({
       environment: "test",
-      version: "0.1.0",
+      version: "0.2.0",
       adminInitialized: true,
       activeProviderCount: 0,
       activeCallerKeyCount: 2,

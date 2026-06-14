@@ -17,7 +17,7 @@ const mockedFetchDashboardSummary = vi.mocked(fetchDashboardSummary);
 const dashboardSummary: DashboardSummary = {
   readiness: {
     environment: "test",
-    version: "0.1.0",
+    version: "0.2.0",
     adminInitialized: true,
     activeProviderCount: 0,
     activeCallerKeyCount: 0,

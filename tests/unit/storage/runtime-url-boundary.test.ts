@@ -45,6 +45,23 @@ describe("Postgres runtime URL boundary", () => {
     });
   });
 
+  it("keeps bootstrap or seed direct URL separate from runtime URL", () => {
+    const env = createLocalTestEnv({
+      DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",
+      DATABASE_URL_UNPOOLED: "postgresql://direct-user@localhost:5432/subhub",
+    });
+
+    const boundary = resolvePostgresUrlBoundary({ env });
+
+    expect(boundary.runtimeUrl).toBe(
+      "postgresql://runtime-user@localhost:5432/subhub",
+    );
+    expect(boundary.directUrl).toBe(
+      "postgresql://direct-user@localhost:5432/subhub",
+    );
+    expect(boundary.runtimeUrl).not.toBe(boundary.directUrl);
+  });
+
   it("creates runtime client only from DATABASE_URL", () => {
     const env = createLocalTestEnv({
       DATABASE_URL: "postgresql://runtime-user@localhost:5432/subhub",

@@ -1,7 +1,8 @@
+import packageJson from "../../../package.json";
 import { and, count, countDistinct, eq } from "drizzle-orm";
 
 import type { AppErrorCode } from "@/lib/errors";
-import { readEnv } from "@/lib/env";
+import { readEnv, type AppEnv } from "@/lib/env";
 import {
   getStorageClient,
   type StorageDatabase,
@@ -43,7 +44,7 @@ export type SettingsServiceOptions = {
   now?: Date;
 };
 
-const defaultAppVersion = "0.1.0";
+const fallbackAppVersion = packageJson.version;
 const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
   "admin",
   "provider",
@@ -83,12 +84,14 @@ async function readSignal<T>(
   }
 }
 
-const readEnvironment = () => readEnv().NODE_ENV;
+export const resolveReadinessEnvironment = (
+  env: Pick<AppEnv, "NODE_ENV" | "resolvedTier"> = readEnv(),
+) => (env.NODE_ENV === "test" ? "test" : env.resolvedTier);
 
-const readVersion = () =>
+export const readAppVersion = () =>
   process.env.NEXT_PUBLIC_APP_VERSION ??
   process.env.APP_VERSION ??
-  defaultAppVersion;
+  fallbackAppVersion;
 
 export async function getSystemReadiness({
   db = getStorageClient().db,
@@ -103,8 +106,13 @@ export async function getSystemReadiness({
     activeProviderCount,
     activeCallerKeyCount,
   ] = await Promise.all([
-    readSignal("environment", readEnvironment, "unknown", partialErrors),
-    readSignal("version", readVersion, defaultAppVersion, partialErrors),
+    readSignal(
+      "environment",
+      resolveReadinessEnvironment,
+      "unknown",
+      partialErrors,
+    ),
+    readSignal("version", readAppVersion, fallbackAppVersion, partialErrors),
     readSignal(
       "admin",
       async () => {

@@ -44,6 +44,7 @@ const partialErrorTargetLabels = {
 
 const environmentLabels = {
   production: "生产环境",
+  staging: "预发布环境",
   development: "开发环境",
   test: "测试环境",
   unknown: "未知环境",

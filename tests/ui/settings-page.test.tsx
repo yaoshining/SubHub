@@ -15,7 +15,7 @@ const mockedFetchSettingsStatus = vi.mocked(fetchSettingsStatus);
 
 const settingsStatus: SettingsStatus = {
   environment: "production",
-  version: "0.1.0",
+  version: "0.2.0",
   adminInitialized: true,
   activeProviderCount: 1,
   activeCallerKeyCount: 1,
