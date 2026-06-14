@@ -230,7 +230,7 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
 
   const readinessPartialErrors =
     status?.partialErrors.filter((error) =>
-      ["admin", "provider", "caller_key"].includes(error.target),
+      ["runtime", "admin", "provider", "caller_key"].includes(error.target),
     ) ?? [];
   const hasReadinessPartialErrors = readinessPartialErrors.length > 0;
 

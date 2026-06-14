@@ -296,16 +296,12 @@ export const applyManagedSeed = async ({
   }
 
   const seedProvider = buildSeedProvider(mode, now);
-  const [existing] = await db
-    .select({ id: providers.id })
-    .from(providers)
-    .where(eq(providers.id, seedProvider.id))
-    .limit(1);
-
-  if (existing) {
-    await db
-      .update(providers)
-      .set({
+  await db
+    .insert(providers)
+    .values(seedProvider)
+    .onConflictDoUpdate({
+      target: providers.id,
+      set: {
         name: seedProvider.name,
         type: seedProvider.type,
         fallbackProviderId: seedProvider.fallbackProviderId,
@@ -318,11 +314,8 @@ export const applyManagedSeed = async ({
         lastHealthStatus: seedProvider.lastHealthStatus,
         lastErrorSummary: seedProvider.lastErrorSummary,
         updatedAt: seedProvider.updatedAt,
-      })
-      .where(eq(providers.id, seedProvider.id));
-  } else {
-    await db.insert(providers).values(seedProvider);
-  }
+      },
+    });
 
   const nextState = await inspectBootstrapState({
     db,
@@ -334,7 +327,7 @@ export const applyManagedSeed = async ({
   return {
     ...nextState,
     seedProviderId: seedProvider.id,
-    insertedProviders: existing ? 0 : 1,
-    updatedProviders: existing ? 1 : 0,
+    insertedProviders: 0,
+    updatedProviders: 0,
   };
 };

@@ -54,8 +54,8 @@ const resolveBootstrapMode = (env: AppEnv): BootstrapMode => {
 };
 
 type ProbeResult = { ok: true } | { ok: false; error: Error };
-let probeCache: { result: ProbeResult; expiresAt: number } | null = null;
-let probePending: Promise<ProbeResult> | null = null;
+const probeCache = new Map<string, { result: ProbeResult; expiresAt: number }>();
+const probePending = new Map<string, Promise<ProbeResult>>();
 const PROBE_CACHE_TTL_MS = 30_000;
 type StatusCacheEntry = { result: RuntimeReadinessStatus; expiresAt: number };
 let statusCache: StatusCacheEntry | null = null;
@@ -64,16 +64,18 @@ const STATUS_CACHE_TTL_MS = 10_000;
 
 const defaultDirectUrlProbe = async (directUrl: string): Promise<void> => {
   const now = Date.now();
-  if (probeCache !== null && now < probeCache.expiresAt) {
-    if (!probeCache.result.ok) {
-      throw probeCache.result.error;
+  const cached = probeCache.get(directUrl);
+  if (cached && now < cached.expiresAt) {
+    if (!cached.result.ok) {
+      throw cached.result.error;
     }
     return;
   }
 
   // 复用进行中的 probe promise，避免并发请求同时建立多个连接
-  if (probePending !== null) {
-    const result = await probePending;
+  const pending = probePending.get(directUrl);
+  if (pending) {
+    const result = await pending;
     if (!result.ok) throw result.error;
     return;
   }
@@ -93,20 +95,25 @@ const defaultDirectUrlProbe = async (directUrl: string): Promise<void> => {
         error: err instanceof Error ? err : new Error(String(err)),
       };
     } finally {
-      await client.close();
+      try {
+        await client.close();
+      } catch (closeErr) {
+        console.error("[RuntimeReadiness] client.close() failed:", closeErr);
+      }
+      probePending.delete(directUrl);
     }
 
-    probeCache = {
+    probeCache.set(directUrl, {
       result: probeResult,
       expiresAt: Date.now() + PROBE_CACHE_TTL_MS,
-    };
-    probePending = null;
+    });
     return probeResult;
   };
 
   // 在第一个 await 之前同步赋值，确保后续并发调用能复用此 promise
-  probePending = executeProbe();
-  const result = await probePending;
+  const promise = executeProbe();
+  probePending.set(directUrl, promise);
+  const result = await promise;
   if (!result.ok) throw result.error;
 };
 

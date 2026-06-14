@@ -25,8 +25,10 @@ describeWhenLocalPostgresEnabled("staging / dev seed smoke", () => {
     | ReturnType<typeof createDirectPostgresClient>["sql"]
     | undefined;
   let storageDb: ReturnType<typeof createStorageClient>["db"] | undefined;
+  let originalEnv: NodeJS.ProcessEnv;
 
   beforeAll(async () => {
+    originalEnv = { ...process.env };
     Object.assign(process.env, testEnv);
 
     const storageClient = createStorageClient({
@@ -53,6 +55,7 @@ describeWhenLocalPostgresEnabled("staging / dev seed smoke", () => {
   afterAll(async () => {
     await closeStorageClient?.();
     await closeDirectClient?.();
+    process.env = originalEnv;
   });
 
   it.each([

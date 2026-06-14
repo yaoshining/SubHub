@@ -69,7 +69,7 @@ export function ReadinessCards({ status }: { status: SettingsStatus }) {
     (error) => error.target === "admin",
   );
   const hasReadinessPartialError = status.partialErrors.some((error) =>
-    ["admin", "provider", "caller_key"].includes(error.target),
+    ["runtime", "admin", "provider", "caller_key"].includes(error.target),
   );
 
   return (

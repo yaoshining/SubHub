@@ -198,15 +198,23 @@ export const runDeploySmoke = async ({
 
   for (const check of smokeChecks) {
     const targetUrl = new URL(check.path, `${targetBaseUrl}/`).toString();
-    const response = await fetchImpl(targetUrl, {
-      headers: {
-        "x-subhub-deploy-smoke-tier": tier,
-      },
-    });
-    const bodyText = await response.text();
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), 30_000);
 
-    await check.validate(response, bodyText, tier);
-    console.log(`✓ ${tier} deploy smoke: ${check.label}`);
+    try {
+      const response = await fetchImpl(targetUrl, {
+        headers: {
+          "x-subhub-deploy-smoke-tier": tier,
+        },
+        signal: abortController.signal,
+      });
+      const bodyText = await response.text();
+
+      await check.validate(response, bodyText, tier);
+      console.log(`✓ ${tier} deploy smoke: ${check.label}`);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 };
 

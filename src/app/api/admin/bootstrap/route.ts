@@ -15,10 +15,14 @@ const bootstrapRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const runtimeStatus = await getRuntimeReadinessStatus().catch(
-      () => undefined,
-    );
-    if (runtimeStatus && !runtimeStatus.schemaReady) {
+    const runtimeStatus = await getRuntimeReadinessStatus().catch((err) => {
+      throw new AppError(
+        "SERVICE_NOT_READY",
+        "运行时就绪状态校验失败，无法执行首个管理员初始化。",
+        "runtime_readiness",
+      );
+    });
+    if (!runtimeStatus.schemaReady) {
       throw new AppError(
         "SERVICE_NOT_READY",
         `schema 未就绪，无法执行首个管理员初始化。${runtimeStatus.missingTables.length > 0 ? ` 缺少表：${runtimeStatus.missingTables.join(", ")}。` : ""}`,

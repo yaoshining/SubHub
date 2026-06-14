@@ -71,28 +71,37 @@ const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
 const buildRuntimeStatusFallback = (
   now: Date,
   runtimeGateRequired: boolean,
-): RuntimeReadinessStatus => ({
-  initialized: false,
-  mode: runtimeGateRequired ? "production" : "development",
-  schemaReady: !runtimeGateRequired,
-  bootstrapReady: !runtimeGateRequired,
-  seedState: runtimeGateRequired ? "not_applicable" : "pending",
-  adminInitializationState: "required",
-  missingTables: [],
-  adminUsersCount: 0,
-  runtimeGateRequired,
-  directUrlReady: !runtimeGateRequired,
-  directUrlError: null,
-  runtimeReady: !runtimeGateRequired,
-  blockingReasons: runtimeGateRequired
-    ? [
-        "direct_url_unreachable",
-        "schema_not_ready",
-        "admin_initialization_required",
-      ]
-    : [],
-  lastCheckedAt: now.toISOString(),
-});
+  runtimeTier: RuntimeTier,
+): RuntimeReadinessStatus => {
+  const mode =
+    runtimeTier === "production"
+      ? "production"
+      : runtimeTier === "staging"
+        ? "staging"
+        : "development";
+  return {
+    initialized: false,
+    mode,
+    schemaReady: !runtimeGateRequired,
+    bootstrapReady: !runtimeGateRequired,
+    seedState: runtimeGateRequired ? "not_applicable" : "pending",
+    adminInitializationState: "required",
+    missingTables: [],
+    adminUsersCount: 0,
+    runtimeGateRequired,
+    directUrlReady: !runtimeGateRequired,
+    directUrlError: null,
+    runtimeReady: !runtimeGateRequired,
+    blockingReasons: runtimeGateRequired
+      ? [
+          "direct_url_unreachable",
+          "schema_not_ready",
+          "admin_initialization_required",
+        ]
+      : [],
+    lastCheckedAt: now.toISOString(),
+  };
+};
 
 async function countRows(
   query: Promise<Array<{ value: number }>>,
@@ -142,14 +151,22 @@ export async function getSystemReadiness({
   now = new Date(),
 }: SettingsServiceOptions = {}): Promise<SystemReadiness> {
   const partialErrors: SystemReadinessPartialError[] = [];
-  const runtimeGateRequiredByEnv = (() => {
+  const fallbackTierInfo = (() => {
     try {
-      return readEnv().resolvedTier === "production";
+      const env = readEnv();
+      return {
+        runtimeGateRequired: env.resolvedTier === "production",
+        runtimeTier: env.resolvedTier,
+      };
     } catch {
       // readEnv() 解析失败（如环境变量缺失/不合法）时，以 VERCEL_ENV 作为最保守
       // 兜底判断，确保 production 部署不会因 readEnv 异常而被误判为非 production。
       // 注意：此处不检查 VERCEL_GIT_COMMIT_REF，仅用于 fallback 的 gate 方向判断。
-      return process.env.VERCEL_ENV === "production";
+      const isProd = process.env.VERCEL_ENV === "production";
+      return {
+        runtimeGateRequired: isProd,
+        runtimeTier: (isProd ? "production" : "development") as RuntimeTier,
+      };
     }
   })();
 
@@ -166,7 +183,11 @@ export async function getSystemReadiness({
     readSignal(
       "runtime",
       () => getRuntimeReadinessStatus({ db, now }),
-      buildRuntimeStatusFallback(now, runtimeGateRequiredByEnv),
+      buildRuntimeStatusFallback(
+        now,
+        fallbackTierInfo.runtimeGateRequired,
+        fallbackTierInfo.runtimeTier,
+      ),
       partialErrors,
     ),
     readSignal(

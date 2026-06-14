@@ -104,7 +104,7 @@ To execute: `/speckit.git.commit`
 - [ ] T023 [US1] 在 `src/server/services/dashboard-service.ts`、`src/server/services/settings-service.ts`、`src/app/api/admin/dashboard/summary/route.ts`、`src/app/api/admin/settings/status/route.ts` 落地生产运行时的数据库就绪状态、bootstrap 状态和失败护栏，且不引入新的后台治理流程
 - [ ] T024 [US1] 在 `src/server/api/admin-auth.ts` 和 `src/server/api/response.ts` 增加 production 运行护栏与错误映射，使 migration / bootstrap 未完成时返回明确失败结果而不是半可用状态
 - [ ] T025 [US1] 在 `src/server/subtitles/subtitle-gateway.ts`、`src/server/subtitles/subtitle-download.ts`、`src/app/api/subtitles/search/route.ts`、`src/app/api/subtitles/download/route.ts` 验证对外字幕主路径完全走 pooled Postgres 运行时连接，且不改变现有统一 API 行为
-- [ ] T026 [US1] 在 `.github/workflows/db-migrate.yml` 落地 production 迁移工作流，使用 `DATABASE_URL_UNPOOLED` 执行 migration / bootstrap，并在失败时阻断应用 promotion；本期只交付最小 migration gate，不引入自动 rollback 或多阶段自动 promotion pipeline（与 issue #70 边界对齐）
+- [ ] T026 [US1] 在 `.github/workflows/db-migrate.yml` 落地 production 迁移工作流，使用 `DATABASE_URL_UNPOOLED` 执行 migration / bootstrap，并在失败时阻断应用 promotion；本期只交付最小 migration gate，不引入自动 rollback 或多阶段自动 promotion pipeline（与 issue #70 边界对齐）。前置条件：staging migration 必须先完成才能执行 production migration
 - [ ] T027 [US1] 在 `.github/workflows/deploy-smoke.yml` 落地 production 部署后 smoke gate，验证 Postgres 运行下的后台与对外 API 主链路；本期只交付最小失败阻断，不在本 issue 内实现完整 release orchestration（与 issue #70 边界对齐）
 - [ ] T028 [US1] 运行 `pnpm db:migrate`、`pnpm db:bootstrap`、`pnpm test -- tests/smoke/production-runtime.smoke.test.ts tests/integration/runtime/production-readiness-gate.test.ts tests/integration/admin-auth-flow.test.ts tests/integration/settings-readiness-flow.test.ts` 并修复 `src/server/services/`、`src/app/api/admin/`、`src/app/api/subtitles/`、`.github/workflows/` 中被触达文件
 
@@ -171,7 +171,7 @@ To execute: `/speckit.git.commit`
 - [ ] T053 [US4] 在 `src/server/storage/bootstrap.ts` 和 `scripts/db/bootstrap.ts` 明确区分 production bootstrap、staging seed、dev seed 的初始化模式，并约束管理员初始化只在“无管理员且显式允许初始化”时触发
 - [ ] T054 [US4] 在 `scripts/db/seed-dev.ts` 和 `scripts/db/seed-staging.ts` 实现非生产 seed，确保 staging/dev 可重复初始化，且 production 永不执行 seed
 - [ ] T055 [US4] 在 `.github/workflows/db-migrate.yml` 为 staging 增加 direct URL migration job、readiness gate 和失败阻断逻辑，并与 production job 保持同一套受控责任边界；本期只交付最小 staging migration gate，不实现自动 rollback 或跨环境自动 promotion（与 issue #70 边界对齐）
-- [ ] T056 [US4] 在 `.github/workflows/deploy-smoke.yml` 和 `.github/workflows/ci.yml` 增加 post-migration smoke gate、release-blocking checks 和三层环境验证步骤，阻止失败实例被 promotion；本期只交付最小 CI / deploy 门禁，不在本 issue 内引入平台级长期发布治理（与 issue #70 边界对齐）
+- [ ] T056 [US4] 在 `.github/workflows/deploy-smoke.yml` 增加 post-migration smoke gate、release-blocking checks 和三层环境验证步骤，阻止失败实例被 promotion；本期只交付最小 deploy 门禁，所有部署后验证逻辑均保留在 deploy-smoke.yml 中，不在本 issue 内引入平台级长期发布治理（与 issue #70 边界对齐）
 - [ ] T057 [US4] 在 `specs/002-migrate-neon-vercel/data-model.md`、`specs/002-migrate-neon-vercel/quickstart.md` 同步 `BootstrapState`、seed 规则和 production / staging / dev 责任边界
 - [ ] T058 [US4] 运行 `pnpm db:bootstrap`、`pnpm db:seed:dev`、`pnpm db:seed:staging`、`pnpm test -- tests/integration/storage/greenfield-production-init.test.ts tests/integration/storage/production-bootstrap-repeatability.test.ts tests/integration/storage/seed-repeatability.test.ts tests/smoke/staging-dev-seed.smoke.test.ts` 并修复 `src/server/storage/`、`scripts/db/`、`.github/workflows/`、`specs/002-migrate-neon-vercel/` 中被触达文件
 
