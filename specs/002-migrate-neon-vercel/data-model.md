@@ -1,5 +1,8 @@
 # Neon Postgres + Vercel 运行时迁移 - 数据模型
 
+**目标版本**：`v0.2.0`（数据库与部署生产化版本）。
+**关联 issue**：`#62`（002 主追踪 issue）、`#64`（production runtime readiness）、`#66`（Vercel / GitHub Actions migration & deploy gate）、`#68`（本文档所属 issue：002 回写迁移决策、runbook 与 quickstart 收尾）。
+
 ## RuntimeEnvironment
 
 **用途**: 表示应用当前所处的运行身份，用于决定数据库目标、部署门禁与初始化策略。

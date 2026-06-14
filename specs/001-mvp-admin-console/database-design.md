@@ -1,5 +1,21 @@
 # MVP 管理控制台与统一字幕出口 - 数据库设计
 
+## 0. v0.2.0 数据库落地状态
+
+**目标版本**：`v0.2.0`（数据库与部署生产化版本）。
+**关联 issue**：`#62`（002 主追踪 issue）、`#68`（本节所属 issue：002 回写迁移决策、runbook 与 quickstart 收尾）。
+
+自 `v0.2.0` 起：
+
+1. **Postgres 成为 SubHub 当前 MVP 的正式运行基线**。
+   正式运行底座由 SQLite + 单机部署假设切换到 Neon Postgres + Vercel；正式运行底座的语义定义、环境映射与运行手册由 `docs/decisions/neon-vercel-runtime.md`、`docs/runtime/environment-mapping.md` 与 `docs/workflows/vercel-neon-environments.md` 维护。
+2. **SQLite 已降级为 `001-mvp-admin-console` 阶段的历史实现参考**，不再作为当前正式部署数据库，也不再作为当前正式交付中的数据迁移来源。
+3. **Postgres schema / migration 独立建立**：SQLite 时代的 migration 历史不做 1:1 继承，Postgres baseline 由 `specs/002-migrate-neon-vercel/` 收敛。
+4. **本文件保留并继续作为 001 数据语义真源**：本文件定义的实体、字段、状态、唯一约束、外键、索引、敏感数据处理与迁移策略等"领域语义"在 `v0.2.0` 不变；只是"承载这些语义的数据库"从 SQLite 切换到 Postgres。
+5. **不再以"先完成 SQLite 历史数据迁移"为 `v0.2.0` 上线前置条件**：SQLite 历史数据迁入 Neon 不属于当前 002 的正式交付范围。
+
+如果后续要在 001 数据语义上做新的结构性调整，应先回写本文件与 `data-model.md`；如果只是"承载数据库切换到 Postgres 后的存储实现细节"（例如索引写法、约束写法、迁移目录结构），应更新 `specs/002-migrate-neon-vercel/` 中的相关章节。
+
 ## 1. 文档定位
 
 本文件是 `001-mvp-admin-console` 的数据库落地设计基线，面向实现阶段的 Drizzle schema、migration、数据库访问层、后端服务、测试与未来数据库迁移。它不是纯产品层 data model，也不替代 API 契约或页面规范。
