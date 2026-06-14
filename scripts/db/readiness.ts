@@ -7,9 +7,6 @@ import {
   type RuntimeReadinessStatus,
 } from "../../src/server/services/runtime-readiness-service";
 
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
-
 /**
  * #70 migration / deploy gate 专用 readiness 消费脚本。
  *
@@ -94,9 +91,17 @@ export const resolveReadinessClientOptions = ({
 });
 
 const main = async () => {
+  loadEnvConfig(process.cwd());
   const env = readEnv();
   const tier = env.resolvedTier;
   const enforce = parseEnforceFlag(process.argv.slice(2));
+
+  if (enforce && !isProduction(tier)) {
+    console.error(
+      `[readiness-gate] --enforce 仅在 production tier 下支持，当前 tier 为 ${tier}，拒绝执行。`,
+    );
+    process.exit(1);
+  }
 
   if (tier === "production" && enforce) {
     console.log(

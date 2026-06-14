@@ -58,6 +58,11 @@ let probeCache: { result: ProbeResult; expiresAt: number } | null = null;
 let probePending: Promise<ProbeResult> | null = null;
 const PROBE_CACHE_TTL_MS = 30_000;
 
+type StatusCacheEntry = { result: RuntimeReadinessStatus; expiresAt: number };
+let statusCache: StatusCacheEntry | null = null;
+let statusPending: Promise<RuntimeReadinessStatus> | null = null;
+const STATUS_CACHE_TTL_MS = 10_000;
+
 const defaultDirectUrlProbe = async (directUrl: string): Promise<void> => {
   const now = Date.now();
   if (probeCache !== null && now < probeCache.expiresAt) {
@@ -138,12 +143,17 @@ const buildBlockingReasons = (status: {
   return blockingReasons;
 };
 
-export async function getRuntimeReadinessStatus({
-  db = getStorageClient().db,
-  now = new Date(),
-  env = readEnv(),
-  directUrlProbe = defaultDirectUrlProbe,
-}: RuntimeReadinessServiceOptions = {}): Promise<RuntimeReadinessStatus> {
+async function computeRuntimeReadinessStatus({
+  db,
+  now,
+  env,
+  directUrlProbe,
+}: {
+  db: StorageDatabase;
+  now: Date;
+  env: AppEnv;
+  directUrlProbe: (directUrl: string) => Promise<void>;
+}): Promise<RuntimeReadinessStatus> {
   const mode = resolveBootstrapMode(env);
   const inspection = await inspectBootstrapState({
     db,
@@ -192,6 +202,49 @@ export async function getRuntimeReadinessStatus({
     blockingReasons,
     lastCheckedAt: inspection.state.lastValidatedAt,
   };
+}
+
+export async function getRuntimeReadinessStatus(
+  options: RuntimeReadinessServiceOptions = {},
+): Promise<RuntimeReadinessStatus> {
+  const resolved = {
+    db: options.db ?? getStorageClient().db,
+    now: options.now ?? new Date(),
+    env: options.env ?? readEnv(),
+    directUrlProbe: options.directUrlProbe ?? defaultDirectUrlProbe,
+  };
+
+  const useCache =
+    options.db === undefined &&
+    options.now === undefined &&
+    options.env === undefined &&
+    options.directUrlProbe === undefined;
+
+  if (!useCache) {
+    return computeRuntimeReadinessStatus(resolved);
+  }
+
+  const nowMs = Date.now();
+  if (statusCache !== null && nowMs < statusCache.expiresAt) {
+    return statusCache.result;
+  }
+  if (statusPending !== null) {
+    return statusPending;
+  }
+
+  const pending = computeRuntimeReadinessStatus(resolved).then(
+    (result) => {
+      statusCache = { result, expiresAt: Date.now() + STATUS_CACHE_TTL_MS };
+      statusPending = null;
+      return result;
+    },
+    (err: unknown) => {
+      statusPending = null;
+      throw err;
+    },
+  );
+  statusPending = pending;
+  return pending;
 }
 
 export async function assertProductionRuntimeReady(

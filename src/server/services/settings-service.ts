@@ -65,6 +65,7 @@ const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
   "admin",
   "provider",
   "caller_key",
+  "runtime",
 ]);
 
 const buildRuntimeStatusFallback = (
@@ -83,7 +84,9 @@ const buildRuntimeStatusFallback = (
   directUrlReady: !runtimeGateRequired,
   directUrlError: null,
   runtimeReady: !runtimeGateRequired,
-  blockingReasons: runtimeGateRequired ? ["bootstrap_not_ready"] : [],
+  blockingReasons: runtimeGateRequired
+    ? ["direct_url_unreachable", "schema_not_ready", "bootstrap_not_ready"]
+    : [],
   lastCheckedAt: now.toISOString(),
 });
 
@@ -235,7 +238,9 @@ export async function getSystemReadiness({
     gatewayReady:
       missingConditions.length === 0 &&
       !hasReadinessPartialErrors &&
-      runtimeStatus.runtimeReady,
+      runtimeStatus.schemaReady &&
+      runtimeStatus.bootstrapReady &&
+      (!runtimeStatus.runtimeGateRequired || runtimeStatus.runtimeReady),
     runtimeGateRequired: runtimeStatus.runtimeGateRequired,
     runtimeReady: runtimeStatus.runtimeReady,
     schemaReady: runtimeStatus.schemaReady,

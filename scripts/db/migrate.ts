@@ -2,9 +2,6 @@ import { loadEnvConfig } from "@next/env";
 import { resolveDirectDbUrl } from "../../src/lib/db-url";
 import { createStorageClient } from "../../src/server/storage/client";
 
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
-
 export const resolveMigrationClientOptions = ({
   DATABASE_URL_UNPOOLED,
 }: {
@@ -15,6 +12,7 @@ export const resolveMigrationClientOptions = ({
 });
 
 const main = async () => {
+  loadEnvConfig(process.cwd());
   const directDatabaseUrl = resolveDirectDbUrl();
   const client = createStorageClient(
     resolveMigrationClientOptions({
