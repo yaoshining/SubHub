@@ -4,9 +4,6 @@ import { readEnv, isInitialAdminBootstrapAllowed } from "../../src/lib/env";
 import { createStorageClient } from "../../src/server/storage/client";
 import { runBootstrap } from "../../src/server/storage/bootstrap";
 
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
-
 const requireInitialAdminInput = () => {
   const identifier = process.env.INITIAL_ADMIN_IDENTIFIER?.trim();
   const displayName = process.env.INITIAL_ADMIN_DISPLAY_NAME?.trim();
@@ -41,6 +38,7 @@ export const resolveBootstrapClientOptions = ({
 });
 
 const main = async () => {
+  loadEnvConfig(process.cwd());
   const env = readEnv();
   const initialAdminInput = requireInitialAdminInput();
   const client = createStorageClient(

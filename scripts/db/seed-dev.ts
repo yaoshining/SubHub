@@ -4,9 +4,6 @@ import { readEnv } from "../../src/lib/env";
 import { createStorageClient } from "../../src/server/storage/client";
 import { applyManagedSeed } from "../../src/server/storage/bootstrap";
 
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
-
 export const resolveSeedDevClientOptions = ({
   DATABASE_URL,
   DATABASE_URL_UNPOOLED,
@@ -19,6 +16,7 @@ export const resolveSeedDevClientOptions = ({
 });
 
 const main = async () => {
+  loadEnvConfig(process.cwd());
   const env = readEnv();
 
   if (env.resolvedTier !== "development") {

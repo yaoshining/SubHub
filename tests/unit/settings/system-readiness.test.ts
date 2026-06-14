@@ -186,13 +186,15 @@ describe("SystemReadiness 聚合", () => {
       requiresDirectMigrationGate: true,
     });
 
-    const readiness = await getSystemReadiness({
-      now: new Date("2026-05-30T11:00:00.000Z"),
-    });
+    try {
+      const readiness = await getSystemReadiness({
+        now: new Date("2026-05-30T11:00:00.000Z"),
+      });
 
-    expect(readiness.environment).toBe("staging");
-    expect(readiness.runtimeGateRequired).toBe(false);
-
-    readEnvSpy.mockRestore();
+      expect(readiness.environment).toBe("staging");
+      expect(readiness.runtimeGateRequired).toBe(false);
+    } finally {
+      readEnvSpy.mockRestore();
+    }
   });
 });
