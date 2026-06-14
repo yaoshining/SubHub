@@ -1,5 +1,8 @@
 # Neon Postgres + Vercel 运行时迁移 - Quickstart
 
+**目标版本**：`v0.2.0`（数据库与部署生产化版本）。
+**关联 issue**：`#62`（002 主追踪 issue）、`#64`（production runtime readiness）、`#66`（Vercel / GitHub Actions migration & deploy gate）、`#68`（本文档所属 issue：002 回写迁移决策、runbook 与 quickstart 收尾）。
+
 说明：本 quickstart 只提供 002 的执行入口与操作提示。运行时环境映射与 Preview 分支白名单的仓库级真源以 `docs/runtime/environment-mapping.md` 为准；若本文件与仓库级真源冲突，应优先回收本文件中的局部表述。
 
 ## 1. 前置条件
@@ -186,7 +189,7 @@ CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 
 说明：
 
 - 普通 Preview 白名单分支不进入 production migration gate
-- 当前阶段 deploy smoke 只覆盖最小可达性与公开接口校验；最终 readiness 阻断条件等待 #64 收敛后再接入
+- 当前阶段 deploy smoke 只覆盖最小可达性与公开接口校验；production readiness 最终阻断语义由 `#64` 在当前 `v0.2.0` 中提供并已接入，不在本 quickstart 内重新定义
 
 ### production
 
@@ -201,4 +204,77 @@ CI 约束：GitHub Actions 中的 migration / integration / contract / db tests 
 
 - Vercel build / start 不应隐式执行 production migration
 - 当前阶段只收敛 migration / bootstrap / 最小 smoke 的顺序边界
-- production readiness 的最终阻断语义仍等待 #64 明确后再接入
+- production readiness 的最终阻断语义由 `#64` 在当前 `v0.2.0` 中提供并已接入，不在本 quickstart 内重新定义
+
+## 8. dev / staging dry run 复现记录
+
+本节是 `v0.2.0` 阶段对 dev 与 staging 的最小 dry run 复现记录；它的目标不是新增任何环境能力，而是确保后续 issue / implementation 能按本 quickstart 复现最小闭环。
+除非后续 issue 明确补充执行记录，否则本节应被视为 **runbook / 复现步骤真源**，而不是“本 PR 已在真实 Neon dev / staging 环境完成实跑验证”的证明。
+
+### 8.1 dev dry run 复现命令
+
+前置：
+
+- 已准备 Neon dev 数据库，并取得 `DEV_DATABASE_URL` / `DEV_DATABASE_URL_UNPOOLED`。
+- 本地已配置 `.env.development.local`，至少含：
+  - `DEV_DATABASE_URL=postgres://<dev-pooled-url>`
+  - `DEV_DATABASE_URL_UNPOOLED=postgres://<dev-direct-url>`
+  - `APP_URL=http://localhost:3000`
+  - `PROVIDER_CREDENTIAL_ENCRYPTION_KEY=replace-with-at-least-32-chars`
+  - `ADMIN_SESSION_SECRET=replace-with-at-least-32-chars`
+  - `CALLER_KEY_SECRET=replace-with-at-least-32-chars`
+
+复现命令：
+
+```bash
+# 1. 安装依赖
+pnpm install
+
+# 2. 对 dev 数据库执行 schema migration
+pnpm db:migrate
+
+# 3. 执行 bootstrap，输出当前 bootstrap / adminInitialization 状态
+pnpm db:bootstrap
+
+# 4. 写 dev seed（仅 dev tier 允许；非 development tier 会显式失败）
+pnpm db:seed:dev
+
+# 5. 启动本地 dev 服务
+pnpm dev
+```
+
+预期结果：
+
+- `pnpm db:migrate` 成功完成 Postgres baseline migration，且未在 SQLite 文件上产生任何写动作。
+- `pnpm db:bootstrap` 输出 `mode=development`，并按当前实现展示 `seedState=pending` 与 `adminInitializationState`。
+- `pnpm db:seed:dev` 成功写入固定前缀 `seed_provider_development_opensubtitles` 占位 provider，可重复执行。
+- `pnpm dev` 启动后，后台登录、Dashboard、Provider 列表与 Settings 就绪状态接口均返回 dev 数据。
+
+### 8.2 staging dry run 复现命令
+
+前置：
+
+- 已准备 Neon staging 数据库，并取得 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`（由 Vercel `Preview` 环境在 `preview` 分支下注入）。
+- 已配置 GitHub `staging` environment，提供 `DATABASE_URL` / `DATABASE_URL_UNPOOLED` / `APP_URL` / `PROVIDER_CREDENTIAL_ENCRYPTION_KEY` / `ADMIN_SESSION_SECRET` / `CALLER_KEY_SECRET`。
+
+复现命令（推荐通过受控 workflow）：
+
+1. 推送 `preview` 分支，触发 `.github/workflows/db-migrate.yml` 的 `staging` job。
+2. 由该 job 显式执行 `pnpm db:migrate` 与 `pnpm db:bootstrap`。
+3. 若 staging 仍无管理员，按本文件第 3 节临时设置 `ALLOW_INITIAL_ADMIN_BOOTSTRAP=true` 与 `INITIAL_ADMIN_*`，再次执行 `pnpm db:bootstrap`。
+4. （可选）按本文件第 4 节执行 `pnpm db:seed:staging`。
+5. 等待 Vercel Preview 部署完成。
+6. 由 `.github/workflows/deploy-smoke.yml` 以 `target=staging` 执行最小 smoke gate。
+
+预期结果：
+
+- staging migration 与 bootstrap 在 `staging` job 内完成；Vercel build / start 不隐式执行 production migration。
+- Preview 部署完成后，`pnpm db:seed:staging` 写入固定前缀 `seed_provider_staging_opensubtitles` 占位 provider；不进入 production 数据库。
+- `deploy-smoke.yml` 校验通过后，Preview 部署被视为最小可用。
+
+### 8.3 已知阻塞项与边界
+
+- 仓库当前阶段 `v0.2.0` 不会执行 SQLite 历史数据迁入 Neon；如需补做，应作为独立 feature / issue 推进，不在本 quickstart 内。
+- `pnpm db:seed:dev` / `pnpm db:seed:staging` 是 idempotent，但仍依赖当前 `bootstrapReady = true`；若数据库未先完成 bootstrap，seed 会失败。
+- 当前 dev / staging dry run 都基于 Neon dev / Neon staging；本地真实数据库测试主线仍是本地 Docker Postgres（`subhub-postgres-test`）与 GitHub Actions Postgres service。
+- 若后续引入 `v0.2.x` 扩展（例如 PR 级独立数据库 branch），本节应同步更新以反映新的 dry run 路径，不在本 issue 范围内重写。
