@@ -1,4 +1,5 @@
 import { and, count, countDistinct, eq } from "drizzle-orm";
+import packageJson from "../../../package.json";
 
 import type { AppErrorCode } from "@/lib/errors";
 import { readEnv } from "@/lib/env";
@@ -58,7 +59,7 @@ export type SettingsServiceOptions = {
   now?: Date;
 };
 
-const defaultAppVersion = "0.1.0";
+const defaultAppVersion = packageJson.version;
 const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
   "admin",
   "provider",
@@ -118,7 +119,10 @@ async function readSignal<T>(
   }
 }
 
-const readEnvironment = () => readEnv().NODE_ENV;
+const readEnvironment = () => {
+  const env = readEnv();
+  return env.NODE_ENV === "test" ? "test" : env.resolvedTier;
+};
 
 const readVersion = () =>
   process.env.NEXT_PUBLIC_APP_VERSION ??

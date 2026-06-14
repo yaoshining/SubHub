@@ -1,5 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 
 import { SettingsClient } from "@/app/(admin)/settings/settings-client";
 import { fetchSettingsStatus } from "@/lib/api/settings";
@@ -15,7 +16,7 @@ const mockedFetchSettingsStatus = vi.mocked(fetchSettingsStatus);
 
 const settingsStatus: SettingsStatus = {
   environment: "production",
-  version: "0.1.0",
+  version: packageJson.version,
   adminInitialized: true,
   activeProviderCount: 1,
   activeCallerKeyCount: 1,
