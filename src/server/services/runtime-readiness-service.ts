@@ -54,7 +54,10 @@ const resolveBootstrapMode = (env: AppEnv): BootstrapMode => {
 };
 
 type ProbeResult = { ok: true } | { ok: false; error: Error };
-const probeCache = new Map<string, { result: ProbeResult; expiresAt: number }>();
+const probeCache = new Map<
+  string,
+  { result: ProbeResult; expiresAt: number }
+>();
 const probePending = new Map<string, Promise<ProbeResult>>();
 const PROBE_CACHE_TTL_MS = 30_000;
 type StatusCacheEntry = { result: RuntimeReadinessStatus; expiresAt: number };

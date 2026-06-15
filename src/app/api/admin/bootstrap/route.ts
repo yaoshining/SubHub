@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { AppError } from "@/lib/errors";
+import { isInitialAdminBootstrapAllowed } from "@/lib/env";
 import { apiErrorFromUnknown, apiSuccess } from "@/server/api/response";
 import { createInitialAdmin } from "@/server/services/bootstrap-service";
 import { getRuntimeReadinessStatus } from "@/server/services/runtime-readiness-service";
@@ -15,7 +16,15 @@ const bootstrapRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const runtimeStatus = await getRuntimeReadinessStatus().catch((err) => {
+    if (!isInitialAdminBootstrapAllowed()) {
+      throw new AppError(
+        "FORBIDDEN",
+        "当前环境未显式允许首个管理员初始化。",
+        "bootstrap",
+      );
+    }
+
+    const runtimeStatus = await getRuntimeReadinessStatus().catch(() => {
       throw new AppError(
         "SERVICE_NOT_READY",
         "运行时就绪状态校验失败，无法执行首个管理员初始化。",

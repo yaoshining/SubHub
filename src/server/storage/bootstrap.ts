@@ -296,6 +296,10 @@ export const applyManagedSeed = async ({
   }
 
   const seedProvider = buildSeedProvider(mode, now);
+  const alreadyExists = await resolveSeedProviderExists(
+    db,
+    mode as Exclude<BootstrapMode, "production">,
+  );
   await db
     .insert(providers)
     .values(seedProvider)
@@ -327,7 +331,7 @@ export const applyManagedSeed = async ({
   return {
     ...nextState,
     seedProviderId: seedProvider.id,
-    insertedProviders: 0,
-    updatedProviders: 0,
+    insertedProviders: alreadyExists ? 0 : 1,
+    updatedProviders: alreadyExists ? 1 : 0,
   };
 };
