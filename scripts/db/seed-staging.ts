@@ -1,0 +1,54 @@
+import { loadEnvConfig } from "@next/env";
+
+import { readEnv } from "../../src/lib/env";
+import { createStorageClient } from "../../src/server/storage/client";
+import { applyManagedSeed } from "../../src/server/storage/bootstrap";
+
+export const resolveSeedStagingClientOptions = ({
+  DATABASE_URL,
+  DATABASE_URL_UNPOOLED,
+}: {
+  DATABASE_URL: string;
+  DATABASE_URL_UNPOOLED: string;
+}) => ({
+  runtimeDatabaseUrl: DATABASE_URL,
+  directDatabaseUrl: DATABASE_URL_UNPOOLED,
+});
+
+const main = async () => {
+  loadEnvConfig(process.cwd());
+  const env = readEnv();
+
+  if (env.resolvedTier !== "staging") {
+    throw new Error("db:seed:staging 仅允许在 staging tier 执行。");
+  }
+
+  const client = createStorageClient(
+    resolveSeedStagingClientOptions({
+      DATABASE_URL: env.DATABASE_URL,
+      DATABASE_URL_UNPOOLED: env.DATABASE_URL_UNPOOLED,
+    }),
+  );
+
+  try {
+    const result = await applyManagedSeed({
+      db: client.db,
+      mode: "staging",
+    });
+
+    console.log(JSON.stringify(result, null, 2));
+  } finally {
+    await client.close();
+  }
+};
+
+if (
+  process.argv[1] &&
+  import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"))
+) {
+  main().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("staging seed 失败：", message);
+    process.exit(1);
+  });
+}

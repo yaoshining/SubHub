@@ -112,7 +112,9 @@
 
 1. **Given** 一个新的 dev 或 staging 数据库，**When** 执行初始化流程，**Then** schema、基础 bootstrap 和后续应用启动顺序清晰且可重复。
 2. **Given** 一个已经存在 schema 的环境，**When** 重复执行 migration 流程，**Then** 系统不会错误重置数据，也不会把测试数据混入正式环境。
-3. **Given** 团队准备生产发布，**When** 执行受控 migration 与部署流程，**Then** 可明确区分数据库变更、应用发布和发布后验证的责任边界。
+3. **Given** 团队准备生产发布，**When** 执行受控 migration 与部署流程，**Then** 可明确区分数据库变更、应用发布和发布后验证的责任边界，且失败时必须明确阻断 promotion，不留下半可用实例。
+
+> 边界说明：本用户故事只覆盖当前阶段 v0.2.0 上线前所需的最小 migration / deploy gate。不引入完整 release orchestration、自动 rollback 体系、多阶段自动 promotion pipeline 或平台级长期发布治理框架。
 
 ---
 
@@ -147,7 +149,7 @@
 - **FR-009**: 系统 MUST 将当前正式交付基线建立在独立的 Postgres schema / migration / bootstrap 路径上，不以 SQLite 历史数据导入为前置条件。
 - **FR-010**: 系统 MUST 明确 SQLite 历史数据迁移不属于当前 002 的正式交付范围；Postgres 基线独立建立，且不把 SQLite 时代的 migration 历史作为 1:1 迁移目标。
 - **FR-011**: 系统 MUST 定义 bootstrap、seed 和管理员初始化在新环境下的职责边界，明确哪些是首次环境初始化必需步骤，哪些属于可选测试或演示数据。
-- **FR-012**: 系统 MUST 定义 production 环境中 migration 的执行策略，并明确它与应用部署、发布确认和回滚判断之间的顺序关系。
+- **FR-012**: 系统 MUST 定义 production 环境中 migration 的执行策略，并明确它与应用部署、发布确认之间的最小顺序关系；migration 与应用部署必须分离，部署失败时必须明确阻断 promotion。本期不实现自动 rollback。
 - **FR-013**: 系统 MUST 为 pooled 与 unpooled 数据库 URL 定义明确使用边界，使运行时请求路径、迁移流程和运维脚本不会误用同一连接类型。
 - **FR-014**: 系统 MUST 定义 Vercel 部署模型下的环境变量策略，包括 production、preview 和 development 所需配置类别与最小必需项；同时为测试与 CI 定义 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED` 的专用配置语义。
 - **FR-015**: 系统 MUST 明确 preview/staging、dev 与 test 的数据策略，区分发布前验证数据、开发测试数据、测试隔离数据与正式生产数据。
@@ -158,6 +160,7 @@
 - **FR-020**: 系统 MUST 保证当前三层环境模型在未来扩展到 PR 独立数据库 branch 时仍可兼容，不得把当前环境命名、数据库解析或初始化流程写死为不可扩展结构。
 - **FR-021**: 系统 MUST 定义当环境映射错误、数据库连接异常、migration 失败或初始化不完整时的可识别失败结果，使维护者可以明确判断环境不可运行。
 - **FR-021A**: 系统 MUST 对不在仓库级 Preview 分支白名单内的 Preview 部署直接失败；不得静默映射到 dev，也不得对任意 Preview 分支自动放行。
+- **FR-021B**: 系统 MUST 把 production runtime readiness 与 migration / deploy gate 收敛为当前阶段的最小职责集，不再引入长期运维治理框架、runtime 编排能力、完整 release orchestration、自动 rollback 体系、多阶段自动 promotion pipeline 或平台级长期发布治理框架。
 - **FR-022**: 系统 MUST 定义本 feature 与 `001-mvp-admin-console` 的边界：001 继续定义产品范围，002 只定义运行底座迁移，不得在 002 中新增产品能力要求。
 - **FR-023**: 系统 MUST 约束数据库相关单测、集成测试、契约测试与 CI 中需要真实数据库行为验证的测试默认连接 `DATABASE_URL_TEST` / `DATABASE_URL_TEST_UNPOOLED`；本地真实数据库测试默认连接本地 Docker Postgres，CI 真实数据库测试默认连接 GitHub Actions Postgres service，并在测试前完成 schema 建立与最小 fixture 准备。
 - **FR-024**: 系统 MUST 允许测试流程在结束后执行清理、重建或 reset，使 `test` 数据库保持干净、隔离、可重复的运行基线；测试不得依赖 dev、staging 或 production 中的历史脏数据。

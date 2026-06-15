@@ -22,7 +22,6 @@ import {
   restoreProviderCredential,
   updateProvider,
 } from "@/server/services/provider-service";
-import {} from "@/server/services/provider-service";
 
 let tempDir: string;
 
@@ -38,7 +37,7 @@ afterEach(async () => {
   rmSync(tempDir, { recursive: true, force: true });
 });
 
-describe.skip("Provider 管理闭环", () => {
+describe("Provider 管理闭环", () => {
   it("创建 Provider、新增凭据、隔离、恢复与策略保存均可追踪", async () => {
     const provider = await createProvider({
       name: "OpenSubtitles Primary",

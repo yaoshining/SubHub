@@ -264,7 +264,7 @@ tests/
 - test 允许在每次测试批次前后执行 reset / rebuild，但不得承载开发预览、发布前验证或生产运维职责
 - bootstrap 和 seed 都必须具备幂等性；重复执行不得污染正式数据或重复创建管理员/演示数据。管理员初始化逻辑必须只在“数据库内无管理员且显式 greenfield 模式”时允许执行。
 
-### 5. Vercel 部署与发布门禁
+### 5. Vercel 部署与发布门禁（最小收口）
 
 - Vercel 只负责应用构建、部署和运行时环境注入；不在 build/start 中隐式执行数据库 migration。
 - 构建前/构建时：只允许类型检查、API 文档构建、前端构建和静态校验，不执行写数据库动作。
@@ -274,6 +274,14 @@ tests/
   - local dev：手工运行 `pnpm db:migrate`、`pnpm db:bootstrap`、可选 `pnpm db:seed:dev`
   - staging / production：通过 GitHub Actions 或等价受控发布工作流，使用 direct URL 执行 migration、bootstrap 与 readiness 校验
 - 生产发布必须把“数据库变更”和“应用发布可用性确认”拆成两个可审计步骤，中间保留失败中止点
+- 本期 release 收敛到最小职责：失败时明确阻断 promotion，不实现自动 rollback；不引入完整 release orchestration、多阶段自动 promotion pipeline 或平台级长期发布治理框架。
+
+### 5.5 与配套 issue 的职责边界
+
+- **#63**：负责 Postgres 正式接入与 schema / migration baseline、pooled / unpooled URL 边界、运行时 client 基线。本计划不重复承担这些职责。
+- **#67**：负责 bootstrap / seed / 首个管理员初始化 / 环境准备的最小收口，初始化逻辑集中在该 issue。
+- **#64**：仅负责 production runtime readiness 的最小规则与失败语义，包括数据库连接可用、schema readiness、bootstrap readiness、管理员初始化状态判断与未就绪时的明确失败语义；不引入 production 长期运维治理框架或 runtime 编排能力。
+- **#70**：仅负责最小 migration / deploy gate，包括 staging 先于 production 的 migration 顺序、deploy 与 migration 的边界、最小 CI 门禁、失败时阻断 promotion；不实现自动 rollback 或多阶段自动 promotion pipeline。
 
 ### 6. 回归与兼容
 

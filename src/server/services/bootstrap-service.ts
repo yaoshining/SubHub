@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 
+import { isInitialAdminBootstrapAllowed } from "@/lib/env";
 import { hashPassword } from "@/lib/auth/password";
 import { AppError } from "@/lib/errors";
 import { recordAdminActionResult } from "@/server/audit/action-results";
@@ -28,6 +29,7 @@ export type CreateInitialAdminResult = {
 export type BootstrapServiceOptions = {
   db?: StorageDatabase;
   now?: Date;
+  allowBootstrap?: boolean;
 };
 
 const createAdminUserId = () =>
@@ -52,8 +54,17 @@ export async function createInitialAdmin(
   {
     db = getStorageClient().db,
     now = new Date(),
+    allowBootstrap = isInitialAdminBootstrapAllowed(),
   }: BootstrapServiceOptions = {},
 ): Promise<CreateInitialAdminResult> {
+  if (!allowBootstrap) {
+    throw new AppError(
+      "FORBIDDEN",
+      "当前环境未显式允许首个管理员初始化。",
+      "bootstrap",
+    );
+  }
+
   const identifier = normalizeAdminIdentifier(input.identifier);
   const displayName = input.displayName.trim();
 

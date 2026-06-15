@@ -3,7 +3,7 @@
  * Do not edit manually.
  * SubHub API
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import type { ProviderCredential } from "./providerCredential";
 

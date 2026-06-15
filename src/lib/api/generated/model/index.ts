@@ -3,7 +3,7 @@
  * Do not edit manually.
  * SubHub API
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export * from "./adminInvitation";
@@ -31,7 +31,11 @@ export * from "./adminUsersOverview";
 export * from "./adminUsersOverviewResponse";
 export * from "./adminUserStatus";
 export * from "./bootstrapStatus";
+export * from "./bootstrapStatusAdminInitializationState";
+export * from "./bootstrapStatusBlockingReasonsItem";
+export * from "./bootstrapStatusMode";
 export * from "./bootstrapStatusResponse";
+export * from "./bootstrapStatusSeedState";
 export * from "./callerKey";
 export * from "./callerKeyEnvironment";
 export * from "./callerKeyList";
@@ -97,6 +101,9 @@ export * from "./providerType";
 export * from "./readinessPartialError";
 export * from "./readinessPartialErrorTarget";
 export * from "./readinessSummary";
+export * from "./readinessSummaryAdminInitializationState";
+export * from "./readinessSummaryBlockingReasonsItem";
+export * from "./readinessSummaryEnvironment";
 export * from "./readinessSummaryMissingConditionsItem";
 export * from "./searchSubtitlesParams";
 export * from "./settingsStatusResponse";

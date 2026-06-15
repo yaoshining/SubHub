@@ -1,3 +1,4 @@
+import packageJson from "../../../package.json";
 import { AppError } from "@/lib/errors";
 import { readEnv } from "@/lib/env";
 
@@ -113,7 +114,7 @@ export class OpenSubtitlesAdapter {
     let response: Response;
     try {
       response = await this.fetchImpl(payload.link, {
-        headers: { "User-Agent": "SubHub/0.1.0" },
+        headers: { "User-Agent": `SubHub/${packageJson.version}` },
         signal: dlController.signal,
       });
     } finally {
@@ -159,7 +160,7 @@ export class OpenSubtitlesAdapter {
         headers: {
           ...init.headers,
           "Api-Key": credentialSecret,
-          "User-Agent": "SubHub/0.1.0",
+          "User-Agent": `SubHub/${packageJson.version}`,
         },
         signal: controller.signal,
       });

@@ -37,6 +37,7 @@ const missingConditionLabels: Record<ReadinessCondition, string> = {
 const partialErrorTargetLabels = {
   environment: "部署环境",
   version: "版本读数",
+  runtime: "运行就绪门禁",
   admin: "管理员初始化",
   provider: "Provider 可用性",
   caller_key: "调用方 Key 可用性",
@@ -44,6 +45,7 @@ const partialErrorTargetLabels = {
 
 const environmentLabels = {
   production: "生产环境",
+  staging: "预发环境",
   development: "开发环境",
   test: "测试环境",
   unknown: "未知环境",
@@ -228,7 +230,7 @@ export function SettingsClient({ initialStatus }: SettingsClientProps) {
 
   const readinessPartialErrors =
     status?.partialErrors.filter((error) =>
-      ["admin", "provider", "caller_key"].includes(error.target),
+      ["runtime", "admin", "provider", "caller_key"].includes(error.target),
     ) ?? [];
   const hasReadinessPartialErrors = readinessPartialErrors.length > 0;
 

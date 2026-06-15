@@ -2,6 +2,7 @@ import { renderWithTheme } from "../helpers/ui";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 
 import { DashboardClient } from "@/app/(admin)/dashboard/dashboard-client";
 import { fetchDashboardSummary } from "@/lib/api/dashboard";
@@ -17,11 +18,19 @@ const mockedFetchDashboardSummary = vi.mocked(fetchDashboardSummary);
 const dashboardSummary: DashboardSummary = {
   readiness: {
     environment: "test",
-    version: "0.1.0",
+    version: packageJson.version,
     adminInitialized: true,
     activeProviderCount: 0,
     activeCallerKeyCount: 0,
     gatewayReady: false,
+    runtimeGateRequired: false,
+    runtimeReady: true,
+    schemaReady: true,
+    bootstrapReady: true,
+    adminInitializationState: "completed",
+    directUrlReady: true,
+    directUrlError: null,
+    blockingReasons: [],
     missingConditions: ["provider", "caller_key"],
     lastCheckedAt: "2026-05-27T07:00:00.000Z",
     partialErrors: [],

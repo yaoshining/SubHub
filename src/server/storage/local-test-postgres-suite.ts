@@ -5,7 +5,10 @@ export const localRealPostgresTestFiles = [
   "tests/integration/storage/caller-key-repository.postgres.test.ts",
   "tests/integration/storage/subtitle-gateway-failure.postgres.test.ts",
   "tests/integration/storage/bootstrap-service.postgres.test.ts",
+  "tests/integration/storage/bootstrap-state.test.ts",
   "tests/integration/storage/admin-invitation-service.postgres.test.ts",
   "tests/integration/storage/auth-service.postgres.test.ts",
   "tests/integration/storage/storage-client-smoke.postgres.test.ts",
+  "tests/integration/storage/seed-repeatability.test.ts",
+  "tests/smoke/staging-dev-seed.smoke.test.ts",
 ] as const;

@@ -1,0 +1,132 @@
+name: DB Migrate Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 选择需要执行 migration 的目标环境
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+  workflow_call:
+    inputs:
+      target:
+        description: 选择需要执行 migration 的目标环境
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  validate-target:
+    name: 校验 migration 目标
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.validate.outputs.target }}
+    steps:
+      - name: 校验输入
+        id: validate
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          if [ "${TARGET}" != "staging" ] && [ "${TARGET}" != "production" ]; then
+            echo "只允许 staging 或 production migration。"
+            exit 1
+          fi
+
+          echo "target=${TARGET}" >> "${GITHUB_OUTPUT}"
+          echo "已确认 migration 目标：${TARGET}"
+
+  staging-migrate:
+    name: staging migration gate
+    runs-on: ubuntu-latest
+    needs: validate-target
+    if: needs.validate-target.outputs.target == 'staging' || needs.validate-target.outputs.target == 'production'
+    environment: staging
+    env:
+      NODE_ENV: production
+      VERCEL_ENV: preview
+      VERCEL_GIT_COMMIT_REF: preview
+      APP_URL: ${{ vars.APP_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      PROVIDER_CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.PROVIDER_CREDENTIAL_ENCRYPTION_KEY }}
+      ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
+      CALLER_KEY_SECRET: ${{ secrets.CALLER_KEY_SECRET }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 执行 staging migration（direct URL）
+        run: pnpm db:migrate
+      - name: 执行 staging bootstrap 基线校验
+        run: pnpm db:bootstrap
+      - name: 记录当前阶段边界
+        run: |
+          echo "staging migration gate 已完成。"
+          echo "本 workflow 当前只收敛 migration / bootstrap 顺序边界，不在本阶段重新定义 readiness 规则。"
+          echo "staging tier 不会强制阻断 readiness gate；如需最终阻断请执行 production gate。"
+
+  production-migrate:
+    name: production migration gate
+    runs-on: ubuntu-latest
+    needs:
+      - validate-target
+      - staging-migrate
+    if: needs.validate-target.outputs.target == 'production'
+    environment: production
+    env:
+      NODE_ENV: production
+      VERCEL_ENV: production
+      VERCEL_GIT_COMMIT_REF: main
+      APP_URL: ${{ vars.APP_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      PROVIDER_CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.PROVIDER_CREDENTIAL_ENCRYPTION_KEY }}
+      ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
+      CALLER_KEY_SECRET: ${{ secrets.CALLER_KEY_SECRET }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.3.0
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 执行 production migration（direct URL）
+        run: pnpm db:migrate
+      - name: 执行 production bootstrap 基线校验
+        run: pnpm db:bootstrap
+      - name: 消费 #64 readiness 信号（仅 inspect，不在本 workflow 内重新定义 readiness 规则）
+        run: pnpm db:readiness
+      - name: production readiness gate 强制阻断
+        run: pnpm db:readiness -- --enforce
+      - name: 记录当前阶段边界
+        run: |
+          echo "production migration gate 已完成。"
+          echo "本 workflow 已消费 #64 readiness 信号，并在 production 阶段按 blocking reasons 强制阻断。"
+          echo "本期不引入自动 rollback 或多阶段自动 promotion pipeline。"

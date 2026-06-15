@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 
 import {
   getStorageClient,
@@ -45,18 +46,26 @@ const mockedDegradedReadiness: Awaited<
   ReturnType<typeof settingsService.getSystemReadiness>
 > = {
   environment: "production",
-  version: "0.1.0",
+  version: packageJson.version,
   adminInitialized: true,
   activeProviderCount: 0,
   activeCallerKeyCount: 0,
   gatewayReady: false,
+  runtimeGateRequired: true,
+  runtimeReady: false,
+  schemaReady: true,
+  bootstrapReady: true,
+  adminInitializationState: "completed",
+  directUrlReady: false,
+  directUrlError: "direct url unavailable",
+  blockingReasons: ["direct_url_unreachable"],
   missingConditions: ["provider", "caller_key"],
   lastCheckedAt: "2026-05-30T12:00:00.000Z",
   partialErrors: [
     {
-      target: "environment",
+      target: "runtime",
       code: "UPSTREAM_FAILED",
-      message: "environment unavailable",
+      message: "runtime unavailable",
     },
   ],
 };
@@ -132,6 +141,14 @@ describe("Settings status API 契约", () => {
         activeProviderCount: number;
         activeCallerKeyCount: number;
         gatewayReady: boolean;
+        runtimeGateRequired: boolean;
+        runtimeReady: boolean;
+        schemaReady: boolean;
+        bootstrapReady: boolean;
+        adminInitializationState: string;
+        directUrlReady: boolean;
+        directUrlError: string | null;
+        blockingReasons: string[];
         missingConditions: string[];
         lastCheckedAt: string;
         partialErrors: Array<{
@@ -145,11 +162,19 @@ describe("Settings status API 契约", () => {
     expect(response.status).toBe(200);
     expect(payload.data).toMatchObject({
       environment: "test",
-      version: "0.1.0",
+      version: packageJson.version,
       adminInitialized: true,
       activeProviderCount: 1,
       activeCallerKeyCount: 1,
       gatewayReady: true,
+      runtimeGateRequired: false,
+      runtimeReady: true,
+      schemaReady: true,
+      bootstrapReady: true,
+      adminInitializationState: "completed",
+      directUrlReady: true,
+      directUrlError: null,
+      blockingReasons: [],
       missingConditions: [],
       partialErrors: [],
     });

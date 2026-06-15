@@ -14,6 +14,7 @@ import {
   type StorageDatabase,
 } from "@/server/storage/client";
 import { adminUsers, type AdminUser } from "@/server/storage/schema";
+import { assertProductionRuntimeReady } from "./runtime-readiness-service";
 import { normalizeAdminIdentifier } from "./bootstrap-service";
 
 export { adminSessionCookieName };
@@ -59,6 +60,8 @@ export async function loginAdmin(
   input: LoginInput,
   { db = getStorageClient().db, now = new Date() }: AuthServiceOptions = {},
 ): Promise<LoginResult> {
+  await assertProductionRuntimeReady({ db, now });
+
   const identifier = normalizeAdminIdentifier(input.identifier);
   const [adminUser] = await db
     .select()

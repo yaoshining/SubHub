@@ -35,6 +35,13 @@ jobs:
         run: pnpm typecheck
       - name: 单元测试
         run: pnpm test
+      - name: 环境映射与 URL 护栏校验
+        run: >-
+          pnpm test --
+          tests/unit/env/runtime-environment.test.ts
+          tests/integration/runtime/preview-branch-mapping.test.ts
+          tests/unit/storage/runtime-url-boundary.test.ts
+          tests/smoke/nonproduction-runtime.smoke.test.ts
       - name: API 契约链路检查
         run: pnpm api:check
 
@@ -60,6 +67,10 @@ jobs:
           --health-retries 5
 
     env:
+      # 与 `services.postgres.env` 字面量一一对应；job 顶层 env 不允许使用
+      # `job.*` 表达式，只能直接 inline 字面量。
+      DATABASE_URL: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
+      DATABASE_URL_UNPOOLED: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
       DATABASE_URL_TEST: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
       DATABASE_URL_TEST_UNPOOLED: postgresql://subhub_test:subhub_test_password@localhost:5432/subhub_test
 
@@ -79,5 +90,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: 准备测试数据库（reset + migrate）
         run: pnpm db:prepare:ci
+      - name: 数据库 schema / migration 漂移校验
+        run: pnpm db:check
+      - name: migration 后最小校验
+        run: >-
+          pnpm test --
+          tests/unit/storage/postgres-schema.test.ts
+          tests/integration/storage/postgres-client.test.ts
       - name: 运行数据库集成测试
         run: pnpm test:db:ci

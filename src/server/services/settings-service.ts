@@ -1,11 +1,18 @@
 import { and, count, countDistinct, eq } from "drizzle-orm";
+import packageJson from "../../../package.json";
 
 import type { AppErrorCode } from "@/lib/errors";
-import { readEnv } from "@/lib/env";
+import { readEnv, type RuntimeTier } from "@/lib/env";
 import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
+import {
+  getRuntimeReadinessStatus,
+  type RuntimeReadinessStatus,
+  type RuntimeBlockingReason,
+} from "@/server/services/runtime-readiness-service";
+import type { AdminInitializationState } from "@/server/storage/bootstrap";
 import {
   adminUsers,
   callerKeys,
@@ -16,6 +23,7 @@ import {
 export type SystemReadinessPartialErrorTarget =
   | "environment"
   | "version"
+  | "runtime"
   | "admin"
   | "provider"
   | "caller_key";
@@ -27,12 +35,20 @@ export type SystemReadinessPartialError = {
 };
 
 export type SystemReadiness = {
-  environment: string;
+  environment: ReadinessEnvironment;
   version: string;
   adminInitialized: boolean;
   activeProviderCount: number;
   activeCallerKeyCount: number;
   gatewayReady: boolean;
+  runtimeGateRequired: boolean;
+  runtimeReady: boolean;
+  schemaReady: boolean;
+  bootstrapReady: boolean;
+  adminInitializationState: AdminInitializationState;
+  directUrlReady: boolean;
+  directUrlError: string | null;
+  blockingReasons: RuntimeBlockingReason[];
   missingConditions: Array<"admin" | "provider" | "caller_key">;
   lastCheckedAt: string;
   partialErrors: SystemReadinessPartialError[];
@@ -43,12 +59,49 @@ export type SettingsServiceOptions = {
   now?: Date;
 };
 
-const defaultAppVersion = "0.1.0";
+const defaultAppVersion = packageJson.version;
+type ReadinessEnvironment = RuntimeTier | "test" | "unknown";
 const readinessTargets = new Set<SystemReadinessPartialErrorTarget>([
+  "runtime",
   "admin",
   "provider",
   "caller_key",
 ]);
+
+const buildRuntimeStatusFallback = (
+  now: Date,
+  runtimeGateRequired: boolean,
+  runtimeTier: RuntimeTier,
+): RuntimeReadinessStatus => {
+  const mode =
+    runtimeTier === "production"
+      ? "production"
+      : runtimeTier === "staging"
+        ? "staging"
+        : "development";
+  return {
+    initialized: false,
+    mode,
+    schemaReady: !runtimeGateRequired,
+    bootstrapReady: !runtimeGateRequired,
+    seedState: runtimeGateRequired ? "not_applicable" : "pending",
+    adminInitializationState: "required",
+    missingTables: [],
+    adminUsersCount: 0,
+    runtimeGateRequired,
+    directUrlReady: !runtimeGateRequired,
+    directUrlError: null,
+    runtimeReady: !runtimeGateRequired,
+    blockingReasons: runtimeGateRequired
+      ? [
+          "direct_url_unreachable",
+          "schema_not_ready",
+          "admin_initialization_required",
+        ]
+      : [],
+    lastCheckedAt: now.toISOString(),
+  };
+};
 
 async function countRows(
   query: Promise<Array<{ value: number }>>,
@@ -83,7 +136,10 @@ async function readSignal<T>(
   }
 }
 
-const readEnvironment = () => readEnv().NODE_ENV;
+const readEnvironment = (): Exclude<ReadinessEnvironment, "unknown"> => {
+  const env = readEnv();
+  return env.NODE_ENV === "test" ? "test" : env.resolvedTier;
+};
 
 const readVersion = () =>
   process.env.NEXT_PUBLIC_APP_VERSION ??
@@ -95,16 +151,45 @@ export async function getSystemReadiness({
   now = new Date(),
 }: SettingsServiceOptions = {}): Promise<SystemReadiness> {
   const partialErrors: SystemReadinessPartialError[] = [];
+  const fallbackTierInfo = (() => {
+    try {
+      const env = readEnv();
+      return {
+        runtimeGateRequired: env.resolvedTier === "production",
+        runtimeTier: env.resolvedTier,
+      };
+    } catch {
+      // readEnv() 解析失败（如环境变量缺失/不合法）时，以 VERCEL_ENV 作为最保守
+      // 兜底判断，确保 production 部署不会因 readEnv 异常而被误判为非 production。
+      // 注意：此处不检查 VERCEL_GIT_COMMIT_REF，仅用于 fallback 的 gate 方向判断。
+      const isProd = process.env.VERCEL_ENV === "production";
+      return {
+        runtimeGateRequired: isProd,
+        runtimeTier: (isProd ? "production" : "development") as RuntimeTier,
+      };
+    }
+  })();
 
   const [
     environment,
     version,
+    runtimeStatus,
     adminInitialized,
     activeProviderCount,
     activeCallerKeyCount,
   ] = await Promise.all([
     readSignal("environment", readEnvironment, "unknown", partialErrors),
     readSignal("version", readVersion, defaultAppVersion, partialErrors),
+    readSignal(
+      "runtime",
+      () => getRuntimeReadinessStatus({ db, now }),
+      buildRuntimeStatusFallback(
+        now,
+        fallbackTierInfo.runtimeGateRequired,
+        fallbackTierInfo.runtimeTier,
+      ),
+      partialErrors,
+    ),
     readSignal(
       "admin",
       async () => {
@@ -175,7 +260,20 @@ export async function getSystemReadiness({
     adminInitialized,
     activeProviderCount,
     activeCallerKeyCount,
-    gatewayReady: missingConditions.length === 0 && !hasReadinessPartialErrors,
+    gatewayReady:
+      missingConditions.length === 0 &&
+      !hasReadinessPartialErrors &&
+      runtimeStatus.schemaReady &&
+      runtimeStatus.bootstrapReady &&
+      (!runtimeStatus.runtimeGateRequired || runtimeStatus.runtimeReady),
+    runtimeGateRequired: runtimeStatus.runtimeGateRequired,
+    runtimeReady: runtimeStatus.runtimeReady,
+    schemaReady: runtimeStatus.schemaReady,
+    bootstrapReady: runtimeStatus.bootstrapReady,
+    adminInitializationState: runtimeStatus.adminInitializationState,
+    directUrlReady: runtimeStatus.directUrlReady,
+    directUrlError: runtimeStatus.directUrlError,
+    blockingReasons: runtimeStatus.blockingReasons,
     missingConditions,
     lastCheckedAt: now.toISOString(),
     partialErrors,

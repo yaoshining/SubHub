@@ -1,20 +1,30 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 
 import { SettingsClient } from "@/app/(admin)/settings/settings-client";
+import type { SettingsStatus } from "@/lib/api/settings";
 import { renderWithTheme } from "../helpers/ui";
 
 vi.mock("@/lib/api/settings", () => ({
   fetchSettingsStatus: vi.fn(),
 }));
 
-const settingsStatus = {
+const settingsStatus: SettingsStatus = {
   environment: "production",
-  version: "0.1.0",
+  version: packageJson.version,
   adminInitialized: true,
   activeProviderCount: 1,
   activeCallerKeyCount: 1,
   gatewayReady: true,
+  runtimeGateRequired: true,
+  runtimeReady: true,
+  schemaReady: true,
+  bootstrapReady: true,
+  adminInitializationState: "completed",
+  directUrlReady: true,
+  directUrlError: null,
+  blockingReasons: [],
   missingConditions: [],
   lastCheckedAt: "2026-05-30T12:00:00.000Z",
   partialErrors: [],
