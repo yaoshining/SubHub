@@ -186,6 +186,7 @@ export class OpenSubtitlesAdapter {
           "User-Agent": `SubHub/${packageJson.version}`,
         },
         signal: controller.signal,
+        redirect: "follow",
       });
 
       if (response.status === 401 || response.status === 403) {

@@ -129,7 +129,7 @@ beforeAll(() => {
       "postgresql://direct-user@localhost:5432/subhub",
     OPENSUBTITLES_API_URL:
       process.env.OPENSUBTITLES_API_URL ??
-      "https://api.opensubtitles.com/api/v3",
+      "https://api.opensubtitles.com/api/v1",
     PROVIDER_CREDENTIAL_ENCRYPTION_KEY:
       process.env.PROVIDER_CREDENTIAL_ENCRYPTION_KEY ??
       "test-provider-credential-key-32-byte",

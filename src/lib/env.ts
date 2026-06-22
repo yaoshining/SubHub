@@ -23,7 +23,7 @@ const rawEnvSchema = z.object({
   OPENSUBTITLES_API_URL: z
     .string()
     .url()
-    .default("https://api.opensubtitles.com/api/v3"),
+    .default("https://api.opensubtitles.com/api/v1"),
   PROVIDER_CREDENTIAL_ENCRYPTION_KEY: z.string().min(32).optional(),
   ADMIN_SESSION_SECRET: z.string().min(32).optional(),
   CALLER_KEY_SECRET: z.string().min(32).optional(),
