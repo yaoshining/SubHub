@@ -4,19 +4,7 @@ import { OpenSubtitlesAdapter } from "@/server/providers/opensubtitles-adapter";
 
 const createAdapterWithMock = () => {
   const fetchImpl = vi.fn(
-    async (
-      input: RequestInfo | URL,
-      _init?: RequestInit,
-    ): Promise<Response> => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.toString()
-            : input.url;
-      const query = url.split("?")[1] ?? "";
-      return Response.json({ data: [] });
-    },
+    async (): Promise<Response> => Response.json({ data: [] }),
   );
   const adapter = new OpenSubtitlesAdapter({
     baseUrl: "https://opensubtitles.test",
