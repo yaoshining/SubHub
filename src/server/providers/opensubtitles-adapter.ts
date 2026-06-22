@@ -3,8 +3,13 @@ import { AppError } from "@/lib/errors";
 import { readEnv } from "@/lib/env";
 
 export type OpenSubtitlesSearchInput = {
-  query: string;
+  query?: string;
+  imdbId?: string;
+  tmdbId?: number;
+  season?: number;
+  episode?: number;
   language?: string;
+  type?: "movie" | "episode";
 };
 
 export type OpenSubtitlesSubtitle = {
@@ -42,9 +47,29 @@ export class OpenSubtitlesAdapter {
     credentialSecret: string,
     input: OpenSubtitlesSearchInput,
   ): Promise<OpenSubtitlesSubtitle[]> {
-    const params = new URLSearchParams({ query: input.query });
+    const params = new URLSearchParams();
+    // OpenSubtitles 要求 query 至少 3 字符（过短会返回 400 "Query is too short"），
+    // 短于阈值的 query 不透传给上游，避免空 query 误判触发凭据池降级。
+    if (input.query && input.query.trim().length >= 3) {
+      params.set("query", input.query.trim());
+    }
+    if (input.imdbId) {
+      params.set("imdb_id", input.imdbId);
+    }
+    if (input.tmdbId !== undefined) {
+      params.set("tmdb_id", String(input.tmdbId));
+    }
+    if (input.season !== undefined) {
+      params.set("season_number", String(input.season));
+    }
+    if (input.episode !== undefined) {
+      params.set("episode_number", String(input.episode));
+    }
     if (input.language) {
       params.set("languages", input.language);
+    }
+    if (input.type) {
+      params.set("type", input.type);
     }
 
     const payload = await this.request<{ data?: unknown[] }>(
@@ -163,6 +188,7 @@ export class OpenSubtitlesAdapter {
           "User-Agent": `SubHub/${packageJson.version}`,
         },
         signal: controller.signal,
+        redirect: "follow",
       });
 
       if (response.status === 401 || response.status === 403) {

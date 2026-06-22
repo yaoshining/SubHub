@@ -722,6 +722,29 @@ paths:
           schema:
             type: string
             minLength: 1
+        - name: imdb_id
+          in: query
+          required: false
+          description: IMDb ID 定位，格式为 `tt` + 数字；存在时优先走 ID 定位路径，`title` 不参与上游 query 构造。
+          schema:
+            type: string
+            pattern: ^tt\d+$
+        - name: tmdb_id
+          in: query
+          required: false
+          description: TMDb ID 定位，配合 `season`/`episode` 可定位单集；与 `imdb_id` 同时存在时 `imdb_id` 优先。
+          schema:
+            type: integer
+            minimum: 1
+        - name: type
+          in: query
+          required: false
+          description: 媒体类型过滤；`type=movie` 与 `season`/`episode` 同时出现时返回 400；`type=episode` 缺少 `season`/`episode` 且缺少 `imdb_id`/`tmdb_id` 时返回 400。
+          schema:
+            type: string
+            enum:
+              - movie
+              - episode
       responses:
         "200":
           description: 字幕查询成功
