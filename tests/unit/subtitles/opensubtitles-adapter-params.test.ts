@@ -4,7 +4,10 @@ import { OpenSubtitlesAdapter } from "@/server/providers/opensubtitles-adapter";
 
 const createAdapterWithMock = () => {
   const fetchImpl = vi.fn(
-    async (input: RequestInfo | URL, _init?: RequestInit): Promise<Response> => {
+    async (
+      input: RequestInfo | URL,
+      _init?: RequestInit,
+    ): Promise<Response> => {
       const url =
         typeof input === "string"
           ? input
