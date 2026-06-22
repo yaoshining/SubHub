@@ -106,6 +106,7 @@ export * from "./readinessSummaryBlockingReasonsItem";
 export * from "./readinessSummaryEnvironment";
 export * from "./readinessSummaryMissingConditionsItem";
 export * from "./searchSubtitlesParams";
+export * from "./searchSubtitlesType";
 export * from "./settingsStatusResponse";
 export * from "./subtitleDownloadRequestRecord";
 export * from "./subtitleDownloadRequestStatus";

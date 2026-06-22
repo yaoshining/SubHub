@@ -5,6 +5,7 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
  * OpenAPI spec version: 0.2.0
  */
+import type { SearchSubtitlesType } from "./searchSubtitlesType";
 
 export type SearchSubtitlesParams = {
   /**
@@ -28,4 +29,18 @@ export type SearchSubtitlesParams = {
    * @minLength 1
    */
   language?: string;
+  /**
+   * IMDb ID 定位，格式为 `tt` + 数字；存在时优先走 ID 定位路径，`title` 不参与上游 query 构造。
+   * @pattern ^tt\d+$
+   */
+  imdb_id?: string;
+  /**
+   * TMDb ID 定位，配合 `season`/`episode` 可定位单集；与 `imdb_id` 同时存在时 `imdb_id` 优先。
+   * @minimum 1
+   */
+  tmdb_id?: number;
+  /**
+   * 媒体类型过滤；`type=movie` 与 `season`/`episode` 同时出现时返回 400。
+   */
+  type?: SearchSubtitlesType;
 };

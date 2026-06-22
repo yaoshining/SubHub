@@ -119,4 +119,132 @@ describe("字幕出口端到端 API 流程", () => {
       "CALLER_KEY_SUSPENDED",
     );
   });
+
+  it("ID 定位路径端到端：imdb_id 优先于 query 构造", async () => {
+    const [callerKey] = await Promise.all([
+      createCallerKey({
+        callerName: "Jellyfin",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      }),
+      createProvider({
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      }),
+    ]);
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        data: [
+          {
+            id: "file_010",
+            attributes: {
+              language: "en",
+              files: [{ file_id: "file_010", file_name: "Inception.en.srt" }],
+            },
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const search = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Inception&imdb_id=tt1375666&language=en",
+        callerKey.key,
+      ),
+    );
+    expect(search.status).toBe(200);
+
+    const requestUrl = (fetchMock.mock.calls[0]![0] as string).toString();
+    const params = new URLSearchParams(requestUrl.split("?")[1]);
+    expect(params.get("imdb_id")).toBe("tt1375666");
+    expect(params.get("query")).toBe("Inception");
+  });
+
+  it("query fallback 路径端到端：老调用方零改动行为一致", async () => {
+    const [callerKey] = await Promise.all([
+      createCallerKey({
+        callerName: "Jellyfin",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      }),
+      createProvider({
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      }),
+    ]);
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        data: [
+          {
+            id: "file_011",
+            attributes: {
+              language: "en",
+              files: [
+                {
+                  file_id: "file_011",
+                  file_name: "Breaking.Bad.S01E01.en.srt",
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const search = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Breaking%20Bad&year=2008&season=1&episode=1&language=en",
+        callerKey.key,
+      ),
+    );
+    expect(search.status).toBe(200);
+
+    const requestUrl = (fetchMock.mock.calls[0]![0] as string).toString();
+    const params = new URLSearchParams(requestUrl.split("?")[1]);
+    expect(params.get("query")).toBe("Breaking Bad 2008 S01E01");
+    expect(params.get("imdb_id")).toBeNull();
+    expect(params.get("tmdb_id")).toBeNull();
+  });
+
+  it("跨字段冲突端到端：type=movie + season 返回 400", async () => {
+    const callerKey = await createCallerKey({
+      callerName: "Jellyfin",
+      environment: "production",
+      scope: "subtitles:read",
+      quotaPolicy: "default",
+    });
+
+    await createProvider({
+      name: "OpenSubtitles Primary",
+      type: "opensubtitles",
+      initialCredential: {
+        label: "primary",
+        secret: "opensubtitles-api-key",
+      },
+    });
+
+    await expectApiError(
+      await searchRoute.GET(
+        nextRequest(
+          "http://localhost/api/subtitles/search?title=Inception&type=movie&season=1",
+          callerKey.key,
+        ),
+      ),
+      "VALIDATION_FAILED",
+    );
+  });
 });

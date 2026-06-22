@@ -3,8 +3,13 @@ import { AppError } from "@/lib/errors";
 import { readEnv } from "@/lib/env";
 
 export type OpenSubtitlesSearchInput = {
-  query: string;
+  query?: string;
+  imdbId?: string;
+  tmdbId?: number;
+  season?: number;
+  episode?: number;
   language?: string;
+  type?: "movie" | "episode";
 };
 
 export type OpenSubtitlesSubtitle = {
@@ -42,9 +47,27 @@ export class OpenSubtitlesAdapter {
     credentialSecret: string,
     input: OpenSubtitlesSearchInput,
   ): Promise<OpenSubtitlesSubtitle[]> {
-    const params = new URLSearchParams({ query: input.query });
+    const params = new URLSearchParams();
+    if (input.query) {
+      params.set("query", input.query);
+    }
+    if (input.imdbId) {
+      params.set("imdb_id", input.imdbId);
+    }
+    if (input.tmdbId !== undefined) {
+      params.set("tmdb_id", String(input.tmdbId));
+    }
+    if (input.season !== undefined) {
+      params.set("season_number", String(input.season));
+    }
+    if (input.episode !== undefined) {
+      params.set("episode_number", String(input.episode));
+    }
     if (input.language) {
       params.set("languages", input.language);
+    }
+    if (input.type) {
+      params.set("type", input.type);
     }
 
     const payload = await this.request<{ data?: unknown[] }>(

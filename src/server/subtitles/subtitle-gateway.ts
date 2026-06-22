@@ -6,7 +6,10 @@ import {
   markCredentialUsed,
   selectProviderCredential,
 } from "@/server/providers/credential-pool";
-import { OpenSubtitlesAdapter } from "@/server/providers/opensubtitles-adapter";
+import {
+  OpenSubtitlesAdapter,
+  type OpenSubtitlesSearchInput,
+} from "@/server/providers/opensubtitles-adapter";
 import { ProviderRepository } from "@/server/providers/provider-repository";
 import {
   getStorageClient,
@@ -21,6 +24,9 @@ export type SubtitleSearchInput = {
   season?: number;
   episode?: number;
   language?: string;
+  imdbId?: string;
+  tmdbId?: number;
+  type?: "movie" | "episode";
 };
 
 export type SubtitleSearchResult = {
@@ -53,6 +59,41 @@ const buildSearchQuery = (input: SubtitleSearchInput) =>
   ]
     .filter(Boolean)
     .join(" ");
+
+/**
+ * 按定位路径分流构造适配器输入。
+ *
+ * - 当 `imdbId` 或 `tmdbId` 存在时走 ID 定位路径：ID 参数优先，
+ *   `query` 仅在 `title` 存在时作为辅助线索。
+ * - 无 ID 字段时走原有 `buildSearchQuery` 逻辑（拼 `title` + `year` + `SxxExx`），
+ *   保持老调用方行为 100% 不变。
+ * - `imdbId` 与 `tmdbId` 同时存在时 `imdbId` 优先，`tmdbId` 作为辅助。
+ */
+export const buildAdapterInput = (
+  input: SubtitleSearchInput,
+): OpenSubtitlesSearchInput => {
+  const hasId = Boolean(input.imdbId || input.tmdbId);
+
+  if (hasId) {
+    return {
+      query: input.title.trim() || undefined,
+      imdbId: input.imdbId,
+      tmdbId: input.imdbId ? undefined : input.tmdbId,
+      season: input.season,
+      episode: input.episode,
+      language: input.language,
+      type: input.type,
+    };
+  }
+
+  return {
+    query: buildSearchQuery(input),
+    season: input.season,
+    episode: input.episode,
+    language: input.language,
+    type: input.type,
+  };
+};
 
 const getProviderCandidates = async (
   db: StorageDatabase,
@@ -160,10 +201,10 @@ export async function searchSubtitles(
   const adapter = options.adapter ?? new OpenSubtitlesAdapter();
 
   try {
-    const subtitles = await adapter.search(credential.secret, {
-      query: buildSearchQuery(input),
-      language: input.language,
-    });
+    const subtitles = await adapter.search(
+      credential.secret,
+      buildAdapterInput(input),
+    );
 
     const downloadableSubtitles = subtitles.filter((subtitle) => subtitle.id);
 
