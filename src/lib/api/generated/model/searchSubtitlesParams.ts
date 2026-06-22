@@ -40,7 +40,7 @@ export type SearchSubtitlesParams = {
    */
   tmdb_id?: number;
   /**
-   * 媒体类型过滤；`type=movie` 与 `season`/`episode` 同时出现时返回 400。
+   * 媒体类型过滤；`type=movie` 与 `season`/`episode` 同时出现时返回 400；`type=episode` 缺少 `season`/`episode` 且缺少 `imdb_id`/`tmdb_id` 时返回 400。
    */
   type?: SearchSubtitlesType;
 };

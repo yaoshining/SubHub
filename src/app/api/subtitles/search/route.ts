@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const searchParamsSchema = z
   .object({
-    title: z.string().min(1),
+    title: z.string().trim().min(1),
     year: z.coerce.number().int().min(1800).max(3000).optional(),
     season: z.coerce.number().int().min(0).optional(),
     episode: z.coerce.number().int().min(0).optional(),

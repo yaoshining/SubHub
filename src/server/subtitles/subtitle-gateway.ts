@@ -63,11 +63,11 @@ const buildSearchQuery = (input: SubtitleSearchInput) =>
 /**
  * 按定位路径分流构造适配器输入。
  *
- * - 当 `imdbId` 或 `tmdbId` 存在时走 ID 定位路径：ID 参数优先，
- *   `query` 仅在 `title` 存在时作为辅助线索。
+ * - 当 `imdbId` 或 `tmdbId` 存在时走 ID 定位路径：仅传 ID 字段，不透传 `query`，
+ *   避免短 title（< 3 字符）触发 OpenSubtitles 400 凭据降级。
  * - 无 ID 字段时走原有 `buildSearchQuery` 逻辑（拼 `title` + `year` + `SxxExx`），
  *   保持老调用方行为 100% 不变。
- * - `imdbId` 与 `tmdbId` 同时存在时 `imdbId` 优先，`tmdbId` 作为辅助。
+ * - `imdbId` 与 `tmdbId` 同时存在时 `imdbId` 优先，`tmdbId` 不再传上游。
  */
 export const buildAdapterInput = (
   input: SubtitleSearchInput,
@@ -76,7 +76,6 @@ export const buildAdapterInput = (
 
   if (hasId) {
     return {
-      query: input.title.trim() || undefined,
       imdbId: input.imdbId,
       tmdbId: input.imdbId ? undefined : input.tmdbId,
       season: input.season,

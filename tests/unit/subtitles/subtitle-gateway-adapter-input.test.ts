@@ -4,7 +4,7 @@ import { buildAdapterInput } from "@/server/subtitles/subtitle-gateway";
 
 describe("buildAdapterInput 定位路径分流", () => {
   describe("ID 定位路径", () => {
-    it("有 imdbId 时走 ID 定位路径，query 为 title 辅助", () => {
+    it("有 imdbId 时走 ID 定位路径，query 不透传（避免短 title 触发上游 400）", () => {
       expect(
         buildAdapterInput({
           title: "Inception",
@@ -13,7 +13,6 @@ describe("buildAdapterInput 定位路径分流", () => {
           language: "en",
         }),
       ).toEqual({
-        query: "Inception",
         imdbId: "tt1375666",
         tmdbId: undefined,
         season: undefined,
@@ -23,7 +22,7 @@ describe("buildAdapterInput 定位路径分流", () => {
       });
     });
 
-    it("有 tmdbId 时走 ID 定位路径", () => {
+    it("有 tmdbId 时走 ID 定位路径，query 不透传", () => {
       expect(
         buildAdapterInput({
           title: "Breaking Bad",
@@ -33,7 +32,6 @@ describe("buildAdapterInput 定位路径分流", () => {
           type: "episode",
         }),
       ).toEqual({
-        query: "Breaking Bad",
         imdbId: undefined,
         tmdbId: 1396,
         season: 1,
@@ -51,7 +49,6 @@ describe("buildAdapterInput 定位路径分流", () => {
           tmdbId: 27205,
         }),
       ).toEqual({
-        query: "Inception",
         imdbId: "tt1375666",
         tmdbId: undefined,
         season: undefined,
@@ -61,13 +58,26 @@ describe("buildAdapterInput 定位路径分流", () => {
       });
     });
 
-    it("ID 路径下 year 不参与 query 构造", () => {
+    it("ID 路径下 year 不参与上游 query 构造", () => {
       const result = buildAdapterInput({
         title: "Inception",
         year: 2010,
         imdbId: "tt1375666",
       });
-      expect(result.query).toBe("Inception");
+      expect(result.query).toBeUndefined();
+      expect(result.imdbId).toBe("tt1375666");
+    });
+
+    it("ID 路径下短 title（如 'my' 2 字符）不触发上游 400", () => {
+      // 之前 ID 路径会透传 title.trim() 作为 query，短 title 会触发 OpenSubtitles
+      // 'Query is too short' 400，导致凭据池误降级。
+      // 修复后 ID 路径不传 query，避免该问题。
+      const result = buildAdapterInput({
+        title: "my",
+        imdbId: "tt1375666",
+      });
+      expect(result.query).toBeUndefined();
+      expect(result.imdbId).toBe("tt1375666");
     });
   });
 

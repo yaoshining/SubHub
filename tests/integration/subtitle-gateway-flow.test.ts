@@ -164,7 +164,7 @@ describe("字幕出口端到端 API 流程", () => {
     const requestUrl = (fetchMock.mock.calls[0]![0] as string).toString();
     const params = new URLSearchParams(requestUrl.split("?")[1]);
     expect(params.get("imdb_id")).toBe("tt1375666");
-    expect(params.get("query")).toBe("Inception");
+    expect(params.get("query")).toBeNull();
   });
 
   it("query fallback 路径端到端：老调用方零改动行为一致", async () => {

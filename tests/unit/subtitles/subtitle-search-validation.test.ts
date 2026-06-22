@@ -102,6 +102,17 @@ describe("字幕搜索 request validation", () => {
       });
     });
 
+    it("空白 title 校验失败（trim 后长度不足 1）", () => {
+      expect(() => parse({ title: "   " })).toThrow();
+      expect(() => parse({ title: "" })).toThrow();
+    });
+
+    it("title 前后空白被自动 trim", () => {
+      expect(parse({ title: "  Inception  " })).toMatchObject({
+        title: "Inception",
+      });
+    });
+
     it("传完整现有字段通过", () => {
       expect(
         parse({

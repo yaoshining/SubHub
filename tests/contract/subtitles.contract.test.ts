@@ -288,7 +288,7 @@ describe("对外字幕 API 契约", () => {
     const requestUrl = (fetchMock.mock.calls[0]![0] as string).toString();
     const params = new URLSearchParams(requestUrl.split("?")[1]);
     expect(params.get("imdb_id")).toBe("tt1375666");
-    expect(params.get("query")).toBe("Inception");
+    expect(params.get("query")).toBeNull();
   });
 
   it("传入 tmdb_id + season + episode + type=episode 时走 ID 定位路径", async () => {
