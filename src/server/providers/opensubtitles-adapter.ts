@@ -48,8 +48,10 @@ export class OpenSubtitlesAdapter {
     input: OpenSubtitlesSearchInput,
   ): Promise<OpenSubtitlesSubtitle[]> {
     const params = new URLSearchParams();
-    if (input.query) {
-      params.set("query", input.query);
+    // OpenSubtitles 要求 query 至少 3 字符（过短会返回 400 "Query is too short"），
+    // 短于阈值的 query 不透传给上游，避免空 query 误判触发凭据池降级。
+    if (input.query && input.query.trim().length >= 3) {
+      params.set("query", input.query.trim());
     }
     if (input.imdbId) {
       params.set("imdb_id", input.imdbId);

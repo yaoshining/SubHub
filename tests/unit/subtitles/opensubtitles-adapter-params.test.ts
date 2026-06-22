@@ -117,4 +117,25 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
     expect(params.get("episode_number")).toBeNull();
     expect(params.get("type")).toBeNull();
   });
+
+  it("query 短于 3 字符时不透传给上游（避免 OpenSubtitles 400）", async () => {
+    const { fetchImpl, adapter } = createAdapterWithMock();
+    await adapter.search("secret", {
+      query: "my",
+      imdbId: "tt1375666",
+    });
+    const params = getParams(fetchImpl);
+    expect(params.get("query")).toBeNull();
+    expect(params.get("imdb_id")).toBe("tt1375666");
+  });
+
+  it("query 为 3 字符时正常透传", async () => {
+    const { fetchImpl, adapter } = createAdapterWithMock();
+    await adapter.search("secret", {
+      query: "abc",
+      imdbId: "tt1375666",
+    });
+    const params = getParams(fetchImpl);
+    expect(params.get("query")).toBe("abc");
+  });
 });
