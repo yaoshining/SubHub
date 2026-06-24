@@ -4,6 +4,8 @@
 
 - `v0.1.0`：当前已收口的 MVP 版本。
 - `v0.2.0`：数据库与部署生产化版本，重点覆盖 Neon / Vercel 路线、运行时环境映射、初始化与迁移流程收敛。
+- `v0.2.1`：在 `v0.2.0` 正式运行基线之上，针对已发布 API 的小步快跑式字段扩展；本版本以 003「字幕搜索字段扩展」为代表。
+- `v0.2.x`：允许在 `v0.2.0` 之后引入 patch 级版本，承载"已发布 API 的非 breaking 字段扩展"或"已建立 feature 的小幅补强"，不引入新的产品模块或数据库 schema 变更。
 - `v1.0.0`：产品功能与基础设施都达到正式稳定首发标准后的版本。
 
 ## 各版本含义
@@ -36,6 +38,34 @@
 - Production / Preview / Development 环境映射稳定
 - migration、seed、bootstrap 与发布流程收敛
 
+### `v0.2.1`
+
+代表在 `v0.2.0` 正式运行基线之上的第一轮 patch 版本，重点解决「字幕搜索接口请求字段不足」的问题，对应 003「字幕搜索字段扩展」。
+
+首版（Tier 1）实际落地字段：
+
+- `imdb_id`：格式 `^tt\d+$`，IMDb ID 定位
+- `tmdb_id`：正整数，TMDb ID 定位
+- `type`：`movie` | `episode`，与 `season`/`episode` 冲突时返回 400
+
+保持现有字段命名不变：`title` / `year` / `season` / `episode` / `language`。
+
+明确不包含在 `v0.2.1`：
+
+- `filename`（Tier 2 辅助字段，价值有限，暂缓）
+- `moviehash`（Tier 3，需调用方客户端预计算哈希，暂缓）
+- `hearing_impaired` / `foreign_parts_only`（Tier 2-3，偏好过滤 / 上游不稳定，暂缓）
+- 字段改名（`season` → `season_number`、`language` → `languages`）—— 涉及 breaking 风险，不在 patch 版本内做
+- 多 provider 能力模型设计
+- provider 路由 / fallback 编排
+- 新字幕 provider 正式接入
+- 手动上传字幕
+- 缓存字幕管理
+- 自有字幕资产管理
+- AI 字幕处理
+
+`v0.2.1` 属于「字幕搜索字段扩展」阶段，重点解决请求字段不足的问题，不进入多 provider 搜索建模与字幕资产管理阶段。
+
 ### `v1.0.0`
 
 代表产品与基础设施均达到正式稳定首发标准：
@@ -48,15 +78,21 @@
 ## 与仓库流程的关系
 
 - 当前 `specs/001-mvp-admin-console/` 对应的收口版本为 `v0.1.0`。
+- `specs/002-migrate-neon-vercel/` 对应的收口版本为 `v0.2.0`。
+- `specs/003-subtitle-search-fields/` 对应的收口版本为 `v0.2.1`。
 - 后续数据库 / 部署生产化工作建议以独立 feature 或独立 spec 形式推进，并默认对应 `v0.2.0`。
+- 已发布 API 的非 breaking 字段扩展可对应 `v0.2.x`（如 `v0.2.1`），并应同步在对应 spec 的 `tasks.md` §Issue 映射表中说明该 milestone。
 - GitHub milestone 可逐步从阶段性命名过渡到版本号命名，但 `scope:*` 标签仍保留为范围控制手段，不与版本号职责混淆。
 
 ## GitHub Milestone 约定
 
-- 当前仓库已建立版本 milestones：`v0.1.0`、`v0.2.0`、`v1.0.0`。
+- 当前仓库已建立版本 milestones：`v0.1.0`、`v0.2.0`、`v0.2.1`、`v1.0.0`。
 - 历史 milestones：`MVP`、`Post-MVP`、`Future` 继续保留，用于过渡期兼容与历史查询，不再作为版本归档主入口。
 - 已完成的 MVP 管理控制台与统一字幕出口相关 issue 已迁移至 `v0.1.0`；旧 `MVP` milestone 保留但应维持为空。
+- 已完成的 002 Neon / Vercel 基础设施迁移相关 issue 归入 `v0.2.0`。
+- 已完成的 003「字幕搜索字段扩展」37 个 issue 已从 `v0.2.0` 迁移至 `v0.2.1`；该里程碑承载的是 patch 级字段扩展，不与 `v0.2.0` 的数据库与部署生产化职责重叠。
 - 后续新 issue 默认优先按版本目标挂 milestone，而不是继续挂到 `MVP`、`Post-MVP`、`Future`。
 - `scope:*` 标签负责表达范围层级，例如 `scope:mvp`、`scope:post-mvp`、`scope:future`；milestone 负责表达目标版本，两者不得互相替代。
-- 当 issue 属于当前首发闭环，应优先归入 `v0.1.0`；数据库与部署生产化工作应优先归入 `v0.2.0`；正式稳定首发收口工作应优先归入 `v1.0.0`。
+- 当 issue 属于当前首发闭环，应优先归入 `v0.1.0`；数据库与部署生产化工作应优先归入 `v0.2.0`；已发布 API 的非 breaking 字段扩展应优先归入 `v0.2.x`（如 `v0.2.1`）；正式稳定首发收口工作应优先归入 `v1.0.0`。
+- patch 级 milestone（`v0.2.x`）只承载"已发布 API 的非 breaking 字段扩展"或"已建立 feature 的小幅补强"，不引入新模块、不变更数据库 schema、不引入 breaking 行为；若突破该边界，应升至 minor（`v0.3.0`）或 major。
 - 若出现仅需表达长期积压、但尚未承诺版本窗口的事项，可暂不设置版本 milestone，仅保留 `scope:*` 标签，待进入明确版本规划后再补 milestone。
