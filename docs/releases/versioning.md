@@ -5,7 +5,7 @@
 - `v0.1.0`：当前已收口的 MVP 版本。
 - `v0.2.0`：数据库与部署生产化版本，重点覆盖 Neon / Vercel 路线、运行时环境映射、初始化与迁移流程收敛。
 - `v0.2.1`：在 `v0.2.0` 正式运行基线之上，针对已发布 API 的小步快跑式字段扩展；本版本以 003「字幕搜索字段扩展」为代表。
-- `v0.2.2`：在 `v0.2.1` 字段扩展基础上，正式建立适合多 provider 的聚合搜索入口模型，使接口可以接收 richer request fields，并允许各 provider 按自身能力选择性消费字段，为后续接入迅雷等第二字幕源打好契约与实现边界。
+- `v0.2.2`：在 `v0.2.1` 字段扩展基础上，正式建立适合多 provider 的聚合搜索入口模型，并完成第二字幕 provider 的基础接入，优先以迅雷字幕 provider 作为首个新增 provider 落地样本。
 - `v0.2.x`：允许在 `v0.2.0` 之后引入 patch 级版本，承载"已发布 API 的非 breaking 字段扩展"或"已建立 feature 的小幅补强"，不引入新的产品模块或数据库 schema 变更。
 - `v0.3.0`：字幕资产管理基础版。本版本标志 SubHub 从“字幕搜索与下载工具”进一步进入“字幕资产管理平台”的初始阶段，重点解决字幕从临时搜索结果走向可管理资产的问题。
 - `v0.4.0`：字幕内容治理与 AI 处理版本。在 `v0.3.0` 字幕资产管理基础能力之上，开始建设字幕内容治理能力，包括人工审核辅助、AI 清洗、字幕内容修正、合规替换、版本管理与可回滚编辑流程。
@@ -71,31 +71,43 @@
 
 ### `v0.2.2`
 
-代表在 `v0.2.1` 字段扩展基础上的「多字幕 provider 搜索入口模型基础版」阶段，目标不是简单继续加字段，而是正式建立适合多 provider 的聚合搜索入口模型，使接口可以接收 richer request fields，并允许各 provider 按自身能力选择性消费字段，为后续接入迅雷等第二字幕源打好契约与实现边界。
+代表在 `v0.2.1` 字段扩展基础上的「多字幕 provider 搜索入口模型基础版」阶段，目标是在 `v0.2.1` 字段扩展基础上，正式建立适合多 provider 的聚合搜索入口模型，并完成第二字幕 provider 的基础接入，优先以迅雷字幕 provider 作为首个新增 provider 落地样本。
 
-建议包含的范围：
+本 milestone 重点包括：
 
 - 定义 SubHub 稳定的聚合字幕搜索请求模型
+- 支持 richer request fields
 - 明确"字段可传 != 所有 provider 都支持"的 provider 能力边界
-- provider 选择性消费请求字段
-- provider 参数映射边界收敛
-- 为 OpenSubtitles 保留结构化字段优势
-- 为迅雷等名称检索型 provider 预留接入方式
-- provider 结果标准化的基础准备
-- 更新 OpenAPI / generated client / tests / 文档
+- provider 按能力选择性消费请求字段
+- 保留 OpenSubtitles 对结构化字段的较强支持能力
+- 接入迅雷字幕 provider，作为名称检索型 provider 的首个落地样本
+- 建立 provider 参数映射边界
+- 建立 provider 结果标准化模型
+- 为多 provider 搜索结果聚合、来源标记、错误隔离提供最小实现基础
+- 同步更新 OpenAPI / generated client / tests / 文档
+
+建议明确列入的范围：
+
+1. OpenSubtitles provider 的结构化字段消费能力收口
+2. 迅雷字幕 provider adapter
+3. 迅雷 provider 配置管理的最小实现
+4. provider 搜索调用与结果解析
+5. provider 结果归一化
+6. provider 来源标识
+7. provider 失败隔离
+8. 最小 provider fallback / 聚合策略
 
 明确不包含在 `v0.2.2`：
 
 - 手动上传字幕
 - 缓存字幕查看/编辑/转正
-- 自有字幕资产管理
-- AI 审核/清洗字幕内容
+- SubHub 自有字幕资产管理
+- AI 审核、清洗、内容替换
 - 大规模 provider 架构重写
-- 完整 provider 调度系统
-- 高级 provider 熔断、排序、评分编排
-- breaking API 重设计（除非单独评审）
+- 高级 provider 调度、评分、熔断和复杂排序编排
+- 字幕内容治理工作流
 
-`v0.2.2` 属于「多 provider 搜索入口模型」阶段，重点解决聚合搜索契约与 provider 消费边界问题，不进入字幕资产管理阶段。
+`v0.2.2` 仍属于"字幕搜索与下载能力升级"阶段，不进入字幕资产管理阶段。迅雷字幕 provider 的引入属于"第二 provider 接入"，用于验证多 provider 搜索入口模型的可行性，而不是在本阶段一次性完成完整 provider 平台化。
 
 ### `v0.3.0`
 
@@ -163,6 +175,7 @@
 - `specs/002-migrate-neon-vercel/` 对应的收口版本为 `v0.2.0`。
 - `specs/003-subtitle-search-fields/` 对应的收口版本为 `v0.2.1`。
 - 后续「多 provider 搜索入口模型基础版」工作（对应 `v0.2.2`）建议以独立 feature / spec 形式推进（如 `specs/004-*`），并默认对应 `v0.2.2`。
+- 后续「字幕资产管理基础版」工作（对应 `v0.3.0`）建议以独立 feature / spec 形式推进，并默认对应 `v0.3.0`。
 - 后续「字幕内容治理与 AI 处理」工作（对应 `v0.4.0`）建议以独立 feature / spec 形式推进，并默认对应 `v0.4.0`。
 - 后续数据库 / 部署生产化工作建议以独立 feature 或独立 spec 形式推进，并默认对应 `v0.2.0`。
 - 已发布 API 的非 breaking 字段扩展可对应 `v0.2.x`（如 `v0.2.1`），并应同步在对应 spec 的 `tasks.md` §Issue 映射表中说明该 milestone。
