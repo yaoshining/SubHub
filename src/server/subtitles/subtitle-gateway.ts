@@ -20,6 +20,7 @@ import { assertProductionRuntimeReady } from "@/server/services/runtime-readines
 
 export type SubtitleSearchInput = {
   title: string;
+  query?: string;
   year?: number;
   season?: number;
   episode?: number;
