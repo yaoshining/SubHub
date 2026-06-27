@@ -36,7 +36,7 @@
 - `src/server/providers/opensubtitles-adapter.ts`：当前 OpenSubtitles 适配器，`OpenSubtitlesSearchInput` 与 `OpenSubtitlesSubtitle` 模型
 - `src/server/providers/credential-pool.ts`：凭据池抽象（`selectProviderCredential` / `markCredentialUsed` / `markCredentialFailure`）
 - `src/server/providers/provider-repository.ts`：Provider 仓库，含 `listProviders` / `requireProvider` / `setProviderStatus` 等
-- `src/server/storage/schema.ts`：`providerTypes = ["opensubtitles"]` enum（详见 §Conflict Points 注释）、`providerStatuses`、`subtitleSearchStatuses`、`providers` / `providerCredentials` 表
+- `src/server/storage/schema.ts`：`providerTypes = ["opensubtitles"]` enum（`v0.2.2` **不**扩展）、`providerStatuses`、`subtitleSearchStatuses`、`providers` / `providerCredentials` 表
 - `src/app/api/subtitles/search/route.ts`：当前 route Zod schema
 - `docs/api/openapi.yaml`：当前 `/api/subtitles/search` 契约真源；`SubtitleSearchResult` 的 `provider` enum 当前为 `opensubtitles` 单值
 - `tests/contract/subtitles.contract.test.ts`：当前契约测试
@@ -58,7 +58,7 @@
 - 迅雷字幕 API `https://api-shoulei-ssl.xunlei.com/oracle/subtitle`（名称检索）
 - Orval + Scalar（API 契约链路）
 
-**存储**: 不新增数据库 schema（与 `versioning.md` v0.2.2 范围一致）；`subtitleSearchRequests` 审计表保持现有字段；`providerTypes` enum 扩展方式见 §Conflict Points
+**存储**: `v0.2.2` **不**做任何数据库 schema 变更（与 `versioning.md` v0.2.2 范围一致）；不扩展 `providerTypes` enum、不新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。详见 §9.1。
 
 **测试**: `vitest`；分层为 `mock/no-db`（纯逻辑单测）、`PGlite`（contract / unit）、`real Postgres`（integration）。遵循 `.github/copilot-instructions.md` 数据库测试分层约定
 
@@ -142,7 +142,7 @@ src/
 │   ├── xunlei-adapter.ts                      # 迅雷 provider adapter（新增）
 │   ├── credential-pool.ts                     # 现有实现，OpenSubtitles 凭据池隔离保持
 │   └── provider-repository.ts                 # 现有实现，支持多 provider 列表
-└── server/storage/schema.ts                   # providerTypes 扩展方式见 §Conflict Points
+└── server/storage/schema.ts                   # `v0.2.2` 不改动（详见 §9.1）
 
 docs/api/openapi.yaml                          # 契约真源（SubtitleSearchResult.provider 扩展 + 新增 provider 失败信息）
 
@@ -170,7 +170,7 @@ tests/
 | 结果归一化模块 | 多 provider 返回字段不一致（OpenSubtitles `file_id` vs 迅雷 `cid` / `gcid` / `url` 等），需要统一出口 | 在 gateway 内联归一化会导致 gateway 承担 provider 特定知识 |
 | provider 错误隔离与失败信息结构化 | 多 provider 聚合的首要价值是鲁棒性，单 provider 失败必须隔离 | 简单 fail-fast 会让一个 provider 不可用拖垮整个搜索 |
 | 串行调用 provider | 首批优先追求实现简单、错误隔离清晰、性能边界明确 | 并行调用需要超时预算与去重策略，超出 v0.2.2 范围 |
-| `providerTypes` enum 扩展点 | provider 元数据需要持久化，schema enum 是当前唯一 provider 类型表达 | 不引入 schema 会让 provider 类型无法在数据库层验证 |
+| `provider-registry` 代码层硬编码 provider key | 迅雷 provider 在 `v0.2.2` 不依赖数据库 schema；provider key → adapter 映射由代码层决定 | 直接把 provider 分支写进 gateway 会让 gateway 膨胀，违反宪章原则 VI；引入插件化框架超出 `v0.2.2` 范围 |
 
 ---
 
@@ -399,7 +399,9 @@ export function listProviderKeys(): SubtitleProviderKey[];
 - provider adapter MUST 仅处理"本 provider 实际消费"的字段映射。
 - provider adapter MUST NOT 感知其他 provider 的存在。
 - provider adapter MUST NOT 直接与数据库交互；凭据、审计由 gateway 统一处理。
-- provider adapter MUST 把 provider 原始响应解析为统一的 `ProviderSearchResult` 形态（id / language / releaseName / format / downloadUrl / raw），由 gateway 调用归一化模块注入 `provider` 字段。
+- provider adapter MUST 把 provider 原始响应解析为统一的 `ProviderSearchResult` 形态（id / language / releaseName / format / providerDownloadUrl / raw），由 gateway 调用归一化模块注入 `provider` 字段。
+  - `providerDownloadUrl` 是 adapter 内部字段，承载 provider 原始下载地址，仅供 adapter / download 路由内部使用；**绝不**作为公共 API 的 `downloadUrl` 透传给 client。
+  - 公共响应的 `downloadUrl` 一律由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={id}`（详见 §9.3）。
 
 ### 4.6 provider 不支持某字段时如何处理
 
@@ -451,7 +453,7 @@ type AggregatedSubtitleResult = {
 |--------------|-------------|------|
 | `cid` | `id` 的一部分（`xunlei:{providerId}:{cid}` 或 `{gcid}`） | 网关生成的稳定引用；优先用 `gcid`（更长，更稳定），缺失时回退 `cid` |
 | `gcid` | 同上 | 优先使用 |
-| `url` | `downloadUrl`（间接） | 迅雷的 `url` 不直接作为 `downloadUrl` 返回给调用方；调用方走 `/api/subtitles/download?subtitleId={xunlei:...}`，由 `subtitle-gateway` 的下载流程处理迅雷 provider 的 URL 拉取。原始 `url` 保留在 `raw.url` |
+| `url` | `providerDownloadUrl`（adapter 内部）→ `downloadUrl`（公共，间接） | 迅雷的 `url` 进入 adapter 内部字段 `providerDownloadUrl`（仅供 adapter / download 路由内部使用）；公共 `downloadUrl` 由网关生成为 `/api/subtitles/download?subtitleId={xunlei:...}`，**不**直接用迅雷原始 `url`。原始 `url` 保留在 `raw.url` |
 | `ext` | `format` | 字幕文件扩展名；缺失时回退 `srt` |
 | `name` | `releaseName` | 字幕发布名；缺失时回退 `null` |
 | `duration` | `raw.duration` | 视频时长，不进入主结果对象 |
@@ -492,8 +494,8 @@ type AggregatedSubtitleResult = {
 | Xunlei Adapter | `src/server/providers/xunlei-adapter.ts`（新增） | 迅雷 provider adapter；`query → name` + `languages`；必要条件缺失返回 skipped |
 | Normalizer | `src/server/subtitles/subtitle-result-normalizer.ts`（新增） | provider 原始结果 → `AggregatedSubtitleResult`；`provider` 注入 + `raw` 保留 |
 | Credential Pool | `src/server/providers/credential-pool.ts` | OpenSubtitles 凭据池隔离保持；不引入新逻辑 |
-| Provider Repository | `src/server/providers/provider-repository.ts` | 现有 `listProviders` 已能列出多 provider，无需大改；按需调整筛选逻辑 |
-| Storage Schema | `src/server/storage/schema.ts` | `providerTypes` enum 从 `["opensubtitles"]` 扩展为 `["opensubtitles", "xunlei"]`（详见 §Conflict Points） |
+| Provider Repository | `src/server/providers/provider-repository.ts` | `v0.2.2` 期间迅雷 provider 不走 `providers` 表（详见 §9.1），按需调整筛选逻辑时**仅**针对 OpenSubtitles |
+| Storage Schema | `src/server/storage/schema.ts` | **不**做任何改动：`providerTypes` enum 保持 `["opensubtitles"]` 单值；表结构、migration 均不变 |
 | OpenAPI | `docs/api/openapi.yaml` | §5.4 字段清单 |
 | Generated Client | `src/lib/api/generated/` | Orval 重新生成 |
 | Tests | `tests/contract/`、`tests/unit/`、`tests/integration/` | 见 §7 |
@@ -501,7 +503,7 @@ type AggregatedSubtitleResult = {
 ### 6.2 不改动的层
 
 - `src/server/api/caller-key-auth.ts`：调用方鉴权与本次无关
-- `src/server/storage/schema.ts` 中除 `providerTypes` 外的表结构
+- `src/server/storage/schema.ts`：本次**完全不动**（`providerTypes` 不扩展、表结构不变、无新增 migration）
 - `src/server/services/runtime-readiness-service.ts`：运行时就绪检查逻辑不变
 - 前端代码（本功能不触达）
 
@@ -658,34 +660,28 @@ type AggregatedSubtitleResult = {
   - gateway 调用 OpenSubtitles 时仍走 `selectProviderCredential` + `markCredentialUsed` / `markCredentialFailure`
   - 迅雷 provider 不接入凭据池（独立 adapter）
 
-## 9. Conflict Points
+## 9. 范围收口（已明确，不作为 review 决策点）
 
-> 本节显式列出本计划与现状的冲突点，便于 review 时明确决策。
+> 本节代替原「Conflict Points」章节。三个原本作为 review 决策点的冲突项已在本轮文档修订中**收口**为明确范围，所有 reviewer 可直接以本节为准。
 
-### 9.1 `providerTypes` enum 扩展
+### 9.1 providerTypes / schema 边界（已收口）
 
-- **现状**: `src/server/storage/schema.ts` 中 `providerTypes = ["opensubtitles"]` 是数据库 enum check 约束。
-- **冲突**: 多 provider 模型需要持久化"迅雷 provider"类型。
-- **方案**: 本 plan 决策为**扩展 `providerTypes` enum 为 `["opensubtitles", "xunlei"]`**。理由：
-  - 多 provider 模型要求 provider 类型在 schema 层可验证，避免运行时脏数据
-  - 迅雷 provider 需要 `Provider` 表中的元数据记录（id / name / status / 等）
-  - 数据库 enum 扩展是 schema 演进，不引入新表；与 `versioning.md` 中 `v0.2.2` "不新增数据库 schema" 的边界不冲突（`v0.2.2` 明确不新增 schema，但允许 enum 扩展；此决策需要在 review 时确认）
-- **migration**: 编写 Drizzle migration 以扩展 enum check 约束；遵循 `.github/copilot-instructions.md` 的数据库测试分层约定（migration 验证保留在真实 Postgres / Neon 链路）
-- **回退**: 若 review 不同意扩展 enum，备选方案是把 provider type 改为字符串列 + 应用层 enum 校验，但这会牺牲数据库层校验能力
+- **范围声明**：`v0.2.2` **不**做任何数据库 schema 变更。不扩展 `providerTypes` enum、不新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。
+- **迅雷 provider 接入路径**：走「不依赖数据库 schema 的最小接入路径」—— provider key → adapter 的映射由 `provider-registry.ts` 在代码层硬编码，gateway 通过 `provider-registry` 调度，不依赖 `providers` 表的 `type` 字段（保持 `["opensubtitles"]` 单值）。
+- **provider 元数据控制**：`v0.2.2` 期间迅雷 provider 的启用 / 禁用 / 限流 / 冷却等调度控制仅由代码层配置决定（feature flag / 环境变量）。
+- **未来路径**：若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.3.0`），届时才允许扩展 `providerTypes` enum 与新增 migration。
 
-### 9.2 `provider_failures` 是否暴露在响应中
+### 9.2 provider_failures 暴露方式（已收口）
 
-- **现状**: `SubtitleSearchResponse.data.results[]` 不含失败信息。
-- **冲突**: 多 provider 错误隔离需要让调用方知道哪些 provider 失败。
-- **方案**: 在 `SubtitleSearchData` 中新增 `provider_failures` 可选数组，`status` 扩展为 `success | partial`。
-- **回退**: 若 review 不同意暴露，可改为仅在响应 header 中暴露（如 `X-Subhub-Provider-Failures`），但这会牺牲 client 端可观测性
+- **范围声明**：provider 失败信息一律通过**响应 body** 暴露：`.data.status` 扩展为 `success | partial`，同时 `.data.provider_failures[]` 为可选数组承载失败详情。`partial` 不阻塞 200 响应。
+- **明确不做**为：不采用仅在响应 header 暴露（如 `X-Subhub-Provider-Failures`）的方式。
+- **兼容性**：老调用方若不读取 `provider_failures` / 不识别 `status: partial`，原有消费路径不受影响。
 
-### 9.3 `downloadUrl` 的统一性
+### 9.3 downloadUrl 统一入口（已收口）
 
-- **现状**: `downloadUrl` 是 `/api/subtitles/download?subtitleId={opensubtitles:...}`。
-- **冲突**: 迅雷 provider 的下载流程需要单独适配（拉取迅雷 `url`）。
-- **方案**: 保持 `downloadUrl` 是 SubHub 网关统一下载入口，由 download 路由根据 `subtitleId` 前缀判断 provider；迅雷原始 `url` 保留在 `raw.url`。
-- **回退**: 若 review 不同意统一入口，可改为 provider 各自暴露不同下载路径，但这会牺牲 client 一致性
+- **范围声明**：公共 API 响应中的 `results[].downloadUrl` 一律由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={id}`；download 路由根据 `subtitleId` 前缀（`opensubtitles:` / `xunlei:`）判断 provider 后再走 adapter 的下载流程。
+- **明确不做**为：不采用 provider 各自暴露不同下载路径的方式（避免 client 端根据 `provider` 切换 URL）。
+- **adapter 内部字段命名**：adapter 内部使用独立的 `providerDownloadUrl` 字段承载 provider 原始 URL（如迅雷 `url`），与公共 API 的 `downloadUrl` 严格区分；provider 原始 URL 仅保留在 `AggregatedSubtitleResult.raw.url` 用于调试与审计，**绝不**直接出现在 `downloadUrl`。
 
 ## 10. Deliverables
 
@@ -700,7 +696,7 @@ type AggregatedSubtitleResult = {
 - `provider-registry` 轻量注册表（`src/server/providers/provider-registry.ts`）
 - `XunleiAdapter` 迅雷 provider adapter（`src/server/providers/xunlei-adapter.ts`）
 - `OpenSubtitlesAdapter` 收敛为 `SubtitleProviderAdapter` 实现（`src/server/providers/opensubtitles-adapter.ts`）
-- `providerTypes` enum 扩展 + Drizzle migration
+- 迅雷 provider key 在 `provider-registry.ts` 硬编码；**不**修改 `providerTypes` enum、**不**新增 migration（详见 §9.1）
 
 ### 10.3 结果归一化
 
@@ -741,5 +737,5 @@ type AggregatedSubtitleResult = {
 - [ ] `pnpm test` 全量测试通过（unit + contract + integration）
 - [ ] `pnpm api:check` 通过（OpenAPI / generated 同步）
 - [ ] 老调用方兼容性 contract test 100% 覆盖
-- [ ] Conflict Points 章节的三个决策点已在 review 中获得显式确认
+- [ ] §9 范围收口三个项目已在文档中明示并与 `versioning.md` / `spec.md` / `contracts/*.md` 一致（**不再作为 review 决策点**）
 - [ ] Issue 同步范围限定在 `specs/004-multi-provider-search/`

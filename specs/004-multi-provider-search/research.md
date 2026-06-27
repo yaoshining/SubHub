@@ -91,34 +91,28 @@ interface SubtitleProviderAdapter {
 
 ---
 
-## R-4. `providerTypes` enum 是否扩展
+## R-4. `providerTypes` enum 与 schema 变更（`v0.2.2` 不变更）
 
-### 决策
+### 决策（`v0.2.2` 不变）
 
-扩展 `providerTypes` enum 为 `["opensubtitles", "xunlei"]`；编写 Drizzle migration 以更新 schema。
+本次 `v0.2.2` **不**扩展 `providerTypes` enum、**不**新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。迅雷 provider 走「不依赖数据库 schema 的最小接入路径」：provider key → adapter 映射由 `provider-registry.ts` 在代码层硬编码。迅雷 provider 的启用 / 禁用 / 限流 / 冷却等控制仅由代码层 feature flag / 环境变量决定，不依赖数据库持久化。
 
 ### Rationale
 
-- 多 provider 模型要求 provider 类型在数据库层可验证，避免运行时脏数据。
-- 迅雷 provider 需要 `Provider` 表中的元数据记录（id / name / status / 等），而 `type` 字段是当前唯一的 provider 类型表达。
-- enum 扩展是 schema 演进，不引入新表；与 `versioning.md` 中 `v0.2.2` "不新增数据库 schema" 的边界不冲突。
-- 数据库 enum check 约束是应用一致性的最后一道防线，避免任意字符串污染 provider 元数据。
+- `versioning.md` 明确 `v0.2.x` 不引入数据库 schema 变更，`v0.2.2` 作为 patch 版本必须遵守该边界。
+- 在多 provider 架构收口过程中，数据库 schema 不应是阻碍因素：provider key 映射可以在代码层完成。
+- 若在 `v0.2.2` 引入 schema 变更，会跨过 `v0.2.x → v0.3.0` 的边界，破坏 patch 版本约束。
 
 ### Alternatives considered
 
 - **A. 把 provider type 改为字符串列 + 应用层 enum 校验**：被否决；牺牲数据库层校验能力，应用层校验有遗漏风险。
-- **B. 不持久化迅雷 provider，由代码硬编码**：被否决；后续 provider 配置（如 enable/disable、status、concurrency limit）无法存储。
-- **C. 引入独立 `xunlei_providers` 表**：被否决；`v0.2.2` 不新增数据库 schema；硬隔离会让 provider 配置分散。
+- **B. 扩展 enum（被否决于本次 `v0.2.2`）**：应作为 post-`v0.2.2` / `v0.3.0` 议题处理。
+- **B. 不持久化迅雷 provider，代码层硬编码（被采纳于本次 `v0.2.2`）**：适配 `versioning.md` 中 `v0.2.x` 不变 schema 的约束；后续 `v0.3.0` 可考虑重考虑是否需持久化。
+- **C. 引入独立 `xunlei_providers` 表**：被否决；`v0.2.2` 不新增数据库 schema。
 
-### migration 风险
+### 未来路径
 
-- Drizzle migration 编写需要遵循 `.github/copilot-instructions.md` 的数据库测试分层约定：migration 验证 MUST 保留在真实 Postgres / Neon 链路，不可用 PGlite 完全替代。
-- enum check 约束扩展在 Postgres 中需要 `ALTER TYPE` 或 `DROP CONSTRAINT + ADD CONSTRAINT`，需在 migration 文件中正确表达。
-
-### 回退
-
-若 review 不同意扩展 enum，备选方案见 plan §9.1。
-
+若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.3.0`），届时才允许扩展 `providerTypes` enum 与新增 migration
 ---
 
 ## R-5. `provider_failures` 暴露位置

@@ -56,7 +56,7 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 | `name` | `releaseName` | 缺失时为 `null` |
 | `languages` | `language` | 取第一个语言码；保留在 `raw.languages` |
 | `score` | `score` + `raw.score` | 顶层 `score` 透传；原始保留 |
-| `url` | `downloadUrl: null` | 不直接暴露给 client；保留在 `raw.url` |
+| `url` | adapter 内部 `providerDownloadUrl`（**绝不暴露给 client**） | 迅雷的 `url` 是 provider 原始下载地址，仅在 adapter 内部使用；adapter 将其放入 `ProviderSearchResult.providerDownloadUrl`（adapter 内部字段，不进入公共响应）。公共响应的 `downloadUrl` 由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={xunlei:providerId:gcid\|cid}`；download 路由根据 `subtitleId` 前缀判断 provider 后再走 adapter 的 URL 拉取。迅雷原始 `url` 仅保留在 `AggregatedSubtitleResult.raw.url`（用于调试与审计，不直接是下载入口） |
 | `cid` / `gcid` / `url` / `ext` / `name` / `duration` / `languages` / `source` / `score` / `fingerprintf_score` / `extra_name` / `mt` | `raw.*` | 全量保留 |
 
 ### 2.3 `id` 生成规则
@@ -120,9 +120,11 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 - adapter 接受 `credential: null`
 - gateway 不为迅雷 provider 调用凭据池
 
-### 5.2 后续扩展
+### 5.2 后续扩展（**全部属于 post-v0.2.2**，不属于本次 `v0.2.2` 范围）
 
-若实际部署发现迅雷接口需要凭据，由独立 spec 推进凭据池接入：
+> ⚠️ **范围声明**：若实际部署发现迅雷接口需要凭据，必须由独立 spec 推进凭据池接入，且必须先评估是否需要扩展 `versioning.md` 中 `v0.2.2` 范围（很可能升级到 minor `v0.3.0`）。本次 `v0.2.2` **不**接入凭据池、**不**扩展 `providerTypes` enum、**不**新增 migration、**不**变更数据库 schema。
+
+后续扩展步骤（仅供规划参考，不属于 `v0.2.2`）：
 
 - 扩展 `providerTypes` enum（如需数据库持久化新凭据类型）
 - 在凭据池中为迅雷 provider 增加专属调度逻辑
@@ -263,10 +265,10 @@ try {
 - 迅雷可能存在反爬限制（频率限制、UA 检测、Cookie 等）
 - adapter 内可根据需要添加 UA / Cookie / 频率控制；这些扩展由独立 spec 处理
 
-### 9.3 凭据缺失
+### 9.3 凭据缺失（**post-v0.2.2**，不属于本次 `v0.2.2` 范围）
 
 - 当前接口可能无需凭据，但实际部署可能发现需要
-- adapter 已设计为接受 `credential: null`；扩展凭据池支持由独立 spec 处理
+- adapter 已设计为接受 `credential: null`；扩展凭据池支持由独立 spec 处理，且需要先升级 `versioning.md` `v0.2.2` 范围或推迟到 post-`v0.2.2`
 
 ### 9.4 字段命名变化
 

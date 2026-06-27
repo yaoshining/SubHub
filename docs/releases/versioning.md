@@ -97,6 +97,12 @@
 7. provider 失败隔离
 8. 最小 provider fallback / 聚合策略
 
+`v0.2.2` 的 schema / migration 边界（明确声明）：
+
+- **`v0.2.2` 不引入任何数据库 schema 变更**：不新增表、不修改现有表结构、不新增 migration、不扩展 enum（如 `providerTypes`）。
+- 迅雷 provider 在本次 `v0.2.2` 走「**不依赖新增 schema 的最小接入路径**」：provider key → adapter 的映射由代码层 `provider-registry.ts` 硬编码，不持久化到 `providers` 表。
+- 凡是需要将新 provider 元数据持久化到 `providers` 表、扩展 `providerTypes` enum、新增 migration 的工作，均**不属于本次 `v0.2.2`**，需由 post-`v0.2.2` 独立 spec 推进或升级到 minor `v0.3.0`。
+
 明确不包含在 `v0.2.2`：
 
 - 手动上传字幕

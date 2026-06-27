@@ -94,11 +94,13 @@
 
 ### 用户故事 4 - 单 provider 失败不拖垮整体搜索 (Priority: P1)
 
-聚合搜索过程中，单个 provider 出现网络故障、上游 5xx、超时或凭据失效时，不应导致整个搜索接口返回错误。其他 provider 的结果应继续返回给调用方，失败信息以最小化形式暴露（例如 `degraded` 标记）。
+聚合搜索过程中，单个 provider 出现网络故障、上游 5xx、超时或凭据失效时，不应导致整个搜索接口返回错误。其他 provider 的结果应继续返回给调用方，失败信息通过**响应 body**以结构化形式暴露：`data.status` 扩展为 `success | partial`，同时在 `data.provider_failures[]`（可选数组）中承载失败详情。`partial` 状态**不**阻塞 200 响应。老调用方若不读取新增字段，原有消费路径不受影响。
+
+> **范围声明**：本规范明确**仅采用响应 body 暴露**（`status + provider_failures[]`），**不**采用仅在响应 header 暴露（如 `X-Subhub-Provider-Failures`）的方式；后者会牺牲 client 端可观测性与中间件兼容性，不符合 SubHub 现有 API 风格。
 
 **优先级原因**: 多 provider 聚合的鲁棒性是基本要求。一个 provider 不可用不能把整个功能拉垮，否则用户体验不如单 provider。
 
-**独立测试**: 模拟迅雷 provider 上游返回 5xx 或超时，验证聚合接口仍能返回 OpenSubtitles 的结果，且响应结构体现降级状态。
+**独立测试**: 模拟迅雷 provider 上游返回 5xx 或超时，验证聚合接口仍能返回 OpenSubtitles 的结果，且响应结构体现 `status: partial` 与 `provider_failures[]`。
 
 **验收场景**:
 
@@ -278,11 +280,15 @@ AggregatedSubtitleResult {
   language: string | null;
   releaseName: string | null;
   format: string;
-  downloadUrl: string;         // 迅雷需解析 `url`；OpenSubtitles 走 download 流程
-  raw?: Record<string, unknown>; // 迅雷原始字段保留
+  downloadUrl: string;         // 【对外统一字段】由 SubHub gateway 一律生成为 `/api/subtitles/download?subtitleId={id}`；不允许直接暴露 provider 原始下载地址
+  raw?: Record<string, unknown>; // 迅雷原始字段保留（含原始 url，仅用于调试与审计）
   score?: number | null;       // 迅雷 `score` 透传；OpenSubtitles 暂无
 }
 ```
+
+> ⚠️ **`downloadUrl` 语义声明**：`downloadUrl` 是公共 API 字段，一律由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={id}`，调用方直接请求该路径；download 路由根据 `subtitleId` 前缀（`opensubtitles:` / `xunlei:`）判断 provider 后再走 adapter 的下载流程。
+>
+> provider 原始下载地址（如迅雷的 `url`）**绝不**直接出现在公共响应的 `downloadUrl` 上；adapter 内部应使用单独的 `providerDownloadUrl` 字段承载 provider 原始 URL，仅在 download 路由内部被使用。原始 URL 仅在 `AggregatedSubtitleResult.raw.url` 中保留供调试与审计。
 
 ### provider 来源标识
 
@@ -292,7 +298,7 @@ AggregatedSubtitleResult {
 ### provider 原始评分 / 信息的处理
 
 - 迅雷 `score` / `fingerprintf_score` 透传到 `raw` 或顶层 `score`（顶层优先级）；不进行跨 provider 评分编排。
-- 迅雷 `cid` / `gcid` / `url` / `ext` / `name` / `duration` / `languages` / `source` / `extra_name` / `mt` 保留在 `raw` 中；`url` 同时映射到 `downloadUrl`（前提是接口返回的 `url` 可直接用于下载；细节由 plan 阶段与 `downloadUrl` 实际语义对齐）。
+- 迅雷 `cid` / `gcid` / `url` / `ext` / `name` / `duration` / `languages` / `source` / `extra_name` / `mt` 全部保留在 `raw` 中；**迅雷原始 `url` 绝不映射到公共 `downloadUrl`**，仅在 `raw.url` 中保留。
 - OpenSubtitles 原始字段（`download_count` 等）保留在 `raw` 中。
 
 ### 归一化边界
@@ -412,9 +418,20 @@ AggregatedSubtitleResult {
 ### 配置与凭据
 
 - `src/server/providers/credential-pool.ts`：
-  - 保持现有 OpenSubtitles 凭据池行为独立；迅雷 provider 暂不接入凭据池（如需后续接入，独立 spec）。
+  - 保持现有 OpenSubtitles 凭据池行为独立；迅雷 provider **本次 `v0.2.2` 不接入凭据池**（如需后续接入，需独立 spec 并先评估 `versioning.md` 中 `v0.2.2` 范围是否需要升级到 `v0.3.0`）。
 - `src/server/storage/schema.ts`：
-  - 不新增 schema；复用 `Provider` / `ProviderCredential` / `subtitleSearchRequests` 现有结构。
+  - **本次 `v0.2.2` 不做任何数据库 schema 变更**：不新增 schema、不修改 enum、不新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。
+  - 迅雷 provider 在本次 `v0.2.2` 走「不依赖新增 schema 的最小接入路径」（详见 §提供商元数据接入方式）。
+  - 凡是需要扩展 `providerTypes` enum / 新增 migration / 持久化新 provider 类型的操作，均**不属于本次 `v0.2.2`**，需置于 post-`v0.2.2` 或独立 minor 升级。
+
+### 提供商元数据接入方式（`v0.2.2` 范围说明）
+
+> ⚠️ 本节是本规范的**范围声明**，与 `versioning.md` 中 `v0.2.2` 边界对齐。
+
+- 本次 `v0.2.2` **不**将「迅雷 provider 元数据」持久化到 `providers` 表。`providers` 表当前 `type` 字段的 enum 约束为 `["opensubtitles"]`，本次不扩展。
+- 迅雷 provider 在本次 `v0.2.2` 采取「**不依赖数据库 schema 的最小接入路径**」：provider key → adapter 的映射由 `provider-registry.ts` 在代码层硬编码，gateway 通过 `provider-registry` 调度，不需要 `providers` 表新增记录。
+- 在 `v0.2.2` 期间，迅雷 provider 的启用 / 禁用 / 限流 / 冷却等调度控制**仅由代码层配置决定**（如 feature flag、环境变量）；不依赖数据库持久化。
+- 若后续需要将迅雷 provider 元数据持久化（启用/禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 的独立 spec 推进，且需要先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升级到 minor `v0.3.0`），届时才允许扩展 `providerTypes` enum 与新增 migration。
 
 ### API 契约链路（仓库级约定）
 

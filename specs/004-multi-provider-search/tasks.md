@@ -28,7 +28,7 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 - **API 契约真源**: `docs/api/openapi.yaml`
 - **Generated client**: `src/lib/api/generated/`
 - **设计文档**: `DESIGN.md`（本功能不触达）、`docs/pages/*.md`（本功能不触达）
-- **数据库 schema**: `src/server/storage/schema.ts` + Drizzle migration
+- **数据库 schema**: `src/server/storage/schema.ts`（**本次 `v0.2.2` 不做任何 schema 变更**：不扩展 enum、不新增 migration、不变更表结构；详见 `plan.md` §9.1 / `spec.md`「提供商元数据接入方式」）
 
 ---
 
@@ -39,7 +39,7 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 ### 必须先做（顺序执行）
 
 1. **阶段 1（Setup）**: 仓库级初始化与 lint / format 门禁基线
-2. **阶段 2（Foundational）**: 数据库 schema 扩展 + 聚合请求模型 + provider 适配层接口 + provider-registry + OpenAPI 请求 schema 同步
+2. **阶段 2（Foundational）**: 确认 `v0.2.2` 不依赖 schema 变更 + 聚合请求模型 + provider 适配层接口 + provider-registry + OpenAPI 请求 schema 同步
 3. 阶段 2 完成 → 才能开始任何用户故事实现
 
 ### 可并行推进
@@ -82,12 +82,12 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 
 **⚠️ CRITICAL**: 本阶段完成前不得开始任何用户故事开发
 
-### 数据层前置
+### 数据层前置（`v0.2.2` **不**做任何 schema 变更）
 
-- [ ] T006 扩展 `src/server/storage/schema.ts` 中 `providerTypes` enum 为 `["opensubtitles", "xunlei"]`，并更新 `providers` 表 `type` 字段的 enum 引用
-- [ ] T007 编写 Drizzle migration 以扩展 `providerTypes` enum check 约束（保留真实 Postgres / Neon 验证）
-- [ ] T008 [P] 在 `scripts/db/seed-dev.ts` 追加迅雷 provider 种子记录（`type=xunlei`、`status=enabled`），便于本地开发与测试
-- [ ] T009 [P] 在 `scripts/db/seed-staging.ts` 追加迅雷 provider 种子记录（staging 环境验证）
+> ⚠️ **范围声明**：本次 `v0.2.2` 不扩展 `providerTypes` enum、不新增 migration、不修改 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。迅雷 provider 走「不依赖数据库 schema 的最小接入路径」（provider key → adapter 映射由 `provider-registry.ts` 代码层硬编码）。`scripts/db/seed-dev.ts` / `scripts/db/seed-staging.ts` 不追加迅雷 provider 种子记录。
+
+- [ ] T006 [P] 验证 `src/server/storage/schema.ts` 中 `providerTypes` enum 仍为 `["opensubtitles"]` 单值；本次 `v0.2.2` **不**扩展
+- [ ] T007 [P] 验证本次 `v0.2.2` **不**新增 migration；仓库 `drizzle/` 目录本次 PR 不出现新文件（除 generated client 等无关产物）
 
 ### 聚合请求模型前置
 
@@ -106,7 +106,7 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 - [ ] T016 在 `docs/api/openapi.yaml` 中扩展 `/api/subtitles/search` 的 parameters，透传 `query` 可选字段
 - [ ] T017 [P] 在 `docs/api/openapi.yaml` 中更新 `/api/subtitles/search` operation description，明确"字段可传 != 所有 provider 都消费"的契约表述
 
-**检查点**: 数据库 schema 已扩展、聚合请求模型已收口、provider 适配层接口已定义、OpenAPI 请求 schema 已同步。所有用户故事实现可启动。
+**检查点**: 已确认 `v0.2.2` 不依赖 schema 变更（`providerTypes` enum 不扩展、无新 migration）、聚合请求模型已收口、provider 适配层接口已定义、OpenAPI 请求 schema 已同步。所有用户故事实现可启动。
 
 ---
 
@@ -276,7 +276,7 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 - [ ] T079 [P] 运行 `pnpm lint` + `pnpm typecheck` + `pnpm format:write`
 - [ ] T080 运行 `pnpm api:check` 验证契约链路（OpenAPI / generated 同步）
 - [ ] T081 在 `quickstart.md` 7 个端到端验证场景基础上，手动验证至少场景 1（OpenSubtitles 回归）、场景 2（迅雷名称检索）、场景 6（老调用方零改动回归）
-- [ ] T082 [P] 校验 `pnpm db:migrate` 与 `pnpm db:check` 在本地 Postgres / Neon staging 上通过，验证 `providerTypes` enum 扩展 migration 正确
+- [ ] T082 [P] 校验 `src/server/storage/schema.ts` / `drizzle/` migration 目录在本次 PR 中**未**改动；如仓库 CI 需运行 `pnpm db:check`，仅应验证现有 schema 健康，**不应**包含新增的 `providerTypes` enum 扩展
 - [ ] T083 [P] 校验 `.github/copilot-instructions.md` 中 SPECKIT 引用仍指向 `specs/004-multi-provider-search/plan.md`
 - [ ] T084 [P] 校验 `.specify/feature.json` 中 `feature_directory` 为 `specs/004-multi-provider-search`
 - [ ] T085 [P] 校验 `docs/releases/versioning.md` 中 `v0.2.2` 范围定义与本次实现一致；如不一致，更新 versioning.md

@@ -34,12 +34,14 @@ adapter 返回的 provider 内原始结果：
 
 ```ts
 type ProviderSearchResult = {
-  id: string;                                    // provider 内字幕 ID
+  id: string;                                    // provider 内字幕 ID（仅 adapter 内部使用，不直接暴露给 client）
   language: string | null;
   releaseName: string | null;
   format: string;                                // 字幕格式（srt / ass / sub）
-  downloadUrl: string | null;                    // provider 原始 URL；OpenSubtitles 为 null（走 SubHub 网关）
-  raw?: Record<string, unknown>;                 // provider 原始字段（仅 adapter 内部使用）
+  providerDownloadUrl: string | null;            // 【adapter 内部字段】provider 原始下载地址；OpenSubtitles 通常为 null（走 SubHub 网关）
+                                                 // ⚠️ 此字段仅用于 adapter 内部与下载流程，绝对不允许作为公共 API 的 `downloadUrl` 直接透传给 client
+                                                 //    公共响应的 `downloadUrl` 一律由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId=...`
+  raw?: Record<string, unknown>;                 // provider 原始字段（仅 adapter 内部使用）；公共响应中的 `raw` 由 gateway 归一化后暴露
   score?: number | null;                         // provider 原始评分（迅雷透传 score）
 };
 ```
@@ -194,7 +196,7 @@ export function listProviderKeys(): SubtitleProviderKey[] {
   1. 在 `SubtitleProviderKey` 联合类型追加新 key
   2. 实现 `SubtitleProviderAdapter` 接口
   3. 在 `provider-registry.ts` 注册新 adapter
-- 若数据库层也需要支持新 provider type，则同步扩展 `providerTypes` enum
+- （**future / post-v0.2.2**）若数据库层也需要支持新 provider type，则同步扩展 `providerTypes` enum；本次 `v0.2.2` **不**扩展 enum、**不**新增 migration
 
 ---
 
@@ -324,18 +326,22 @@ adapter `outcome.skipped` 映射：
 
 ---
 
-## 9. 适配器扩展流程（post-mvp）
+## 9. 适配器扩展流程（**全部属于 post-v0.2.2**，不属于本次 `v0.2.2` 范围）
+
+> ⚠️ **范围声明**：本节描述的是「如何在未来新增第三个 provider」，全部步骤都属于后续 milestone（`v0.2.3` / `v0.3.0` / 独立 spec），**不属于本次 `v0.2.2`**。`v0.2.2` 仅完成 OpenSubtitles + 迅雷 provider 的最小接入，不涉及任何数据库 schema 变更或 migration。
 
 新增 provider 的步骤：
 
 1. 在 `SubtitleProviderKey` 联合类型追加新 key
 2. 在 `provider-registry.ts` 注册新 adapter 实例
 3. 在 `src/server/providers/` 创建新 adapter 文件，实现 `SubtitleProviderAdapter` 接口
-4. 若需要数据库持久化，扩展 `providerTypes` enum + 编写 Drizzle migration
-5. 若需要凭据池，扩展凭据池逻辑（独立 spec）
+4. （**future / post-v0.2.2**）若需要数据库持久化新 provider 元数据，扩展 `providerTypes` enum + 编写 Drizzle migration；本次 `v0.2.2` **不**扩展 enum，**不**新增 migration
+5. （**future / post-v0.2.2**）若需要凭据池接入，扩展凭据池逻辑（独立 spec）；本次 `v0.2.2` 迅雷 provider 不接入凭据池
 6. 编写单元测试 / contract 测试
 7. 更新 OpenAPI 与 generated client
 8. 更新文档（本 contracts/ 目录）
+
+> 若 review 阶段有人提议在 `v0.2.2` 内推进步骤 4 或 5，必须先升级 `versioning.md` 的 `v0.2.2` 范围定义（进入 minor `v0.3.0`）或推迟到 post-`v0.2.2`。
 
 ---
 

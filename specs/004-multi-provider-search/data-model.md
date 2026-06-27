@@ -16,12 +16,11 @@
 2. **provider 适配层**：`SubtitleProviderAdapter` 接口与 `ProviderSearchOutcome`（provider 内部契约）
 3. **聚合响应层**：`AggregatedSubtitleResult` + `SubtitleSearchData`（SubHub 对外契约）
 
-数据库 schema 层：
+数据库 schema 层（`v0.2.2` 不变更）：
 
-- 扩展 `providerTypes` enum 为 `["opensubtitles", "xunlei"]`
-- `Provider` 表结构不变；`ProviderCredential` 表结构不变；`subtitleSearchRequests` 表结构不变
-
-> 本 feature 不新增数据库表；enum 扩展详见 plan §9.1。
+- 本次 `v0.2.2` **不**做任何数据库 schema 变更：不扩展 `providerTypes` enum、不新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。
+- 迅雷 provider 在 `v0.2.2` 走「不依赖数据库 schema 的最小接入路径」：provider key → adapter 映射由 `provider-registry.ts` 代码层硬编码。
+- 详见 `plan.md` §9.1 / `spec.md`「提供商元数据接入方式」。
 
 ---
 
@@ -76,7 +75,9 @@ export type ProviderSearchResult = {
   language: string | null;
   releaseName: string | null;
   format: string;                                // 字幕格式（如 srt / ass / sub）
-  downloadUrl: string | null;                    // provider 原始 URL；OpenSubtitles 为 null（走 SubHub 网关）
+  providerDownloadUrl: string | null;            // 【adapter 内部字段】provider 原始下载地址；仅供 adapter / download 路由内部使用，绝不作为公共 API 的 `downloadUrl` 透传
+                                                  // OpenSubtitles 通常为 null（走 SubHub 网关）；迅雷为原始 `url`
+                                                  // 公共响应的 `downloadUrl` 一律由 SubHub gateway 生成为 `/api/subtitles/download?subtitleId=...`
   raw?: Record<string, unknown>;                 // provider 原始字段（仅 adapter 内部使用）
   score?: number | null;                         // provider 原始评分（迅雷透传 score）
 };
@@ -272,27 +273,14 @@ export type SubtitleSearchResponse = {
 
 ---
 
-## 5. 数据库 schema 变更
+## 5. 数据库 schema（`v0.2.2` 不变更）
 
-### 5.1 `providerTypes` enum 扩展
+> ⚠️ **范围声明**：本次 `v0.2.2` 不做任何数据库 schema 变更。不扩展 enum、不新增 migration、不修改表结构。
 
-```ts
-// src/server/storage/schema.ts
-export const providerTypes = ["opensubtitles", "xunlei"] as const;
-```
-
-### 5.2 migration
-
-编写 Drizzle migration 文件（位于 `drizzle/` 目录下，由 Drizzle 自动生成或手动编写）：
-
-- ALTER TYPE 扩展 enum 集合（如 Postgres）
-- 或 DROP CONSTRAINT + ADD CONSTRAINT 更新 check 约束
-
-### 5.3 不变更的表结构
-
-- `providers` 表结构不变
-- `provider_credentials` 表结构不变
-- `subtitle_search_requests` 表结构不变
+- `src/server/storage/schema.ts` 中 `providerTypes` enum 保持 `["opensubtitles"]` 单值
+- `providers` / `provider_credentials` / `subtitle_search_requests` 表结构不变
+- 本次 PR 不出现任何新增 migration 文件
+- 如后续需将迅雷 provider 元数据持久化，需由 post-`v0.2.2` 独立 spec 推进并先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.3.0`）
 - 其他表结构不变
 
 ### 5.4 种子数据（可选）
@@ -369,8 +357,8 @@ export const providerTypes = ["opensubtitles", "xunlei"] as const;
 | 请求模型 | `SubtitleSearchInput`（OpenSubtitles 单 provider 视角） | 新增 `query` 字段 |
 | 响应模型 | `SubtitleSearchResult`（provider enum 单值） | provider enum 扩展为 `[opensubtitles, xunlei]`；新增 `raw` / `score` / `provider_failures` / `status: partial` |
 | provider 适配层 | 单 provider（OpenSubtitles） | 引入 `SubtitleProviderAdapter` 接口 + `provider-registry` + `XunleiAdapter` |
-| 数据库 schema | `providerTypes = ["opensubtitles"]` | enum 扩展为 `["opensubtitles", "xunlei"]` |
-| provider 元数据 | OpenSubtitles | 接入迅雷 provider（通过现有 Provider 表） |
+| 数据库 schema | `providerTypes = ["opensubtitles"]` | **无变更**（`v0.2.2` 不扩展 enum、不新增 migration） |
+| provider 元数据 | OpenSubtitles | 迅雷 provider 走代码层硬编码（`provider-registry`），不依赖 `providers` 表持久化 |
 | 凭据池 | 仅 OpenSubtitles | 迅雷 provider 不接入凭据池 |
 
 `v0.2.2` 严格保持 `v0.2.1` 行为不变；新增能力通过增量字段暴露。
