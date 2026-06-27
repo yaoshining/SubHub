@@ -43,4 +43,9 @@ export type SearchSubtitlesParams = {
    * 媒体类型过滤；`type=movie` 与 `season`/`episode` 同时出现时返回 400；`type=episode` 缺少 `season`/`episode` 且缺少 `imdb_id`/`tmdb_id` 时返回 400。
    */
   type?: SearchSubtitlesType;
+  /**
+   * 自由文本检索；与 `title` 共同构成 free-text 兜底；迅雷 provider 映射为上游 `name`。
+   * @minLength 1
+   */
+  query?: string;
 };
