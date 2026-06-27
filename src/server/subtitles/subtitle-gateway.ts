@@ -11,12 +11,25 @@ import {
   type OpenSubtitlesSearchInput,
 } from "@/server/providers/opensubtitles-adapter";
 import { ProviderRepository } from "@/server/providers/provider-repository";
+import { getAdapter } from "@/server/providers/provider-registry";
+import type {
+  ProviderSearchOutcome,
+  SubtitleProviderAdapter,
+} from "@/server/providers/provider-adapter";
 import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
 import type { CallerKey, Provider } from "@/server/storage/schema";
 import { assertProductionRuntimeReady } from "@/server/services/runtime-readiness-service";
+import {
+  mapFailure,
+  normalize,
+  type AggregatedSubtitleResult,
+  type ProviderFailureInfo,
+  type SubtitleSearchData,
+  type SubtitleSearchDataStatus,
+} from "@/server/subtitles/subtitle-result-normalizer";
 
 export type SubtitleSearchInput = {
   title: string;
@@ -30,24 +43,17 @@ export type SubtitleSearchInput = {
   type?: "movie" | "episode";
 };
 
-export type SubtitleSearchResult = {
-  id: string;
-  provider: "opensubtitles";
-  language: string | null;
-  releaseName: string | null;
-  format: string;
-  downloadUrl: string;
-};
+export type SubtitleSearchResult = AggregatedSubtitleResult;
 
 export type SubtitleSearchResponse = {
-  status: "success";
-  results: SubtitleSearchResult[];
+  data: SubtitleSearchData;
 };
 
 export type SubtitleGatewayOptions = {
   db?: StorageDatabase;
   now?: Date;
   adapter?: Pick<OpenSubtitlesAdapter, "searchRaw">;
+  xunleiAdapter?: SubtitleProviderAdapter;
 };
 
 const buildSearchQuery = (input: SubtitleSearchInput) =>
@@ -61,15 +67,6 @@ const buildSearchQuery = (input: SubtitleSearchInput) =>
     .filter(Boolean)
     .join(" ");
 
-/**
- * 按定位路径分流构造适配器输入。
- *
- * - 当 `imdbId` 或 `tmdbId` 存在时走 ID 定位路径：仅传 ID 字段，不透传 `query`，
- *   避免短 title（< 3 字符）触发 OpenSubtitles 400 凭据降级。
- * - 无 ID 字段时走原有 `buildSearchQuery` 逻辑（拼 `title` + `year` + `SxxExx`），
- *   保持老调用方行为 100% 不变。
- * - `imdbId` 与 `tmdbId` 同时存在时 `imdbId` 优先，`tmdbId` 不再传上游。
- */
 export const buildAdapterInput = (
   input: SubtitleSearchInput,
 ): OpenSubtitlesSearchInput => {
@@ -135,11 +132,159 @@ const syncProviderFailureState = async (
   }
 };
 
+type ProviderCallResult = {
+  results: AggregatedSubtitleResult[];
+  failure: ProviderFailureInfo | null;
+  providerId: string | null;
+  credentialId: string | null;
+  hadResults: boolean;
+};
+
+const callOpenSubtitles = async (
+  input: SubtitleSearchInput,
+  db: StorageDatabase,
+  now: Date,
+  options: SubtitleGatewayOptions,
+): Promise<ProviderCallResult> => {
+  const candidates = await getProviderCandidates(db, now);
+  if (candidates.length === 0) {
+    return {
+      results: [],
+      failure: null,
+      providerId: null,
+      credentialId: null,
+      hadResults: false,
+    };
+  }
+
+  const provider = candidates[0]!;
+  const credential = await selectProviderCredential(provider.id, { db, now });
+  const adapter = options.adapter ?? new OpenSubtitlesAdapter();
+
+  try {
+    const subtitles = await adapter.searchRaw(
+      credential.secret,
+      buildAdapterInput(input),
+    );
+
+    const downloadable = subtitles.filter((s) => s.id);
+    await markCredentialUsed(provider.id, credential.id, { db, now });
+
+    const results = downloadable.map((s) =>
+      normalize(
+        "opensubtitles",
+        {
+          id: s.id,
+          language: s.language,
+          releaseName: s.fileName,
+          format: s.fileName?.includes(".")
+            ? (s.fileName!.split(".").pop()?.toLowerCase() ?? "srt")
+            : "srt",
+          providerDownloadUrl: null,
+          raw: { download_count: s.downloadCount },
+          score: null,
+        },
+        provider.id,
+      ),
+    );
+
+    return {
+      results,
+      failure: null,
+      providerId: provider.id,
+      credentialId: credential.id,
+      hadResults: results.length > 0,
+    };
+  } catch (error) {
+    if (error instanceof AppError && error.code === "NO_RESULTS") {
+      return {
+        results: [],
+        failure: null,
+        providerId: provider.id,
+        credentialId: credential.id,
+        hadResults: false,
+      };
+    }
+
+    if (error instanceof AppError) {
+      await markCredentialFailure(
+        provider,
+        credential.id,
+        mapProviderFailureReason(error),
+        error.message,
+        { db, now },
+      );
+      await syncProviderFailureState(provider.id, db, now);
+    } else {
+      await markCredentialFailure(
+        provider,
+        credential.id,
+        "upstream_failed",
+        "字幕查询上游请求失败。",
+        { db, now },
+      );
+      await syncProviderFailureState(provider.id, db, now);
+    }
+
+    return {
+      results: [],
+      failure: {
+        provider: "opensubtitles",
+        reason: "upstream_failed",
+        message: "OpenSubtitles 上游请求失败。",
+      },
+      providerId: provider.id,
+      credentialId: credential.id,
+      hadResults: false,
+    };
+  }
+};
+
+const callXunlei = async (
+  input: SubtitleSearchInput,
+  options: SubtitleGatewayOptions,
+): Promise<ProviderCallResult> => {
+  const adapter = options.xunleiAdapter ?? getAdapter("xunlei");
+  const outcome: ProviderSearchOutcome = await adapter.search(null, input);
+
+  if (outcome.skipped) {
+    return {
+      results: [],
+      failure: mapFailure("xunlei", outcome),
+      providerId: null,
+      credentialId: null,
+      hadResults: false,
+    };
+  }
+
+  if (!outcome.ok) {
+    return {
+      results: [],
+      failure: mapFailure("xunlei", outcome),
+      providerId: null,
+      credentialId: null,
+      hadResults: false,
+    };
+  }
+
+  const results = outcome.results.map((r) =>
+    normalize("xunlei", r, "xunlei_default"),
+  );
+
+  return {
+    results,
+    failure: null,
+    providerId: null,
+    credentialId: null,
+    hadResults: results.length > 0,
+  };
+};
+
 export async function searchSubtitles(
   request: Request,
   input: SubtitleSearchInput,
   options: SubtitleGatewayOptions = {},
-): Promise<SubtitleSearchResponse> {
+): Promise<SubtitleSearchData> {
   const db = options.db ?? getStorageClient().db;
   const now = options.now ?? new Date();
   await assertProductionRuntimeReady({ db, now });
@@ -186,8 +331,24 @@ export async function searchSubtitles(
     throw error;
   }
 
-  const candidates = await getProviderCandidates(db, now);
-  if (candidates.length === 0) {
+  const osResult = await callOpenSubtitles(input, db, now, options);
+  const xunleiResult = await callXunlei(input, options);
+
+  const allResults = [...osResult.results, ...xunleiResult.results];
+  const failures = [osResult.failure, xunleiResult.failure].filter(
+    (f): f is ProviderFailureInfo => f !== null,
+  );
+
+  const hardFailures = failures.filter(
+    (f) =>
+      f.reason !== "skipped_missing_fields" && f.reason !== "skipped_disabled",
+  );
+
+  const noProviderAvailable =
+    osResult.providerId === null &&
+    osResult.results.length === 0 &&
+    hardFailures.length === 0;
+  if (noProviderAvailable) {
     await record("service_not_ready");
     throw new AppError(
       "SERVICE_NOT_READY",
@@ -196,78 +357,35 @@ export async function searchSubtitles(
     );
   }
 
-  const provider = candidates[0]!;
-  const credential = await selectProviderCredential(provider.id, { db, now });
-  const adapter = options.adapter ?? new OpenSubtitlesAdapter();
-
-  try {
-    const subtitles = await adapter.searchRaw(
-      credential.secret,
-      buildAdapterInput(input),
-    );
-
-    const downloadableSubtitles = subtitles.filter((subtitle) => subtitle.id);
-
-    if (downloadableSubtitles.length === 0) {
-      await record("no_results", 0, provider.id, credential.id);
-      throw new AppError("NO_RESULTS", "未找到匹配字幕。", "query");
-    }
-
-    await markCredentialUsed(provider.id, credential.id, { db, now });
-
-    const results = downloadableSubtitles.map<SubtitleSearchResult>(
-      (subtitle) => {
-        const subtitleRef = `opensubtitles:${provider.id}:${subtitle.id}`;
-        const fileName = subtitle.fileName ?? subtitle.id;
-        const extension = fileName.includes(".")
-          ? fileName.split(".").pop()?.toLowerCase()
-          : undefined;
-
-        return {
-          id: subtitleRef,
-          provider: "opensubtitles",
-          language: subtitle.language,
-          releaseName: subtitle.fileName,
-          format: extension || "srt",
-          downloadUrl: `/api/subtitles/download?subtitleId=${encodeURIComponent(subtitleRef)}`,
-        };
-      },
-    );
-
-    await record("success", results.length, provider.id, credential.id);
-
-    return { status: "success", results };
-  } catch (error) {
-    if (error instanceof AppError && error.code === "NO_RESULTS") {
-      throw error;
-    }
-
-    if (error instanceof AppError) {
-      await markCredentialFailure(
-        provider,
-        credential.id,
-        mapProviderFailureReason(error),
-        error.message,
-        { db, now },
-      );
-      await syncProviderFailureState(provider.id, db, now);
-      await record("provider_failed", 0, provider.id, credential.id);
+  if (allResults.length === 0) {
+    if (hardFailures.length > 0) {
+      await record("provider_failed");
       throw new AppError(
         "UPSTREAM_FAILED",
         "字幕查询上游请求失败。",
         "provider",
       );
     }
-
-    await markCredentialFailure(
-      provider,
-      credential.id,
-      "upstream_failed",
-      "字幕查询上游请求失败。",
-      { db, now },
-    );
-    await syncProviderFailureState(provider.id, db, now);
-    await record("provider_failed", 0, provider.id, credential.id);
-    throw new AppError("UPSTREAM_FAILED", "字幕查询上游请求失败。");
+    const lastProviderId = osResult.providerId ?? xunleiResult.providerId;
+    const lastCredentialId = osResult.credentialId ?? xunleiResult.credentialId;
+    await record("no_results", 0, lastProviderId, lastCredentialId);
+    throw new AppError("NO_RESULTS", "未找到匹配字幕。", "query");
   }
+
+  const status: SubtitleSearchDataStatus =
+    hardFailures.length > 0 ? "partial" : "success";
+
+  const lastProviderId = osResult.providerId ?? xunleiResult.providerId;
+  const lastCredentialId = osResult.credentialId ?? xunleiResult.credentialId;
+  await record("success", allResults.length, lastProviderId, lastCredentialId);
+
+  const data: SubtitleSearchData = {
+    status,
+    results: allResults,
+  };
+  if (failures.length > 0) {
+    data.provider_failures = failures;
+  }
+
+  return data;
 }
