@@ -46,7 +46,7 @@ export type SubtitleSearchResponse = {
 export type SubtitleGatewayOptions = {
   db?: StorageDatabase;
   now?: Date;
-  adapter?: Pick<OpenSubtitlesAdapter, "search">;
+  adapter?: Pick<OpenSubtitlesAdapter, "searchRaw">;
 };
 
 const buildSearchQuery = (input: SubtitleSearchInput) =>
@@ -200,7 +200,7 @@ export async function searchSubtitles(
   const adapter = options.adapter ?? new OpenSubtitlesAdapter();
 
   try {
-    const subtitles = await adapter.search(
+    const subtitles = await adapter.searchRaw(
       credential.secret,
       buildAdapterInput(input),
     );

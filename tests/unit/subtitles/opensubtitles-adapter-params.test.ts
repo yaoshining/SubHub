@@ -30,10 +30,10 @@ const getParams = (fetchImpl: ReturnType<typeof vi.fn>): URLSearchParams => {
   return new URLSearchParams(query);
 };
 
-describe("OpenSubtitlesAdapter.search 参数映射", () => {
+describe("OpenSubtitlesAdapter.searchRaw 参数映射", () => {
   it("imdbId 映射到上游 imdb_id", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Inception",
       imdbId: "tt1375666",
     });
@@ -44,7 +44,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("tmdbId 映射到上游 tmdb_id", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Breaking Bad",
       tmdbId: 1396,
     });
@@ -54,7 +54,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("season 映射到上游 season_number", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Breaking Bad",
       season: 1,
     });
@@ -64,7 +64,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("episode 映射到上游 episode_number", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Breaking Bad",
       episode: 2,
     });
@@ -74,7 +74,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("language 映射到上游 languages", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Inception",
       language: "en",
     });
@@ -84,7 +84,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("type 映射到上游 type", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Inception",
       type: "movie",
     });
@@ -94,7 +94,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("无 query 时不设置 query 参数（ID-only 定位）", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       imdbId: "tt1375666",
     });
     const params = getParams(fetchImpl);
@@ -104,7 +104,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("老调用方仅传 query + language 时保持现有行为", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "Inception 2010",
       language: "en",
     });
@@ -120,7 +120,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("query 短于 3 字符时不透传给上游（避免 OpenSubtitles 400）", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "my",
       imdbId: "tt1375666",
     });
@@ -131,7 +131,7 @@ describe("OpenSubtitlesAdapter.search 参数映射", () => {
 
   it("query 为 3 字符时正常透传", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
-    await adapter.search("secret", {
+    await adapter.searchRaw("secret", {
       query: "abc",
       imdbId: "tt1375666",
     });

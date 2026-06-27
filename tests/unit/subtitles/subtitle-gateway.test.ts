@@ -65,7 +65,7 @@ describe("统一字幕查询与下载", () => {
       searchSubtitles(
         requestWithKey(callerKey.key),
         { title: "Example", language: "zh-CN" },
-        { adapter: { search: vi.fn() } },
+        { adapter: { searchRaw: vi.fn() } },
       ),
     ).rejects.toMatchObject({
       code: "SERVICE_NOT_READY",
@@ -84,7 +84,7 @@ describe("统一字幕查询与下载", () => {
       { title: "Example", year: 2024, season: 1, episode: 2 },
       {
         adapter: {
-          search: vi.fn().mockResolvedValue([
+          searchRaw: vi.fn().mockResolvedValue([
             {
               id: "subtitle_001",
               language: "zh-CN",
@@ -115,7 +115,7 @@ describe("统一字幕查询与下载", () => {
       searchSubtitles(
         requestWithKey(callerKey.key),
         { title: "No Result" },
-        { adapter: { search: vi.fn().mockResolvedValue([]) } },
+        { adapter: { searchRaw: vi.fn().mockResolvedValue([]) } },
       ),
     ).rejects.toMatchObject({ code: "NO_RESULTS" });
 
@@ -123,7 +123,7 @@ describe("统一字幕查询与下载", () => {
       searchSubtitles(
         requestWithKey("invalid"),
         { title: "Example" },
-        { adapter: { search: vi.fn() } },
+        { adapter: { searchRaw: vi.fn() } },
       ),
     ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
 
@@ -133,7 +133,7 @@ describe("统一字幕查询与下载", () => {
         { title: "Upstream Failed" },
         {
           adapter: {
-            search: vi.fn().mockRejectedValue(new Error("network")),
+            searchRaw: vi.fn().mockRejectedValue(new Error("network")),
           },
         },
       ),
@@ -225,7 +225,7 @@ describe("统一字幕查询与下载", () => {
         { title: "Rate Limited" },
         {
           adapter: {
-            search: vi
+            searchRaw: vi
               .fn()
               .mockRejectedValue(
                 new AppError(
