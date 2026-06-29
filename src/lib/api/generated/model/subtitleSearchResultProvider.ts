@@ -6,9 +6,13 @@
  * OpenAPI spec version: 0.2.0
  */
 
+/**
+ * 由 SubHub 显式注入；不允许直接复用 provider 原始数据中的同名字段。
+ */
 export type SubtitleSearchResultProvider =
   (typeof SubtitleSearchResultProvider)[keyof typeof SubtitleSearchResultProvider];
 
 export const SubtitleSearchResultProvider = {
   opensubtitles: "opensubtitles",
+  xunlei: "xunlei",
 } as const;
