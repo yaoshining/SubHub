@@ -245,4 +245,58 @@ describe("统一字幕查询与下载", () => {
       cooldownUntil: expect.any(String),
     });
   });
+
+  it("OpenSubtitles 失败时 provider_failures 保留真实失败原因而非固定 upstream_failed", async () => {
+    const [callerKey] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    const xunleiAdapter = {
+      key: "xunlei" as const,
+      search: vi.fn().mockResolvedValue({
+        ok: true,
+        skipped: false,
+        results: [
+          {
+            id: "xunlei_001",
+            language: "zh-CN",
+            releaseName: "Example.zh-CN.srt",
+            format: "srt",
+            providerDownloadUrl: "https://xunlei.test/subtitle.srt",
+            raw: {},
+            score: 0.9,
+          },
+        ],
+      }),
+    };
+
+    const result = await searchSubtitles(
+      requestWithKey(callerKey.key),
+      { title: "Partial Success" },
+      {
+        adapter: {
+          searchRaw: vi
+            .fn()
+            .mockRejectedValue(
+              new AppError(
+                "PROVIDER_CREDENTIAL_EXHAUSTED",
+                "OpenSubtitles 上游限流。",
+                "rate_limited",
+              ),
+            ),
+        },
+        xunleiAdapter,
+      },
+    );
+
+    expect(result.status).toBe("partial");
+    expect(result.results).toHaveLength(1);
+    expect(result.provider_failures).toHaveLength(1);
+    expect(result.provider_failures?.[0]).toMatchObject({
+      provider: "opensubtitles",
+      reason: "rate_limited",
+      message: "OpenSubtitles 上游限流。",
+    });
+  });
 });

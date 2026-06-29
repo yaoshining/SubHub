@@ -38,20 +38,18 @@ export type SubtitleSearchResponse = {
   data: SubtitleSearchData;
 };
 
-const mapSkippedReason = (
-  reason: "missing_required_field" | "disabled" | "credential_missing",
-): ProviderFailureReason => {
-  if (reason === "missing_required_field") return "skipped_missing_fields";
-  return "skipped_disabled";
+const ERROR_REASON_MAP: Readonly<Record<string, ProviderFailureReason>> = {
+  upstream_failed: "upstream_failed",
+  timeout: "timeout",
+  rate_limited: "rate_limited",
+  authentication_failed: "authentication_failed",
 };
 
-const mapErrorReason = (
-  reason:
-    | "upstream_failed"
-    | "timeout"
-    | "rate_limited"
-    | "authentication_failed",
-): ProviderFailureReason => reason;
+const SKIPPED_REASON_MAP: Readonly<Record<string, ProviderFailureReason>> = {
+  missing_required_field: "skipped_missing_fields",
+  disabled: "skipped_disabled",
+  credential_missing: "skipped_disabled",
+};
 
 export function normalize(
   providerKey: SubtitleProviderKey,
@@ -80,24 +78,13 @@ export function mapFailure(
   if ("skipped" in outcome && outcome.skipped) {
     return {
       provider: providerKey,
-      reason: mapSkippedReason(
-        outcome.reason as
-          | "missing_required_field"
-          | "disabled"
-          | "credential_missing",
-      ),
+      reason: SKIPPED_REASON_MAP[outcome.reason] ?? "skipped_disabled",
       message: `provider ${providerKey} 跳过：${outcome.reason}`,
     };
   }
   return {
     provider: providerKey,
-    reason: mapErrorReason(
-      outcome.error.reason as
-        | "upstream_failed"
-        | "timeout"
-        | "rate_limited"
-        | "authentication_failed",
-    ),
+    reason: ERROR_REASON_MAP[outcome.error.reason] ?? "upstream_failed",
     message: outcome.error.message,
   };
 }

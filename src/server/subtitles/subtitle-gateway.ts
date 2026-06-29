@@ -5,6 +5,7 @@ import {
   markCredentialFailure,
   markCredentialUsed,
   selectProviderCredential,
+  type CredentialFailureReason,
 } from "@/server/providers/credential-pool";
 import {
   OpenSubtitlesAdapter,
@@ -27,6 +28,7 @@ import {
   normalize,
   type AggregatedSubtitleResult,
   type ProviderFailureInfo,
+  type ProviderFailureReason,
   type SubtitleSearchData,
   type SubtitleSearchDataStatus,
 } from "@/server/subtitles/subtitle-result-normalizer";
@@ -106,7 +108,7 @@ const getProviderCandidates = async (
   );
 };
 
-const mapProviderFailureReason = (error: AppError) => {
+const mapProviderFailureReason = (error: AppError): CredentialFailureReason => {
   if (error.code !== "PROVIDER_CREDENTIAL_EXHAUSTED") {
     return "upstream_failed";
   }
@@ -118,6 +120,20 @@ const mapProviderFailureReason = (error: AppError) => {
   }
 
   return "quota_exhausted";
+};
+
+const toProviderFailureReason = (
+  reason: CredentialFailureReason,
+): ProviderFailureReason => {
+  if (
+    reason === "rate_limited" ||
+    reason === "authentication_failed" ||
+    reason === "timeout" ||
+    reason === "upstream_failed"
+  ) {
+    return reason;
+  }
+  return "upstream_failed";
 };
 
 const syncProviderFailureState = async (
@@ -206,32 +222,32 @@ const callOpenSubtitles = async (
       };
     }
 
+    let failureReason: CredentialFailureReason;
+    let failureMessage: string;
+
     if (error instanceof AppError) {
-      await markCredentialFailure(
-        provider,
-        credential.id,
-        mapProviderFailureReason(error),
-        error.message,
-        { db, now },
-      );
-      await syncProviderFailureState(provider.id, db, now);
+      failureReason = mapProviderFailureReason(error);
+      failureMessage = error.message;
     } else {
-      await markCredentialFailure(
-        provider,
-        credential.id,
-        "upstream_failed",
-        "字幕查询上游请求失败。",
-        { db, now },
-      );
-      await syncProviderFailureState(provider.id, db, now);
+      failureReason = "upstream_failed";
+      failureMessage = "字幕查询上游请求失败。";
     }
+
+    await markCredentialFailure(
+      provider,
+      credential.id,
+      failureReason,
+      failureMessage,
+      { db, now },
+    );
+    await syncProviderFailureState(provider.id, db, now);
 
     return {
       results: [],
       failure: {
         provider: "opensubtitles",
-        reason: "upstream_failed",
-        message: "OpenSubtitles 上游请求失败。",
+        reason: toProviderFailureReason(failureReason),
+        message: failureMessage,
       },
       providerId: provider.id,
       credentialId: credential.id,
