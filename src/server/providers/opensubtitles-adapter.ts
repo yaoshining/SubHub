@@ -54,14 +54,30 @@ export class OpenSubtitlesAdapter implements SubtitleProviderAdapter {
   async search(
     credential: SelectedProviderCredential | null,
     input: SubtitleSearchInput,
-    _options?: { fetchImpl?: typeof fetch; timeoutMs?: number },
+    options?: { fetchImpl?: typeof fetch; timeoutMs?: number },
   ): Promise<ProviderSearchOutcome> {
-    const secret = credential?.secret ?? "";
+    if (!credential) {
+      return {
+        ok: true,
+        skipped: true,
+        reason: "credential_missing",
+        results: [],
+      };
+    }
+
+    const secret = credential.secret;
     const adapterInput = this.toInternalInput(input);
-    void _options;
+    const executor =
+      options && (options.fetchImpl || options.timeoutMs)
+        ? new OpenSubtitlesAdapter({
+            baseUrl: this.baseUrl,
+            fetchImpl: options.fetchImpl,
+            timeoutMs: options.timeoutMs,
+          })
+        : this;
 
     try {
-      const subtitles = await this.searchRaw(secret, adapterInput);
+      const subtitles = await executor.searchRaw(secret, adapterInput);
       const results: ProviderSearchResult[] = subtitles
         .filter((s) => s.id)
         .map((s) => {
@@ -72,7 +88,7 @@ export class OpenSubtitlesAdapter implements SubtitleProviderAdapter {
             id: s.id,
             language: s.language,
             releaseName: s.fileName,
-            format: extension ?? "srt",
+            format: extension || "srt",
             providerDownloadUrl: null,
             raw: {
               download_count: s.downloadCount,
