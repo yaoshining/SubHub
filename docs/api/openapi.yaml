@@ -1979,7 +1979,7 @@ components:
           nullable: true
         format:
           type: string
-          description: 字幕文件格式（如 srt / ass / sub）；缺失时默认 srt。
+          description: 字幕文件格式（如 srt / ass / sub）；上游未提供时由网关默认填充 srt，响应中始终存在。
         downloadUrl:
           type: string
           description: |
@@ -1990,9 +1990,10 @@ components:
           additionalProperties: true
           nullable: true
           description: |
-            provider 原始字段；老调用方可忽略。
+            provider 原始字段，仅用于调试与兼容；不保证字段稳定性，调用方不应依赖其中字段名或结构。
+            不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl。
             OpenSubtitles: download_count, upload_date, feature_id, file_id, original_payload 等
-            Xunlei: cid, gcid, url, ext, duration, languages, source, score, fingerprintf_score, extra_name, mt, original_payload 等
+            Xunlei: cid, gcid, ext, duration, languages, source, score, extra_name, mt, original_payload 等
         score:
           type: number
           nullable: true
@@ -2016,7 +2017,7 @@ components:
             $ref: "#/components/schemas/SubtitleSearchResult"
         provider_failures:
           type: array
-          description: 单 provider 失败信息；与 results 并存但不阻塞主流程。
+          description: 包含失败与跳过原因的 provider 结果摘要；与 results 并存但不阻塞主流程。
           items:
             $ref: "#/components/schemas/ProviderFailureInfo"
     ProviderFailureInfo:

@@ -14,6 +14,6 @@ export interface SubtitleSearchData {
    *  */
   status: SubtitleSearchDataStatus;
   results: SubtitleSearchResult[];
-  /** 单 provider 失败信息；与 results 并存但不阻塞主流程。 */
+  /** 包含失败与跳过原因的 provider 结果摘要；与 results 并存但不阻塞主流程。 */
   provider_failures?: ProviderFailureInfo[];
 }

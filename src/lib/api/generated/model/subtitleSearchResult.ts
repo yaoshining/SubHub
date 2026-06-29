@@ -18,15 +18,16 @@ export interface SubtitleSearchResult {
   provider: SubtitleSearchResultProvider;
   language: string | null;
   releaseName: string | null;
-  /** 字幕文件格式（如 srt / ass / sub）；缺失时默认 srt。 */
+  /** 字幕文件格式（如 srt / ass / sub）；上游未提供时由网关默认填充 srt，响应中始终存在。 */
   format: string;
   /** 已包含完整 subtitleId 查询参数的下载路径，调用方可直接请求。
    * 统一下载入口，由网关根据 subtitleId 前缀路由到对应 provider 的下载流程。
    *  */
   downloadUrl: string;
-  /** provider 原始字段；老调用方可忽略。
+  /** provider 原始字段，仅用于调试与兼容；不保证字段稳定性，调用方不应依赖其中字段名或结构。
+   * 不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl。
    * OpenSubtitles: download_count, upload_date, feature_id, file_id, original_payload 等
-   * Xunlei: cid, gcid, url, ext, duration, languages, source, score, fingerprintf_score, extra_name, mt, original_payload 等
+   * Xunlei: cid, gcid, ext, duration, languages, source, score, extra_name, mt, original_payload 等
    *  */
   raw?: SubtitleSearchResultRaw;
   /** provider 原始评分；迅雷透传 score；OpenSubtitles 暂无。 */
