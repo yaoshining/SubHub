@@ -315,7 +315,6 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 ### 可并行任务组
 
 - T004 / T005（阶段 1 工具链基线验证）
-- T008 / T009（阶段 2 数据库种子）
 - T011 / T012（阶段 2 gateway 内部并行）
 - T014 / T015（阶段 2 provider-registry 注册与占位）
 - T016 / T017（阶段 2 OpenAPI 请求 schema 与 description）

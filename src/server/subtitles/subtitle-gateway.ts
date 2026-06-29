@@ -61,6 +61,7 @@ export type SubtitleGatewayOptions = {
 const buildSearchQuery = (input: SubtitleSearchInput) =>
   [
     input.title.trim(),
+    input.query?.trim() || undefined,
     input.year ? String(input.year) : undefined,
     input.season !== undefined && input.episode !== undefined
       ? `S${String(input.season).padStart(2, "0")}E${String(input.episode).padStart(2, "0")}`
@@ -347,8 +348,10 @@ export async function searchSubtitles(
     throw error;
   }
 
-  const osResult = await callOpenSubtitles(input, db, now, options);
-  const xunleiResult = await callXunlei(input, options);
+  const [osResult, xunleiResult] = await Promise.all([
+    callOpenSubtitles(input, db, now, options),
+    callXunlei(input, options),
+  ]);
 
   const allResults = [...osResult.results, ...xunleiResult.results];
   const failures = [osResult.failure, xunleiResult.failure].filter(
@@ -363,6 +366,7 @@ export async function searchSubtitles(
   const noProviderAvailable =
     osResult.providerId === null &&
     osResult.results.length === 0 &&
+    xunleiResult.results.length === 0 &&
     hardFailures.length === 0;
   if (noProviderAvailable) {
     await record("service_not_ready");

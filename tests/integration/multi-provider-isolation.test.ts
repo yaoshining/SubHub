@@ -69,6 +69,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
   await closePGliteStorageForTesting();
   await resetPGliteStorageForTesting();
   rmSync(tempDir, { recursive: true, force: true });
@@ -272,5 +273,27 @@ describe("多 provider 集成", () => {
     );
 
     expect(data.status).toBe("success");
+  });
+
+  it("仅迅雷有结果（无 OpenSubtitles 凭据）时不误报 SERVICE_NOT_READY", async () => {
+    const callerKey = await createCallerKey({
+      callerName: "Jellyfin",
+      environment: "production",
+      scope: "subtitles:read",
+      quotaPolicy: "default",
+    });
+
+    const data = await searchSubtitles(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Example&query=肖申克&language=zh",
+        callerKey.key,
+      ),
+      { title: "Example", query: "肖申克的救赎", language: "zh" },
+      { xunleiAdapter: mockXunleiAdapter(mockXunleiSuccess) },
+    );
+
+    expect(data.status).toBe("success");
+    expect(data.results).toHaveLength(1);
+    expect(data.results[0]!.provider).toBe("xunlei");
   });
 });

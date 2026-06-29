@@ -183,7 +183,7 @@ export async function downloadSubtitle(
     await record("not_found", null, null);
     throw new AppError(
       "SUBTITLE_NOT_FOUND",
-      "迅雷字幕 provider 下载暂不支持无状态下载；请使用搜索结果中的 raw.url。",
+      "迅雷字幕下载请直接使用搜索结果中的 downloadUrl 字段（provider 直链），统一下载入口暂不支持迅雷 provider。",
       "subtitleId",
     );
   }

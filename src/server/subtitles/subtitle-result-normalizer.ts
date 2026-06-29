@@ -57,13 +57,17 @@ export function normalize(
   providerId: string,
 ): AggregatedSubtitleResult {
   const id = `${providerKey}:${providerId}:${result.id}`;
+  const downloadUrl =
+    providerKey === "xunlei" && result.providerDownloadUrl
+      ? result.providerDownloadUrl
+      : `/api/subtitles/download?subtitleId=${encodeURIComponent(id)}`;
   return {
     id,
     provider: providerKey,
     language: result.language,
     releaseName: result.releaseName,
     format: result.format,
-    downloadUrl: `/api/subtitles/download?subtitleId=${encodeURIComponent(id)}`,
+    downloadUrl,
     raw: result.raw,
     score: result.score ?? null,
   };

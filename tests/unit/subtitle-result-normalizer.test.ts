@@ -70,6 +70,27 @@ describe("归一化 - downloadUrl 生成", () => {
       encodeURIComponent("opensubtitles:provider_abc:file_001"),
     );
   });
+
+  it("迅雷结果使用 providerDownloadUrl 作为 downloadUrl", () => {
+    const result = normalize(
+      "xunlei",
+      makeResult({
+        id: "gcid_001",
+        providerDownloadUrl: "https://xunlei.test/subtitle.srt",
+      }),
+      "xunlei_default",
+    );
+    expect(result.downloadUrl).toBe("https://xunlei.test/subtitle.srt");
+  });
+
+  it("迅雷无 providerDownloadUrl 时回退到统一下载入口", () => {
+    const result = normalize(
+      "xunlei",
+      makeResult({ id: "gcid_001", providerDownloadUrl: null }),
+      "xunlei_default",
+    );
+    expect(result.downloadUrl).toContain("/api/subtitles/download?subtitleId=");
+  });
 });
 
 describe("归一化 - raw 字段保留", () => {
