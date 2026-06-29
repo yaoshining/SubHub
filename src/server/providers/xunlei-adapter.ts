@@ -120,7 +120,7 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
 
       return { ok: true, skipped: false, results };
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
+      if ((error as { name?: string }).name === "AbortError") {
         return {
           ok: false,
           skipped: false,

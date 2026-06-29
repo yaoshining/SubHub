@@ -186,6 +186,29 @@ describe("XunleiAdapter 错误处理", () => {
     });
   });
 
+  it("自定义 fetchImpl 抛出非 DOMException 的 AbortError 仍归类为 timeout", async () => {
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl: vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => {
+              const err = new Error("Aborted");
+              err.name = "AbortError";
+              reject(err);
+            });
+          }),
+      ) as unknown as typeof fetch,
+      timeoutMs: 50,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(outcome).toMatchObject({
+      ok: false,
+      skipped: false,
+      error: { reason: "timeout" },
+    });
+  });
+
   it("响应解析失败（非 JSON）返回 upstream_failed", async () => {
     const adapter = new XunleiAdapter({
       baseUrl: "https://xunlei.test",
