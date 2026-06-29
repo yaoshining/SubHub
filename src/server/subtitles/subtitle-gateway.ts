@@ -374,16 +374,16 @@ export async function searchSubtitles(
   }
 
   if (allResults.length === 0) {
+    const lastProviderId = osResult.providerId ?? xunleiResult.providerId;
+    const lastCredentialId = osResult.credentialId ?? xunleiResult.credentialId;
     if (hardFailures.length > 0) {
-      await record("provider_failed");
+      await record("provider_failed", 0, lastProviderId, lastCredentialId);
       throw new AppError(
         "UPSTREAM_FAILED",
         "字幕查询上游请求失败。",
         "provider",
       );
     }
-    const lastProviderId = osResult.providerId ?? xunleiResult.providerId;
-    const lastCredentialId = osResult.credentialId ?? xunleiResult.credentialId;
     await record("no_results", 0, lastProviderId, lastCredentialId);
     throw new AppError("NO_RESULTS", "未找到匹配字幕。", "query");
   }
