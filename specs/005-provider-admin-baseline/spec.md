@@ -135,7 +135,7 @@
 
 1. **Given** SubHub 已存在至少一个 OpenSubtitles 实例和一个 Xunlei 实例, **When** 管理员进入 `/providers`, **Then** 列表至少包含这两类 provider 的行，且每行展示 `type` 标签（如 `Badge variant="secondary"`）以区分。
 2. **Given** OpenSubtitles 与 Xunlei 实例均已配置, **When** 管理员进入 `/providers`, **Then** 列表行的选中 / 池检查区 / 进入详情等动作均按当前选中 provider 类型自适应（OpenSubtitles 选中后右侧展示凭据池；Xunlei 选中后右侧展示「无凭据可配」空状态说明）。
-3. **Given** 当前不存在任何 provider 实例, **When** 管理员进入 `/providers`, **Then** 页面显示既有 empty state（沿用 `providers.md` 中"先添加首个 OpenSubtitles Provider"的空态文案），并允许通过新增抽屉新建 OpenSubtitles 实例；Xunlei 的空态按 §3 用户故事 6 处理。
+3. **Given** 当前不存在任何 OpenSubtitles 实例（Xunlei 始终由 `v0.2.3` migration 预置，必存在）, **When** 管理员进入 `/providers`, **Then** 页面显示既有 empty state（沿用 `providers.md` 中"先添加首个 OpenSubtitles Provider"的空态文案），并允许通过新增抽屉新建 OpenSubtitles 实例；Xunlei 始终可见，其「无凭据可配」空态按 §3 用户故事 6 处理。
 
 ---
 
@@ -236,7 +236,7 @@
 - **`fallbackProviderId` 自引用**: 管理员设置 provider 的 `fallbackProviderId` 为自身，保存 MUST 被拒绝并提示"不能回退到自身"。
 - **`fallbackProviderId` 循环引用**: A → B → A 的回退链保存 MUST 被拒绝并提示"回退目标形成循环"（避免调度死循环；具体校验策略在 plan 阶段敲定）。
 - **`providerTypes` enum 兼容性**: 扩展 enum MUST 兼容现有 `providers` 表的已有 OpenSubtitles 行；migration MUST NOT 强制重写现有数据。
-- **新增 Xunlei 实例**: `v0.2.2` 已通过 migration 在 `providers` 表插入 Xunlei 行；`v0.2.3` 不再需要 code-layer 注册；UI 上"新增 Provider"入口 MAY 在 plan 阶段决定是否对 Xunlei 暴露（默认: 不暴露"新增 Xunlei"模板化入口，因 Xunlei 是单一实例 provider，不鼓励多实例）。
+- **新增 Xunlei 实例**: `v0.2.3` 通过 migration 在 `providers` 表插入 Xunlei 默认行（接续 `v0.2.2` 由 code-layer 接入的 Xunlei provider，将其元数据持久化）；`v0.2.3` 不再依赖 code-layer 注册该 provider；UI 上"新增 Provider"入口 MAY 在 plan 阶段决定是否对 Xunlei 暴露（默认: 不暴露"新增 Xunlei"模板化入口，因 Xunlei 是单一实例 provider，不鼓励多实例）。
 - **聚合搜索 API 兼容性**: `v0.2.3` MUST NOT 引入对聚合字幕搜索 API 的 breaking 变更；老调用方零改动。
 - **Provider 元数据历史回溯**: v0.2.2 期间 Xunlei 的 code-layer 配置（baseUrl 等）作为 `v0.2.3` migration 的初始值持久化到 `providers` 表对应字段；若当前 `Provider` 模型不包含 `baseUrl` 字段，则 baseUrl 仍由 code-layer 维护（不破坏"统一 provider 模型"的边界 —— 因为 baseUrl 不属于"最小基础配置"中的管理员可调字段）。
 
