@@ -5,10 +5,15 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
  * OpenAPI spec version: 0.2.0
  */
+import type { ProviderFailureInfo } from "./providerFailureInfo";
 import type { SubtitleSearchDataStatus } from "./subtitleSearchDataStatus";
 import type { SubtitleSearchResult } from "./subtitleSearchResult";
 
 export interface SubtitleSearchData {
+  /** success: 所有 provider 成功或无 provider；partial: 至少一个 provider 失败但其他 provider 返回了结果。
+   *  */
   status: SubtitleSearchDataStatus;
   results: SubtitleSearchResult[];
+  /** 包含失败与跳过原因的 provider 结果摘要；与 results 并存但不阻塞主流程。 */
+  provider_failures?: ProviderFailureInfo[];
 }

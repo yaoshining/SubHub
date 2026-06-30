@@ -85,6 +85,9 @@ export const getSearchSubtitlesUrl = (params: SearchSubtitlesParams) => {
 
 /**
  * 外部调用方使用 active Caller Key 查询字幕；无 Provider、无活跃凭据、无结果与上游失败均使用统一错误结构。
+ *
+ * 聚合搜索接口支持多个 provider（opensubtitles、xunlei）；不同 provider 的能力差异由 SubHub 内部处理，调用方无需关心。字段可传不等于所有 provider 都同等支持；provider 实际可消费字段由 provider adapter 决定。
+ *
  * @summary 统一字幕查询
  */
 export const searchSubtitles = async (

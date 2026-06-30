@@ -65,7 +65,7 @@ describe("统一字幕查询与下载", () => {
       searchSubtitles(
         requestWithKey(callerKey.key),
         { title: "Example", language: "zh-CN" },
-        { adapter: { search: vi.fn() } },
+        { adapter: { searchRaw: vi.fn() } },
       ),
     ).rejects.toMatchObject({
       code: "SERVICE_NOT_READY",
@@ -84,7 +84,7 @@ describe("统一字幕查询与下载", () => {
       { title: "Example", year: 2024, season: 1, episode: 2 },
       {
         adapter: {
-          search: vi.fn().mockResolvedValue([
+          searchRaw: vi.fn().mockResolvedValue([
             {
               id: "subtitle_001",
               language: "zh-CN",
@@ -115,7 +115,7 @@ describe("统一字幕查询与下载", () => {
       searchSubtitles(
         requestWithKey(callerKey.key),
         { title: "No Result" },
-        { adapter: { search: vi.fn().mockResolvedValue([]) } },
+        { adapter: { searchRaw: vi.fn().mockResolvedValue([]) } },
       ),
     ).rejects.toMatchObject({ code: "NO_RESULTS" });
 
@@ -123,7 +123,7 @@ describe("统一字幕查询与下载", () => {
       searchSubtitles(
         requestWithKey("invalid"),
         { title: "Example" },
-        { adapter: { search: vi.fn() } },
+        { adapter: { searchRaw: vi.fn() } },
       ),
     ).rejects.toMatchObject({ code: "CALLER_KEY_INVALID" });
 
@@ -133,7 +133,7 @@ describe("统一字幕查询与下载", () => {
         { title: "Upstream Failed" },
         {
           adapter: {
-            search: vi.fn().mockRejectedValue(new Error("network")),
+            searchRaw: vi.fn().mockRejectedValue(new Error("network")),
           },
         },
       ),
@@ -225,7 +225,7 @@ describe("统一字幕查询与下载", () => {
         { title: "Rate Limited" },
         {
           adapter: {
-            search: vi
+            searchRaw: vi
               .fn()
               .mockRejectedValue(
                 new AppError(
@@ -243,6 +243,60 @@ describe("统一字幕查询与下载", () => {
     expect(detail.credentials[0]).toMatchObject({
       status: "cooldown",
       cooldownUntil: expect.any(String),
+    });
+  });
+
+  it("OpenSubtitles 失败时 provider_failures 保留真实失败原因而非固定 upstream_failed", async () => {
+    const [callerKey] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    const xunleiAdapter = {
+      key: "xunlei" as const,
+      search: vi.fn().mockResolvedValue({
+        ok: true,
+        skipped: false,
+        results: [
+          {
+            id: "xunlei_001",
+            language: "zh-CN",
+            releaseName: "Example.zh-CN.srt",
+            format: "srt",
+            providerDownloadUrl: "https://xunlei.test/subtitle.srt",
+            raw: {},
+            score: 0.9,
+          },
+        ],
+      }),
+    };
+
+    const result = await searchSubtitles(
+      requestWithKey(callerKey.key),
+      { title: "Partial Success" },
+      {
+        adapter: {
+          searchRaw: vi
+            .fn()
+            .mockRejectedValue(
+              new AppError(
+                "PROVIDER_CREDENTIAL_EXHAUSTED",
+                "OpenSubtitles 上游限流。",
+                "rate_limited",
+              ),
+            ),
+        },
+        xunleiAdapter,
+      },
+    );
+
+    expect(result.status).toBe("partial");
+    expect(result.results).toHaveLength(1);
+    expect(result.provider_failures).toHaveLength(1);
+    expect(result.provider_failures?.[0]).toMatchObject({
+      provider: "opensubtitles",
+      reason: "rate_limited",
+      message: "OpenSubtitles 上游限流。",
     });
   });
 });

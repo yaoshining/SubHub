@@ -687,7 +687,10 @@ paths:
         - Subtitles
       operationId: searchSubtitles
       summary: 统一字幕查询
-      description: 外部调用方使用 active Caller Key 查询字幕；无 Provider、无活跃凭据、无结果与上游失败均使用统一错误结构。
+      description: |
+        外部调用方使用 active Caller Key 查询字幕；无 Provider、无活跃凭据、无结果与上游失败均使用统一错误结构。
+
+        聚合搜索接口支持多个 provider（opensubtitles、xunlei）；不同 provider 的能力差异由 SubHub 内部处理，调用方无需关心。字段可传不等于所有 provider 都同等支持；provider 实际可消费字段由 provider adapter 决定。
       security:
         - CallerKeyBearer: []
       parameters:
@@ -745,6 +748,13 @@ paths:
             enum:
               - movie
               - episode
+        - name: query
+          in: query
+          required: false
+          description: 自由文本检索；与 `title` 共同构成 free-text 兜底；OpenSubtitles 将其追加至上游 query 串，迅雷 provider 映射为上游 `name`。
+          schema:
+            type: string
+            minLength: 1
       responses:
         "200":
           description: 字幕查询成功
@@ -1951,11 +1961,16 @@ components:
       properties:
         id:
           type: string
-          description: 网关生成的字幕引用，可直接用于下载接口 subtitleId；OpenSubtitles 结果格式为 `opensubtitles:{providerId}:{file_id}`。
+          description: |
+            网关生成的字幕引用，可直接用于下载接口 subtitleId。
+            OpenSubtitles: opensubtitles:{providerId}:{file_id}
+            Xunlei: xunlei:{providerId}:{gcid} 或 xunlei:{providerId}:{cid}（优先 gcid）
         provider:
           type: string
           enum:
             - opensubtitles
+            - xunlei
+          description: 由 SubHub 显式注入；不允许直接复用 provider 原始数据中的同名字段。
         language:
           type: string
           nullable: true
@@ -1964,9 +1979,26 @@ components:
           nullable: true
         format:
           type: string
+          description: 字幕文件格式（如 srt / ass / sub）；上游未提供时由网关默认填充 srt，响应中始终存在。
         downloadUrl:
           type: string
-          description: 已包含完整 `subtitleId` 查询参数的下载路径，调用方可直接请求。
+          description: |
+            已包含完整 subtitleId 查询参数的下载路径，调用方可直接请求。
+            OpenSubtitles: 统一下载入口，由网关根据 subtitleId 前缀路由到 provider 下载流程。
+            Xunlei: provider 直链（迅雷不支持无状态统一下载，downloadUrl 即为 provider 返回的直链 URL）。
+        raw:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: |
+            provider 原始字段，仅用于调试与兼容；不保证字段稳定性，调用方不应依赖其中字段名或结构。
+            不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl（迅雷 provider 的 downloadUrl 本身为 provider 直链）。
+            OpenSubtitles: download_count, upload_date, feature_id, file_id, original_payload 等
+            Xunlei: cid, gcid, ext, duration, languages, source, score, extra_name, mt, original_payload 等
+        score:
+          type: number
+          nullable: true
+          description: provider 原始评分；迅雷透传 score；OpenSubtitles 暂无。
     SubtitleSearchData:
       type: object
       required:
@@ -1977,10 +2009,48 @@ components:
           type: string
           enum:
             - success
+            - partial
+          description: |
+            success: 所有 provider 成功或无 provider；partial: 至少一个 provider 失败但其他 provider 返回了结果。
         results:
           type: array
           items:
             $ref: "#/components/schemas/SubtitleSearchResult"
+        provider_failures:
+          type: array
+          description: 包含失败与跳过原因的 provider 结果摘要；与 results 并存但不阻塞主流程。
+          items:
+            $ref: "#/components/schemas/ProviderFailureInfo"
+    ProviderFailureInfo:
+      type: object
+      required:
+        - provider
+        - reason
+      properties:
+        provider:
+          type: string
+          enum:
+            - opensubtitles
+            - xunlei
+        reason:
+          type: string
+          enum:
+            - upstream_failed
+            - timeout
+            - rate_limited
+            - skipped_missing_fields
+            - skipped_disabled
+            - authentication_failed
+          description: |
+            upstream_failed: 上游 5xx 或网络异常
+            timeout: 请求超时
+            rate_limited: 上游限流
+            skipped_missing_fields: provider 因必要条件缺失而跳过（不计入错误）
+            skipped_disabled: provider 被禁用或无凭据
+            authentication_failed: 认证失败
+        message:
+          type: string
+          description: 失败信息摘要；不含堆栈。
     SubtitleSearchResponse:
       type: object
       required:

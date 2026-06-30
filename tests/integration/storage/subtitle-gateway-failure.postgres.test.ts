@@ -129,7 +129,7 @@ describeWhenLocalPostgresEnabled(
             db: providerRepository["db"],
             now,
             adapter: {
-              search: async () => {
+              searchRaw: async () => {
                 throw new AppError(
                   "PROVIDER_CREDENTIAL_EXHAUSTED",
                   "429 限流",
@@ -190,7 +190,7 @@ describeWhenLocalPostgresEnabled(
             db: providerRepository["db"],
             now,
             adapter: {
-              search: async () => {
+              searchRaw: async () => {
                 throw new AppError(
                   "PROVIDER_CREDENTIAL_EXHAUSTED",
                   "quota exhausted",

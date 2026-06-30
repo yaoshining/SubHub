@@ -1,6 +1,13 @@
 import packageJson from "../../../package.json";
 import { AppError } from "@/lib/errors";
 import { readEnv } from "@/lib/env";
+import type { SelectedProviderCredential } from "@/server/providers/credential-pool";
+import type {
+  ProviderSearchOutcome,
+  ProviderSearchResult,
+  SubtitleProviderAdapter,
+} from "@/server/providers/provider-adapter";
+import type { SubtitleSearchInput } from "@/server/subtitles/subtitle-gateway";
 
 export type OpenSubtitlesSearchInput = {
   query?: string;
@@ -31,7 +38,8 @@ export type OpenSubtitlesAdapterOptions = {
   timeoutMs?: number;
 };
 
-export class OpenSubtitlesAdapter {
+export class OpenSubtitlesAdapter implements SubtitleProviderAdapter {
+  readonly key = "opensubtitles" as const;
   private readonly baseUrl: string;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
@@ -44,6 +52,116 @@ export class OpenSubtitlesAdapter {
   }
 
   async search(
+    credential: SelectedProviderCredential | null,
+    input: SubtitleSearchInput,
+    options?: { fetchImpl?: typeof fetch; timeoutMs?: number },
+  ): Promise<ProviderSearchOutcome> {
+    if (!credential) {
+      return {
+        ok: true,
+        skipped: true,
+        reason: "credential_missing",
+        results: [],
+      };
+    }
+
+    const secret = credential.secret;
+    const adapterInput = this.toInternalInput(input);
+    const executor =
+      options && (options.fetchImpl || options.timeoutMs)
+        ? new OpenSubtitlesAdapter({
+            baseUrl: this.baseUrl,
+            fetchImpl: options.fetchImpl,
+            timeoutMs: options.timeoutMs,
+          })
+        : this;
+
+    try {
+      const subtitles = await executor.searchRaw(secret, adapterInput);
+      const results: ProviderSearchResult[] = subtitles
+        .filter((s) => s.id)
+        .map((s) => {
+          const extension = s.fileName?.includes(".")
+            ? s.fileName!.split(".").pop()?.toLowerCase()
+            : undefined;
+          return {
+            id: s.id,
+            language: s.language,
+            releaseName: s.fileName,
+            format: extension || "srt",
+            providerDownloadUrl: null,
+            raw: {
+              download_count: s.downloadCount,
+              original_payload: s,
+            },
+            score: null,
+          };
+        });
+      return { ok: true, skipped: false, results };
+    } catch (error) {
+      if (error instanceof AppError) {
+        const reason = this.mapErrorReason(error);
+        return {
+          ok: false,
+          skipped: false,
+          error: { reason, message: error.message },
+        };
+      }
+      return {
+        ok: false,
+        skipped: false,
+        error: {
+          reason: "upstream_failed",
+          message: "OpenSubtitles 上游请求不可用。",
+        },
+      };
+    }
+  }
+
+  private toInternalInput(
+    input: SubtitleSearchInput,
+  ): OpenSubtitlesSearchInput {
+    const hasId = Boolean(input.imdbId || input.tmdbId);
+    if (hasId) {
+      return {
+        imdbId: input.imdbId,
+        tmdbId: input.imdbId ? undefined : input.tmdbId,
+        season: input.season,
+        episode: input.episode,
+        language: input.language,
+        type: input.type,
+      };
+    }
+    const query = [
+      input.title.trim(),
+      input.year ? String(input.year) : undefined,
+      input.season !== undefined && input.episode !== undefined
+        ? `S${String(input.season).padStart(2, "0")}E${String(input.episode).padStart(2, "0")}`
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return {
+      query: query || undefined,
+      season: input.season,
+      episode: input.episode,
+      language: input.language,
+      type: input.type,
+    };
+  }
+
+  private mapErrorReason(
+    error: AppError,
+  ): "upstream_failed" | "timeout" | "rate_limited" | "authentication_failed" {
+    if (error.code === "PROVIDER_CREDENTIAL_EXHAUSTED") {
+      if (error.target === "rate_limited") return "rate_limited";
+      if (error.target === "authentication_failed")
+        return "authentication_failed";
+    }
+    return "upstream_failed";
+  }
+
+  async searchRaw(
     credentialSecret: string,
     input: OpenSubtitlesSearchInput,
   ): Promise<OpenSubtitlesSubtitle[]> {

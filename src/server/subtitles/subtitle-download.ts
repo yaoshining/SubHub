@@ -29,9 +29,10 @@ export type SubtitleDownloadOptions = {
 };
 
 const parseSubtitleRef = (subtitleRef: string) => {
-  const [providerType, providerId, subtitleId] = subtitleRef.split(":");
+  const [providerType, providerId, ...rest] = subtitleRef.split(":");
+  const subtitleId = rest.join(":");
 
-  if (providerType !== "opensubtitles" || !providerId || !subtitleId) {
+  if (!providerType || !providerId || !subtitleId) {
     throw new AppError(
       "SUBTITLE_NOT_FOUND",
       "未找到可下载的字幕项。",
@@ -39,7 +40,19 @@ const parseSubtitleRef = (subtitleRef: string) => {
     );
   }
 
-  return { providerId, subtitleId };
+  if (providerType === "xunlei") {
+    return { providerType: "xunlei" as const, providerId, subtitleId };
+  }
+
+  if (providerType === "opensubtitles") {
+    return { providerType: "opensubtitles" as const, providerId, subtitleId };
+  }
+
+  throw new AppError(
+    "SUBTITLE_NOT_FOUND",
+    "未找到可下载的字幕项。",
+    "subtitleId",
+  );
 };
 
 const requireDownloadProvider = async (
@@ -164,6 +177,15 @@ export async function downloadSubtitle(
   } catch (error) {
     await record("not_found");
     throw error;
+  }
+
+  if (parsed.providerType === "xunlei") {
+    await record("not_found", null, null);
+    throw new AppError(
+      "SUBTITLE_NOT_FOUND",
+      "迅雷字幕下载请直接使用搜索结果中的 downloadUrl 字段（provider 直链），统一下载入口暂不支持迅雷 provider。",
+      "subtitleId",
+    );
   }
 
   let provider: Provider;

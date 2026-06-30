@@ -6,9 +6,14 @@
  * OpenAPI spec version: 0.2.0
  */
 
+/**
+ * success: 所有 provider 成功或无 provider；partial: 至少一个 provider 失败但其他 provider 返回了结果。
+ *
+ */
 export type SubtitleSearchDataStatus =
   (typeof SubtitleSearchDataStatus)[keyof typeof SubtitleSearchDataStatus];
 
 export const SubtitleSearchDataStatus = {
   success: "success",
+  partial: "partial",
 } as const;

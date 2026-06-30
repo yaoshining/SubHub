@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export const searchParamsSchema = z
   .object({
     title: z.string().trim().min(1),
+    query: z.string().min(1).optional(),
     year: z.coerce.number().int().min(1800).max(3000).optional(),
     season: z.coerce.number().int().min(0).optional(),
     episode: z.coerce.number().int().min(0).optional(),
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
     );
     const input: SubtitleSearchInput = {
       title: parsed.title,
+      query: parsed.query,
       year: parsed.year,
       season: parsed.season,
       episode: parsed.episode,
