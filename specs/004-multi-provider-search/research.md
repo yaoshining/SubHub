@@ -101,18 +101,18 @@ interface SubtitleProviderAdapter {
 
 - `versioning.md` 明确 `v0.2.x` 不引入数据库 schema 变更，`v0.2.2` 作为 patch 版本必须遵守该边界。
 - 在多 provider 架构收口过程中，数据库 schema 不应是阻碍因素：provider key 映射可以在代码层完成。
-- 若在 `v0.2.2` 引入 schema 变更，会跨过 `v0.2.x → v0.3.0` 的边界，破坏 patch 版本约束。
+- 若在 `v0.2.2` 引入 schema 变更，会跨过 `v0.2.x → v0.2.3` 的边界，破坏 patch 版本约束。
 
 ### Alternatives considered
 
 - **A. 把 provider type 改为字符串列 + 应用层 enum 校验**：被否决；牺牲数据库层校验能力，应用层校验有遗漏风险。
-- **B. 扩展 enum（被否决于本次 `v0.2.2`）**：应作为 post-`v0.2.2` / `v0.3.0` 议题处理。
-- **B. 不持久化迅雷 provider，代码层硬编码（被采纳于本次 `v0.2.2`）**：适配 `versioning.md` 中 `v0.2.x` 不变 schema 的约束；后续 `v0.3.0` 可考虑重考虑是否需持久化。
+- **B. 扩展 enum（被否决于本次 `v0.2.2`）**：应作为 post-`v0.2.2` / `v0.2.3` 议题处理。
+- **B. 不持久化迅雷 provider，代码层硬编码（被采纳于本次 `v0.2.2`）**：适配 `versioning.md` 中 `v0.2.x` 不变 schema 的约束；后续 `v0.2.3` 可考虑重考虑是否需持久化。
 - **C. 引入独立 `xunlei_providers` 表**：被否决；`v0.2.2` 不新增数据库 schema。
 
 ### 未来路径
 
-若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.3.0`），届时才允许扩展 `providerTypes` enum 与新增 migration
+若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.2.3`），届时才允许扩展 `providerTypes` enum 与新增 migration
 ---
 
 ## R-5. `provider_failures` 暴露位置

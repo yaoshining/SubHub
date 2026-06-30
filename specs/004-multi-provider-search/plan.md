@@ -17,10 +17,11 @@
 5. 引入最小错误隔离：单 provider 失败不拖垮整体搜索；其他 provider 结果继续返回；所有 provider 失败时返回明确错误（502）。
 6. 同步更新 OpenAPI / generated client / route Zod schema / contract tests / unit tests / integration tests。
 
-### 与 `v0.2.1` / `v0.3.0` 的边界
+### 与 `v0.2.1` / `v0.2.3` / `v0.3.0` 的边界
 
 - `v0.2.1` 负责"已发布 API 的非 breaking 字段扩展"，本计划不重做其工作；`v0.2.1` 的字段消费路径 MUST 保持不变。
 - `v0.2.2` 负责"多 provider 搜索入口模型 + 第二 provider 接入"；本计划不进入 provider 平台重构、不引入字段改名 breaking、不引入并行 / 熔断 / 评分编排。
+- `v0.2.3` 负责"provider 管理能力补齐基础版"；管理台 provider 可见 / 可开关 / 基础配置 / 状态展示由 `v0.2.3` 承接，本计划不涉及。
 - `v0.3.0` 负责"字幕资产管理基础版"；本计划不涉及手动上传、缓存管理、自有资产管理；这些明确排除。
 - `v0.4.0` 负责"字幕内容治理与 AI 处理"；本计划不涉及。
 
@@ -669,7 +670,7 @@ type AggregatedSubtitleResult = {
 - **范围声明**：`v0.2.2` **不**做任何数据库 schema 变更。不扩展 `providerTypes` enum、不新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。
 - **迅雷 provider 接入路径**：走「不依赖数据库 schema 的最小接入路径」—— provider key → adapter 的映射由 `provider-registry.ts` 在代码层硬编码，gateway 通过 `provider-registry` 调度，不依赖 `providers` 表的 `type` 字段（保持 `["opensubtitles"]` 单值）。
 - **provider 元数据控制**：`v0.2.2` 期间迅雷 provider 的启用 / 禁用 / 限流 / 冷却等调度控制仅由代码层配置决定（feature flag / 环境变量）。
-- **未来路径**：若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.3.0`），届时才允许扩展 `providerTypes` enum 与新增 migration。
+- **未来路径**：若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.2.3`），届时才允许扩展 `providerTypes` enum 与新增 migration。
 
 ### 9.2 provider_failures 暴露方式（已收口）
 

@@ -122,7 +122,7 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 
 ### 5.2 后续扩展（**全部属于 post-v0.2.2**，不属于本次 `v0.2.2` 范围）
 
-> ⚠️ **范围声明**：若实际部署发现迅雷接口需要凭据，必须由独立 spec 推进凭据池接入，且必须先评估是否需要扩展 `versioning.md` 中 `v0.2.2` 范围（很可能升级到 minor `v0.3.0`）。本次 `v0.2.2` **不**接入凭据池、**不**扩展 `providerTypes` enum、**不**新增 migration、**不**变更数据库 schema。
+> ⚠️ **范围声明**：若实际部署发现迅雷接口需要凭据，必须由独立 spec 推进凭据池接入，且必须先评估是否需要扩展 `versioning.md` 中 `v0.2.2` 范围（很可能升级到 `v0.2.3`）。本次 `v0.2.2` **不**接入凭据池、**不**扩展 `providerTypes` enum、**不**新增 migration、**不**变更数据库 schema。
 
 后续扩展步骤（仅供规划参考，不属于 `v0.2.2`）：
 

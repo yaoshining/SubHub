@@ -33,5 +33,5 @@
 
 - 存在 1 个 [NEEDS CLARIFICATION] 标记：`season` / `episode` / `language` 是否在 `v0.2.2` 升级为 `season_number` / `episode_number` / `languages` 以对齐上游语义。`spec.md` 当前默认倾向保持现有命名不变（与 `v0.2.1` 一致，避免 patch 阶段 breaking），最终决定需用户在 review 时确认后再进入 plan 阶段。
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`。
-- spec 已明确 `v0.2.2` 与 `v0.3.0` / `v0.4.0` 的边界；范围外后续工作（手动上传 / 资产管理 / AI 处理等）已显式排除，避免与后续 milestone 混批。
+- spec 已明确 `v0.2.2` 与 `v0.2.3` / `v0.3.0` / `v0.4.0` 的边界；范围外后续工作（provider 管理台 / 手动上传 / 资产管理 / AI 处理等）已显式排除，避免与后续 milestone 混批。
 - spec 已与 `docs/releases/versioning.md` 中 `v0.2.2` 的范围定义对齐；scope 标签倾向为 `scope:mvp`，milestone 倾向为 `v0.2.2`，待 spec review 通过后继承到 issue / tasks 流程。

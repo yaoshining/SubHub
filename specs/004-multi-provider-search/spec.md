@@ -418,7 +418,7 @@ AggregatedSubtitleResult {
 ### 配置与凭据
 
 - `src/server/providers/credential-pool.ts`：
-  - 保持现有 OpenSubtitles 凭据池行为独立；迅雷 provider **本次 `v0.2.2` 不接入凭据池**（如需后续接入，需独立 spec 并先评估 `versioning.md` 中 `v0.2.2` 范围是否需要升级到 `v0.3.0`）。
+  - 保持现有 OpenSubtitles 凭据池行为独立；迅雷 provider **本次 `v0.2.2` 不接入凭据池**（如需后续接入，需独立 spec 并先评估 `versioning.md` 中 `v0.2.2` 范围是否需要升级到 `v0.2.3`）。
 - `src/server/storage/schema.ts`：
   - **本次 `v0.2.2` 不做任何数据库 schema 变更**：不新增 schema、不修改 enum、不新增 migration、不变更 `providers` / `provider_credentials` / `subtitle_search_requests` 表结构。
   - 迅雷 provider 在本次 `v0.2.2` 走「不依赖新增 schema 的最小接入路径」（详见 §提供商元数据接入方式）。
@@ -431,7 +431,7 @@ AggregatedSubtitleResult {
 - 本次 `v0.2.2` **不**将「迅雷 provider 元数据」持久化到 `providers` 表。`providers` 表当前 `type` 字段的 enum 约束为 `["opensubtitles"]`，本次不扩展。
 - 迅雷 provider 在本次 `v0.2.2` 采取「**不依赖数据库 schema 的最小接入路径**」：provider key → adapter 的映射由 `provider-registry.ts` 在代码层硬编码，gateway 通过 `provider-registry` 调度，不需要 `providers` 表新增记录。
 - 在 `v0.2.2` 期间，迅雷 provider 的启用 / 禁用 / 限流 / 冷却等调度控制**仅由代码层配置决定**（如 feature flag、环境变量）；不依赖数据库持久化。
-- 若后续需要将迅雷 provider 元数据持久化（启用/禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 的独立 spec 推进，且需要先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升级到 minor `v0.3.0`），届时才允许扩展 `providerTypes` enum 与新增 migration。
+- 若后续需要将迅雷 provider 元数据持久化（启用/禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 的独立 spec 推进，且需要先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升级到 `v0.2.3`），届时才允许扩展 `providerTypes` enum 与新增 migration。
 
 ### API 契约链路（仓库级约定）
 

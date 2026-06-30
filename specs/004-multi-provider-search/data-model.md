@@ -280,7 +280,7 @@ export type SubtitleSearchResponse = {
 - `src/server/storage/schema.ts` 中 `providerTypes` enum 保持 `["opensubtitles"]` 单值
 - `providers` / `provider_credentials` / `subtitle_search_requests` 表结构不变
 - 本次 PR 不出现任何新增 migration 文件
-- 如后续需将迅雷 provider 元数据持久化，需由 post-`v0.2.2` 独立 spec 推进并先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.3.0`）
+- 如后续需将迅雷 provider 元数据持久化，需由 post-`v0.2.2` 独立 spec 推进并先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.2.3`）
 - 其他表结构不变
 
 ### 5.4 种子数据（可选）

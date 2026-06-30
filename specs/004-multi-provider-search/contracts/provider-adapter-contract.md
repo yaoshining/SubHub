@@ -341,7 +341,7 @@ adapter `outcome.skipped` 映射：
 7. 更新 OpenAPI 与 generated client
 8. 更新文档（本 contracts/ 目录）
 
-> 若 review 阶段有人提议在 `v0.2.2` 内推进步骤 4 或 5，必须先升级 `versioning.md` 的 `v0.2.2` 范围定义（进入 minor `v0.3.0`）或推迟到 post-`v0.2.2`。
+> 若 review 阶段有人提议在 `v0.2.2` 内推进步骤 4 或 5，必须先升级 `versioning.md` 的 `v0.2.2` 范围定义（进入 `v0.2.3`）或推迟到 post-`v0.2.2`。
 
 ---
 
