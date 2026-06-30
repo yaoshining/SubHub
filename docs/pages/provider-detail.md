@@ -18,6 +18,16 @@
 2. 启停是即时动作（不走 Save），调度策略编辑走独立 Save 按钮
 3. 创建一个支持宽屏双栏、窄屏单栏的 responsive section stack
 
+## Aesthetic Direction
+
+本页应呈现“技术对象的精密维护感”，而不是通用设置页。
+
+- 顶部 `Context Strip` 要像对象抬头，不是普通返回条。
+- 左列 section 要形成从**状态判断 → 策略编辑 → 凭据/限制 → 行为证据**的线性叙事。
+- 右侧 Inspector 更像“只读技术侧写”，强调时间、类型、风险门槛。
+- 避免把四个 section 都做成同权重卡片堆叠；允许通过分隔线、留白和标题位置建立节奏。
+- OpenSubtitles 与 Xunlei 的差异必须由**结构不同**来表达，不只靠一句说明文字。
+
 ## Layout
 
 **Context Strip + Section Stack**（对应 `DESIGN.md §6.2.3`）。桌面 ≥ 1280px 显示右侧 Inspector。
@@ -68,6 +78,12 @@
 | 768–1023px | 全宽单栏 | 下沉到 Section D 之后；危险区移至 Section C 末尾 | Section B 内联 |
 | < 768px | 全宽单栏 | 下沉到 Section D 之后 | `fixed bottom-0 inset-x-0` sticky |
 
+### 结构审美约束
+
+- 顶部 Context Strip 必须是本页第一视觉锚点，承担“对象识别 + 状态判断 + 返回关系”三件事。
+- Section 标题优先作为裸标题或轻容器标题，不要四个模块都做成同款厚卡片。
+- Save 按钮必须和“调度策略”视觉绑定，不能漂浮成全局孤立主按钮。
+
 ## Module A: 启停与状态
 
 **组件**：`Switch` + `ProviderStatusBadge` + `HealthBlock.detailed`。
@@ -104,6 +120,12 @@
 - 保存成功 → Toast「调度策略已保存」+ dirty 徽章消失 + `updatedAt` 刷新。
 - 保存失败 → Toast「保存失败」+ 表单保留 + 字段级 inline 错误。
 - 字段级错误（如 fallback 自身/循环）加 `Alert variant="destructive"` 紧贴字段。
+
+### 审美提升规则
+
+- 表单应采用“基础信息 / 调度策略”两段式，而不是一组平铺数字输入。
+- 数字字段宜以 2×2 或 3+1 的有节奏编排出现，避免一长排相同输入框。
+- `Rotation Enabled` 作为布尔能力，视觉上应像策略开关，而不是普通字段。
 
 ## Module C: 凭据池 / 受限说明（type-aware 整段替换）
 
@@ -151,6 +173,12 @@
 
 组件：`RestrictedCapabilityCallout`（见 `DESIGN.md §14.5`）。
 
+### 审美提升规则
+
+- OpenSubtitles 分支要体现“可操作池”的密度和秩序感。
+- Xunlei 分支要体现“受限但清楚”的平静感，不得做成报错样式或残缺空白。
+- 该模块是本页最强的 type-aware 证据，必须一眼看出不是同一类对象。
+
 ## Module D: 最近行为
 
 **组件**：`ProviderActivity`（既有，升级为 Timeline 形态）。
@@ -196,6 +224,12 @@ Status: Enabled
 **type-aware 危险区**：
 - OpenSubtitles：按钮仅 `status=disabled` 且 `availableCredentialCount === 0` 时启用；其余 disabled + tooltip「仅在停用且无活跃凭据时可删除」。
 - Xunlei：**不显示删除按钮**；显示文字「Xunlei 实例由 migration 预置，请联系运维删除。」
+
+### Inspector 审美约束
+
+- Inspector 内部优先用标题、数据行、分隔线组织信息，不建议再嵌套多个次级卡片。
+- 时间、类型、状态等技术元信息要更像“设备铭牌”，可用 `font-mono` 辅助局部信息，但不能让整栏过度代码化。
+- 危险区只能在满足条件时出现，避免页面长期处于“危险提示过载”。
 
 ## Interaction Rules
 

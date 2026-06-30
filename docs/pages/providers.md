@@ -16,14 +16,25 @@
 
 核心设计矛盾：OpenSubtitles 与 Xunlei 共用同一组页面，但能力不等价。页面必须做到"一眼可辨差异，不因统一而混淆"。
 
+## Aesthetic Direction
+
+本页不是普通的 CRUD 列表，而是**运维驾驶舱**。在不突破 `DESIGN.md` 既有字体、图标和 token 约束的前提下，页面审美必须主动规避“平均化后台模板感”。
+
+- 采用**非对称主次结构**：顶部必须有一个主导性的全局状态区，不得只是 4 个同权重统计卡平铺。
+- 视觉气质以**冷静中性底 + 单一电蓝强调**为主；不要混入第二套品牌强调色。
+- 列表行要像“可操作对象”而不是“表格替代品”：type identity、状态、健康、动作必须形成明确纵深。
+- Inspector 是“当前选中对象的上下文舞台”，不是右侧随手塞信息的附属栏。
+- 卡片只在承担层级和承接职责时使用；避免把每一块文字都再包一层弱卡片。
+
 ## Layout
 
-**三段式控制台布局**（对应 `DESIGN.md §6.2.2 列表治理页`），桌面 1280+ 三栏并列：
+**非对称三段式控制台布局**（对应 `DESIGN.md §6.2.2 列表治理页`），桌面 1280+ 三栏并列：
 
 ```
-+--Summary Strip (全宽, sticky top)------------------------------------------+
-| Providers    全部 4 · 已启用 3 · 降级 1 · 待完善 0 · 停用 0 [?新增 Provider]  |
-|                      类型: [全部▾]  状态: [全部▾]    [搜索 Provider...]      |
++--Operational Pulse Strip (全宽, sticky top)-------------------------------+
+| Providers  当前 4 个实例；1 个需要立即处理                 [创建 Provider]   |
+| 全局脉冲: 降级 1 · 待完善 0 · 停用 0     类型: [全部▾]  状态: [全部▾]       |
+|                                                   [搜索 Provider...]      |
 +----------------------------------------------------------------------------+
 |  +--Master List (左 2/3) -----------------------------------------------+  |
 |  | [OS] OpenSubtitles Main Pool            ● Enabled  Health: ● OK       |  |
@@ -51,23 +62,34 @@
 | 768–1023px | 2×2 网格，筛选和按钮换行 | 全宽单列 | 点击触发的 Bottom Sheet | Drawer 90vw 居右 |
 | < 768px | 单列堆叠 | 全宽单列 | Bottom Sheet | Drawer 全屏 |
 
-## Module 1: Summary Strip（顶部摘要条）
+## Module 1: Operational Pulse Strip（顶部状态条）
 
 **目的**：在 2 秒内传达全局状态，并承载筛选/搜索/创建入口。
 
-**结构**：4 个 `SummaryTile` + Type Tab 筛选器 + 搜索输入 + 主按钮。
+**结构**：1 个主导性的 `Operational Pulse` 面板 + 3 个紧凑状态 Tile + Type Tabs + 搜索输入 + 主按钮。
 
-### SummaryTile 矩阵
+### Operational Pulse 主面板
+
+主面板必须明显大于其余状态块，承担页面第一视觉焦点。
+
+- 左侧：`Providers` 标题、当前实例总数、系统摘要句
+- 右侧：主按钮 `创建 Provider`
+- 第二行：一组可点击状态 chips（`已启用 / 降级 / 待完善 / 停用`）
+- 文案风格必须短、硬、可操作，例如：
+  - `当前 4 个实例；1 个需要立即处理`
+  - `Xunlei 已接入，无需凭据池；OpenSubtitles 需重点关注池健康`
+
+### Compact Status Tile 矩阵
 
 | Tile | Token | 内容 | 可点击 |
 |------|-------|------|--------|
-| Total | 中性 | `全部 N 个` | 否（仅展示） |
 | Enabled | success | `已启用 N` | 是 → 筛选切到 enabled |
-| Degraded | warning | `降级 N`（0 时隐藏、或显示 `降级 0` muted） | 是 → 筛选切到 degraded |
-| Disabled / Needs-config | destructive | `停用 N / 待完善 N`（复合 tile） | 是 → 筛选切到 disabled |
+| Degraded | warning | `降级 N`（0 时 muted） | 是 → 筛选切到 degraded |
+| Disabled / Needs-config | destructive | `停用 N / 待完善 N`（复合） | 是 → 筛选切到 disabled |
 
 - 点击 Tile ⇒ 全局状态筛选切换到对应值；当前激活 Tile 用 `border-strong` 强化。
-- `SummaryTile` 视觉：`Card` + 大数字（`text-2xl font-semibold`）+ Label（`text-xs text-muted-foreground`）+ 左侧状态色 Dot 4px。
+- 这些 Tile 必须是**紧凑补充信息**，不能和主面板抢视觉权重。
+- 视觉：`surface-elevated` 容器 + `text-xl font-semibold` 数字 + `text-[11px]` label + 顶部 2px 状态线。
 
 ### 筛选与搜索
 
@@ -81,6 +103,12 @@
 - 文案：**「创建 Provider」**（禁止写"创建 OpenSubtitles"）
 - 位置：Summary Strip 右端
 - 点击：打开 Create Provider Drawer（详见 `docs/pages/create-provider.md`）
+
+### 审美约束
+
+- 不得把顶部区做成 4 个等宽、等高、等语气的信息盒子。
+- 顶部标题区必须存在一句“运营判断句”，而不只是数值罗列。
+- 搜索、筛选、主按钮要形成右侧一条干净操作带，避免散落。
 
 ## Module 2: Master List（中央主区）
 
@@ -105,6 +133,13 @@
 | Layer 2 — Identity | 左中 | 名称（主）+ ID（副） | 名称 `text-base font-medium`；ID `text-xs font-mono text-muted-foreground`，单行省略+tooltip |
 | Layer 3 — Status & Health | 右中上 | `ProviderStatusBadge` + `HealthBlock.compact` | `gap-2` 垂直堆叠 |
 | Layer 4 — Pool & Actions | 右下 | OpenSubtitles：`PoolSizeIndicator`；Xunlei：固定文案「无凭据可配」；动作：[禁用/启用] + [详情 →] | 辅助行 `text-xs text-muted-foreground` |
+
+### 行级审美提升规则
+
+- 行容器要优先依靠**左侧 type block、纵向间距和底部动作线**建立层次，不靠重阴影。
+- 名称与 ID 要形成一主一副的节奏，ID 不能和状态抢视觉层级。
+- `详情 →` 必须比 `启用/禁用` 更安静；真正的高风险动作只能有一个视觉高点。
+- Xunlei 行不能长得像“坏掉的 OpenSubtitles 行”，要像“能力不同的另一类对象”。
 
 ### 行内动作
 
@@ -137,6 +172,8 @@
 **位置**：右 1/3，sticky 顶部对齐，与 List 同步滚动。
 
 **渲染规则**：按当前选中的 `provider.type` 分支渲染。
+
+**审美定位**：Inspector 是“对象舞台”，而不是附属说明栏。它必须通过更宽松的留白、更清晰的 section 节奏，让用户在列表扫描后能快速完成二次判断。
 
 ### OpenSubtitles 选中
 
@@ -191,6 +228,12 @@
 - 凭据池区用 `RestrictedCapabilityCallout`（非空态卡片）
 - 顶部 `🔒 受限` 徽章
 - 调度摘要保持字段一致
+
+### Inspector 审美约束
+
+- Inspector 内部 section 建议采用“标题在上、内容在下、线性分隔”的方式，避免再堆 3 张同样的 Card。
+- 进入详情按钮应放在 Inspector 视觉收束点，作为自然承接动作。
+- OpenSubtitles 与 Xunlei 的 Inspector 必须共享同一骨架，但中心信息块必须不同，形成“相同框架，不同对象性格”。
 
 ## Interaction Rules
 
