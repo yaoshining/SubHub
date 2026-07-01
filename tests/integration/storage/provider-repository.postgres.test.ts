@@ -180,12 +180,12 @@ describeWhenLocalPostgresEnabled(
 
     it("migration 003 CHECK constraint allows inserting xunlei type providers", async () => {
       // Use direct SQL to bypass the application-layer Xunlei creation guard.
-      // Format the timestamp to Postgres-compatible ISO 8601 (no T separator).
-      const timestamp = now.toISOString().replace("T", " ").replace("Z", "");
+      // Use Postgres-native timestamp via epoch-millis to avoid any quoting issues.
+      const ts = `to_timestamp(${now.getTime() / 1000})`;
 
       const [inserted] = await directSql!.unsafe(
         `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "created_at", "updated_at")
-         VALUES ('xunlei-test-constraint', 'Xunlei Constraint Check', 'xunlei', 'enabled', 5, 1, 1, false, 0, ${timestamp}::timestamptz, ${timestamp}::timestamptz)
+         VALUES ('xunlei-test-constraint', 'Xunlei Constraint Check', 'xunlei', 'enabled', 5, 1, 1, false, 0, ${ts}, ${ts})
          RETURNING *`,
       );
 
