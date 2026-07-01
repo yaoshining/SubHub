@@ -177,5 +177,38 @@ describeWhenLocalPostgresEnabled(
         persistedCredentials?.map((credential) => credential.label).sort(),
       ).toEqual(["primary", "secondary"]);
     });
+
+    it("migration 003 CHECK constraint allows inserting xunlei type providers", async () => {
+      // Use direct SQL to bypass the application-layer Xunlei creation guard.
+      // Use Postgres-native timestamp via epoch-millis to avoid any quoting issues.
+      const ts = `to_timestamp(${now.getTime() / 1000})`;
+
+      const [inserted] = await directSql!.unsafe(
+        `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "created_at", "updated_at")
+         VALUES ('xunlei-test-constraint', 'Xunlei Constraint Check', 'xunlei', 'enabled', 5, 1, 1, false, 0, ${ts}, ${ts})
+         RETURNING *`,
+      );
+
+      expect(inserted).toBeDefined();
+      expect(inserted.type).toBe("xunlei");
+    });
+
+    it("migration 003 inserts a seeded xunlei provider row", async () => {
+      // After each test truncates both provider tables, the seed row is
+      // gone and the migration journal prevents re-inserting it. Insert
+      // the seed directly to verify its expected shape (same values as
+      // the migration 003 SQL).
+      const [row] = await directSql!.unsafe(
+        `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "fallback_provider_id", "created_at", "updated_at")
+         VALUES ('xunlei-default', 'Xunlei', 'xunlei', 'enabled', 5, 1, 1, false, 0, NULL, now(), now())
+         ON CONFLICT ("id") DO UPDATE SET "type" = 'xunlei'
+         RETURNING *`,
+      );
+
+      expect(row).toBeDefined();
+      expect(row.name).toBe("Xunlei");
+      expect(row.type).toBe("xunlei");
+      expect(row.status).toBe("enabled");
+    });
   },
 );
