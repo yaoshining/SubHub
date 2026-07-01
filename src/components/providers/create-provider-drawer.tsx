@@ -94,7 +94,7 @@ export function CreateProviderDrawer({
       <DrawerTrigger asChild>
         <Button disabled={disabled}>
           <Plus aria-hidden="true" className="size-4" />
-          新增 OpenSubtitles
+          创建 Provider
         </Button>
       </DrawerTrigger>
       <DrawerContent className="w-full max-w-xl overflow-y-auto sm:w-[34rem]">

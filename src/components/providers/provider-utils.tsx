@@ -1,15 +1,24 @@
-import { AlertTriangle, CheckCircle2, Clock, PauseCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Info,
+  Lock,
+  PauseCircle,
+} from "lucide-react";
 
 import type {
   Provider,
   ProviderCredential,
   ProviderCredentialStatus,
   ProviderStatus,
+  ProviderType,
 } from "@/lib/api/providers";
 import {
   StatusBadge,
   type AdminStatusTone,
 } from "@/components/admin/status-badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const providerStatusMeta: Record<
   ProviderStatus,
@@ -37,6 +46,16 @@ export const providerStatusMeta: Record<
   },
 };
 
+export const healthStatusMeta: Record<
+  string,
+  { label: string; tone: AdminStatusTone }
+> = {
+  healthy: { label: "健康", tone: "success" },
+  degraded: { label: "降级", tone: "warning" },
+  unknown: { label: "未知", tone: "secondary" },
+  unavailable: { label: "不可用", tone: "destructive" },
+};
+
 export const credentialStatusMeta: Record<
   ProviderCredentialStatus,
   { label: string; tone: AdminStatusTone }
@@ -62,8 +81,8 @@ export function CredentialStatusBadge({
   return <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge>;
 }
 
-export function providerTypeLabel(type: Provider["type"]) {
-  return type === "opensubtitles" ? "OpenSubtitles" : type;
+export function providerTypeLabel(type: ProviderType) {
+  return type === "opensubtitles" ? "OpenSubtitles" : "Xunlei";
 }
 
 export function formatDateTime(value?: string | null) {
@@ -75,6 +94,21 @@ export function formatDateTime(value?: string | null) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+export function formatRelativeTime(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+  const now = Date.now();
+  const then = new Date(value).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "刚刚";
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour} 小时前`;
+  return formatDateTime(value);
 }
 
 export function formatTokenFragment(credential: ProviderCredential) {
@@ -119,3 +153,175 @@ export function summarizeCredentials(credentials: ProviderCredential[]) {
     ).length,
   };
 }
+
+/** 48×48 type identity block: OS=blue, XL=orange+lock */
+export function ProviderTypeBlock({
+  type,
+  className,
+}: {
+  type: ProviderType;
+  className?: string;
+}) {
+  const isOS = type === "opensubtitles";
+  return (
+    <div
+      className={`relative flex size-12 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
+        isOS
+          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+          : "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+      } ${className ?? ""}`}
+      aria-label={providerTypeLabel(type)}
+    >
+      {isOS ? "OS" : "XL"}
+      {!isOS && (
+        <Lock
+          aria-hidden="true"
+          className="absolute -bottom-0.5 -right-0.5 size-3.5 text-muted-foreground"
+        />
+      )}
+    </div>
+  );
+}
+
+/** Compact health indicator with dot + label + time */
+export function HealthBlock({
+  lastHealthStatus,
+  lastHealthCheckedAt,
+  compact,
+}: {
+  lastHealthStatus: string | null;
+  lastHealthCheckedAt: string | null;
+  compact?: boolean;
+}) {
+  const status = lastHealthStatus ?? "unknown";
+  const meta = healthStatusMeta[status] ?? healthStatusMeta.unknown;
+  const timeText = lastHealthCheckedAt
+    ? formatRelativeTime(lastHealthCheckedAt)
+    : "尚未检查";
+
+  return (
+    <div
+      className={`flex items-center gap-2 ${compact ? "text-xs" : "text-sm"}`}
+    >
+      <span
+        className={`inline-block size-2 rounded-full ${
+          meta.tone === "success"
+            ? "bg-success"
+            : meta.tone === "warning"
+              ? "bg-warning"
+              : meta.tone === "destructive"
+                ? "bg-destructive"
+                : "bg-muted-foreground"
+        }`}
+      />
+      <span className="text-muted-foreground">
+        Health: {meta.label}
+        {compact && timeText ? (
+          <span className="ml-1">· {timeText}</span>
+        ) : null}
+      </span>
+    </div>
+  );
+}
+
+/** Pool size indicator showing active/cooling/quarantined */
+export function PoolSizeIndicator({
+  active,
+  cooling,
+  quarantined,
+}: {
+  active: number;
+  cooling: number;
+  quarantined: number;
+}) {
+  return (
+    <span className="text-xs text-muted-foreground">
+      Pool: {active} active{cooling > 0 ? ` · ${cooling} cooling` : ""}
+      {quarantined > 0 ? ` · ${quarantined} quarantined` : ""}
+    </span>
+  );
+}
+
+/** Callout for providers that don't need credentials (e.g. Xunlei) */
+export function RestrictedCapabilityCallout({
+  providerName,
+}: {
+  providerName: string;
+}) {
+  return (
+    <Alert variant="default" className="border-border/50 bg-muted/30">
+      <Info aria-hidden="true" className="size-4" />
+      <AlertTitle className="text-xs font-medium">
+        该 provider 不需要 API Key
+      </AlertTitle>
+      <AlertDescription className="mt-1 text-xs leading-5 text-muted-foreground">
+        {providerName}由 migration 预置，当前无凭据池结构。
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+/** Scheduling summary list for inspector */
+export function SchedulingSummaryList({
+  priority,
+  weight,
+  concurrencyLimit,
+  cooldownSeconds,
+  fallbackProviderId,
+}: {
+  priority: number;
+  weight: number;
+  concurrencyLimit: number;
+  cooldownSeconds: number;
+  fallbackProviderId: string | null;
+}) {
+  const items = [
+    { label: "priority", value: priority },
+    { label: "weight", value: weight },
+    { label: "concurrency", value: concurrencyLimit },
+    { label: "cooldown", value: `${cooldownSeconds}s` },
+    { label: "fallback", value: fallbackProviderId ?? "无" },
+  ];
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3">
+      <p className="mb-2 text-xs font-medium text-muted-foreground">调度摘要</p>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        {items.map((item) => (
+          <div className="flex items-center justify-between" key={item.label}>
+            <dt className="text-muted-foreground">{item.label}</dt>
+            <dd className="font-medium tabular-nums">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** Provider type tabs data */
+export const PROVIDER_TYPE_TABS = [
+  { value: "all", label: "全部" },
+  { value: "opensubtitles", label: "OpenSubtitles" },
+  { value: "xunlei", label: "Xunlei" },
+] as const;
+
+export type ProviderTypeTab = (typeof PROVIDER_TYPE_TABS)[number]["value"];
+
+/** Empty state messages keyed by type */
+export const emptyStateMessages = {
+  "no-providers": {
+    title: "还没有任何 Provider",
+    description:
+      "先添加第一个 OpenSubtitles Provider。创建后仍需进入详情页补充调度策略，才能稳定参与统一字幕出口服务。",
+    actionLabel: "创建 Provider",
+  },
+  "no-results": {
+    title: "没有符合筛选条件的 Provider",
+    description: "可切换状态筛选或清空搜索条件。",
+    actionLabel: "清空筛选",
+  },
+  "no-matches": {
+    title: "没有匹配的 Provider",
+    description: "没有匹配当前搜索关键词的 Provider。",
+    actionLabel: "清空搜索",
+  },
+} as const;
