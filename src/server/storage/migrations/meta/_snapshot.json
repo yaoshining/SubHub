@@ -1193,6 +1193,12 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "last_health_checked_at": {
+          "name": "last_health_checked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -1277,7 +1283,7 @@
       "checkConstraints": {
         "providers_type_check": {
           "name": "providers_type_check",
-          "value": "\"providers\".\"type\" in ('opensubtitles')"
+          "value": "\"providers\".\"type\" in ('opensubtitles', 'xunlei')"
         },
         "providers_status_check": {
           "name": "providers_status_check",
