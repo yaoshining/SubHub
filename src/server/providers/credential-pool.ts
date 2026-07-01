@@ -39,7 +39,7 @@ const summarizeCredentialError = (summary: string) =>
  * Check whether a provider type uses credentials.
  * Xunlei doesn't use API keys / credentials.
  */
-export function hasCredentials(providerType: string): boolean {
+export function hasCredentials(providerType: Provider["type"]): boolean {
   return providerType === "opensubtitles";
 }
 

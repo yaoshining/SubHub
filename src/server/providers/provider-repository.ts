@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { AppError } from "@/lib/errors";
 import {
@@ -138,7 +138,7 @@ const addCredentialSummary = (
  * Check whether a provider type requires credentials for operation.
  */
 export const providerTypeRequiresCredentials = (
-  type: string,
+  type: Provider["type"],
 ): type is "opensubtitles" => type === "opensubtitles";
 
 export class ProviderRepository {

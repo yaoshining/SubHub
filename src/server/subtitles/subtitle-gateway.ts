@@ -106,7 +106,9 @@ const getProviderCandidates = async (
   return providers.filter(
     (provider) =>
       (provider.status === "enabled" || provider.status === "degraded") &&
-      (provider.type === "xunlei" || provider.availableCredentialCount > 0),
+      (hasCredentials(provider.type)
+        ? provider.availableCredentialCount > 0
+        : true),
   );
 };
 
@@ -410,7 +412,9 @@ export async function searchSubtitles(
     );
   }
   // Fire and forget health sync — don't block search response
-  Promise.all(healthSyncPromises).catch(() => {});
+  void Promise.all(healthSyncPromises).catch((error) => {
+    console.error("health sync failed:", error);
+  });
 
   const allResults = [...osResult.results, ...xunleiResult.results];
   const failures = [osResult.failure, xunleiResult.failure].filter(
