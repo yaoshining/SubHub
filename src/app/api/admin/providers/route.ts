@@ -42,9 +42,7 @@ export async function GET(request: NextRequest) {
     if (query.status) filter.status = query.status;
 
     return apiSuccess(
-      await listProviders(
-        Object.keys(filter).length > 0 ? filter : undefined,
-      ),
+      await listProviders(Object.keys(filter).length > 0 ? filter : undefined),
     );
   } catch (error) {
     return apiErrorFromUnknown(error);
