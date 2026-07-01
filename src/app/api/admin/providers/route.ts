@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdminApiSession } from "@/server/api/admin-auth";
 import { apiErrorFromUnknown, apiSuccess } from "@/server/api/response";
+import type { ProviderFilter } from "@/server/providers/provider-repository";
 import {
   createProvider,
   listProviders,
@@ -21,11 +22,28 @@ const createProviderSchema = z.object({
     .optional(),
 });
 
+const listProvidersQuerySchema = z.object({
+  type: z.enum(["opensubtitles", "xunlei"]).optional(),
+  status: z
+    .enum(["enabled", "disabled", "needs_config", "degraded"])
+    .optional(),
+});
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminApiSession({ request });
 
-    return apiSuccess(await listProviders());
+    const query = listProvidersQuerySchema.parse(
+      Object.fromEntries(request.nextUrl.searchParams),
+    );
+
+    const filter: ProviderFilter = {};
+    if (query.type) filter.type = query.type;
+    if (query.status) filter.status = query.status;
+
+    return apiSuccess(
+      await listProviders(Object.keys(filter).length > 0 ? filter : undefined),
+    );
   } catch (error) {
     return apiErrorFromUnknown(error);
   }
