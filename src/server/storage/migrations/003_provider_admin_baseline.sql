@@ -17,8 +17,8 @@ ALTER TABLE "providers" ADD COLUMN IF NOT EXISTS "last_health_checked_at" timest
 
 --> statement-breakpoint
 -- 4. Insert Xunlei default provider row (idempotent via ON CONFLICT)
-INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "fallback_provider_id")
-SELECT 'xunlei-default', 'Xunlei', 'xunlei', 'enabled', 5, 1, 1, false, 0, NULL
+INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "fallback_provider_id", "created_at", "updated_at")
+SELECT 'xunlei-default', 'Xunlei', 'xunlei', 'enabled', 5, 1, 1, false, 0, NULL, now(), now()
 WHERE NOT EXISTS (SELECT 1 FROM "providers" WHERE "type" = 'xunlei');
 
 --> statement-breakpoint

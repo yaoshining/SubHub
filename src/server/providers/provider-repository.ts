@@ -123,8 +123,8 @@ const addCredentialSummary = (
     provider.type === "xunlei"
       ? 1 // xunlei doesn't use credentials — always treat as available
       : credentials.filter((credential) =>
-            isCredentialCurrentlyAvailable(credential, now),
-          ).length;
+          isCredentialCurrentlyAvailable(credential, now),
+        ).length;
 
   return {
     ...provider,
@@ -319,7 +319,10 @@ export class ProviderRepository {
 
   async updateProviderPolicy(
     providerId: string,
-    input: Partial<ProviderPolicyInput> & { name?: string; status?: Provider["status"] },
+    input: Partial<ProviderPolicyInput> & {
+      name?: string;
+      status?: Provider["status"];
+    },
     now = new Date(),
   ): Promise<ProviderDetail> {
     await this.requireProvider(providerId, now);
@@ -365,8 +368,15 @@ export class ProviderRepository {
     }
 
     // Validate fallback target before saving
-    if (input.fallbackProviderId !== undefined && input.fallbackProviderId !== null) {
-      await this.validateFallbackTarget(providerId, input.fallbackProviderId, now);
+    if (
+      input.fallbackProviderId !== undefined &&
+      input.fallbackProviderId !== null
+    ) {
+      await this.validateFallbackTarget(
+        providerId,
+        input.fallbackProviderId,
+        now,
+      );
     }
 
     if (input.status !== undefined) {
