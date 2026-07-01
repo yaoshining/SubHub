@@ -6,13 +6,9 @@
  * OpenAPI spec version: 0.2.3
  */
 
-export type ReadinessSummaryEnvironment =
-  (typeof ReadinessSummaryEnvironment)[keyof typeof ReadinessSummaryEnvironment];
+export type CreatableProviderType =
+  (typeof CreatableProviderType)[keyof typeof CreatableProviderType];
 
-export const ReadinessSummaryEnvironment = {
-  production: "production",
-  staging: "staging",
-  development: "development",
-  test: "test",
-  unknown: "unknown",
+export const CreatableProviderType = {
+  opensubtitles: "opensubtitles",
 } as const;

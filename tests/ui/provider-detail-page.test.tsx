@@ -24,6 +24,7 @@ const provider = {
   fallbackProviderId: null,
   lastHealthStatus: null,
   lastErrorSummary: null,
+  lastHealthCheckedAt: null,
   createdAt,
   updatedAt: recentUpdatedAt,
   credentialCount: 1,

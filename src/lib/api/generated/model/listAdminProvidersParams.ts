@@ -5,11 +5,16 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。v0.2.3 扩展 provider 管理 API 支持多 provider（OpenSubtitles / Xunlei），补齐启停、基础配置编辑与健康状态查看。
  * OpenAPI spec version: 0.2.3
  */
+import type { ProviderStatus } from "./providerStatus";
+import type { ProviderType } from "./providerType";
 
-export type DownloadSubtitleParams = {
+export type ListAdminProvidersParams = {
   /**
-   * 来自搜索响应 `results[].id` 的完整网关字幕引用，格式为 `opensubtitles:{providerId}:{file_id}`；调用方不应传裸 OpenSubtitles subtitle record id 或 file_id。
-   * @minLength 1
+   * 按 Provider 类型筛选。不传则返回所有类型。
    */
-  subtitleId: string;
+  type?: ProviderType;
+  /**
+   * 按 Provider 状态筛选。不传则返回所有状态。
+   */
+  status?: ProviderStatus;
 };
