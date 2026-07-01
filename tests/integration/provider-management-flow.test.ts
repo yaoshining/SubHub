@@ -18,7 +18,9 @@ import {
 import {
   addProviderCredential,
   createProvider,
+  getProviderDetail,
   isolateProviderCredential,
+  listProviders,
   restoreProviderCredential,
   updateProvider,
 } from "@/server/services/provider-service";
@@ -87,5 +89,51 @@ describe("Provider 管理闭环", () => {
     expect(
       actions.every((action: AdminActionResult) => action.result === "success"),
     ).toBe(true);
+  });
+
+  it("Xunlei 与 OpenSubtitles 并存时列表返回正确顺序，Xunlei detail 的 credentials 为空数组", async () => {
+    const created = await createProvider({
+      name: "OpenSubtitles Primary",
+      type: "opensubtitles",
+      initialCredential: {
+        label: "primary",
+        secret: "opensubtitles-api-key",
+      },
+    });
+
+    // List all providers — should include both
+    const { items } = await listProviders();
+    const providerIds = items.map((p) => p.id);
+    expect(providerIds).toContain("xunlei-default");
+    expect(providerIds).toContain(created.id);
+
+    // List with type filter
+    const xunleiProviders = await listProviders({ type: "xunlei" });
+    expect(xunleiProviders.items).toHaveLength(1);
+    expect(xunleiProviders.items[0]!.type).toBe("xunlei");
+
+    const opensubtitlesProviders = await listProviders({
+      type: "opensubtitles",
+    });
+    expect(opensubtitlesProviders.items.length).toBeGreaterThanOrEqual(1);
+    expect(
+      opensubtitlesProviders.items.every(
+        (p: { type: string }) => p.type === "opensubtitles",
+      ),
+    ).toBe(true);
+
+    // List with status filter
+    const disabledProviders = await listProviders({ status: "disabled" });
+    expect(
+      disabledProviders.items.every(
+        (p: { status: string }) => p.status === "disabled",
+      ),
+    ).toBe(true);
+
+    // Xunlei detail — credentials should be empty
+    const xunleiDetail = await getProviderDetail("xunlei-default");
+    expect(xunleiDetail.id).toBe("xunlei-default");
+    expect(xunleiDetail.type).toBe("xunlei");
+    expect(xunleiDetail.credentials).toEqual([]);
   });
 });

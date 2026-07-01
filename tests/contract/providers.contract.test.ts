@@ -150,6 +150,48 @@ describe("Provider 管理 API 契约", () => {
       }),
     });
 
+    // Xunlei detail — verify stable empty credentials array
+    const xunleiDetail = await providerDetailRoute.GET(
+      nextRequest(
+        "http://localhost/api/admin/providers/xunlei-default",
+        cookie,
+      ),
+      { params: { providerId: "xunlei-default" } },
+    );
+    const xunleiDetailPayload = await readJson<{
+      data: { id: string; type: string; credentials: unknown[] };
+    }>(xunleiDetail);
+    expect(xunleiDetailPayload.data).toMatchObject({
+      id: "xunlei-default",
+      type: "xunlei",
+      credentials: [],
+    });
+
+    // Filter by type=xunlei
+    const xunleiList = await providersRoute.GET(
+      nextRequest("http://localhost/api/admin/providers?type=xunlei", cookie),
+    );
+    const xunleiListPayload = await readJson<{
+      data: { items: Array<{ id: string; type: string }> };
+    }>(xunleiList);
+    expect(xunleiListPayload.data.items).toHaveLength(1);
+    expect(xunleiListPayload.data.items[0]!.type).toBe("xunlei");
+
+    // Filter by type=opensubtitles
+    const osList = await providersRoute.GET(
+      nextRequest(
+        "http://localhost/api/admin/providers?type=opensubtitles",
+        cookie,
+      ),
+    );
+    const osListPayload = await readJson<{
+      data: { items: Array<{ id: string; type: string }> };
+    }>(osList);
+    expect(
+      osListPayload.data.items.every((p) => p.type === "opensubtitles"),
+    ).toBe(true);
+    expect(osListPayload.data.items.length).toBeGreaterThanOrEqual(1);
+
     const updated = await providerDetailRoute.PATCH(
       jsonRequest(
         `http://localhost/api/admin/providers/${providerId}`,
