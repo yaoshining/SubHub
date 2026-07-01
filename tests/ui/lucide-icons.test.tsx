@@ -93,11 +93,9 @@ describe("Lucide 图标基线", () => {
       );
 
       expect(iconFrameNode?.name).toBe(iconName);
+      expect(iconNode?.library).toBe("lucide");
+      expect(iconNode?.icon).toBe(iconName);
       expect(labelNode?.content).toBe(iconName);
-      expect(
-        iconNode?.iconFontName === iconName ||
-          (iconNode?.icon === iconName && iconNode.library === "lucide"),
-      ).toBe(true);
     }
   });
 
