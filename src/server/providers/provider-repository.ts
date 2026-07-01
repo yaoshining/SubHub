@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 
 import { AppError } from "@/lib/errors";
 import {
@@ -15,6 +15,7 @@ import {
 import {
   providerCredentials,
   providers,
+  providerTypes,
   type NewProvider,
   type NewProviderCredential,
   type Provider,
@@ -35,6 +36,11 @@ export type ProviderPolicyInput = Pick<
   | "cooldownSeconds"
   | "fallbackProviderId"
 >;
+
+export type ProviderFilter = {
+  type?: (typeof providerTypes)[number];
+  status?: Provider["status"];
+};
 
 export type CreateProviderInput = {
   name: string;
@@ -108,26 +114,52 @@ const addCredentialSummary = (
   provider: Provider,
   credentials: ProviderCredential[],
   now: Date,
-): ProviderWithCredentialSummary => ({
-  ...provider,
-  credentialCount: credentials.length,
-  activeCredentialCount: credentials.filter(
+): ProviderWithCredentialSummary => {
+  const credentialCount = credentials.length;
+  const activeCredentialCount = credentials.filter(
     (credential) => credential.status === "active",
-  ).length,
-  availableCredentialCount: credentials.filter((credential) =>
-    isCredentialCurrentlyAvailable(credential, now),
-  ).length,
-});
+  ).length;
+  const availableCredentialCount =
+    provider.type === "xunlei"
+      ? 1 // xunlei doesn't use credentials — always treat as available
+      : credentials.filter((credential) =>
+            isCredentialCurrentlyAvailable(credential, now),
+          ).length;
+
+  return {
+    ...provider,
+    credentialCount,
+    activeCredentialCount,
+    availableCredentialCount,
+  };
+};
+
+/**
+ * Check whether a provider type requires credentials for operation.
+ */
+export const providerTypeRequiresCredentials = (
+  type: string,
+): type is "opensubtitles" => type === "opensubtitles";
 
 export class ProviderRepository {
   constructor(private readonly db = getStorageClient().db) {}
 
   async listProviders(
+    filter?: ProviderFilter,
     now = new Date(),
   ): Promise<ProviderWithCredentialSummary[]> {
+    const conditions = [];
+    if (filter?.type) {
+      conditions.push(eq(providers.type, filter.type));
+    }
+    if (filter?.status) {
+      conditions.push(eq(providers.status, filter.status));
+    }
+
     const providerRows = await this.db
       .select()
       .from(providers)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(providers.priority, providers.name);
     const providerIds = providerRows.map((provider: Provider) => provider.id);
     const credentialRows =
@@ -207,6 +239,14 @@ export class ProviderRepository {
       );
     }
 
+    if (input.type === "xunlei") {
+      throw new AppError(
+        "VALIDATION_FAILED",
+        "Xunlei 是预置 Provider，不支持通过创建入口新增。",
+        "type",
+      );
+    }
+
     let provider: Provider | undefined;
 
     try {
@@ -279,7 +319,7 @@ export class ProviderRepository {
 
   async updateProviderPolicy(
     providerId: string,
-    input: Partial<ProviderPolicyInput> & { name?: string },
+    input: Partial<ProviderPolicyInput> & { name?: string; status?: Provider["status"] },
     now = new Date(),
   ): Promise<ProviderDetail> {
     await this.requireProvider(providerId, now);
@@ -308,8 +348,29 @@ export class ProviderRepository {
       "fallbackProviderId",
     ] as const) {
       if (input[key] !== undefined) {
+        // Xunlei: rotationEnabled is silently ignored
+        if (key === "rotationEnabled" && input[key] !== undefined) {
+          const currentProvider = await this.db
+            .select()
+            .from(providers)
+            .where(eq(providers.id, providerId))
+            .limit(1)
+            .then((rows) => rows[0]);
+          if (currentProvider?.type === "xunlei") {
+            continue; // silently ignore for xunlei
+          }
+        }
         values[key] = input[key] as never;
       }
+    }
+
+    // Validate fallback target before saving
+    if (input.fallbackProviderId !== undefined && input.fallbackProviderId !== null) {
+      await this.validateFallbackTarget(providerId, input.fallbackProviderId, now);
+    }
+
+    if (input.status !== undefined) {
+      values.status = input.status;
     }
 
     try {
@@ -453,6 +514,79 @@ export class ProviderRepository {
     }
 
     return credential;
+  }
+
+  async findByProviderType(
+    type: Provider["type"],
+    now = new Date(),
+  ): Promise<ProviderWithCredentialSummary | undefined> {
+    const providers = await this.listProviders({ type }, now);
+    return providers[0];
+  }
+
+  async updateHealthStatus(
+    providerId: string,
+    healthStatus: string | null,
+    errorSummary: string | null,
+    now = new Date(),
+  ): Promise<void> {
+    await this.db
+      .update(providers)
+      .set({
+        lastHealthStatus: healthStatus,
+        lastErrorSummary: errorSummary,
+        lastHealthCheckedAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      })
+      .where(eq(providers.id, providerId));
+  }
+
+  async validateFallbackTarget(
+    providerId: string,
+    fallbackProviderId: string,
+    now = new Date(),
+  ): Promise<void> {
+    // Self-reference check
+    if (providerId === fallbackProviderId) {
+      throw new AppError(
+        "VALIDATION_FAILED",
+        "Provider 不能自引用作为 fallback。",
+        "fallbackProviderId",
+      );
+    }
+
+    // Target must exist
+    const target = await this.getProvider(fallbackProviderId, now);
+    if (!target) {
+      throw new AppError(
+        "VALIDATION_FAILED",
+        "Fallback 目标 Provider 不存在。",
+        "fallbackProviderId",
+      );
+    }
+
+    // Cycle detection: follow the fallback chain to check for cycles
+    const visited = new Set<string>([providerId, fallbackProviderId]);
+    let currentFallbackId = target.fallbackProviderId;
+    while (currentFallbackId) {
+      if (visited.has(currentFallbackId)) {
+        throw new AppError(
+          "VALIDATION_FAILED",
+          "Fallback 配置形成循环引用，请检查 provider 的 fallback 链。",
+          "fallbackProviderId",
+        );
+      }
+      visited.add(currentFallbackId);
+
+      const currentProvider = await this.db
+        .select()
+        .from(providers)
+        .where(eq(providers.id, currentFallbackId))
+        .limit(1)
+        .then((rows) => rows[0]);
+      if (!currentProvider) break;
+      currentFallbackId = currentProvider.fallbackProviderId;
+    }
   }
 
   private buildCredentialInsert(

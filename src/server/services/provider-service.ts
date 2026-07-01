@@ -2,6 +2,7 @@ import { AppError } from "@/lib/errors";
 import { recordAdminActionResult } from "@/server/audit/action-results";
 import {
   ProviderRepository,
+  providerTypeRequiresCredentials,
   sanitizeProviderCredential,
   type CreateProviderCredentialInput,
   type CreateProviderInput,
@@ -16,6 +17,7 @@ import {
   type StorageDatabase,
 } from "@/server/storage/client";
 import type { Provider } from "@/server/storage/schema";
+import type { ProviderFilter } from "@/server/providers/provider-repository";
 
 export type ProviderServiceOptions = {
   db?: StorageDatabase;
@@ -45,10 +47,11 @@ const getRepository = (db?: StorageDatabase) =>
   new ProviderRepository(db ?? getStorageClient().db);
 
 export async function listProviders(
+  filter?: ProviderFilter,
   options: ProviderServiceOptions = {},
 ): Promise<ProviderListResult> {
   const repository = getRepository(options.db);
-  const items = await repository.listProviders(options.now);
+  const items = await repository.listProviders(filter, options.now);
 
   return { items, total: items.length };
 }
@@ -102,7 +105,11 @@ export async function enableProvider(
   const repository = getRepository(options.db);
   const current = await repository.requireProvider(providerId, options.now);
 
-  if (current.availableCredentialCount === 0) {
+  // Type-aware credential check: Xunlei skips credential validation
+  if (
+    providerTypeRequiresCredentials(current.type) &&
+    current.availableCredentialCount === 0
+  ) {
     await recordAdminActionResult({
       db: options.db,
       actorAdminUserId: options.actorAdminUserId ?? null,
