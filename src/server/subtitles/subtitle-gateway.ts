@@ -183,7 +183,8 @@ const callOpenSubtitles = async (
   options: SubtitleGatewayOptions,
 ): Promise<ProviderCallResult> => {
   const candidates = await getProviderCandidates(db, now);
-  if (candidates.length === 0) {
+  const provider = candidates.find((p) => p.type === "opensubtitles");
+  if (!provider) {
     return {
       results: [],
       failure: null,
@@ -192,8 +193,6 @@ const callOpenSubtitles = async (
       hadResults: false,
     };
   }
-
-  const provider = candidates[0]!;
   const credential = await selectProviderCredential(provider.id, { db, now });
   const adapter = options.adapter ?? new OpenSubtitlesAdapter();
 
