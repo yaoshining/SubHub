@@ -22,38 +22,28 @@ const createProviderSchema = z.object({
     .optional(),
 });
 
+const listProvidersQuerySchema = z.object({
+  type: z.enum(["opensubtitles", "xunlei"]).optional(),
+  status: z
+    .enum(["enabled", "disabled", "needs_config", "degraded"])
+    .optional(),
+});
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminApiSession({ request });
 
-    const { searchParams } = request.nextUrl;
-    const type = searchParams.get("type");
-    const status = searchParams.get("status");
+    const query = listProvidersQuerySchema.parse(
+      Object.fromEntries(request.nextUrl.searchParams),
+    );
 
-    const filter: Partial<{ type: string; status: string }> = {};
-    if (type === "opensubtitles" || type === "xunlei") {
-      filter.type = type;
-    }
-    if (status) {
-      filter.status = status;
-    }
-
-    const providerFilter: ProviderFilter = {};
-    if (filter.type === "opensubtitles" || filter.type === "xunlei") {
-      providerFilter.type = filter.type;
-    }
-    if (
-      filter.status === "enabled" ||
-      filter.status === "disabled" ||
-      filter.status === "needs_config" ||
-      filter.status === "degraded"
-    ) {
-      providerFilter.status = filter.status;
-    }
+    const filter: ProviderFilter = {};
+    if (query.type) filter.type = query.type;
+    if (query.status) filter.status = query.status;
 
     return apiSuccess(
       await listProviders(
-        Object.keys(providerFilter).length > 0 ? providerFilter : undefined,
+        Object.keys(filter).length > 0 ? filter : undefined,
       ),
     );
   } catch (error) {

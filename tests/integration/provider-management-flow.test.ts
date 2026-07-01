@@ -18,6 +18,7 @@ import {
 import {
   addProviderCredential,
   createProvider,
+  disableProvider,
   getProviderDetail,
   isolateProviderCredential,
   listProviders,
@@ -91,7 +92,7 @@ describe("Provider 管理闭环", () => {
     ).toBe(true);
   });
 
-  it("Xunlei 与 OpenSubtitles 并存时列表返回正确顺序，Xunlei detail 的 credentials 为空数组", async () => {
+  it("Xunlei 与 OpenSubtitles 并存时列表同时包含两者，Xunlei detail 的 credentials 为空数组", async () => {
     const created = await createProvider({
       name: "OpenSubtitles Primary",
       type: "opensubtitles",
@@ -122,8 +123,10 @@ describe("Provider 管理闭环", () => {
       ),
     ).toBe(true);
 
-    // List with status filter
+    // List with status filter — first disable the created provider
+    await disableProvider(created.id);
     const disabledProviders = await listProviders({ status: "disabled" });
+    expect(disabledProviders.items.length).toBeGreaterThan(0);
     expect(
       disabledProviders.items.every(
         (p: { status: string }) => p.status === "disabled",
