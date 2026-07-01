@@ -180,4 +180,46 @@ describe("Provider service 状态流转", () => {
       target: "fallbackProviderId",
     });
   });
+
+  it("Xunlei 无凭据可启用，且不受凭据池约束", async () => {
+    const provider = await enableProvider("xunlei-default");
+
+    expect(provider.status).toBe("enabled");
+    expect(provider.availableCredentialCount).toBe(1);
+    expect(provider.type).toBe("xunlei");
+  });
+
+  it("自引用 fallback 返回明确验证错误", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Self",
+      type: "opensubtitles",
+    });
+
+    await expect(
+      updateProvider(provider.id, { fallbackProviderId: provider.id }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "fallbackProviderId",
+    });
+  });
+
+  it("循环 fallback 引用返回明确验证错误", async () => {
+    const providerA = await createProvider({
+      name: "OpenSubtitles A",
+      type: "opensubtitles",
+    });
+    const providerB = await createProvider({
+      name: "OpenSubtitles B",
+      type: "opensubtitles",
+    });
+
+    // A -> B -> A creates a cycle
+    await updateProvider(providerA.id, { fallbackProviderId: providerB.id });
+    await expect(
+      updateProvider(providerB.id, { fallbackProviderId: providerA.id }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "fallbackProviderId",
+    });
+  });
 });

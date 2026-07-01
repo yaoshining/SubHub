@@ -534,6 +534,21 @@ export class ProviderRepository {
     return providers[0];
   }
 
+  async findByStatus(
+    status: Provider["status"],
+    now = new Date(),
+  ): Promise<ProviderWithCredentialSummary[]> {
+    return this.listProviders({ status }, now);
+  }
+
+  async updateStatus(
+    providerId: string,
+    status: Provider["status"],
+    now = new Date(),
+  ): Promise<ProviderDetail> {
+    return this.setProviderStatus(providerId, status, now);
+  }
+
   async updateHealthStatus(
     providerId: string,
     healthStatus: string | null,
