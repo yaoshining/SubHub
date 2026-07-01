@@ -178,29 +178,36 @@ describeWhenLocalPostgresEnabled(
       ).toEqual(["primary", "secondary"]);
     });
 
-    it("uses migration 003 CHECK constraint allowing both opensubtitles and xunlei types", async () => {
-      // Verifying the CHECK constraint from migration 003 allows both types
-      await repository.createProvider(
-        { name: "Xunlei Test", type: "xunlei" },
-        now,
-      );
-      const providers = await repository.listProviders(undefined, now);
-      const xunleiType = providers.filter((p) => p.type === "xunlei");
-      const osType = providers.filter((p) => p.type === "opensubtitles");
-      expect(xunleiType.length).toBeGreaterThanOrEqual(1);
-      expect(osType.length).toBeGreaterThanOrEqual(0); // may be empty after truncate
+    it("migration 003 CHECK constraint allows inserting xunlei type providers", async () => {
+      // Use direct SQL to bypass the application-layer Xunlei creation guard
+      const [inserted] = await directSql!
+        .unsafe(
+          `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "created_at", "updated_at")
+           VALUES ('xunlei-test-constraint', 'Xunlei Constraint Check', 'xunlei', 'enabled', 5, 1, 1, false, 0, ${now.toISOString()}, ${now.toISOString()})
+           RETURNING *`,
+        );
+
+      expect(inserted).toBeDefined();
+      expect(inserted.type).toBe("xunlei");
     });
 
-    it("migration 003 seeded xunlei instance exists and has correct defaults", async () => {
-      // Re-run migration 003 to seed Xunlei row (the seed SQL uses WHERE NOT EXISTS)
-      // Skip truncate for this test — use direct SQL to insert
-      const xunleiSeed = await repository.findByProviderType("xunlei", now);
-      if (xunleiSeed) {
-        expect(xunleiSeed.name).toBe("Xunlei");
-        expect(xunleiSeed.type).toBe("xunlei");
-        expect(xunleiSeed.status).toBe("enabled");
-        expect(xunleiSeed.availableCredentialCount).toBe(1); // type-aware
-      }
+    it("migration 003 inserts a seeded xunlei provider row", async () => {
+      // Migration 003 runs in beforeAll; seed uses WHERE NOT EXISTS, so it persists
+      // across truncations. Drop and re-run migration to verify seed insertion.
+      const client = createStorageClient({
+        runtimeDatabaseUrl: runtimeUrl,
+        directDatabaseUrl: directUrl,
+      });
+      // Run migration 003 again; the seed SQL will insert because we truncated
+      await client.migrate();
+      await client.close();
+
+      const seed = await repository.findByProviderType("xunlei", now);
+      expect(seed).toBeDefined();
+      expect(seed!.name).toBe("Xunlei");
+      expect(seed!.type).toBe("xunlei");
+      expect(seed!.status).toBe("enabled");
+      expect(seed!.availableCredentialCount).toBe(1);
     });
   },
 );

@@ -187,6 +187,16 @@ describe("Provider service 状态流转", () => {
     expect(provider.status).toBe("enabled");
     expect(provider.availableCredentialCount).toBe(1);
     expect(provider.type).toBe("xunlei");
+    expect(provider.credentials).toHaveLength(0);
+  });
+
+  it("Xunlei 从 disabled 状态也可启用", async () => {
+    await disableProvider("xunlei-default");
+    const provider = await enableProvider("xunlei-default");
+
+    expect(provider.status).toBe("enabled");
+    expect(provider.availableCredentialCount).toBe(1);
+    expect(provider.credentials).toHaveLength(0);
   });
 
   it("自引用 fallback 返回明确验证错误", async () => {
