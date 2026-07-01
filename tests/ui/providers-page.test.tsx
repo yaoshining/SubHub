@@ -19,6 +19,7 @@ const providerA = {
   fallbackProviderId: null,
   lastHealthStatus: "healthy",
   lastErrorSummary: null,
+  lastHealthCheckedAt: null,
   createdAt: "2026-05-26T00:00:00.000Z",
   updatedAt: "2026-05-26T00:00:00.000Z",
   credentialCount: 2,

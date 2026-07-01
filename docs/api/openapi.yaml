@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: SubHub API
-  version: 0.2.0
-  description: SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。
+  version: 0.2.3
+  description: SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。v0.2.3 扩展 provider 管理 API 支持多 provider（OpenSubtitles / Xunlei），补齐启停、基础配置编辑与健康状态查看。
 servers:
   - url: http://localhost:3000
     description: 本地开发
@@ -166,9 +166,22 @@ paths:
         - Providers
       operationId: listAdminProviders
       summary: 查询 Provider 列表
-      description: 返回上游 Provider 与凭据池摘要；不会返回上游凭据明文或密文。
+      description: 返回上游 Provider 与凭据池摘要；支持按 type 与 status 筛选；不会返回上游凭据明文或密文。
       security:
         - AdminSession: []
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ProviderType"
+          description: 按 Provider 类型筛选。不传则返回所有类型。
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ProviderStatus"
+          description: 按 Provider 状态筛选。不传则返回所有状态。
       responses:
         "200":
           description: Provider 列表
@@ -1092,6 +1105,7 @@ components:
       type: string
       enum:
         - opensubtitles
+        - xunlei
     ProviderStatus:
       type: string
       enum:
@@ -1122,6 +1136,7 @@ components:
         - fallbackProviderId
         - lastHealthStatus
         - lastErrorSummary
+        - lastHealthCheckedAt
         - createdAt
         - updatedAt
         - credentialCount
@@ -1159,6 +1174,11 @@ components:
         lastErrorSummary:
           type: string
           nullable: true
+        lastHealthCheckedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: 最近一次健康检查时间。未执行过健康检查时为 null。
         createdAt:
           type: string
           format: date-time

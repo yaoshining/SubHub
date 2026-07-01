@@ -14,6 +14,7 @@ import type {
   CreateProviderCredentialRequest,
   CreateProviderRequest,
   IsolateProviderCredentialRequest,
+  ListAdminProvidersParams,
   Provider,
   ProviderCredential,
   ProviderCredentialActionResponse,
@@ -26,6 +27,7 @@ import type {
   ProviderList,
   ProviderListResponse,
   ProviderStatus,
+  ProviderType,
   UpdateProviderRequest,
 } from "./generated/model";
 import { subhubApiClient } from "./client";
@@ -34,6 +36,7 @@ export type {
   CreateProviderCredentialRequest,
   CreateProviderRequest,
   IsolateProviderCredentialRequest,
+  ListAdminProvidersParams,
   Provider,
   ProviderCredential,
   ProviderCredentialList,
@@ -41,6 +44,7 @@ export type {
   ProviderDetail,
   ProviderList,
   ProviderStatus,
+  ProviderType,
   UpdateProviderRequest,
 };
 
@@ -50,10 +54,11 @@ const jsonHeaders = (options?: RequestInit) => ({
 });
 
 export async function fetchProviders(
+  params?: ListAdminProvidersParams,
   options?: RequestInit,
 ): Promise<ProviderList> {
   const response = await subhubApiClient<ProviderListResponse>(
-    getListAdminProvidersUrl(),
+    getListAdminProvidersUrl(params),
     { ...options, method: "GET" },
   );
 
