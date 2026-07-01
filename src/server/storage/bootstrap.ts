@@ -105,8 +105,9 @@ const resolveAdminUsersCount = async (db: StorageDatabase) => {
 const resolveSeedProviderExists = async (
   db: StorageDatabase,
   mode: Exclude<BootstrapMode, "production">,
+  providerType: "opensubtitles" | "xunlei",
 ): Promise<boolean> => {
-  const seedProviderId = `seed_provider_${mode}_opensubtitles`;
+  const seedProviderId = `seed_provider_${mode}_${providerType}`;
   const [row] = await db
     .select({ id: providers.id })
     .from(providers)
@@ -187,11 +188,20 @@ export const inspectBootstrapState = async ({
 
   let resolvedSeedStateOverride = seedStateOverride;
   if (!resolvedSeedStateOverride && mode !== "production" && schemaReady) {
-    const seedExists = await resolveSeedProviderExists(
-      db,
-      mode as Exclude<BootstrapMode, "production">,
+    const seedTypes: Array<"opensubtitles" | "xunlei"> = [
+      "opensubtitles",
+      "xunlei",
+    ];
+    const results = await Promise.all(
+      seedTypes.map((type) =>
+        resolveSeedProviderExists(
+          db,
+          mode as Exclude<BootstrapMode, "production">,
+          type,
+        ),
+      ),
     );
-    resolvedSeedStateOverride = seedExists ? "applied" : "pending";
+    resolvedSeedStateOverride = results.every(Boolean) ? "applied" : "pending";
   }
 
   return buildBootstrapState({
@@ -252,13 +262,13 @@ export const runBootstrap = async ({
   };
 };
 
-const buildSeedProvider = (
+const buildSeedProviders = (
   mode: Exclude<BootstrapMode, "production">,
   now: Date,
 ) => {
   const createdAt = now.toISOString();
 
-  return {
+  const opensubtitles = {
     id: `seed_provider_${mode}_opensubtitles`,
     name: `Seed ${mode} OpenSubtitles`,
     type: "opensubtitles" as const,
@@ -274,6 +284,25 @@ const buildSeedProvider = (
     createdAt,
     updatedAt: createdAt,
   };
+
+  const xunlei = {
+    id: `seed_provider_${mode}_xunlei`,
+    name: `Seed ${mode} XunLei`,
+    type: "xunlei" as const,
+    status: "needs_config" as const,
+    priority: 100,
+    weight: 100,
+    concurrencyLimit: 1,
+    rotationEnabled: true,
+    cooldownSeconds: 60,
+    lastHealthStatus: "seeded",
+    lastErrorSummary: `${mode} seed placeholder provider，需后续补充真实凭据。`,
+    fallbackProviderId: null,
+    createdAt,
+    updatedAt: createdAt,
+  };
+
+  return [opensubtitles, xunlei];
 };
 
 export const applyManagedSeed = async ({
@@ -295,31 +324,47 @@ export const applyManagedSeed = async ({
     throw new Error("schema 尚未就绪，无法执行 non-production seed。");
   }
 
-  const seedProvider = buildSeedProvider(mode, now);
-  const alreadyExists = await resolveSeedProviderExists(
-    db,
+  const seedProviders = buildSeedProviders(
     mode as Exclude<BootstrapMode, "production">,
+    now,
   );
-  await db
-    .insert(providers)
-    .values(seedProvider)
-    .onConflictDoUpdate({
-      target: providers.id,
-      set: {
-        name: seedProvider.name,
-        type: seedProvider.type,
-        fallbackProviderId: seedProvider.fallbackProviderId,
-        status: seedProvider.status,
-        priority: seedProvider.priority,
-        weight: seedProvider.weight,
-        concurrencyLimit: seedProvider.concurrencyLimit,
-        rotationEnabled: seedProvider.rotationEnabled,
-        cooldownSeconds: seedProvider.cooldownSeconds,
-        lastHealthStatus: seedProvider.lastHealthStatus,
-        lastErrorSummary: seedProvider.lastErrorSummary,
-        updatedAt: seedProvider.updatedAt,
-      },
-    });
+
+  let totalInserted = 0;
+  let totalUpdated = 0;
+  let lastSeedProviderId = "";
+
+  for (const seedProvider of seedProviders) {
+    const providerType = seedProvider.type;
+    const alreadyExists = await resolveSeedProviderExists(
+      db,
+      mode as Exclude<BootstrapMode, "production">,
+      providerType,
+    );
+    await db
+      .insert(providers)
+      .values(seedProvider)
+      .onConflictDoUpdate({
+        target: providers.id,
+        set: {
+          name: seedProvider.name,
+          type: seedProvider.type,
+          fallbackProviderId: seedProvider.fallbackProviderId,
+          status: seedProvider.status,
+          priority: seedProvider.priority,
+          weight: seedProvider.weight,
+          concurrencyLimit: seedProvider.concurrencyLimit,
+          rotationEnabled: seedProvider.rotationEnabled,
+          cooldownSeconds: seedProvider.cooldownSeconds,
+          lastHealthStatus: seedProvider.lastHealthStatus,
+          lastErrorSummary: seedProvider.lastErrorSummary,
+          updatedAt: seedProvider.updatedAt,
+        },
+      });
+
+    totalInserted += alreadyExists ? 0 : 1;
+    totalUpdated += alreadyExists ? 1 : 0;
+    lastSeedProviderId = seedProvider.id;
+  }
 
   const nextState = await inspectBootstrapState({
     db,
@@ -330,8 +375,8 @@ export const applyManagedSeed = async ({
 
   return {
     ...nextState,
-    seedProviderId: seedProvider.id,
-    insertedProviders: alreadyExists ? 0 : 1,
-    updatedProviders: alreadyExists ? 1 : 0,
+    seedProviderId: lastSeedProviderId,
+    insertedProviders: totalInserted,
+    updatedProviders: totalUpdated,
   };
 };

@@ -103,22 +103,30 @@ describe("storage/bootstrap", () => {
       .from(providers);
 
     expect(firstRun).toMatchObject({
-      insertedProviders: 1,
+      insertedProviders: 2,
       updatedProviders: 0,
-      seedProviderId: "seed_provider_development_opensubtitles",
+      seedProviderId: "seed_provider_development_xunlei",
     });
     expect(secondRun).toMatchObject({
       insertedProviders: 0,
-      updatedProviders: 1,
-      seedProviderId: "seed_provider_development_opensubtitles",
+      updatedProviders: 2,
+      seedProviderId: "seed_provider_development_xunlei",
     });
-    expect(seededProviders).toEqual([
-      {
-        id: "seed_provider_development_opensubtitles",
-        name: "Seed development OpenSubtitles",
-        status: "needs_config",
-      },
-    ]);
+    expect(seededProviders).toEqual(
+      expect.arrayContaining([
+        {
+          id: "seed_provider_development_opensubtitles",
+          name: "Seed development OpenSubtitles",
+          status: "needs_config",
+        },
+        {
+          id: "seed_provider_development_xunlei",
+          name: "Seed development XunLei",
+          status: "needs_config",
+        },
+      ]),
+    );
+    expect(seededProviders).toHaveLength(2);
 
     await expect(
       applyManagedSeed({

@@ -21,11 +21,12 @@ export interface SubtitleSearchResult {
   /** 字幕文件格式（如 srt / ass / sub）；上游未提供时由网关默认填充 srt，响应中始终存在。 */
   format: string;
   /** 已包含完整 subtitleId 查询参数的下载路径，调用方可直接请求。
-   * 统一下载入口，由网关根据 subtitleId 前缀路由到对应 provider 的下载流程。
+   * OpenSubtitles: 统一下载入口，由网关根据 subtitleId 前缀路由到 provider 下载流程。
+   * Xunlei: provider 直链（迅雷不支持无状态统一下载，downloadUrl 即为 provider 返回的直链 URL）。
    *  */
   downloadUrl: string;
   /** provider 原始字段，仅用于调试与兼容；不保证字段稳定性，调用方不应依赖其中字段名或结构。
-   * 不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl。
+   * 不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl（迅雷 provider 的 downloadUrl 本身为 provider 直链）。
    * OpenSubtitles: download_count, upload_date, feature_id, file_id, original_payload 等
    * Xunlei: cid, gcid, ext, duration, languages, source, score, extra_name, mt, original_payload 等
    *  */

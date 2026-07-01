@@ -44,7 +44,7 @@ export type SearchSubtitlesParams = {
    */
   type?: SearchSubtitlesType;
   /**
-   * 自由文本检索；与 `title` 共同构成 free-text 兜底；迅雷 provider 映射为上游 `name`。
+   * 自由文本检索；与 `title` 共同构成 free-text 兜底；OpenSubtitles 将其追加至上游 query 串，迅雷 provider 映射为上游 `name`。
    * @minLength 1
    */
   query?: string;

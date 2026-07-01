@@ -8,7 +8,7 @@
 
 /**
  * provider 原始字段，仅用于调试与兼容；不保证字段稳定性，调用方不应依赖其中字段名或结构。
- * 不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl。
+ * 不应将 raw 中的任何字段作为直连下载入口；统一下载请使用 downloadUrl（迅雷 provider 的 downloadUrl 本身为 provider 直链）。
  * OpenSubtitles: download_count, upload_date, feature_id, file_id, original_payload 等
  * Xunlei: cid, gcid, ext, duration, languages, source, score, extra_name, mt, original_payload 等
  *
