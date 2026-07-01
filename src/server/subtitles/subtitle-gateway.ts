@@ -2,6 +2,7 @@ import { AppError } from "@/lib/errors";
 import { requireCallerKey } from "@/server/api/caller-key-auth";
 import { createCallerKeyRepository } from "@/server/caller-keys/caller-key-repository";
 import {
+  hasCredentials,
   markCredentialFailure,
   markCredentialUsed,
   selectProviderCredential,
@@ -100,12 +101,14 @@ const getProviderCandidates = async (
   now: Date,
 ): Promise<Provider[]> => {
   const repository = new ProviderRepository(db);
-  const providers = await repository.listProviders(now);
+  const providers = await repository.listProviders(undefined, now);
 
   return providers.filter(
     (provider) =>
       (provider.status === "enabled" || provider.status === "degraded") &&
-      provider.availableCredentialCount > 0,
+      (hasCredentials(provider.type)
+        ? provider.availableCredentialCount > 0
+        : true),
   );
 };
 
@@ -149,6 +152,22 @@ const syncProviderFailureState = async (
   }
 };
 
+const syncProviderHealth = async (
+  providerId: string,
+  success: boolean,
+  errorSummary: string | null,
+  db: StorageDatabase,
+  now: Date,
+) => {
+  const repository = new ProviderRepository(db);
+  await repository.updateHealthStatus(
+    providerId,
+    success ? "ready" : "degraded",
+    errorSummary,
+    now,
+  );
+};
+
 type ProviderCallResult = {
   results: AggregatedSubtitleResult[];
   failure: ProviderFailureInfo | null;
@@ -164,7 +183,8 @@ const callOpenSubtitles = async (
   options: SubtitleGatewayOptions,
 ): Promise<ProviderCallResult> => {
   const candidates = await getProviderCandidates(db, now);
-  if (candidates.length === 0) {
+  const provider = candidates.find((p) => p.type === "opensubtitles");
+  if (!provider) {
     return {
       results: [],
       failure: null,
@@ -173,8 +193,6 @@ const callOpenSubtitles = async (
       hadResults: false,
     };
   }
-
-  const provider = candidates[0]!;
   const credential = await selectProviderCredential(provider.id, { db, now });
   const adapter = options.adapter ?? new OpenSubtitlesAdapter();
 
@@ -259,8 +277,23 @@ const callOpenSubtitles = async (
 
 const callXunlei = async (
   input: SubtitleSearchInput,
+  db: StorageDatabase,
+  now: Date,
   options: SubtitleGatewayOptions,
 ): Promise<ProviderCallResult> => {
+  const candidates = await getProviderCandidates(db, now);
+  const xunleiProvider = candidates.find((p) => p.type === "xunlei");
+
+  if (!xunleiProvider) {
+    return {
+      results: [],
+      failure: null,
+      providerId: null,
+      credentialId: null,
+      hadResults: false,
+    };
+  }
+
   const adapter = options.xunleiAdapter ?? getAdapter("xunlei");
   const outcome: ProviderSearchOutcome = await adapter.search(null, input);
 
@@ -268,7 +301,7 @@ const callXunlei = async (
     return {
       results: [],
       failure: mapFailure("xunlei", outcome),
-      providerId: null,
+      providerId: xunleiProvider.id,
       credentialId: null,
       hadResults: false,
     };
@@ -278,20 +311,20 @@ const callXunlei = async (
     return {
       results: [],
       failure: mapFailure("xunlei", outcome),
-      providerId: null,
+      providerId: xunleiProvider.id,
       credentialId: null,
       hadResults: false,
     };
   }
 
   const results = outcome.results.map((r) =>
-    normalize("xunlei", r, "xunlei_default"),
+    normalize("xunlei", r, xunleiProvider.id),
   );
 
   return {
     results,
     failure: null,
-    providerId: null,
+    providerId: xunleiProvider.id,
     credentialId: null,
     hadResults: results.length > 0,
   };
@@ -350,8 +383,37 @@ export async function searchSubtitles(
 
   const [osResult, xunleiResult] = await Promise.all([
     callOpenSubtitles(input, db, now, options),
-    callXunlei(input, options),
+    callXunlei(input, db, now, options),
   ]);
+
+  // Sync health status after provider calls
+  const healthSyncPromises: Promise<void>[] = [];
+  if (osResult.providerId) {
+    healthSyncPromises.push(
+      syncProviderHealth(
+        osResult.providerId,
+        osResult.failure === null,
+        osResult.failure?.message ?? null,
+        db,
+        now,
+      ),
+    );
+  }
+  if (xunleiResult.providerId) {
+    healthSyncPromises.push(
+      syncProviderHealth(
+        xunleiResult.providerId,
+        xunleiResult.failure === null,
+        xunleiResult.failure?.message ?? null,
+        db,
+        now,
+      ),
+    );
+  }
+  // Fire and forget health sync — don't block search response
+  void Promise.all(healthSyncPromises).catch((error) => {
+    console.error("health sync failed:", error);
+  });
 
   const allResults = [...osResult.results, ...xunleiResult.results];
   const failures = [osResult.failure, xunleiResult.failure].filter(

@@ -125,8 +125,29 @@ describe("Provider 管理 API 契约", () => {
     const list = await providersRoute.GET(
       nextRequest("http://localhost/api/admin/providers", cookie),
     );
-    await expect(readJson<{ data: { total: number } }>(list)).resolves.toEqual({
-      data: expect.objectContaining({ total: 1 }),
+    await expect(
+      readJson<{
+        data: {
+          total: number;
+          items: Array<{ id: string; type: string; name: string }>;
+        };
+      }>(list),
+    ).resolves.toEqual({
+      data: expect.objectContaining({
+        total: 2,
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            id: "xunlei-default",
+            type: "xunlei",
+            name: "Xunlei",
+          }),
+          expect.objectContaining({
+            id: providerId,
+            type: "opensubtitles",
+            name: "OpenSubtitles Primary",
+          }),
+        ]),
+      }),
     });
 
     const updated = await providerDetailRoute.PATCH(

@@ -35,6 +35,14 @@ export type CredentialFailureReason =
 const summarizeCredentialError = (summary: string) =>
   summary.trim().replaceAll(/\s+/g, " ").slice(0, 240);
 
+/**
+ * Check whether a provider type uses credentials.
+ * Xunlei doesn't use API keys / credentials.
+ */
+export function hasCredentials(providerType: Provider["type"]): boolean {
+  return providerType === "opensubtitles";
+}
+
 export async function selectProviderCredential(
   providerId: string,
   { db = getStorageClient().db, now = new Date() }: CredentialPoolOptions = {},

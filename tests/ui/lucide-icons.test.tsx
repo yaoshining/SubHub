@@ -9,6 +9,15 @@ import { EmptyStateCard } from "@/components/admin/empty-state-card";
 import { navigationItems } from "@/components/admin/sidebar";
 import { lucideIcons } from "@/components/icons/lucide";
 
+type PencilNode = {
+  name?: string;
+  content?: string;
+  iconFontName?: string;
+  icon?: string;
+  library?: string;
+  children?: PencilNode[];
+};
+
 const requiredIconNames = [
   "menu",
   "panel-left",
@@ -36,6 +45,24 @@ const requiredDesignIconNames = [
   "sun",
 ] as const;
 
+function findNodeByName(
+  node: PencilNode,
+  name: string,
+): PencilNode | undefined {
+  if (node.name === name) {
+    return node;
+  }
+
+  for (const child of node.children ?? []) {
+    const matchedNode = findNodeByName(child, name);
+    if (matchedNode) {
+      return matchedNode;
+    }
+  }
+
+  return undefined;
+}
+
 describe("Lucide 图标基线", () => {
   it("集中导出约定 Lucide 命名", () => {
     for (const iconName of requiredIconNames) {
@@ -48,20 +75,29 @@ describe("Lucide 图标基线", () => {
       path.resolve(process.cwd(), "design/main.pen"),
       "utf8",
     );
+    const designDocument = JSON.parse(designSource) as PencilNode;
+    const lucideAssetsNode = findNodeByName(
+      designDocument,
+      "Assets / Icons / Lucide",
+    );
 
-    const start = designSource.indexOf('"name": "Assets / Icons / Lucide"');
-    const end = designSource.indexOf('"name": "Sidebar / Dark / Base"', start);
-    expect(start).toBeGreaterThanOrEqual(0);
-    expect(end).toBeGreaterThan(start);
-
-    const lucideSection = designSource.slice(start, end);
-
-    expect(lucideSection).toContain('"name": "Assets / Icons / Lucide"');
+    expect(lucideAssetsNode?.name).toBe("Assets / Icons / Lucide");
 
     for (const iconName of requiredDesignIconNames) {
-      expect(lucideSection).toContain(`"name": "${iconName}"`);
-      expect(lucideSection).toContain(`"iconFontName": "${iconName}"`);
-      expect(lucideSection).toContain(`"content": "${iconName}"`);
+      const iconFrameNode = findNodeByName(lucideAssetsNode ?? {}, iconName);
+      const iconNode = iconFrameNode?.children?.find((child) =>
+        child.name?.endsWith("-icon"),
+      );
+      const labelNode = iconFrameNode?.children?.find(
+        (child) => child.content === iconName,
+      );
+
+      expect(iconFrameNode?.name).toBe(iconName);
+      expect(labelNode?.content).toBe(iconName);
+      expect(
+        iconNode?.iconFontName === iconName ||
+          (iconNode?.icon === iconName && iconNode.library === "lucide"),
+      ).toBe(true);
     }
   });
 

@@ -8,6 +8,13 @@
       "when": 1780216975998,
       "tag": "002_neon_vercel_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780300000000,
+      "tag": "003_provider_admin_baseline",
+      "breakpoints": true
     }
   ]
 }
