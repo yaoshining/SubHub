@@ -1106,6 +1106,10 @@ components:
       enum:
         - opensubtitles
         - xunlei
+    CreatableProviderType:
+      type: string
+      enum:
+        - opensubtitles
     ProviderStatus:
       type: string
       enum:
@@ -1354,7 +1358,7 @@ components:
           type: string
           minLength: 1
         type:
-          $ref: "#/components/schemas/ProviderType"
+          $ref: "#/components/schemas/CreatableProviderType"
         initialCredential:
           $ref: "#/components/schemas/CreateProviderCredentialRequest"
     UpdateProviderRequest:

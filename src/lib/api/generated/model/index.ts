@@ -52,6 +52,7 @@ export * from "./callerKeyScope";
 export * from "./callerKeyStatus";
 export * from "./callerKeyUsage";
 export * from "./callerKeyUsageResponse";
+export * from "./creatableProviderType";
 export * from "./createAdminInvitationRequest";
 export * from "./createAdminInvitationRequestAccessPreset";
 export * from "./createCallerKeyRequest";
