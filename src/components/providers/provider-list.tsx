@@ -96,25 +96,27 @@ function ProviderRow({
           className="flex items-center gap-1.5"
           onClick={(e) => e.stopPropagation()}
         >
-          {isEnabled ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-destructive hover:text-destructive"
-              onClick={() => onToggleEnable?.(provider.id)}
-            >
-              禁用
-            </Button>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              className="text-xs"
-              onClick={() => onToggleEnable?.(provider.id)}
-            >
-              启用
-            </Button>
-          )}
+          {onToggleEnable ? (
+            isEnabled ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-destructive hover:text-destructive"
+                onClick={() => onToggleEnable(provider.id)}
+              >
+                禁用
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                className="text-xs"
+                onClick={() => onToggleEnable(provider.id)}
+              >
+                启用
+              </Button>
+            )
+          ) : null}
           <Button variant="outline" size="sm" asChild className="text-xs">
             <Link href={`/providers/${provider.id}`}>
               详情

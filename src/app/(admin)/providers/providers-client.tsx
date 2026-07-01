@@ -84,6 +84,7 @@ export function ProvidersClient() {
   const [createdProvider, setCreatedProvider] =
     React.useState<ProviderDetail | null>(null);
   const mountedRef = React.useRef(true);
+  const initialSelectedRef = React.useRef(searchParams.get("selected"));
 
   const loadProviders = React.useCallback(async () => {
     setLoading(true);
@@ -95,8 +96,8 @@ export function ProvidersClient() {
       }
       setProviders(list.items);
 
-      // Restore selection from query string, then fallback to degraded > needs_config > first
-      const selectedId = searchParams.get("selected");
+      // Restore selection from initial query string, then fallback to degraded > needs_config > first
+      const selectedId = initialSelectedRef.current;
       setSelectedProviderId((current) => {
         if (selectedId && list.items.some((item) => item.id === selectedId)) {
           return selectedId;
@@ -119,7 +120,7 @@ export function ProvidersClient() {
         setLoading(false);
       }
     }
-  }, [searchParams]);
+  }, []);
 
   React.useEffect(() => {
     mountedRef.current = true;
@@ -268,6 +269,7 @@ export function ProvidersClient() {
                   ? "border-strong bg-primary/5"
                   : "border-border bg-muted/30 hover:bg-muted/50"
               }`}
+              aria-pressed={filter === chip.key}
               onClick={() =>
                 setFilter((f) => (f === chip.key ? "all" : chip.key))
               }
@@ -336,6 +338,7 @@ export function ProvidersClient() {
             {searchQuery && (
               <button
                 type="button"
+                aria-label="清空搜索"
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 onClick={handleClearSearch}
               >

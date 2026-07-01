@@ -102,6 +102,9 @@ export function formatRelativeTime(value?: string | null) {
   }
   const now = Date.now();
   const then = new Date(value).getTime();
+  if (Number.isNaN(then)) {
+    return value;
+  }
   const diffMs = now - then;
   const diffMin = Math.floor(diffMs / 60000);
   if (diffMin < 1) return "刚刚";

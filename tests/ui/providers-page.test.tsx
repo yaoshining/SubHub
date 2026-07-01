@@ -70,6 +70,27 @@ const providerXunlei = {
   availableCredentialCount: 0,
 };
 
+const providerDegraded = {
+  id: "provider_dg",
+  name: "OpenSubtitles Degraded",
+  type: "opensubtitles" as const,
+  status: "degraded" as const,
+  priority: 3,
+  weight: 30,
+  concurrencyLimit: 1,
+  rotationEnabled: true,
+  cooldownSeconds: 60,
+  fallbackProviderId: null,
+  lastHealthStatus: "degraded" as const,
+  lastErrorSummary: null,
+  lastHealthCheckedAt: "2026-06-15T10:00:00.000Z",
+  createdAt: "2026-06-10T00:00:00.000Z",
+  updatedAt: "2026-06-15T10:00:00.000Z",
+  credentialCount: 2,
+  activeCredentialCount: 1,
+  availableCredentialCount: 1,
+};
+
 const credential = {
   id: "cred_001",
   providerId: "provider_001",
@@ -97,8 +118,8 @@ const api = await import("@/lib/api/providers");
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(api.fetchProviders).mockResolvedValue({
-    items: [providerOS, providerNeedsConfig, providerXunlei],
-    total: 3,
+    items: [providerOS, providerDegraded, providerNeedsConfig, providerXunlei],
+    total: 4,
   });
   vi.mocked(api.fetchProviderDetail).mockResolvedValue({
     ...providerOS,
@@ -136,7 +157,7 @@ describe("Providers 页面", () => {
 
     // Should show Operational Pulse summary
     expect(screen.getByText("Providers")).toBeInTheDocument();
-    expect(screen.getByText(/3 个实例/)).toBeInTheDocument();
+    expect(screen.getByText(/4 个实例/)).toBeInTheDocument();
 
     // Inspector should be visible
     expect(
@@ -153,9 +174,12 @@ describe("Providers 页面", () => {
   it("默认选中策略：degraded > needs_config > first", async () => {
     renderWithTheme(<ProvidersClient />);
 
-    // First degraded provider in list
+    // Should select degraded provider_002 (degraded) over needs_config provider
     await waitFor(() =>
       expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledTimes(1),
+    );
+    expect(screen.getByRole("option", { selected: true })).toHaveTextContent(
+      "OpenSubtitles Degraded",
     );
   });
 
