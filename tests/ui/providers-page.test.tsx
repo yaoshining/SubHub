@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProvidersClient } from "@/app/(admin)/providers/providers-client";
 import { renderWithTheme } from "../helpers/ui";
+import { toast } from "sonner";
 
 // Mock useSearchParams with searchParams that has .get()
 const mockSearchParams = new URLSearchParams();
@@ -14,6 +15,13 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: mockRouterReplace }),
   useSearchParams: () => mockSearchParams,
   usePathname: () => "/providers",
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 const providerOS = {
@@ -111,6 +119,8 @@ vi.mock("@/lib/api/providers", () => ({
   fetchProviders: vi.fn(),
   fetchProviderDetail: vi.fn(),
   createProvider: vi.fn(),
+  enableProvider: vi.fn(),
+  disableProvider: vi.fn(),
 }));
 
 const api = await import("@/lib/api/providers");
@@ -271,5 +281,119 @@ describe("Providers 页面", () => {
     await user.click(screen.getByText("Xunlei"));
 
     expect(screen.queryByText("OpenSubtitles Primary")).not.toBeInTheDocument();
+  });
+
+  describe("Enable/Disable 交互", () => {
+    it("点击启用/禁用按钮时显示确认对话框", async () => {
+      const user = userEvent.setup();
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findAllByText("OpenSubtitles Primary");
+
+      // Click disable button on enabled provider
+      const disableButtons = screen.getAllByRole("button", { name: "禁用" });
+      await user.click(disableButtons[0]!);
+
+      // Should show confirmation dialog
+      expect(await screen.findByText("确认禁用 Provider")).toBeInTheDocument();
+      expect(
+        screen.getByText(/将停止参与负载均衡/, { exact: false }),
+      ).toBeInTheDocument();
+    });
+
+    it('API 调用期间按钮显示"处理中..."且禁用状态', async () => {
+      const user = userEvent.setup();
+      let resolveDisable: (value: unknown) => void;
+      const disablePromise = new Promise((resolve) => {
+        resolveDisable = resolve;
+      });
+      vi.mocked(api.disableProvider).mockReturnValue(disablePromise);
+
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findAllByText("OpenSubtitles Primary");
+
+      // Click disable button
+      const disableButtons = screen.getAllByRole("button", { name: "禁用" });
+      await user.click(disableButtons[0]!);
+
+      // Confirm in dialog
+      await user.click(screen.getByRole("button", { name: "确认" }));
+
+      // Button should show "处理中..." and be disabled
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "处理中..." }),
+        ).toBeDisabled(),
+      );
+
+      // Resolve the promise
+      resolveDisable!(undefined);
+    });
+
+    it("成功启用/禁用后更新状态", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.disableProvider).mockResolvedValue(undefined);
+      vi.mocked(api.fetchProviders).mockResolvedValue({
+        items: [
+          { ...providerOS, status: "disabled" },
+          providerDegraded,
+          providerNeedsConfig,
+          providerXunlei,
+        ],
+        total: 4,
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findAllByText("OpenSubtitles Primary");
+
+      // Click disable button
+      const disableButtons = screen.getAllByRole("button", { name: "禁用" });
+      await user.click(disableButtons[0]!);
+
+      // Confirm
+      await user.click(screen.getByRole("button", { name: "确认" }));
+
+      // Should call disableProvider API
+      await waitFor(() =>
+        expect(vi.mocked(api.disableProvider)).toHaveBeenCalledWith(
+          "provider_001",
+        ),
+      );
+
+      // Should reload providers
+      await waitFor(() =>
+        expect(vi.mocked(api.fetchProviders)).toHaveBeenCalledTimes(2),
+      );
+    });
+
+    it("失败时显示错误提示并保持状态", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.disableProvider).mockRejectedValue(
+        new Error("Network error"),
+      );
+
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findAllByText("OpenSubtitles Primary");
+
+      // Click disable button
+      const disableButtons = screen.getAllByRole("button", { name: "禁用" });
+      await user.click(disableButtons[0]!);
+
+      // Confirm
+      await user.click(screen.getByRole("button", { name: "确认" }));
+
+      // Should show error toast
+      await waitFor(() =>
+        expect(toast.error).toHaveBeenCalledWith("Network error"),
+      );
+
+      // State should remain - button should still show "禁用" (not "启用")
+      expect(
+        screen.getAllByRole("button", { name: "禁用" }).length,
+      ).toBeGreaterThan(0);
+    });
   });
 });
