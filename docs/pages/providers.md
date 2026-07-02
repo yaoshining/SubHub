@@ -55,12 +55,12 @@
 
 ### 断点行为
 
-| 断点 | Summary Strip | Master List | Inspector | Create Drawer |
-|------|---------------|-------------|-----------|---------------|
-| ≥ 1280px | 水平单行，SummaryTile 水平铺开 + 筛选 + 按钮 | 左 2/3 卡片行 | 右 1/3 sticky | Drawer 居中 `max-w-xl` |
-| 1024–1279px | 水平单行 | 全宽 | 下沉到 List 下方 | Drawer `max-w-xl` 居中 |
-| 768–1023px | 2×2 网格，筛选和按钮换行 | 全宽单列 | 点击触发的 Bottom Sheet | Drawer 90vw 居右 |
-| < 768px | 单列堆叠 | 全宽单列 | Bottom Sheet | Drawer 全屏 |
+| 断点        | Summary Strip                                | Master List   | Inspector               | Create Drawer          |
+| ----------- | -------------------------------------------- | ------------- | ----------------------- | ---------------------- |
+| ≥ 1280px    | 水平单行，SummaryTile 水平铺开 + 筛选 + 按钮 | 左 2/3 卡片行 | 右 1/3 sticky           | Drawer 居中 `max-w-xl` |
+| 1024–1279px | 水平单行                                     | 全宽          | 下沉到 List 下方        | Drawer `max-w-xl` 居中 |
+| 768–1023px  | 2×2 网格，筛选和按钮换行                     | 全宽单列      | 点击触发的 Bottom Sheet | Drawer 90vw 居右       |
+| < 768px     | 单列堆叠                                     | 全宽单列      | Bottom Sheet            | Drawer 全屏            |
 
 ## Module 1: Operational Pulse Strip（顶部状态条）
 
@@ -81,10 +81,10 @@
 
 ### Compact Status Tile 矩阵
 
-| Tile | Token | 内容 | 可点击 |
-|------|-------|------|--------|
-| Enabled | success | `已启用 N` | 是 → 筛选切到 enabled |
-| Degraded | warning | `降级 N`（0 时 muted） | 是 → 筛选切到 degraded |
+| Tile                    | Token       | 内容                        | 可点击                 |
+| ----------------------- | ----------- | --------------------------- | ---------------------- |
+| Enabled                 | success     | `已启用 N`                  | 是 → 筛选切到 enabled  |
+| Degraded                | warning     | `降级 N`（0 时 muted）      | 是 → 筛选切到 degraded |
 | Disabled / Needs-config | destructive | `停用 N / 待完善 N`（复合） | 是 → 筛选切到 disabled |
 
 - 点击 Tile ⇒ 全局状态筛选切换到对应值；当前激活 Tile 用 `border-strong` 强化。
@@ -127,12 +127,12 @@
 
 **四层信息分解**：
 
-| 层 | 位置 | 内容 | 样式 |
-|----|------|------|------|
-| Layer 1 — Type | 左端 48×48 | `ProviderTypeBlock`：OS=蓝底白字"OS"；XL=橙底白字"XL"+右下 Lock 图标 | `rounded-md`，底部 4px status-color 状态条 |
-| Layer 2 — Identity | 左中 | 名称（主）+ ID（副） | 名称 `text-base font-medium`；ID `text-xs font-mono text-muted-foreground`，单行省略+tooltip |
-| Layer 3 — Status & Health | 右中上 | `ProviderStatusBadge` + `HealthBlock.compact` | `gap-2` 垂直堆叠 |
-| Layer 4 — Pool & Actions | 右下 | OpenSubtitles：`PoolSizeIndicator`；Xunlei：固定文案「无凭据可配」；动作：[禁用/启用] + [详情 →] | 辅助行 `text-xs text-muted-foreground` |
+| 层                        | 位置       | 内容                                                                                             | 样式                                                                                         |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Layer 1 — Type            | 左端 48×48 | `ProviderTypeBlock`：OS=蓝底白字"OS"；XL=橙底白字"XL"+右下 Lock 图标                             | `rounded-md`，底部 4px status-color 状态条                                                   |
+| Layer 2 — Identity        | 左中       | 名称（主）+ ID（副）                                                                             | 名称 `text-base font-medium`；ID `text-xs font-mono text-muted-foreground`，单行省略+tooltip |
+| Layer 3 — Status & Health | 右中上     | `ProviderStatusBadge` + `HealthBlock.compact`                                                    | `gap-2` 垂直堆叠                                                                             |
+| Layer 4 — Pool & Actions  | 右下       | OpenSubtitles：`PoolSizeIndicator`；Xunlei：固定文案「无凭据可配」；动作：[禁用/启用] + [详情 →] | 辅助行 `text-xs text-muted-foreground`                                                       |
 
 ### 行级审美提升规则
 
@@ -225,6 +225,7 @@
 ```
 
 关键差异：
+
 - 凭据池区用 `RestrictedCapabilityCallout`（非空态卡片）
 - 顶部 `🔒 受限` 徽章
 - 调度摘要保持字段一致

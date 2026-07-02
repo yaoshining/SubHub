@@ -8,7 +8,7 @@
 
 **输入**: 用户描述: "请为 SubHub 启动一个新的 spec，目标版本为 `v0.2.3`。当前 v0.2.2 已完成多 provider 搜索入口模型基础版与 Xunlei provider 后端接入，但管理台无法感知 Xunlei，也无法对已接入 provider 做启停与基础配置。v0.2.3 专门承接 provider 管理能力补齐基础版，让管理台对 OpenSubtitles / Xunlei 等已接入 provider 可见、可启停、可做基础配置与状态查看。同时必须严格区分 v0.2.2 / v0.2.3 / v0.3.0 三个版本的边界。"
 
-## 功能身份与可追溯性 *(mandatory)*
+## 功能身份与可追溯性 _(mandatory)_
 
 - **Feature ID**: `005`
 - **Spec 目录**: `specs/005-provider-admin-baseline/`
@@ -19,7 +19,7 @@
 - **scope 标签倾向**: `scope:mvp`（`v0.2.3` 在 versioning.md 中已明确为该 milestone 的核心交付范围）
 - **GitHub issue / PR 标签倾向**: issue 至少 `type:feature` + `area:provider` + `area:admin` + `priority:high` + `scope:mvp` + `stage:spec`；PR 在 issue 落地后继承并补充 `area:db`（若触达 migration）
 
-## 版本边界声明 *(mandatory)*
+## 版本边界声明 _(mandatory)_
 
 本节为本次 spec 的硬约束。任何 plan / tasks / code 阶段出现与本节冲突的内容 MUST 先回到 spec 层修订。
 
@@ -68,25 +68,25 @@
 
 ### 与 `v0.2.2` 的边界对比
 
-| 维度 | `v0.2.2` | `v0.2.3`（本次） |
-|------|----------|-----------------|
-| 触达范围 | 后端聚合搜索 + provider adapter | 管理台 provider 列表 / 详情 / 启停 / 基础配置 |
+| 维度                | `v0.2.2`                                                                        | `v0.2.3`（本次）                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 触达范围            | 后端聚合搜索 + provider adapter                                                 | 管理台 provider 列表 / 详情 / 启停 / 基础配置                                                                 |
 | provider 元数据存储 | 仅 OpenSubtitles 走 `providers` 表，Xunlei 走 `provider-registry.ts` code-layer | OpenSubtitles 与 Xunlei 一律持久化到 `providers` 表，`providerTypes` enum 扩展为 `["opensubtitles","xunlei"]` |
-| provider 启停 | 仅 code-layer / feature flag | 管理台 UI 可直接切换并持久化 |
-| provider 配置 | code-layer 常量 | 管理台可编辑最小基础配置（priority / weight / concurrency / cooldown / fallback） |
-| provider 状态可见性 | 不可见 | 可见（status / lastHealthStatus / lastErrorSummary 等） |
-| 新增 schema | 不引入 | 引入 migration 扩展 enum + 补齐 Xunlei 行 |
-| API 触达 | 仅聚合搜索 API | 新增 provider 管理 API；聚合搜索 API 不变 |
+| provider 启停       | 仅 code-layer / feature flag                                                    | 管理台 UI 可直接切换并持久化                                                                                  |
+| provider 配置       | code-layer 常量                                                                 | 管理台可编辑最小基础配置（priority / weight / concurrency / cooldown / fallback）                             |
+| provider 状态可见性 | 不可见                                                                          | 可见（status / lastHealthStatus / lastErrorSummary 等）                                                       |
+| 新增 schema         | 不引入                                                                          | 引入 migration 扩展 enum + 补齐 Xunlei 行                                                                     |
+| API 触达            | 仅聚合搜索 API                                                                  | 新增 provider 管理 API；聚合搜索 API 不变                                                                     |
 
 ### 与 `v0.3.0` 的边界对比
 
-| 维度 | `v0.2.3`（本次） | `v0.3.0` |
-|------|------------------|----------|
-| 触达对象 | 上游字幕来源（provider 实例） | 字幕搜索结果（subtitle records / assets） |
-| 核心动作 | 启停 provider、配置 provider 调度策略 | 导入 / 缓存 / 编辑 / 转正字幕资产 |
-| 数据模型 | 扩展 `providers` 表 enum + 新增 Xunlei 行 | 字幕资产主表（`subtitle_assets` 等） |
-| 状态机 | provider 状态（`enabled` / `disabled` / `needs_config` / `degraded`） | 字幕资产状态（`pending` / `promoted` / `archived` 等） |
-| 页面 | `providers` / `provider-detail` | 字幕资产列表 / 详情 / 编辑 / 转正（独立 page spec） |
+| 维度     | `v0.2.3`（本次）                                                      | `v0.3.0`                                               |
+| -------- | --------------------------------------------------------------------- | ------------------------------------------------------ |
+| 触达对象 | 上游字幕来源（provider 实例）                                         | 字幕搜索结果（subtitle records / assets）              |
+| 核心动作 | 启停 provider、配置 provider 调度策略                                 | 导入 / 缓存 / 编辑 / 转正字幕资产                      |
+| 数据模型 | 扩展 `providers` 表 enum + 新增 Xunlei 行                             | 字幕资产主表（`subtitle_assets` 等）                   |
+| 状态机   | provider 状态（`enabled` / `disabled` / `needs_config` / `degraded`） | 字幕资产状态（`pending` / `promoted` / `archived` 等） |
+| 页面     | `providers` / `provider-detail`                                       | 字幕资产列表 / 详情 / 编辑 / 转正（独立 page spec）    |
 
 ### "代码层接入 / 受限 provider" 模式的去留
 
@@ -95,7 +95,7 @@
 - `v0.2.3` 不再保留"代码层接入、能力受限 provider"作为产品面特例；若某个 provider 的某个字段当前尚未实现（如 `rotationEnabled` 对 Xunlei 暂未实现），按正常的「未实现字段 / 只读字段」处理（不写入或不开放编辑），而不是把整个 provider 视作受限特例。
 - 任何仍依赖 code-layer 行为的能力（如 Xunlei 当前无需 API Key），MUST 走正常的"该 provider 允许空凭据池"语义，而非通过 feature flag 表达。
 
-## 设计上下文 *(mandatory)*
+## 设计上下文 _(mandatory)_
 
 ### 设计来源
 
@@ -121,7 +121,7 @@
 - **provider 适配层 MUST 隔离在稳定接口之后**（沿用 `specs/004-multi-provider-search/spec.md` 宪章原则 VI），不得让 provider 元数据表结构泄漏到核心 API。
 - **老调用方零改动**: 本次 MUST NOT 引入对现有聚合字幕搜索 API 的 breaking 变更；`v0.2.2` 风格的搜索请求行为 MUST 完全保持。
 
-## 用户场景与测试 *(mandatory)*
+## 用户场景与测试 _(mandatory)_
 
 ### 用户故事 1 - 管理员在管理台看到所有已接入 provider (Priority: P1)
 
@@ -240,7 +240,7 @@
 - **聚合搜索 API 兼容性**: `v0.2.3` MUST NOT 引入对聚合字幕搜索 API 的 breaking 变更；老调用方零改动。
 - **Provider 元数据历史回溯**: v0.2.2 期间 Xunlei 的 code-layer 配置（baseUrl 等）作为 `v0.2.3` migration 的初始值持久化到 `providers` 表对应字段；若当前 `Provider` 模型不包含 `baseUrl` 字段，则 baseUrl 仍由 code-layer 维护（不破坏"统一 provider 模型"的边界 —— 因为 baseUrl 不属于"最小基础配置"中的管理员可调字段）。
 
-## 需求 *(mandatory)*
+## 需求 _(mandatory)_
 
 ### 功能需求
 
@@ -290,7 +290,7 @@
 - **FR-26**: provider 元数据持久化 MUST NOT 改变 `v0.2.2` 期间的聚合行为；具体来说: `v0.2.2` 期间由 code-layer 接入的 Xunlei provider 行为 MUST 与 `v0.2.3` migration 后行为一致（默认值与 code-layer 常量对齐）。
 - **FR-27**: provider 元数据 fallback 路径 MUST NOT 改变 provider 在聚合搜索中的可服务性；任何 fallback MUST 显式记录并在 plan 阶段评估（默认: 在 plan 阶段敲定 fallback 表与策略）。
 
-### 非功能需求 *(mandatory)*
+### 非功能需求 _(mandatory)_
 
 - **NFR-001 (代码质量)**: Feature MUST 通过 `pnpm lint` 与 `pnpm typecheck` 门禁；改动完成后 MUST 先执行 `pnpm format:write`。本次改动 MUST NOT 在 `package.json` / `pnpm-workspace.yaml` / 测试断言中引入 `corepack pnpm` 类环境 workaround。
 - **NFR-002 (测试)**:
@@ -305,7 +305,7 @@
 - **NFR-008 (可维护性)**: provider 元数据仓库层 MUST 与 provider 适配层清晰分离；`subtitle-gateway.ts` MUST 不直接感知 `providerTypes` enum 内部细节，仅消费 `provider.status` / `priority` / `weight` / 等聚合字段；provider 适配 MUST 隔离在稳定接口之后（宪章原则 VI）。
 - **NFR-009 (运行时环境映射)**: 本次不触达运行时环境映射（`docs/runtime/environment-mapping.md` 无变更）；Preview 分支白名单与 `preview -> staging` / `preview -> dev` 映射规则不变。
 
-### 关键实体 *(mandatory)*
+### 关键实体 _(mandatory)_
 
 #### `Provider`（已存在，本次扩展）
 
@@ -362,7 +362,7 @@
 - 字段由系统写入，不通过 UI 直接编辑
 - 字段更新 MUST 与 provider 启停 / 配置编辑动作解耦
 
-## 提议的 provider 元数据扩展方向 *(mandatory)*
+## 提议的 provider 元数据扩展方向 _(mandatory)_
 
 ### migration 方向
 
@@ -379,14 +379,14 @@
 
 ### provider 元数据 fallback 表（方向，非最终）
 
-| 字段 | OpenSubtitles fallback | Xunlei fallback |
-|------|------------------------|-----------------|
-| `priority` | `0` | `0` |
-| `weight` | `1` | `1` |
-| `concurrencyLimit` | `v0.2.2` OpenSubtitles 凭据池默认值 | `v0.2.2` Xunlei code-layer 默认值（具体值在 plan 阶段敲定，默认沿用 `v0.2.2` 行为） |
-| `cooldownSeconds` | `v0.2.2` OpenSubtitles 默认值 | `v0.2.2` Xunlei code-layer 默认值 |
-| `rotationEnabled` | `true` | `false`（Xunlei 当前无凭据，无需轮换） |
-| `fallbackProviderId` | `null` | `null` |
+| 字段                 | OpenSubtitles fallback              | Xunlei fallback                                                                     |
+| -------------------- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `priority`           | `0`                                 | `0`                                                                                 |
+| `weight`             | `1`                                 | `1`                                                                                 |
+| `concurrencyLimit`   | `v0.2.2` OpenSubtitles 凭据池默认值 | `v0.2.2` Xunlei code-layer 默认值（具体值在 plan 阶段敲定，默认沿用 `v0.2.2` 行为） |
+| `cooldownSeconds`    | `v0.2.2` OpenSubtitles 默认值       | `v0.2.2` Xunlei code-layer 默认值                                                   |
+| `rotationEnabled`    | `true`                              | `false`（Xunlei 当前无凭据，无需轮换）                                              |
+| `fallbackProviderId` | `null`                              | `null`                                                                              |
 
 > 上表为方向性约定；plan 阶段 MUST 给出确切值，并 MUST 与 `v0.2.2` 实际行为 100% 对齐（migration 后行为 MUST 与 `v0.2.2` 期间聚合搜索行为一致）。
 
@@ -396,7 +396,7 @@
 - `v0.2.3` 仅保留"provider key → adapter 映射"由 code-layer 维护（这是必要技术边界，不是产品面特例）；provider 元数据一律持久化到 `providers` 表。
 - 任何"未实现字段 / 只读字段"按统一规则处理: 表单 MUST 不展示该字段或显式标注为只读 + 后续说明；不允许通过"该 provider 受限"作为整例屏蔽。
 
-## 验收标准 *(mandatory)*
+## 验收标准 _(mandatory)_
 
 ### 必满足验收
 
@@ -413,7 +413,7 @@
 - **AC-11**: PGlite 单测覆盖 provider 元数据仓库层基础行为；real Postgres test database 覆盖 migration 验证、enum 兼容性、`v0.2.2` 数据兼容性；Neon staging 用于环境与发布验证。
 - **AC-12**: 本次 MUST NOT 引入新视觉语言、新 token、新组件；`DESIGN.md` 不变；`docs/pages/providers.md` 与 `docs/pages/provider-detail.md` MUST 同步更新。
 
-## 成功标准 *(mandatory)*
+## 成功标准 _(mandatory)_
 
 ### 可度量结果
 
@@ -436,7 +436,7 @@
 - `providerTypes` enum 扩展不影响其他依赖该 enum 的代码路径；具体兼容性在 plan 阶段敲定。
 - 仓库级全局约定（包管理器 `pnpm`、数据库测试分层 `mock / PGlite / Postgres / Neon`、运行时环境映射真源 `docs/runtime/environment-mapping.md`、版本约定真源 `docs/releases/versioning.md`、API 契约链路 `docs/api/openapi.yaml` + Orval + Scalar）以 `.github/copilot-instructions.md` 为真源。
 
-## 范围外后续工作 *(mandatory)*
+## 范围外后续工作 _(mandatory)_
 
 以下内容明确不在 `v0.2.3` 范围内，留作后续版本或独立 feature:
 
@@ -450,7 +450,7 @@
 - 字段改名（`season` → `season_number` / `language` → `languages` 等）的 breaking 升级。
 - Xunlei 凭据池（Xunlei 当前无需 API Key；如未来需要凭据池，需独立 spec）。
 
-## 首批实现范围建议 *(mandatory)*
+## 首批实现范围建议 _(mandatory)_
 
 ### 范围内（`v0.2.3` 首批落地）
 
@@ -488,7 +488,7 @@
 - 字段改名（`season` → `season_number` 等）的 breaking 升级。
 - 第三方 provider 注册中心 / 插件化 provider 框架。
 
-## 需要改动的模块范围 *(mandatory)*
+## 需要改动的模块范围 _(mandatory)_
 
 ### 后端核心改动
 

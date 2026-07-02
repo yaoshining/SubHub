@@ -19,6 +19,7 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 **共享布局规范**: `docs/layouts/admin-layout.md`
 
 **相关页面规范**:
+
 - `docs/pages/login.md` - `/login`，管理员初始化与日常登录入口
 - `docs/pages/dashboard.md` - `/dashboard`，系统健康、未就绪与下一步入口
 - `docs/pages/providers.md` - `/providers`，Provider 比较、分诊、OpenSubtitles 建档
@@ -28,9 +29,11 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - `docs/pages/settings.md` - `/settings`，只读系统状态确认与配置分流
 
 **范围外参考**:
+
 - `docs/pages/access-control.md` - 权限矩阵与审批护栏治理，当前状态为 Draft，不在本期实现；`settings` 页可保留后续能力入口，但不得提前实现复杂权限配置。
 
 **已评审的设计输入**:
+
 - `design/main.pen`：已包含 Dashboard、Login、Providers、Provider Detail、API Keys、Users、Settings 的深/浅主题与 Tablet/Mobile 设计稿；包含 `Empty States – Reference (Dark)`；包含设计变量 `--bg-canvas`、`--bg-surface`、`--bg-card`、`--border-default`、`--font-primary`、`--font-secondary`、`--font-muted`、`--accent`、`--success`、`--warning`、`--danger`、`--radius-*`、`--sidebar-width`。
 - `design/main.pen → Assets / Icons / Lucide`：正式图标资产区。实现阶段新增可复用 Lucide 图标必须回写此区域，并与 `lucide-react` 组件名保持一致。
 - `docs/layouts/admin-layout.md §5.8.1`：Providers、API Keys、Users 空状态卡片基线，分别使用 `cloud-off`、`key-round`、`users`。
@@ -40,6 +43,7 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 **语言/版本**: TypeScript；运行时目标为当前 Next.js LTS 可支持的 Node.js 版本。实现前应在 `package.json` 中固定 Next.js、React、TypeScript 与测试工具版本，避免隐式漂移。
 
 **核心依赖**:
+
 - 前端与全栈路由：Next.js + React + TypeScript
 - UI：TailwindCSS + shadcn/ui；基础组件优先使用 Button、Input、Select、Table、Card、Badge、Tabs、Alert、Dialog、Drawer、AlertDialog、Switch、Accordion、Textarea、Separator、Toast/Sonner
 - 图标：Lucide / `lucide-react`
@@ -51,6 +55,7 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 **存储**: 首版采用 SQLite + Drizzle ORM + drizzle-kit，持久化管理员账号、后台成员状态、成员邀请、后台会话、Provider、Provider 凭据、调用方 Key、轮换历史、查询/下载记录摘要、关键管理动作结果。数据库 schema、migration、访问入口、Drizzle 配置、表设计、索引、约束、敏感字段处理、迁移策略与未来 PostgreSQL 可迁移边界必须遵循 `specs/001-mvp-admin-console/database-design.md`；在未完成该数据库落地前，不得使用仅内存存储作为可交付实现。
 
 **测试**:
+
 - 单元测试：认证校验、基础成员管理、Provider 状态流转、凭据池选择/隔离、调用方 Key 校验、统一错误映射
 - API/契约测试：登录/初始化、成员邀请、成员暂停/恢复、基础会话处置、Provider CRUD、Provider 凭据启停、调用方 Key 创建/轮换/停用、字幕查询/下载、未就绪/未授权错误
 - 前端测试：关键页面状态、关键交互、受控 reveal/copy、未保存变更、空状态、错误状态、响应式行为
@@ -61,12 +66,14 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 **项目类型**: Next.js 全栈 Web 应用 + 对外 HTTP API 网关。
 
 **性能目标**:
+
 - 95% 合法字幕查询请求在 5 秒内返回统一结果集、明确无结果或明确失败状态。
 - 当同一 Provider 下存在至少两个活跃凭据时，单个凭据失效后 100% 新请求不得继续分配到该失效凭据。
 - 凭据切换不得造成长时间挂起；上游超时、429、认证失败必须尽快转换为可识别状态。
 - 后台页面首屏必须先展示骨架/已知信息，再补充下钻读数，不因单个摘要失败整页空白。
 
 **约束条件**:
+
 - 响应式是正式交付范围。Desktop ≥1280px、Tablet 768-1279px、Mobile <768px 的行为必须按 `docs/layouts/admin-layout.md §6` 和页面级 Responsive Behavior 实现。
 - 所有后台页使用共享 Admin Shell；登录页使用简化认证外壳。
 - Provider 凭据与下游调用方 Key 必须在数据模型、API、UI 文案和表格中保持明确区分。
@@ -76,13 +83,14 @@ API 变更贯穿本 feature，因此实现必须同步维护 `docs/api/openapi.y
 - `settings` 页只读确认与分流，不承接 Provider、API Key、用户或权限深配置。
 
 **规模/范围**:
+
 - 本 feature 交付 7 个后台页面与 1 组统一字幕出口 API。
 - 首发上游 Provider 仅要求 OpenSubtitles。
 - 不包含公开注册、多租户、完整 RBAC、权限矩阵、审批流、完整身份治理中心、高级风险分析/风控策略系统、审计导出、手动上传、高级缓存治理、统计分析或告警中心。
 
 ## 宪章检查
 
-*门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。*
+_门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。_
 
 - **代码质量门禁**: 通过。实现任务必须补齐 format、lint、type-check、test 脚本并纳入 CI/PR 检查；当前仓库仅有 API placeholder scripts，属于实现前缺口。
 - **必需测试策略**: 通过。测试范围覆盖登录访问控制、Provider 凭据切换、调用方 Key 授权、查询/下载主流程、设置状态汇总、前端关键状态与响应式。
@@ -311,6 +319,7 @@ drizzle.config.ts
 详见 `specs/001-mvp-admin-console/research.md`。本计划已消除技术上下文中的待澄清项；剩余不确定性作为实现风险与任务依赖处理，而不是未决需求。
 
 核心结论：
+
 - Next.js 全栈单体是当前仓库最小可交付路径。
 - `docs/layouts/admin-layout.md` 是共享布局正式基线。
 - OpenAPI/Orval/Scalar 链路必须在首批 API 实现中落地。
@@ -380,25 +389,25 @@ drizzle.config.ts
 
 ## 风险与依赖
 
-| 风险/依赖 | 当前状态 | 计划处理 |
-|---|---|---|
-| page spec 完整性 | 7 个交付页面均 Active；`access-control` Draft 且范围外 | 后续 tasks 只拆 7 个 Active 页面；`access-control` 仅作为 Settings 分流参考 |
-| 共享布局文档稳定性 | `docs/layouts/admin-layout.md` 已完成并定义响应式骨架 | 作为正式实现基线；实现偏离必须回写布局文档或 page spec |
-| 设计稿定稿程度 | `design/main.pen` 已有主要页面、深/浅主题、Tablet/Mobile 与空状态参考 | 不阻塞实现；UI review 必须对照，新增图标需回写资产区 |
-| Next.js 源码未落地 | 当前仓库尚无 `src/` 应用代码 | tasks 第一阶段必须创建工程基础和质量门禁 |
-| OpenAPI/Orval/Scalar 链路未落地 | 当前仅有 `package.json` placeholder scripts，缺少 `docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/` | API 契约链路作为前置任务；任何 API 实现必须同步契约和生成 client |
-| 持久化方案未固定 | spec 未指定数据库 | tasks 必须先选择自托管友好的持久化方案并补 quickstart；不得以内存存储交付 |
-| OpenSubtitles 真实 API 细节 | 需要实现阶段核对认证、限流、错误语义 | Adapter 层隔离；契约只暴露 SubHub 统一语义，不泄漏上游差异 |
-| 用户管理边界 | Users 页 page spec 包含邀请/会话风险，但完整权限矩阵范围外 | MVP 仅实现登录成员、邀请状态、暂停/恢复、风险会话摘要；复杂 RBAC 后置 |
-| 性能验证数据 | 当前无实现基准 | tasks 中加入查询延迟、凭据切换和上游失败超时验证 |
+| 风险/依赖                       | 当前状态                                                                                                               | 计划处理                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| page spec 完整性                | 7 个交付页面均 Active；`access-control` Draft 且范围外                                                                 | 后续 tasks 只拆 7 个 Active 页面；`access-control` 仅作为 Settings 分流参考 |
+| 共享布局文档稳定性              | `docs/layouts/admin-layout.md` 已完成并定义响应式骨架                                                                  | 作为正式实现基线；实现偏离必须回写布局文档或 page spec                      |
+| 设计稿定稿程度                  | `design/main.pen` 已有主要页面、深/浅主题、Tablet/Mobile 与空状态参考                                                  | 不阻塞实现；UI review 必须对照，新增图标需回写资产区                        |
+| Next.js 源码未落地              | 当前仓库尚无 `src/` 应用代码                                                                                           | tasks 第一阶段必须创建工程基础和质量门禁                                    |
+| OpenAPI/Orval/Scalar 链路未落地 | 当前仅有 `package.json` placeholder scripts，缺少 `docs/api/openapi.yaml`、`orval.config.ts`、`src/lib/api/generated/` | API 契约链路作为前置任务；任何 API 实现必须同步契约和生成 client            |
+| 持久化方案未固定                | spec 未指定数据库                                                                                                      | tasks 必须先选择自托管友好的持久化方案并补 quickstart；不得以内存存储交付   |
+| OpenSubtitles 真实 API 细节     | 需要实现阶段核对认证、限流、错误语义                                                                                   | Adapter 层隔离；契约只暴露 SubHub 统一语义，不泄漏上游差异                  |
+| 用户管理边界                    | Users 页 page spec 包含邀请/会话风险，但完整权限矩阵范围外                                                             | MVP 仅实现登录成员、邀请状态、暂停/恢复、风险会话摘要；复杂 RBAC 后置       |
+| 性能验证数据                    | 当前无实现基准                                                                                                         | tasks 中加入查询延迟、凭据切换和上游失败超时验证                            |
 
 ## 复杂度追踪
 
-| 例外项 | 必要原因 | 为何拒绝更简单方案 |
-|---|---|---|
-| OpenAPI + Orval + Scalar 链路必须首期落地 | 本 feature 同时交付管理端 API 与对外字幕 API，契约漂移会直接影响前端和外部调用方 | 只写 Route Handler 或手写 fetch 类型会导致实现、文档、生成 client 不一致，违反仓库 API 契约约定 |
-| 7 个页面同时进入 MVP | spec 已明确当前 feature 交付 Login、Dashboard、Providers、Provider Detail、API Keys、Users、Settings，且这些页面共同构成单维护者运营闭环 | 只实现 Provider/API Key 页面会缺少登录保护、系统就绪判断、成员入口和设置分流，无法满足 spec 的独立验收场景 |
-| 响应式作为正式范围 | `NFR-008` 和共享布局规范已将 Mobile/Tablet/Desktop 行为列为 MUST | 将响应式留作 polish 会导致后续页面结构返工，并违反 page spec 与 UI review 基线 |
+| 例外项                                    | 必要原因                                                                                                                                 | 为何拒绝更简单方案                                                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| OpenAPI + Orval + Scalar 链路必须首期落地 | 本 feature 同时交付管理端 API 与对外字幕 API，契约漂移会直接影响前端和外部调用方                                                         | 只写 Route Handler 或手写 fetch 类型会导致实现、文档、生成 client 不一致，违反仓库 API 契约约定            |
+| 7 个页面同时进入 MVP                      | spec 已明确当前 feature 交付 Login、Dashboard、Providers、Provider Detail、API Keys、Users、Settings，且这些页面共同构成单维护者运营闭环 | 只实现 Provider/API Key 页面会缺少登录保护、系统就绪判断、成员入口和设置分流，无法满足 spec 的独立验收场景 |
+| 响应式作为正式范围                        | `NFR-008` 和共享布局规范已将 Mobile/Tablet/Desktop 行为列为 MUST                                                                         | 将响应式留作 polish 会导致后续页面结构返工，并违反 page spec 与 UI review 基线                             |
 
 ## 宪章复检（Phase 1 后）
 

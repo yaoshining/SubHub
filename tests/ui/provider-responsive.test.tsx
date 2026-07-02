@@ -6,6 +6,16 @@ import { ProviderDetailClient } from "@/app/(admin)/providers/[providerId]/provi
 import { ProvidersClient } from "@/app/(admin)/providers/providers-client";
 import { renderWithTheme } from "../helpers/ui";
 
+// 模拟 useRouter 和 useSearchParams（Vitest 不会从 ui.tsx 导入 vi.mock 的提升）
+const mockRouterReplace = vi.fn();
+const mockSearchParams = new URLSearchParams();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockRouterReplace }),
+  useSearchParams: () => mockSearchParams,
+  usePathname: () => "/providers",
+}));
+
 const activeCredential = {
   id: "cred_active",
   providerId: "provider_001",
@@ -105,9 +115,7 @@ describe("Provider 响应式行为", () => {
     renderWithTheme(<ProvidersClient />);
 
     await screen.findAllByText("OpenSubtitles Primary");
-    await user.click(
-      screen.getByRole("button", { name: "新增 OpenSubtitles" }),
-    );
+    await user.click(screen.getByRole("button", { name: "创建 Provider" }));
     await user.clear(screen.getByLabelText("Provider 名称"));
     await user.type(
       screen.getByLabelText("Provider 名称"),

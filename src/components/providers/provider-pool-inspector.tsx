@@ -251,10 +251,7 @@ export function ProviderPoolInspector({
         ) : null}
 
         {source.type === "opensubtitles" ? (
-          <OpenSubtitlesInspectorContent
-            source={source}
-            detail={detail}
-          />
+          <OpenSubtitlesInspectorContent source={source} detail={detail} />
         ) : (
           <XunleiInspectorContent source={source} />
         )}

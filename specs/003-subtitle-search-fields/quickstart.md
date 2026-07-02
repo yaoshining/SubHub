@@ -17,12 +17,14 @@
 ### 2. 扩展 gateway 请求模型与定位路径分流
 
 编辑 `src/server/subtitles/subtitle-gateway.ts`：
+
 - `SubtitleSearchInput` 新增 `imdbId?` / `tmdbId?` / `type?`
 - `buildSearchQuery` 重构为 `buildAdapterInput`，按 ID 字段是否存在分流
 
 ### 3. 扩展 adapter 参数映射
 
 编辑 `src/server/providers/opensubtitles-adapter.ts`：
+
 - `OpenSubtitlesSearchInput` 新增 `imdbId` / `tmdbId` / `season` / `episode` / `type`
 - `search` 方法修改 `URLSearchParams` 构造，映射 SubHub 字段到上游参数
 

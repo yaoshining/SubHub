@@ -64,6 +64,7 @@ Step 1: Select Type                    Step 2: 首轮建档（仅 OS）
 **组件**：`ProviderTypeSelector`（新增）。
 
 结构：
+
 ```
 typography: "选择 Provider 类型"（page-title）
 subtitle:   "选择一个 provider 类型开始配置。不同 provider 类型有不同的配置项。"（muted）
@@ -82,6 +83,7 @@ Card Grid（2 columns, ≥640px 保持横向）
 ```
 
 **交互规则**：
+
 - 点击 OS Card → 高亮边框 `border-primary` + Step 2 出现（淡入动画 `fadeIn 200ms`）
 - 点击 Xunlei Card → 无选中效果
 - 如果 `hasExistingXunlei === true`，Xunlei Card 下方显示 `Alert variant="info"`：「已有 Xunlei 实例在运行。Xunlei 为预置 provider，单实例不可重复创建。如需重新接入请联系运维。」
@@ -95,14 +97,14 @@ Card Grid（2 columns, ≥640px 保持横向）
 
 **字段清单**：
 
-| 字段 | 类型 | 必填 | 备注 |
-|------|------|------|------|
-| Provider Name | Input | ✅ | 2–45 字符 |
-| Initial API Key | Input `type="password"` | ✅ | 首个上游凭据 |
-| Priority | Input `number` | 默认 10 | |
-| Weight | Input `number` | 默认 1 | |
-| Concurrency | Input `number` | 默认 3 | |
-| Cooldown (s) | Input `number` | 默认 30 | |
+| 字段            | 类型                    | 必填    | 备注         |
+| --------------- | ----------------------- | ------- | ------------ |
+| Provider Name   | Input                   | ✅      | 2–45 字符    |
+| Initial API Key | Input `type="password"` | ✅      | 首个上游凭据 |
+| Priority        | Input `number`          | 默认 10 |              |
+| Weight          | Input `number`          | 默认 1  |              |
+| Concurrency     | Input `number`          | 默认 3  |              |
+| Cooldown (s)    | Input `number`          | 默认 30 |              |
 
 **表单区划**（`Separator` 分隔）：
 
@@ -122,6 +124,7 @@ Next Steps（后续说明）
 ```
 
 **交互规则**：
+
 - 所有校验在点击「创建」时一次性触发
 - 字段级错误：`label + msg` inline style，红色描边
 - 创建中：Button loading spinner + 所有输入 disabled
@@ -148,14 +151,14 @@ Next Steps（后续说明）
 
 ## 类型选择器状态表
 
-| 状态 | Xunlei Card | OS Card | 说明 |
-|------|-------------|---------|------|
-| Boot（初始） | 可选（默认） | 可选 | 无 pre-selected |
-| OS Selected | 可选（不联动） | 高亮 + Step 2 | |
-| Xunlei Clicked | Alert 弹提示 | 不变 | 不允许选中 |
-| Loading | Spinner 覆盖 | Spinner 覆盖 | 从后端请求 type |
-| OS Created | 不变 | 不可重新选中 | Drawer 关闭 |
-| Error | fallback 显示 | fallback 显示 | 创建失败 |
+| 状态           | Xunlei Card    | OS Card       | 说明            |
+| -------------- | -------------- | ------------- | --------------- |
+| Boot（初始）   | 可选（默认）   | 可选          | 无 pre-selected |
+| OS Selected    | 可选（不联动） | 高亮 + Step 2 |                 |
+| Xunlei Clicked | Alert 弹提示   | 不变          | 不允许选中      |
+| Loading        | Spinner 覆盖   | Spinner 覆盖  | 从后端请求 type |
+| OS Created     | 不变           | 不可重新选中  | Drawer 关闭     |
+| Error          | fallback 显示  | fallback 显示 | 创建失败        |
 
 ## Page-Specific Design Rules
 

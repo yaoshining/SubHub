@@ -29,6 +29,7 @@ spec 中 `season_number` / `episode_number` / `languages` 的命名问题，本 
 **相关页面规范**: 无（纯后端接口扩展）
 
 **已评审的设计输入**:
+
 - `specs/003-subtitle-search-fields/spec.md`：本功能规格
 - `src/server/subtitles/subtitle-gateway.ts`：当前网关实现，`buildSearchQuery` 把所有字段坍缩成 free-text
 - `src/server/providers/opensubtitles-adapter.ts`：当前适配器，`OpenSubtitlesSearchInput` 仅接受 `query` + `language`
@@ -58,7 +59,7 @@ spec 中 `season_number` / `episode_number` / `languages` 的命名问题，本 
 
 ## 宪章检查
 
-*门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。*
+_门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。_
 
 - ✅ 已定义代码质量门禁：`pnpm lint` + `pnpm typecheck` + `pnpm format:write`，CI 强制执行
 - ✅ 已定义必需测试策略：unit（校验逻辑）+ contract（API 行为）+ integration（ID 定位路径与 fallback 路径）
@@ -126,10 +127,10 @@ tests/
 
 ## 复杂度追踪
 
-| 例外项 | 必要原因 | 为何拒绝更简单方案 |
-|-----------|------------|-------------------------------------|
-| 网关层定位路径分流 | ID 定位与 query fallback 的上游参数构造完全不同，不能共用 `buildSearchQuery` | 直接拼进 free-text query 会丢失 ID 定位能力，回到现状 |
-| `type` 与季集字段冲突校验 | `type=movie` + `season`/`episode` 语义矛盾，需在 route 层拦截 | 放任冲突向上游发送会导致错配或上游 400，错误信息不可控 |
+| 例外项                    | 必要原因                                                                     | 为何拒绝更简单方案                                     |
+| ------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 网关层定位路径分流        | ID 定位与 query fallback 的上游参数构造完全不同，不能共用 `buildSearchQuery` | 直接拼进 free-text query 会丢失 ID 定位能力，回到现状  |
+| `type` 与季集字段冲突校验 | `type=movie` + `season`/`episode` 语义矛盾，需在 route 层拦截                | 放任冲突向上游发送会导致错配或上游 400，错误信息不可控 |
 
 ---
 
@@ -137,29 +138,29 @@ tests/
 
 ### 范围内
 
-| 字段 | 来源 | 说明 |
-|------|------|------|
-| `title` | 现有 | 保持，作为 free-text 兜底（映射到上游 `query`） |
-| `year` | 现有 | 保持，辅助区分同名作品 |
-| `season` | 现有 | 保持命名，映射到上游 `season_number` |
-| `episode` | 现有 | 保持命名，映射到上游 `episode_number` |
-| `language` | 现有 | 保持命名，映射到上游 `languages` |
-| `imdb_id` | 新增 | Tier 1；IMDb ID 定位，格式 `tt` + 数字 |
-| `tmdb_id` | 新增 | Tier 1；TMDb ID 定位，正整数 |
-| `type` | 新增 | Tier 1；`movie` / `episode` 枚举 |
+| 字段       | 来源 | 说明                                            |
+| ---------- | ---- | ----------------------------------------------- |
+| `title`    | 现有 | 保持，作为 free-text 兜底（映射到上游 `query`） |
+| `year`     | 现有 | 保持，辅助区分同名作品                          |
+| `season`   | 现有 | 保持命名，映射到上游 `season_number`            |
+| `episode`  | 现有 | 保持命名，映射到上游 `episode_number`           |
+| `language` | 现有 | 保持命名，映射到上游 `languages`                |
+| `imdb_id`  | 新增 | Tier 1；IMDb ID 定位，格式 `tt` + 数字          |
+| `tmdb_id`  | 新增 | Tier 1；TMDb ID 定位，正整数                    |
+| `type`     | 新增 | Tier 1；`movie` / `episode` 枚举                |
 
 ### 范围外
 
-| 字段 | 原因 |
-|------|------|
-| `filename` | Tier 2；辅助字段，价值有限，本次不落地 |
-| `hearing_impaired` | Tier 2；偏好过滤，非定位字段，本次不落地 |
-| `moviehash` | Tier 3；需调用方客户端预计算哈希，SubHub 不提供哈希计算能力 |
-| `foreign_parts_only` | Tier 3；上游支持不稳定 |
-| 字段改名（`season` → `season_number` 等） | breaking 风险，本次不做 |
-| 数据库 schema 变更 | spec 明确不做新数据库 schema 设计 |
-| 前端检索页面 | spec 明确不做 |
-| provider 抽象重构 | spec 明确不做 |
+| 字段                                      | 原因                                                        |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `filename`                                | Tier 2；辅助字段，价值有限，本次不落地                      |
+| `hearing_impaired`                        | Tier 2；偏好过滤，非定位字段，本次不落地                    |
+| `moviehash`                               | Tier 3；需调用方客户端预计算哈希，SubHub 不提供哈希计算能力 |
+| `foreign_parts_only`                      | Tier 3；上游支持不稳定                                      |
+| 字段改名（`season` → `season_number` 等） | breaking 风险，本次不做                                     |
+| 数据库 schema 变更                        | spec 明确不做新数据库 schema 设计                           |
+| 前端检索页面                              | spec 明确不做                                               |
+| provider 抽象重构                         | spec 明确不做                                               |
 
 ### 分批理由
 
@@ -364,34 +365,34 @@ GET /api/subtitles/search
 
 ### 需要修改的文件/模块
 
-| 层 | 文件 | 变更内容 |
-|----|------|----------|
-| Route | `src/app/api/subtitles/search/route.ts` | Zod schema 新增 `imdb_id` / `tmdb_id` / `type` + 跨字段冲突校验 |
-| Gateway | `src/server/subtitles/subtitle-gateway.ts` | `SubtitleSearchInput` 扩展 + `buildSearchQuery` 重构为 `buildAdapterInput` 按定位路径分流 |
-| Adapter | `src/server/providers/opensubtitles-adapter.ts` | `OpenSubtitlesSearchInput` 扩展 + `search` 参数映射 |
-| OpenAPI | `docs/api/openapi.yaml` | `/api/subtitles/search` 新增 3 个 query parameter |
-| Generated | `src/lib/api/generated/` | `pnpm api:client` 重新生成 |
+| 层        | 文件                                            | 变更内容                                                                                  |
+| --------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Route     | `src/app/api/subtitles/search/route.ts`         | Zod schema 新增 `imdb_id` / `tmdb_id` / `type` + 跨字段冲突校验                           |
+| Gateway   | `src/server/subtitles/subtitle-gateway.ts`      | `SubtitleSearchInput` 扩展 + `buildSearchQuery` 重构为 `buildAdapterInput` 按定位路径分流 |
+| Adapter   | `src/server/providers/opensubtitles-adapter.ts` | `OpenSubtitlesSearchInput` 扩展 + `search` 参数映射                                       |
+| OpenAPI   | `docs/api/openapi.yaml`                         | `/api/subtitles/search` 新增 3 个 query parameter                                         |
+| Generated | `src/lib/api/generated/`                        | `pnpm api:client` 重新生成                                                                |
 
 ### 需要更新的测试
 
-| 测试类型 | 文件 | 覆盖内容 |
-|----------|------|----------|
-| Unit | `tests/unit/`（新增 subtitle-search-validation.test.ts） | request validation + `buildAdapterInput` 分流逻辑 |
-| Unit | `tests/unit/`（新增 opensubtitles-adapter-params.test.ts） | adapter 参数映射 |
-| Contract | `tests/contract/subtitles.contract.test.ts` | 新字段 API 行为 + 跨字段冲突 + backward compatibility |
-| Integration | `tests/integration/`（新增或扩展） | ID 定位路径与 fallback 路径端到端 |
-| Contract | `tests/contract/openapi-generated-client.test.ts` | generated client 类型包含新字段 |
+| 测试类型    | 文件                                                       | 覆盖内容                                              |
+| ----------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| Unit        | `tests/unit/`（新增 subtitle-search-validation.test.ts）   | request validation + `buildAdapterInput` 分流逻辑     |
+| Unit        | `tests/unit/`（新增 opensubtitles-adapter-params.test.ts） | adapter 参数映射                                      |
+| Contract    | `tests/contract/subtitles.contract.test.ts`                | 新字段 API 行为 + 跨字段冲突 + backward compatibility |
+| Integration | `tests/integration/`（新增或扩展）                         | ID 定位路径与 fallback 路径端到端                     |
+| Contract    | `tests/contract/openapi-generated-client.test.ts`          | generated client 类型包含新字段                       |
 
 ### 需要更新的文档
 
-| 文档 | 变更内容 |
-|------|----------|
-| `docs/api/openapi.yaml` | `/api/subtitles/search` 请求参数扩展 |
-| `specs/003-subtitle-search-fields/plan.md` | 本文件 |
-| `specs/003-subtitle-search-fields/research.md` | 第 0 阶段研究产物 |
-| `specs/003-subtitle-search-fields/data-model.md` | 第 1 阶段数据模型 |
-| `specs/003-subtitle-search-fields/contracts/subtitle-search-request.md` | 第 1 阶段契约 |
-| `specs/003-subtitle-search-fields/quickstart.md` | 第 1 阶段快速上手 |
+| 文档                                                                    | 变更内容                             |
+| ----------------------------------------------------------------------- | ------------------------------------ |
+| `docs/api/openapi.yaml`                                                 | `/api/subtitles/search` 请求参数扩展 |
+| `specs/003-subtitle-search-fields/plan.md`                              | 本文件                               |
+| `specs/003-subtitle-search-fields/research.md`                          | 第 0 阶段研究产物                    |
+| `specs/003-subtitle-search-fields/data-model.md`                        | 第 1 阶段数据模型                    |
+| `specs/003-subtitle-search-fields/contracts/subtitle-search-request.md` | 第 1 阶段契约                        |
+| `specs/003-subtitle-search-fields/quickstart.md`                        | 第 1 阶段快速上手                    |
 
 ### 不需要更新的文档
 

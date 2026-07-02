@@ -19,6 +19,7 @@
 **共享布局规范**: `docs/layouts/admin-layout.md`
 
 **相关页面规范**:
+
 - `docs/pages/login.md`
 - `docs/pages/dashboard.md`
 - `docs/pages/providers.md`
@@ -28,6 +29,7 @@
 - `docs/pages/settings.md`
 
 **已评审的设计输入**:
+
 - `specs/001-mvp-admin-console/spec.md`：现有 MVP 的正式产品范围
 - `specs/001-mvp-admin-console/plan.md`：当前技术基线、质量门禁与实现范围
 - `specs/001-mvp-admin-console/tasks.md`：当前 env / storage / migration / regression 触点
@@ -40,6 +42,7 @@
 **语言/版本**: TypeScript；运行时仍以当前 Next.js LTS 可支持的 Node.js 版本为基线。当前仓库已锁定 `next@16.2.6`、`react@19.2.6`、`typescript@6.0.3`。
 
 **核心依赖**:
+
 - Next.js + React + TypeScript
 - pnpm
 - Drizzle ORM + drizzle-kit
@@ -49,12 +52,14 @@
 - SQLite 仅作为历史实现参考，不进入正式 Vercel 运行时依赖路径
 
 **存储**:
+
 - 正式运行目标：Neon Postgres
 - 环境分层：prod database、staging database、dev database
 - 测试隔离目标：统一的 `test` 数据库语义（本地落在 Docker Postgres，CI 落在 GitHub Actions Postgres service，仅供数据库相关单测、集成测试、契约测试与 CI 真实数据库校验使用）
 - 旧基线：SQLite 文件数据库，仅作为历史实现参考，不再作为正式部署目标
 
 **测试**:
+
 - `vitest` 单元、集成与契约测试
 - `mock / no-db` 用于纯逻辑快速单测
 - `PGlite` 用于本地快速数据库单测层，优先覆盖少量 repository / service 层数据库行为
@@ -66,6 +71,7 @@
 - `001-mvp-admin-console` 主链路回归测试
 
 **目标平台**:
+
 - Vercel Production：`main`
 - Vercel Preview：`preview` 分支，以及命中仓库级 Preview 分支白名单的普通 Preview 分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*`
 - 本地 Development：`pnpm dev`
@@ -73,11 +79,13 @@
 **项目类型**: Next.js 全栈 Web 应用 + 对外 HTTP API 网关；当前 feature 只调整运行底座，不改变应用形态。
 
 **性能目标**:
+
 - 保持 `001-mvp-admin-console` 已定义的查询与后台交互性能基线不回退
 - 数据库环境解析失败时，应用在启动期快速失败，而不是进入半可用状态
 - migration、bootstrap 和 readiness 校验必须可在单个发布窗口内完成并给出明确结果
 
 **约束条件**:
+
 - 不扩大 `001-mvp-admin-console` 的产品功能、页面职责、API 范围或 UX 范围
 - 环境切换必须由 Vercel 环境变量与分支规则驱动，不得依赖手工改连数据库
 - Vercel 对当前部署只注入唯一一组 `DATABASE_URL` / `DATABASE_URL_UNPOOLED`；应用层不得同时持有 prod、staging、dev 多套数据库 URL 后再自行路由
@@ -88,12 +96,13 @@
 - `test` 数据库是测试隔离语义，不是新的产品环境层，也不是当前阶段要求新增的 Vercel 部署层
 
 **规模/范围**:
+
 - 影响当前全部 MVP 页面、管理端 API、对外字幕 API、数据库访问层、环境变量层、部署链路和测试链路
 - 不引入新页面、不引入新产品能力、不引入 PR 级数据库 branch 自动化
 
 ## 宪章检查
 
-*门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。*
+_门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。_
 
 - **代码质量门禁**: 通过。计划继续沿用 `pnpm format`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm db:check`、`pnpm api:check` 作为核心门禁，并新增 Postgres 迁移与初始化验证步骤。
 - **必需测试策略**: 通过。覆盖环境映射、数据库 URL 解析、Postgres schema/migration、bootstrap/seed、三层环境 smoke test、独立 `test` 数据库隔离/reset 策略与 001 主链路回归。
@@ -300,8 +309,8 @@ tests/
 
 ## 复杂度追踪
 
-| 例外项 | 必要原因 | 为何拒绝更简单方案 |
-|-----------|------------|-------------------------------------|
-| Postgres 新 migration 基线 | SQLite 与 Postgres 运行语义不同，且当前 feature 明确不要求继承 SQLite migration 历史 | 继续沿用 SQLite 历史会把旧方言与新方言混在一起，增加迁移风险与长期维护成本 |
-| 运行时 pooled / direct 双 URL | Vercel 运行时与数据库 DDL / bootstrap 的连接模式不同 | 只保留单一 URL 会让运行时和迁移脚本在连接边界上互相污染 |
-| Vercel 与 migration workflow 分离 | 必须避免在构建/启动期隐式改库 | 把 migration 塞进 Vercel build/start 会让发布失败点不可控、不可审计 |
+| 例外项                            | 必要原因                                                                             | 为何拒绝更简单方案                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Postgres 新 migration 基线        | SQLite 与 Postgres 运行语义不同，且当前 feature 明确不要求继承 SQLite migration 历史 | 继续沿用 SQLite 历史会把旧方言与新方言混在一起，增加迁移风险与长期维护成本 |
+| 运行时 pooled / direct 双 URL     | Vercel 运行时与数据库 DDL / bootstrap 的连接模式不同                                 | 只保留单一 URL 会让运行时和迁移脚本在连接边界上互相污染                    |
+| Vercel 与 migration workflow 分离 | 必须避免在构建/启动期隐式改库                                                        | 把 migration 塞进 Vercel build/start 会让发布失败点不可控、不可审计        |

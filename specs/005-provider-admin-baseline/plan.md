@@ -15,6 +15,7 @@
 ### 交付目标
 
 在保留 `v0.2.2` 所有聚合搜索行为不变的前提下：
+
 1. `providerTypes` 常量数组扩展为 `["opensubtitles","xunlei"]`
 2. 新增 migration：DROP + RECREATE CHECK constraint + 插入 Xunlei 默认 provider 行 + 追加 `lastHealthCheckedAt` 列
 3. provider-repository 扩展：filter by status, update status, update config, fallback 自引用/循环引用校验
@@ -31,15 +32,15 @@
 
 ### 当前 v0.2.2 / v0.2.1 的 provider 管理现状
 
-| 维度 | OpenSubtitles | Xunlei |
-|------|---------------|--------|
-| `providers` 表 | 有 1 行（bootstrap 创建或首次 create-drawer） | 不存在 |
-| providerTypes enum | `["opensubtitles"]` | 不在 enum 中 |
-| 凭据池 | 完整隔离/恢复 | 无凭据 |
-| gateway 调用路径 | callOpenSubtitles: 读 DB -> credential pool -> adapter | callXunlei: 硬编码 providerId, 不读 DB, 不经过 credential pool |
-| 启停 | DB status + enableProvider/disableProvider | 代码层无启停 |
-| 管理台可见 | 可见 | 不可见 |
-| provider-registry | 返回完整 adapter + metadata | 返回 adapter + 硬编码元数据 |
+| 维度               | OpenSubtitles                                          | Xunlei                                                         |
+| ------------------ | ------------------------------------------------------ | -------------------------------------------------------------- |
+| `providers` 表     | 有 1 行（bootstrap 创建或首次 create-drawer）          | 不存在                                                         |
+| providerTypes enum | `["opensubtitles"]`                                    | 不在 enum 中                                                   |
+| 凭据池             | 完整隔离/恢复                                          | 无凭据                                                         |
+| gateway 调用路径   | callOpenSubtitles: 读 DB -> credential pool -> adapter | callXunlei: 硬编码 providerId, 不读 DB, 不经过 credential pool |
+| 启停               | DB status + enableProvider/disableProvider             | 代码层无启停                                                   |
+| 管理台可见         | 可见                                                   | 不可见                                                         |
+| provider-registry  | 返回完整 adapter + metadata                            | 返回 adapter + 硬编码元数据                                    |
 
 ### 关键兼容性约束
 
@@ -47,8 +48,6 @@
 2. **enableProvider 凭据检查**（`provider-service.ts ~line 98-141`）：当前检查 `availableCredentialCount > 0`。启用 Xunlei 会失败。**必须改为 type-aware 跳过。**
 3. **callXunlei 硬编码路径**：当前 gateway ~line 260-298 不读 DB。**必须改为读 DB 路径。**
 4. **迁移 002 SQL CHECK constraint**：`"providers_type_check" CHECK ("providers"."type" in ('opensubtitles'))`。**必须在新 migration 中 drop 并 recreate。**
-
-
 
 ## 3. UX / Page Structure Plan
 
@@ -84,6 +83,7 @@
 ```
 
 **关键变化：**
+
 - 每行新增 `type` Badge（`Badge variant="secondary"`），文字为 `OpenSubtitles` / `Xunlei`
 - 列表按 type 可筛选（Tab 切换或下拉筛选）：`All` / `OpenSubtitles` / `Xunlei`
 - "新增"按钮仅触发 OpenSubtitles 创建流（create-provider-drawer）；不暴露"新增 Xunlei"入口
@@ -92,6 +92,7 @@
 ### `/providers/:providerId` 详情页结构升级
 
 **通用区域（所有 type 共享）：**
+
 - 基本信息：`name`（只读）、`type`（只读 Badge）、`status`（可切换 Switch）
 - 策略配置：`priority`、`weight`、`concurrencyLimit`、`cooldownSeconds`（均可编辑）
 - `fallbackProviderId`：可选，校验自引用/循环引用
@@ -99,22 +100,22 @@
 
 **Type 差异区域：**
 
-| 字段/区域 | OpenSubtitles | Xunlei |
-|-----------|---------------|--------|
-| `rotationEnabled` | 可编辑 | 不展示（对 Xunlei 无语义） |
-| `fallbackProviderId` | 可选（可设为 Xunlei 或 null） | 可选（可设为 OpenSubtitles 或 null） |
-| 凭据池面板 | 完整 CRUD | "无凭据可配"空态 + "该 provider 当前不需要 API Key"说明 |
-| "新增凭据"按钮 | 可见 | 不可见/显式禁用 |
+| 字段/区域            | OpenSubtitles                 | Xunlei                                                  |
+| -------------------- | ----------------------------- | ------------------------------------------------------- |
+| `rotationEnabled`    | 可编辑                        | 不展示（对 Xunlei 无语义）                              |
+| `fallbackProviderId` | 可选（可设为 Xunlei 或 null） | 可选（可设为 OpenSubtitles 或 null）                    |
+| 凭据池面板           | 完整 CRUD                     | "无凭据可配"空态 + "该 provider 当前不需要 API Key"说明 |
+| "新增凭据"按钮       | 可见                          | 不可见/显式禁用                                         |
 
 **States 矩阵：**
 
-| 状态 | 视觉表现 | gateway 行为 | 管理台可操作 |
-|------|----------|-------------|-------------|
-| `enabled` | 绿色 Switch ON | 参与调度 | 可禁用，可编辑配置 |
-| `disabled` | 灰色 Switch OFF | 跳过 | 可启用，可编辑配置 |
-| `degraded` | 黄色/警告 Switch ON + 警告图标 | 参与调度（调用方可决定是否降级处理） | 可禁用，可编辑配置 |
-| `needs_config` | 红色/提示 Switch OFF + 配置提示 | 跳过，返回 needs_config 错误 | 不可启用，引导配置 |
-| empty（无 OS 实例） | 空态页："先添加首个 OpenSubtitles Provider" | OS 不存在，Xunlei 正常 | 可见新增 OS 入口 |
+| 状态                | 视觉表现                                    | gateway 行为                         | 管理台可操作       |
+| ------------------- | ------------------------------------------- | ------------------------------------ | ------------------ |
+| `enabled`           | 绿色 Switch ON                              | 参与调度                             | 可禁用，可编辑配置 |
+| `disabled`          | 灰色 Switch OFF                             | 跳过                                 | 可启用，可编辑配置 |
+| `degraded`          | 黄色/警告 Switch ON + 警告图标              | 参与调度（调用方可决定是否降级处理） | 可禁用，可编辑配置 |
+| `needs_config`      | 红色/提示 Switch OFF + 配置提示             | 跳过，返回 needs_config 错误         | 不可启用，引导配置 |
+| empty（无 OS 实例） | 空态页："先添加首个 OpenSubtitles Provider" | OS 不存在，Xunlei 正常               | 可见新增 OS 入口   |
 
 > 注意：`needs_config` 在 v0.2.3 中由代码手动设置，不涉及自动化判定。`degraded` 由 gateway 的 `syncProviderFailureState` 设置在 provider 级别（当前只在 credential 级别，需扩展）。
 
@@ -123,6 +124,7 @@
 **决策：保留 OpenSubtitles-only 创建流。不暴露"新增 Xunlei"入口。**
 
 理由：
+
 1. Xunlei 是单一实例 provider，migration 预置即可
 2. UI 暴露"新增 Xunlei"会误导用户认为可以创建多实例
 3. `providers` 表的 `(type, name)` unique 约束允许同名同 type 的多行，但 Xunlei 的多实例无实际用例
@@ -142,18 +144,23 @@
 ### providerTypes 扩展（text + CHECK constraint，非原生 Postgres enum）
 
 当前 `schema.ts` 中 `providers.type` 的定义为：
+
 ```typescript
 // schema.ts:218
 type: text("type", { enum: providerTypes }).notNull(),
 // schema.ts:240 — CHECK constraint 由 drizzle 的 { enum: } 选项生成
 ```
+
 对应的 migration 002 SQL：
+
 ```sql
 CONSTRAINT "providers_type_check" CHECK ("providers"."type" IN ('opensubtitles'))
 ```
+
 这是 **Drizzle `text({ enum })` + CHECK constraint 模式**，不是原生 Postgres `CREATE TYPE ... AS ENUM`。因此 migration 方案不涉及 `ALTER TYPE`。
 
 **变更方式：**
+
 ```diff
 - export const providerTypes = ["opensubtitles"] as const;
 + export const providerTypes = ["opensubtitles", "xunlei"] as const;
@@ -191,29 +198,29 @@ WHERE "type" = 'xunlei' AND "last_health_status" IS NULL;
 
 **风险与幂等性：**
 
-| 风险 | 缓解 |
-|------|------|
-| DROP CONSTRAINT 若不存在 | `IF EXISTS` 确保幂等 |
-| ADD CONSTRAINT 在旧行上失败 | 旧行 type 均为 'opensubtitles'，在新约束集合中，成功 |
-| 重复运行 migration | `IF EXISTS` (constraint) + `ON CONFLICT DO NOTHING` (insert) 确保幂等 |
-| constraint 名称必须与现有一致 | `providers_type_check` — 与 migration 002 名称对齐 |
+| 风险                          | 缓解                                                                  |
+| ----------------------------- | --------------------------------------------------------------------- |
+| DROP CONSTRAINT 若不存在      | `IF EXISTS` 确保幂等                                                  |
+| ADD CONSTRAINT 在旧行上失败   | 旧行 type 均为 'opensubtitles'，在新约束集合中，成功                  |
+| 重复运行 migration            | `IF EXISTS` (constraint) + `ON CONFLICT DO NOTHING` (insert) 确保幂等 |
+| constraint 名称必须与现有一致 | `providers_type_check` — 与 migration 002 名称对齐                    |
 
 ### Xunlei 默认 provider 行定义
 
-| 字段 | 默认值 | 理由 |
-|------|--------|------|
-| `name` | `'Xunlei'` | 与 provider-registry.ts key 对应 |
-| `type` | `'xunlei'` | 新 enum 值 |
-| `status` | `'enabled'` | 保持与 v0.2.2 行为一致 |
-| `priority` | `5` | 中等优先级，低于 OS（10） |
-| `weight` | `1` | 标准权重 |
-| `concurrencyLimit` | `1` | Xunlei 并发限制较低 |
-| `rotationEnabled` | `false` | Xunlei 无凭据可轮换 |
-| `cooldownSeconds` | `0` | 默认无冷却 |
-| `fallbackProviderId` | `NULL` | 无默认 fallback |
-| `lastHealthStatus` | `'unknown'` | 尚未执行健康检查 |
-| `lastErrorSummary` | `NULL` | 尚无错误 |
-| `lastHealthCheckedAt` | `NULL`（若确认纳入） | 范围决策项 — 见 §8 确认项 #6 |
+| 字段                  | 默认值               | 理由                             |
+| --------------------- | -------------------- | -------------------------------- |
+| `name`                | `'Xunlei'`           | 与 provider-registry.ts key 对应 |
+| `type`                | `'xunlei'`           | 新 enum 值                       |
+| `status`              | `'enabled'`          | 保持与 v0.2.2 行为一致           |
+| `priority`            | `5`                  | 中等优先级，低于 OS（10）        |
+| `weight`              | `1`                  | 标准权重                         |
+| `concurrencyLimit`    | `1`                  | Xunlei 并发限制较低              |
+| `rotationEnabled`     | `false`              | Xunlei 无凭据可轮换              |
+| `cooldownSeconds`     | `0`                  | 默认无冷却                       |
+| `fallbackProviderId`  | `NULL`               | 无默认 fallback                  |
+| `lastHealthStatus`    | `'unknown'`          | 尚未执行健康检查                 |
+| `lastErrorSummary`    | `NULL`               | 尚无错误                         |
+| `lastHealthCheckedAt` | `NULL`（若确认纳入） | 范围决策项 — 见 §8 确认项 #6     |
 
 ### 对现有 OpenSubtitles 行的兼容性
 
@@ -226,6 +233,7 @@ WHERE "type" = 'xunlei' AND "last_health_status" IS NULL;
 **决策：`baseUrl` 不持久化到 `providers` 表。**
 
 理由：
+
 1. `baseUrl` 属于环境配置而非 provider 实例配置
 2. 若放入 DB，每个实例都需 baseUrl 字段，增加 migration 复杂度且极少编辑
 3. 边界清晰：DB 存放"运行时策略元数据"，代码/环境存放"基础设施地址"
@@ -242,6 +250,7 @@ WHERE "type" = 'xunlei' AND "last_health_status" IS NULL;
 **现有：** `GET /api/admin/providers` -- 已存在，返回所有 provider 含凭据计数。
 
 **增强点：**
+
 - 支持 `?type=opensubtitles|xunlei` 筛选
 - 支持 `?status=enabled|disabled|degraded|needs_config` 筛选
 - 返回列表包含 `type` Badge 所需字段
@@ -251,6 +260,7 @@ WHERE "type" = 'xunlei' AND "last_health_status" IS NULL;
 **现有：** `GET /api/admin/providers/{providerId}` -- 已存在。
 
 **增强点：**
+
 - 确保 Xunlei 的 `credentials` 返回空数组 `[]`
 - 返回 `lastHealthCheckedAt`（新字段）
 
@@ -267,10 +277,10 @@ async function enableProvider(providerId: string) {
   // 当且仅当 provider.type 需要凭据时才检查
   if (credentialPool.hasCredentials(provider.type)) {
     if ((await credentialPool.countByProvider(providerId)) <= 0) {
-      throw new Error('Provider needs at least one credential');
+      throw new Error("Provider needs at least one credential");
     }
   }
-  return providerRepository.updateStatus(providerId, 'enabled');
+  return providerRepository.updateStatus(providerId, "enabled");
 }
 ```
 
@@ -279,6 +289,7 @@ async function enableProvider(providerId: string) {
 **现有：** `PATCH /api/admin/providers/{providerId}` -- 已存在。
 
 **增强点：**
+
 - PATCH schema 增加 `status` 可选字段
 - 对 Xunlei provider 的 PATCH 请求中若包含 `rotationEnabled`，后端静默忽略并返回实际值
 
@@ -289,10 +300,10 @@ async function enableProvider(providerId: string) {
 ```typescript
 // getProviderCandidates 改造前：p.availableCredentialCount > 0 (Xunlei 被过滤)
 // 改造后：
-const candidates = providers.filter(p => {
-  const isActive = p.status === 'enabled' || p.status === 'degraded';
+const candidates = providers.filter((p) => {
+  const isActive = p.status === "enabled" || p.status === "degraded";
   if (!isActive) return false;
-  if (p.type === 'xunlei') return true;  // 跳过凭据检查
+  if (p.type === "xunlei") return true; // 跳过凭据检查
   return p.availableCredentialCount > 0;
 });
 ```
@@ -301,20 +312,20 @@ const candidates = providers.filter(p => {
 
 ### Provider-Registry 职责边界
 
-| 当前职责 | 保留/移除 | 说明 |
-|---------|-----------|------|
-| provider key -> adapter 映射 | 保留 | 核心职责 |
-| Xunlei 元数据常量 | 移除 | 已移至 DB |
-| OpenSubtitles 元数据 | 移除 | 保持一致性 |
+| 当前职责                     | 保留/移除 | 说明       |
+| ---------------------------- | --------- | ---------- |
+| provider key -> adapter 映射 | 保留      | 核心职责   |
+| Xunlei 元数据常量            | 移除      | 已移至 DB  |
+| OpenSubtitles 元数据         | 移除      | 保持一致性 |
 
 ### Credential Pool 差异处理
 
-| 操作 | OpenSubtitles | Xunlei |
-|------|---------------|--------|
-| `selectProviderCredential` | 正常选择 | 不调用 |
-| `markCredentialFailure` | 正常标记 | 不调用 |
-| `markCredentialSuccess` | 正常标记 | 不调用 |
-| 凭据列表 | 返回凭据行 | 返回空数组 |
+| 操作                       | OpenSubtitles | Xunlei     |
+| -------------------------- | ------------- | ---------- |
+| `selectProviderCredential` | 正常选择      | 不调用     |
+| `markCredentialFailure`    | 正常标记      | 不调用     |
+| `markCredentialSuccess`    | 正常标记      | 不调用     |
+| 凭据列表                   | 返回凭据行    | 返回空数组 |
 
 > 实现方式：在 credential-pool.ts 中新增 `hasCredentials(providerType)` 方法。
 
@@ -324,17 +335,18 @@ const candidates = providers.filter(p => {
 
 ### 对 v0.2.2 聚合搜索 API 的兼容性
 
-| 维度 | v0.2.2 行为 | v0.2.3 行为 | 兼容性 |
-|------|-------------|-------------|--------|
-| 搜索请求体 | SubtitleSearchInput | 不变 | 完全兼容 |
-| 搜索响应体 | success/partial 语义 | 不变 | 完全兼容 |
-| provider_failures[] | 含 OS + Xunlei 信息 | 不变 | 完全兼容 |
-| provider 字段 | provider key 字符串 | 不变 | 完全兼容 |
-| Xunlei 搜索行为 | 硬编码调用 | DB 驱动调用 | 行为一致（初期值相同） |
-| disabled Xunlei | 始终调用 | 跳过 | 行为变化，但此为新功能 |
-| 排序/权重 | 代码层常量 | DB 持久化值 | 初期值相同 |
+| 维度                | v0.2.2 行为          | v0.2.3 行为 | 兼容性                 |
+| ------------------- | -------------------- | ----------- | ---------------------- |
+| 搜索请求体          | SubtitleSearchInput  | 不变        | 完全兼容               |
+| 搜索响应体          | success/partial 语义 | 不变        | 完全兼容               |
+| provider_failures[] | 含 OS + Xunlei 信息  | 不变        | 完全兼容               |
+| provider 字段       | provider key 字符串  | 不变        | 完全兼容               |
+| Xunlei 搜索行为     | 硬编码调用           | DB 驱动调用 | 行为一致（初期值相同） |
+| disabled Xunlei     | 始终调用             | 跳过        | 行为变化，但此为新功能 |
+| 排序/权重           | 代码层常量           | DB 持久化值 | 初期值相同             |
 
 **保证方式：**
+
 1. Xunlei migration 默认值与 v0.2.2 代码层常量完全对齐
 2. gateway 改造后首次运行行为不变
 3. disabled provider 跳过是新行为，不影响 v0.2.2 的"一切启用"场景
@@ -342,27 +354,25 @@ const candidates = providers.filter(p => {
 
 ### 对既有 OpenSubtitles 管理台流程的兼容性
 
-| 流程 | v0.1.0/v0.2.0 行为 | v0.2.3 行为 | 兼容性 |
-|------|--------------------|-------------|--------|
-| provider 列表 | 单列 OS | 双列 OS + Xunlei | 新增行不影响 OS |
-| provider 详情 | OS 字段 + 凭据池 | OS 字段 + 凭据池 + 新字段 | 新字段不影响既有流程 |
-| 启用 OS | 检查凭据 -> enable | 检查凭据 -> enable | 完全不变 |
-| 配置 OS | 编辑 priority 等 | 同左 + 可选 status | 向后兼容 |
-| 新增 OS | create-provider-drawer | 同左 | 完全不变 |
-
-
+| 流程          | v0.1.0/v0.2.0 行为     | v0.2.3 行为               | 兼容性               |
+| ------------- | ---------------------- | ------------------------- | -------------------- |
+| provider 列表 | 单列 OS                | 双列 OS + Xunlei          | 新增行不影响 OS      |
+| provider 详情 | OS 字段 + 凭据池       | OS 字段 + 凭据池 + 新字段 | 新字段不影响既有流程 |
+| 启用 OS       | 检查凭据 -> enable     | 检查凭据 -> enable        | 完全不变             |
+| 配置 OS       | 编辑 priority 等       | 同左 + 可选 status        | 向后兼容             |
+| 新增 OS       | create-provider-drawer | 同左                      | 完全不变             |
 
 ## 7. Testing Strategy
 
 ### 测试分层总览
 
-| 层 | 工具 | 覆盖范围 | 阶段 |
-|----|------|---------|------|
-| 单元测试 | vitest + mock | provider-repository 方法、credential-pool type-aware、service enable/disable | tasks |
-| 契约测试 | vitest + supertest | admin-providers API contract | tasks |
-| 集成测试 (PGlite) | vitest + drizzle-pglite | repository CRUD、type-aware 过滤、status 更新、fallback 校验 | tasks |
-| 集成测试 (real Postgres) | vitest + @neondatabase/serverless | migration DDL、enum 扩展、CHECK constraint 重建、Xunlei 行插入 | tasks |
-| E2E/UI 状态 | vitest + testing-library | provider 列表 type badge、字段自适应、空态/禁态渲染 | tasks |
+| 层                       | 工具                              | 覆盖范围                                                                     | 阶段  |
+| ------------------------ | --------------------------------- | ---------------------------------------------------------------------------- | ----- |
+| 单元测试                 | vitest + mock                     | provider-repository 方法、credential-pool type-aware、service enable/disable | tasks |
+| 契约测试                 | vitest + supertest                | admin-providers API contract                                                 | tasks |
+| 集成测试 (PGlite)        | vitest + drizzle-pglite           | repository CRUD、type-aware 过滤、status 更新、fallback 校验                 | tasks |
+| 集成测试 (real Postgres) | vitest + @neondatabase/serverless | migration DDL、enum 扩展、CHECK constraint 重建、Xunlei 行插入               | tasks |
+| E2E/UI 状态              | vitest + testing-library          | provider 列表 type badge、字段自适应、空态/禁态渲染                          | tasks |
 
 ### 单元测试覆盖范围
 
@@ -432,39 +442,39 @@ const candidates = providers.filter(p => {
 
 ### 已决决策（本 plan 已明确）
 
-| 问题 | 决策 | 理由 |
-|------|------|------|
-| Xunlei 是否允许多实例 | 不允许多实例。单一实例 | 无实际用例；migration 预置即可 |
-| Xunlei 是否暴露"新增"入口 | 不暴露。create-drawer 保持 OS-only | 若未来需要恢复，走运维脚本 |
-| 哪些字段对 Xunlei 为只读/不展示 | `rotationEnabled` 不展示；`name`、`type` 全局只读；健康字段全局只读 | rotationEnabled 对无凭据无语义 |
-| `baseUrl` 是否进入 DB | 不进入 DB | 属于环境配置 |
-| `rotationEnabled` 对 Xunlei 语义 | 无语义 -- UI 不展示，PATCH 静默忽略 | 无凭据池，轮换不适用 |
-| `fallbackProviderId` 对 Xunlei 语义 | 有效 -- OS 可 fallback 到 Xunlei；Xunlei 可 fallback 到 OS | Xunlei 优先级较低，fallback 场景有限 |
-| 健康状态写回方式 | gateway 增强 `syncProviderFailureState`：搜索完成后写回 provider 表 | 当前仅在 credential 级别记录 |
-| OS 创建时 type 限制 | 保留 `z.literal("opensubtitles")` | 与"不暴露新增 Xunlei"一致 |
-| 聚合搜索 API 向后兼容 | 完全兼容 | 见 6 |
-| gateway credential 检查 | type-aware 跳过 | 见 5 |
+| 问题                                | 决策                                                                | 理由                                 |
+| ----------------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| Xunlei 是否允许多实例               | 不允许多实例。单一实例                                              | 无实际用例；migration 预置即可       |
+| Xunlei 是否暴露"新增"入口           | 不暴露。create-drawer 保持 OS-only                                  | 若未来需要恢复，走运维脚本           |
+| 哪些字段对 Xunlei 为只读/不展示     | `rotationEnabled` 不展示；`name`、`type` 全局只读；健康字段全局只读 | rotationEnabled 对无凭据无语义       |
+| `baseUrl` 是否进入 DB               | 不进入 DB                                                           | 属于环境配置                         |
+| `rotationEnabled` 对 Xunlei 语义    | 无语义 -- UI 不展示，PATCH 静默忽略                                 | 无凭据池，轮换不适用                 |
+| `fallbackProviderId` 对 Xunlei 语义 | 有效 -- OS 可 fallback 到 Xunlei；Xunlei 可 fallback 到 OS          | Xunlei 优先级较低，fallback 场景有限 |
+| 健康状态写回方式                    | gateway 增强 `syncProviderFailureState`：搜索完成后写回 provider 表 | 当前仅在 credential 级别记录         |
+| OS 创建时 type 限制                 | 保留 `z.literal("opensubtitles")`                                   | 与"不暴露新增 Xunlei"一致            |
+| 聚合搜索 API 向后兼容               | 完全兼容                                                            | 见 6                                 |
+| gateway credential 检查             | type-aware 跳过                                                     | 见 5                                 |
 
 ### 留待 Design/Tasks 阶段细化的问题
 
-| 问题 | 当前结论 | 需 tasks 细化 |
-|------|---------|---------------|
-| dead credential 检测触发 provider degraded | gateway syncProviderFailureState 增强范围 | 确定触发条件 |
-| migration 回滚策略 | 手动删除 Xunlei 行 + revert enum | deployment runbook 中记录 |
-| 前端筛选组件具体实现 | Tab 切换或下拉筛选 | tasks 阶段决定 |
-| PATCH 静默忽略 vs 返回 400 | 推荐静默忽略 | tasks 阶段在 schema 中标注 |
-| 健康检查写回时机 | gateway 搜索后处理 | 是否在 search() 末尾统一执行 |
+| 问题                                       | 当前结论                                  | 需 tasks 细化                |
+| ------------------------------------------ | ----------------------------------------- | ---------------------------- |
+| dead credential 检测触发 provider degraded | gateway syncProviderFailureState 增强范围 | 确定触发条件                 |
+| migration 回滚策略                         | 手动删除 Xunlei 行 + revert enum          | deployment runbook 中记录    |
+| 前端筛选组件具体实现                       | Tab 切换或下拉筛选                        | tasks 阶段决定               |
+| PATCH 静默忽略 vs 返回 400                 | 推荐静默忽略                              | tasks 阶段在 schema 中标注   |
+| 健康检查写回时机                           | gateway 搜索后处理                        | 是否在 search() 末尾统一执行 |
 
 ### 风险清单
 
-| 风险 | 影响 | 缓解措施 |
-|------|------|---------|
+| 风险                                                   | 影响                             | 缓解措施                                                             |
+| ------------------------------------------------------ | -------------------------------- | -------------------------------------------------------------------- |
 | CHECK constraint DROP + RECREATE 未对齐 Drizzle schema | migration 重复运行产生 diff 报警 | 手写 migration SQL 确保精确控制；运行 `drizzle-kit check` 验证一致性 |
-| Xunlei ON CONFLICT 插入失败 | migration 失败 | ON CONFLICT DO NOTHING 确保幂等 |
-| 现有 provider 行 cascade 问题 | 删除 OS 时级联删除 credential | 验证现有 FK 约束 |
-| PGlite 无法覆盖真实 Postgres DDL | migration 风险仅生产发现 | Real Postgres 集成测试作为 CI 门禁 |
-| enableProvider 凭据检查未按 type 修复 | 启用 Xunlei 永远失败 | 单元测试覆盖；code review 必查 |
-| getProviderCandidates 遗漏 Xunlei | Xunlei 永远不会被调度 | 集成测试验证 |
+| Xunlei ON CONFLICT 插入失败                            | migration 失败                   | ON CONFLICT DO NOTHING 确保幂等                                      |
+| 现有 provider 行 cascade 问题                          | 删除 OS 时级联删除 credential    | 验证现有 FK 约束                                                     |
+| PGlite 无法覆盖真实 Postgres DDL                       | migration 风险仅生产发现         | Real Postgres 集成测试作为 CI 门禁                                   |
+| enableProvider 凭据检查未按 type 修复                  | 启用 Xunlei 永远失败             | 单元测试覆盖；code review 必查                                       |
+| getProviderCandidates 遗漏 Xunlei                      | Xunlei 永远不会被调度            | 集成测试验证                                                         |
 
 ---
 

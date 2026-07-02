@@ -1,6 +1,6 @@
 <h1 align="left">SubHub</h1>
 
-A self-hosted subtitle gateway for aggregating subtitle providers, caching downloads, and managing manual uploads. 
+A self-hosted subtitle gateway for aggregating subtitle providers, caching downloads, and managing manual uploads.
 
 <p align="left">
   🇺🇸 <a href="./README.md">English</a> | 🇨🇳 <a href="./README.zh-CN.md">简体中文</a>

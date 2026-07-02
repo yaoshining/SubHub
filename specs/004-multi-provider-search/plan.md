@@ -32,6 +32,7 @@
 **相关页面规范**: 无（纯后端接口扩展与 provider 适配层扩展）
 
 **已评审的设计输入**:
+
 - `specs/004-multi-provider-search/spec.md`：本功能规格
 - `src/server/subtitles/subtitle-gateway.ts`：当前网关实现，单 provider（OpenSubtitles）调度
 - `src/server/providers/opensubtitles-adapter.ts`：当前 OpenSubtitles 适配器，`OpenSubtitlesSearchInput` 与 `OpenSubtitlesSubtitle` 模型
@@ -51,6 +52,7 @@
 **语言/版本**: TypeScript；`next@16.2.6`、`react@19.2.6`、`typescript@6.0.3`、`zod`、`drizzle-orm`
 
 **核心依赖**:
+
 - Next.js Route Handler（route Zod schema 与请求处理）
 - `subtitle-gateway.ts`（聚合搜索编排）
 - `credential-pool.ts`（OpenSubtitles 凭据池，迅雷 provider 暂不接入）
@@ -68,11 +70,13 @@
 **项目类型**: web-service（Next.js API）
 
 **性能目标**:
+
 - 单 provider 搜索 p95 延迟 MUST 不高于 `v0.2.1` 同路径
 - 多 provider 串行调用端到端 p95 SHOULD 不高于"单 provider 最慢者 + 1s"（首批允许）
 - provider 失败隔离 MUST 不引入额外串行阻塞（失败快速失败）
 
 **约束条件**:
+
 - 不引入 breaking API 变更
 - 不直接透传 OpenSubtitles 或迅雷上游 query params 作为长期对外契约
 - 不引入并行调用 / 熔断 / 评分编排 / 跨 provider 去重
@@ -83,7 +87,7 @@
 
 ## 宪章检查
 
-*门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。*
+_门禁：必须在第 0 阶段研究前通过，并在第 1 阶段设计后复检。_
 
 - ✅ 已定义代码质量门禁：`pnpm lint` + `pnpm typecheck` + `pnpm format:write`，CI 强制执行
 - ✅ 已定义必需测试策略：unit（provider 选择、字段映射、结果归一化、错误隔离）+ contract（聚合 API 行为、provider 来源字段）+ integration（多 provider 并存路径与单 provider 失败隔离）
@@ -165,13 +169,13 @@ tests/
 
 ## 复杂度追踪
 
-| 例外项 | 必要原因 | 为何拒绝更简单方案 |
-|-----------|------------|-------------------------------------|
-| `SubtitleProviderAdapter` 抽象层 | gateway 需要按 provider key 调度，且不同 provider 字段消费能力差异显著（OpenSubtitles 结构化 vs 迅雷名称检索） | 直接把 provider 分支写进 gateway 会导致 gateway 膨胀，违反宪章原则 VI（provider 集成 MUST 隔离在稳定接口之后） |
-| 结果归一化模块 | 多 provider 返回字段不一致（OpenSubtitles `file_id` vs 迅雷 `cid` / `gcid` / `url` 等），需要统一出口 | 在 gateway 内联归一化会导致 gateway 承担 provider 特定知识 |
-| provider 错误隔离与失败信息结构化 | 多 provider 聚合的首要价值是鲁棒性，单 provider 失败必须隔离 | 简单 fail-fast 会让一个 provider 不可用拖垮整个搜索 |
-| 串行调用 provider | 首批优先追求实现简单、错误隔离清晰、性能边界明确 | 并行调用需要超时预算与去重策略，超出 v0.2.2 范围 |
-| `provider-registry` 代码层硬编码 provider key | 迅雷 provider 在 `v0.2.2` 不依赖数据库 schema；provider key → adapter 映射由代码层决定 | 直接把 provider 分支写进 gateway 会让 gateway 膨胀，违反宪章原则 VI；引入插件化框架超出 `v0.2.2` 范围 |
+| 例外项                                        | 必要原因                                                                                                       | 为何拒绝更简单方案                                                                                             |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `SubtitleProviderAdapter` 抽象层              | gateway 需要按 provider key 调度，且不同 provider 字段消费能力差异显著（OpenSubtitles 结构化 vs 迅雷名称检索） | 直接把 provider 分支写进 gateway 会导致 gateway 膨胀，违反宪章原则 VI（provider 集成 MUST 隔离在稳定接口之后） |
+| 结果归一化模块                                | 多 provider 返回字段不一致（OpenSubtitles `file_id` vs 迅雷 `cid` / `gcid` / `url` 等），需要统一出口          | 在 gateway 内联归一化会导致 gateway 承担 provider 特定知识                                                     |
+| provider 错误隔离与失败信息结构化             | 多 provider 聚合的首要价值是鲁棒性，单 provider 失败必须隔离                                                   | 简单 fail-fast 会让一个 provider 不可用拖垮整个搜索                                                            |
+| 串行调用 provider                             | 首批优先追求实现简单、错误隔离清晰、性能边界明确                                                               | 并行调用需要超时预算与去重策略，超出 v0.2.2 范围                                                               |
+| `provider-registry` 代码层硬编码 provider key | 迅雷 provider 在 `v0.2.2` 不依赖数据库 schema；provider key → adapter 映射由代码层决定                         | 直接把 provider 分支写进 gateway 会让 gateway 膨胀，违反宪章原则 VI；引入插件化框架超出 `v0.2.2` 范围          |
 
 ---
 
@@ -179,30 +183,30 @@ tests/
 
 ### 1.1 范围内（本 plan 实现）
 
-| 模块 | 内容 |
-|------|------|
-| 聚合请求模型 | `SubtitleSearchInput` 承载 `v0.2.2` 提议字段集合；保持 `v0.2.1` 字段命名不变 |
-| provider 适配层 | `SubtitleProviderAdapter` 接口 + `provider-registry.ts` 轻量注册表 |
-| 迅雷 provider 接入 | `XunleiAdapter` 接入 `https://api-shoulei-ssl.xunlei.com/oracle/subtitle` |
-| OpenSubtitles provider 适配形态收敛 | 沿用现有实现，按多 provider gateway 期望暴露 `search` 接口 |
-| 结果归一化 | `AggregatedSubtitleResult` 含 `provider` 字段（SubHub 显式注入）+ `raw` 保留原始字段 |
-| provider 错误隔离 | 单 provider 失败隔离；串行调用；所有 provider 失败返回 502 |
-| OpenAPI 同步 | `SubtitleSearchResult.provider` enum 扩展 + `provider_failures` 失败信息结构 |
-| generated client 同步 | 由 Orval 重新生成 |
-| 测试 | unit + contract + integration |
-| 文档 | 本 plan + research + data-model + quickstart + contracts |
+| 模块                                | 内容                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| 聚合请求模型                        | `SubtitleSearchInput` 承载 `v0.2.2` 提议字段集合；保持 `v0.2.1` 字段命名不变         |
+| provider 适配层                     | `SubtitleProviderAdapter` 接口 + `provider-registry.ts` 轻量注册表                   |
+| 迅雷 provider 接入                  | `XunleiAdapter` 接入 `https://api-shoulei-ssl.xunlei.com/oracle/subtitle`            |
+| OpenSubtitles provider 适配形态收敛 | 沿用现有实现，按多 provider gateway 期望暴露 `search` 接口                           |
+| 结果归一化                          | `AggregatedSubtitleResult` 含 `provider` 字段（SubHub 显式注入）+ `raw` 保留原始字段 |
+| provider 错误隔离                   | 单 provider 失败隔离；串行调用；所有 provider 失败返回 502                           |
+| OpenAPI 同步                        | `SubtitleSearchResult.provider` enum 扩展 + `provider_failures` 失败信息结构         |
+| generated client 同步               | 由 Orval 重新生成                                                                    |
+| 测试                                | unit + contract + integration                                                        |
+| 文档                                | 本 plan + research + data-model + quickstart + contracts                             |
 
 ### 1.2 范围外（本 plan 不实现）
 
-| 排除项 | 归属 |
-|--------|------|
-| `filename` / `moviehash` / `hearing_impaired` / `foreign_parts_only` 首批暴露 | 待评估 |
-| 字段改名（`season` → `season_number` 等） | post-mvp |
-| 并行调用 / 超时预算 / 熔断 / 自适应降级 | post-mvp |
-| 第三方 provider 注册中心 / 插件化框架 | post-mvp |
-| 跨 provider 评分编排 / 去重 / 排序 | post-mvp |
-| 手动上传字幕 / 缓存字幕管理 / 自有字幕资产管理 | `v0.3.0` |
-| AI 审核 / 清洗 / 改写 | `v0.4.0` |
+| 排除项                                                                        | 归属     |
+| ----------------------------------------------------------------------------- | -------- |
+| `filename` / `moviehash` / `hearing_impaired` / `foreign_parts_only` 首批暴露 | 待评估   |
+| 字段改名（`season` → `season_number` 等）                                     | post-mvp |
+| 并行调用 / 超时预算 / 熔断 / 自适应降级                                       | post-mvp |
+| 第三方 provider 注册中心 / 插件化框架                                         | post-mvp |
+| 跨 provider 评分编排 / 去重 / 排序                                            | post-mvp |
+| 手动上传字幕 / 缓存字幕管理 / 自有字幕资产管理                                | `v0.3.0` |
+| AI 审核 / 清洗 / 改写                                                         | `v0.4.0` |
 
 ### 1.3 为什么把"字段扩展"和"多 provider 入口模型"分到 `v0.2.1` / `v0.2.2`
 
@@ -213,17 +217,17 @@ tests/
 
 ### 2.1 聚合请求模型保留字段（`SubtitleSearchInput`）
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `title` | string | ✅ | free-text 兜底；与 `v0.2.1` 一致 |
-| `year` | integer 1800-3000 | 否 | 与 `v0.2.1` 一致 |
-| `season` | integer ≥ 0 | 否 | 保持命名（不升级为 `season_number`） |
-| `episode` | integer ≥ 0 | 否 | 保持命名（不升级为 `episode_number`） |
-| `language` | string | 否 | 保持命名（不升级为 `languages`） |
-| `imdbId` | string `tt\d+` | 否 | `v0.2.1` 已落地 |
-| `tmdbId` | integer ≥ 1 | 否 | `v0.2.1` 已落地 |
-| `type` | enum `movie` / `episode` | 否 | `v0.2.1` 已落地 |
-| `query` | string | 否 | 自由文本；与 `title` 的关系由 gateway 决定（详见 §3） |
+| 字段       | 类型                     | 必填 | 说明                                                  |
+| ---------- | ------------------------ | ---- | ----------------------------------------------------- |
+| `title`    | string                   | ✅   | free-text 兜底；与 `v0.2.1` 一致                      |
+| `year`     | integer 1800-3000        | 否   | 与 `v0.2.1` 一致                                      |
+| `season`   | integer ≥ 0              | 否   | 保持命名（不升级为 `season_number`）                  |
+| `episode`  | integer ≥ 0              | 否   | 保持命名（不升级为 `episode_number`）                 |
+| `language` | string                   | 否   | 保持命名（不升级为 `languages`）                      |
+| `imdbId`   | string `tt\d+`           | 否   | `v0.2.1` 已落地                                       |
+| `tmdbId`   | integer ≥ 1              | 否   | `v0.2.1` 已落地                                       |
+| `type`     | enum `movie` / `episode` | 否   | `v0.2.1` 已落地                                       |
+| `query`    | string                   | 否   | 自由文本；与 `title` 的关系由 gateway 决定（详见 §3） |
 
 > **命名沿用说明**：`v0.2.1` 已确认保持 `season` / `episode` / `language` 命名不变以避免 breaking。`v0.2.2` 继续保持现状命名；`season_number` / `episode_number` / `languages` 等上游语义对齐名在 post-mvp 字段改名阶段统一处理，首批不暴露。
 
@@ -248,14 +252,14 @@ tests/
 SubtitleSearchResult:
   required: [id, provider, language, releaseName, format, downloadUrl]
   properties:
-    id: string                           # 网关生成的字幕引用；OpenSubtitles: opensubtitles:{providerId}:{file_id}；迅雷: xunlei:{providerId}:{cid|gcid}
+    id: string # 网关生成的字幕引用；OpenSubtitles: opensubtitles:{providerId}:{file_id}；迅雷: xunlei:{providerId}:{cid|gcid}
     provider:
       type: string
-      enum: [opensubtitles, xunlei]      # 从 [opensubtitles] 扩展
+      enum: [opensubtitles, xunlei] # 从 [opensubtitles] 扩展
     language: string | null
     releaseName: string | null
     format: string
-    downloadUrl: string                  # OpenSubtitles: /api/subtitles/download?subtitleId=...；迅雷: 同上
+    downloadUrl: string # OpenSubtitles: /api/subtitles/download?subtitleId=...；迅雷: 同上
     raw:
       type: object
       additionalProperties: true
@@ -300,24 +304,24 @@ SubtitleSearchData:
 
 ### 3.1 字段处理方向
 
-| 字段 | 首批支持 | 在请求模型中的位置 | provider 消费情况 |
-|------|----------|--------------------|------------------|
-| `title` | ✅ | `SubtitleSearchInput.title` | OpenSubtitles：参与 `buildSearchQuery`；迅雷：忽略（迅雷需要 `query`，不消费 `title`） |
-| `query` | ✅ | `SubtitleSearchInput.query` | OpenSubtitles：参与 `buildSearchQuery`（与 `title` 等价）；迅雷：映射为 `name`（trim 后非空才传） |
-| `language` | ✅ | `SubtitleSearchInput.language` | OpenSubtitles：映射 `languages`；迅雷：映射 `languages` |
-| `imdbId` | ✅ | `SubtitleSearchInput.imdbId` | OpenSubtitles：消费；迅雷：忽略 |
-| `tmdbId` | ✅ | `SubtitleSearchInput.tmdbId` | OpenSubtitles：消费；迅雷：忽略 |
-| `season` | ✅ | `SubtitleSearchInput.season` | OpenSubtitles：消费；迅雷：忽略 |
-| `episode` | ✅ | `SubtitleSearchInput.episode` | OpenSubtitles：消费；迅雷：忽略 |
-| `type` | ✅ | `SubtitleSearchInput.type` | OpenSubtitles：消费；迅雷：忽略 |
-| `year` | ✅ | `SubtitleSearchInput.year` | OpenSubtitles：消费；迅雷：忽略 |
-| `season_number` | ⛔ | 不暴露 | 字段改名阶段处理 |
-| `episode_number` | ⛔ | 不暴露 | 字段改名阶段处理 |
-| `languages`（复数） | ⛔ | 不暴露 | 与 `language` 命名冲突；字段改名阶段处理 |
-| `filename` | ⛔ | 不暴露 | 价值有限，待评估 |
-| `moviehash` | ⛔ | 不暴露 | 需调用方预计算 |
-| `hearing_impaired` | ⛔ | 不暴露 | 偏好过滤，非定位字段 |
-| `foreign_parts_only` | ⛔ | 不暴露 | 语义较窄，上游支持不稳定 |
+| 字段                 | 首批支持 | 在请求模型中的位置             | provider 消费情况                                                                                 |
+| -------------------- | -------- | ------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `title`              | ✅       | `SubtitleSearchInput.title`    | OpenSubtitles：参与 `buildSearchQuery`；迅雷：忽略（迅雷需要 `query`，不消费 `title`）            |
+| `query`              | ✅       | `SubtitleSearchInput.query`    | OpenSubtitles：参与 `buildSearchQuery`（与 `title` 等价）；迅雷：映射为 `name`（trim 后非空才传） |
+| `language`           | ✅       | `SubtitleSearchInput.language` | OpenSubtitles：映射 `languages`；迅雷：映射 `languages`                                           |
+| `imdbId`             | ✅       | `SubtitleSearchInput.imdbId`   | OpenSubtitles：消费；迅雷：忽略                                                                   |
+| `tmdbId`             | ✅       | `SubtitleSearchInput.tmdbId`   | OpenSubtitles：消费；迅雷：忽略                                                                   |
+| `season`             | ✅       | `SubtitleSearchInput.season`   | OpenSubtitles：消费；迅雷：忽略                                                                   |
+| `episode`            | ✅       | `SubtitleSearchInput.episode`  | OpenSubtitles：消费；迅雷：忽略                                                                   |
+| `type`               | ✅       | `SubtitleSearchInput.type`     | OpenSubtitles：消费；迅雷：忽略                                                                   |
+| `year`               | ✅       | `SubtitleSearchInput.year`     | OpenSubtitles：消费；迅雷：忽略                                                                   |
+| `season_number`      | ⛔       | 不暴露                         | 字段改名阶段处理                                                                                  |
+| `episode_number`     | ⛔       | 不暴露                         | 字段改名阶段处理                                                                                  |
+| `languages`（复数）  | ⛔       | 不暴露                         | 与 `language` 命名冲突；字段改名阶段处理                                                          |
+| `filename`           | ⛔       | 不暴露                         | 价值有限，待评估                                                                                  |
+| `moviehash`          | ⛔       | 不暴露                         | 需调用方预计算                                                                                    |
+| `hearing_impaired`   | ⛔       | 不暴露                         | 偏好过滤，非定位字段                                                                              |
+| `foreign_parts_only` | ⛔       | 不暴露                         | 语义较窄，上游支持不稳定                                                                          |
 
 ### 3.2 字段优先级（gateway 内派生 provider 输入时）
 
@@ -342,14 +346,14 @@ SubtitleSearchData:
 引入 `SubtitleProviderAdapter` 接口：
 
 ```ts
-type SubtitleProviderKey = 'opensubtitles' | 'xunlei';
+type SubtitleProviderKey = "opensubtitles" | "xunlei";
 
 interface SubtitleProviderAdapter {
   readonly key: SubtitleProviderKey;
   search(
     credential: SelectedProviderCredential | null,
     input: SubtitleSearchInput,
-    options: { fetchImpl?: typeof fetch; timeoutMs?: number }
+    options: { fetchImpl?: typeof fetch; timeoutMs?: number },
   ): Promise<ProviderSearchOutcome>;
 }
 
@@ -437,33 +441,33 @@ export function listProviderKeys(): SubtitleProviderKey[];
 
 ```ts
 type AggregatedSubtitleResult = {
-  id: string;                       // 网关生成的字幕引用；OpenSubtitles: opensubtitles:{providerId}:{file_id}；迅雷: xunlei:{providerId}:{cid|gcid}
-  provider: 'opensubtitles' | 'xunlei';
+  id: string; // 网关生成的字幕引用；OpenSubtitles: opensubtitles:{providerId}:{file_id}；迅雷: xunlei:{providerId}:{cid|gcid}
+  provider: "opensubtitles" | "xunlei";
   language: string | null;
   releaseName: string | null;
   format: string;
-  downloadUrl: string;              // 统一 /api/subtitles/download?subtitleId=...
-  raw?: Record<string, unknown>;    // provider 原始字段；老调用方可忽略
-  score?: number | null;            // 迅雷 score 透传；OpenSubtitles 暂无
+  downloadUrl: string; // 统一 /api/subtitles/download?subtitleId=...
+  raw?: Record<string, unknown>; // provider 原始字段；老调用方可忽略
+  score?: number | null; // 迅雷 score 透传；OpenSubtitles 暂无
 };
 ```
 
 ### 5.3 迅雷返回字段的归一化映射
 
-| 迅雷原始字段 | SubHub 字段 | 说明 |
-|--------------|-------------|------|
-| `cid` | `id` 的一部分（`xunlei:{providerId}:{cid}` 或 `{gcid}`） | 网关生成的稳定引用；优先用 `gcid`（更长，更稳定），缺失时回退 `cid` |
-| `gcid` | 同上 | 优先使用 |
-| `url` | `providerDownloadUrl`（adapter 内部）→ `downloadUrl`（公共，间接） | 迅雷的 `url` 进入 adapter 内部字段 `providerDownloadUrl`（仅供 adapter / download 路由内部使用）；公共 `downloadUrl` 由网关生成为 `/api/subtitles/download?subtitleId={xunlei:...}`，**不**直接用迅雷原始 `url`。原始 `url` 保留在 `raw.url` |
-| `ext` | `format` | 字幕文件扩展名；缺失时回退 `srt` |
-| `name` | `releaseName` | 字幕发布名；缺失时回退 `null` |
-| `duration` | `raw.duration` | 视频时长，不进入主结果对象 |
-| `languages` | `language` | 迅雷的语言码可能与 OpenSubtitles 不同；保留在 `raw.languages`，主字段 `language` 优先取第一个语言码 |
-| `source` | `raw.source` | 字幕来源 |
-| `score` | `score` + `raw.score` | 顶层 `score` 字段透传；原始值保留在 `raw.score` |
-| `fingerprintf_score` | `raw.fingerprintf_score` | 指纹评分，仅保留在 `raw` |
-| `extra_name` | `raw.extra_name` | 扩展名，仅保留在 `raw` |
-| `mt` | `raw.mt` | 字幕类型标识，仅保留在 `raw` |
+| 迅雷原始字段         | SubHub 字段                                                        | 说明                                                                                                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cid`                | `id` 的一部分（`xunlei:{providerId}:{cid}` 或 `{gcid}`）           | 网关生成的稳定引用；优先用 `gcid`（更长，更稳定），缺失时回退 `cid`                                                                                                                                                                          |
+| `gcid`               | 同上                                                               | 优先使用                                                                                                                                                                                                                                     |
+| `url`                | `providerDownloadUrl`（adapter 内部）→ `downloadUrl`（公共，间接） | 迅雷的 `url` 进入 adapter 内部字段 `providerDownloadUrl`（仅供 adapter / download 路由内部使用）；公共 `downloadUrl` 由网关生成为 `/api/subtitles/download?subtitleId={xunlei:...}`，**不**直接用迅雷原始 `url`。原始 `url` 保留在 `raw.url` |
+| `ext`                | `format`                                                           | 字幕文件扩展名；缺失时回退 `srt`                                                                                                                                                                                                             |
+| `name`               | `releaseName`                                                      | 字幕发布名；缺失时回退 `null`                                                                                                                                                                                                                |
+| `duration`           | `raw.duration`                                                     | 视频时长，不进入主结果对象                                                                                                                                                                                                                   |
+| `languages`          | `language`                                                         | 迅雷的语言码可能与 OpenSubtitles 不同；保留在 `raw.languages`，主字段 `language` 优先取第一个语言码                                                                                                                                          |
+| `source`             | `raw.source`                                                       | 字幕来源                                                                                                                                                                                                                                     |
+| `score`              | `score` + `raw.score`                                              | 顶层 `score` 字段透传；原始值保留在 `raw.score`                                                                                                                                                                                              |
+| `fingerprintf_score` | `raw.fingerprintf_score`                                           | 指纹评分，仅保留在 `raw`                                                                                                                                                                                                                     |
+| `extra_name`         | `raw.extra_name`                                                   | 扩展名，仅保留在 `raw`                                                                                                                                                                                                                       |
+| `mt`                 | `raw.mt`                                                           | 字幕类型标识，仅保留在 `raw`                                                                                                                                                                                                                 |
 
 > **downloadUrl 语义**：`downloadUrl` 是 SubHub 网关生成的下载路径，不是迅雷原始 URL。所有 provider MUST 走统一的 `/api/subtitles/download?subtitleId=...` 入口；download 路由根据 `subtitleId` 前缀判断 provider，再走各自 adapter 的下载流程。迅雷原始 `url` 保留在 `raw.url` 用于调试与审计。
 
@@ -485,21 +489,21 @@ type AggregatedSubtitleResult = {
 
 ### 6.1 改动清单
 
-| 层 | 文件 | 改动 |
-|----|------|------|
-| Route | `src/app/api/subtitles/search/route.ts` | Zod schema 保持 `v0.2.1` 不变；透传 `query` 字段（gateway 内部合并 `title`/`query`） |
-| Gateway | `src/server/subtitles/subtitle-gateway.ts` | 重构为聚合编排：provider 选择 → 串行调用 → 错误隔离 → 结果归一化；引入 `provider_failures` 与 `status: partial` |
-| Adapter Interface | `src/server/providers/provider-adapter.ts`（新增） | 定义 `SubtitleProviderAdapter` 接口与 `ProviderSearchOutcome` 类型 |
-| Adapter Registry | `src/server/providers/provider-registry.ts`（新增） | provider key → adapter 映射；不引入插件化框架 |
-| OpenSubtitles Adapter | `src/server/providers/opensubtitles-adapter.ts` | 收敛为实现 `SubtitleProviderAdapter`；`v0.2.1` 行为不变 |
-| Xunlei Adapter | `src/server/providers/xunlei-adapter.ts`（新增） | 迅雷 provider adapter；`query → name` + `languages`；必要条件缺失返回 skipped |
-| Normalizer | `src/server/subtitles/subtitle-result-normalizer.ts`（新增） | provider 原始结果 → `AggregatedSubtitleResult`；`provider` 注入 + `raw` 保留 |
-| Credential Pool | `src/server/providers/credential-pool.ts` | OpenSubtitles 凭据池隔离保持；不引入新逻辑 |
-| Provider Repository | `src/server/providers/provider-repository.ts` | `v0.2.2` 期间迅雷 provider 不走 `providers` 表（详见 §9.1），按需调整筛选逻辑时**仅**针对 OpenSubtitles |
-| Storage Schema | `src/server/storage/schema.ts` | **不**做任何改动：`providerTypes` enum 保持 `["opensubtitles"]` 单值；表结构、migration 均不变 |
-| OpenAPI | `docs/api/openapi.yaml` | §5.4 字段清单 |
-| Generated Client | `src/lib/api/generated/` | Orval 重新生成 |
-| Tests | `tests/contract/`、`tests/unit/`、`tests/integration/` | 见 §7 |
+| 层                    | 文件                                                         | 改动                                                                                                            |
+| --------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Route                 | `src/app/api/subtitles/search/route.ts`                      | Zod schema 保持 `v0.2.1` 不变；透传 `query` 字段（gateway 内部合并 `title`/`query`）                            |
+| Gateway               | `src/server/subtitles/subtitle-gateway.ts`                   | 重构为聚合编排：provider 选择 → 串行调用 → 错误隔离 → 结果归一化；引入 `provider_failures` 与 `status: partial` |
+| Adapter Interface     | `src/server/providers/provider-adapter.ts`（新增）           | 定义 `SubtitleProviderAdapter` 接口与 `ProviderSearchOutcome` 类型                                              |
+| Adapter Registry      | `src/server/providers/provider-registry.ts`（新增）          | provider key → adapter 映射；不引入插件化框架                                                                   |
+| OpenSubtitles Adapter | `src/server/providers/opensubtitles-adapter.ts`              | 收敛为实现 `SubtitleProviderAdapter`；`v0.2.1` 行为不变                                                         |
+| Xunlei Adapter        | `src/server/providers/xunlei-adapter.ts`（新增）             | 迅雷 provider adapter；`query → name` + `languages`；必要条件缺失返回 skipped                                   |
+| Normalizer            | `src/server/subtitles/subtitle-result-normalizer.ts`（新增） | provider 原始结果 → `AggregatedSubtitleResult`；`provider` 注入 + `raw` 保留                                    |
+| Credential Pool       | `src/server/providers/credential-pool.ts`                    | OpenSubtitles 凭据池隔离保持；不引入新逻辑                                                                      |
+| Provider Repository   | `src/server/providers/provider-repository.ts`                | `v0.2.2` 期间迅雷 provider 不走 `providers` 表（详见 §9.1），按需调整筛选逻辑时**仅**针对 OpenSubtitles         |
+| Storage Schema        | `src/server/storage/schema.ts`                               | **不**做任何改动：`providerTypes` enum 保持 `["opensubtitles"]` 单值；表结构、migration 均不变                  |
+| OpenAPI               | `docs/api/openapi.yaml`                                      | §5.4 字段清单                                                                                                   |
+| Generated Client      | `src/lib/api/generated/`                                     | Orval 重新生成                                                                                                  |
+| Tests                 | `tests/contract/`、`tests/unit/`、`tests/integration/`       | 见 §7                                                                                                           |
 
 ### 6.2 不改动的层
 

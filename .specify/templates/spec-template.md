@@ -8,7 +8,7 @@
 
 **输入**: 用户描述: "$ARGUMENTS"
 
-## 功能身份与可追溯性 *(mandatory)*
+## 功能身份与可追溯性 _(mandatory)_
 
 - **Feature ID**: [唯一 id，例如 `003`]
 - **Spec 目录**: [例如 `specs/003-search-improvements/`]
@@ -16,7 +16,7 @@
 - **主 Issue**: [GitHub issue 链接/编号，或在规划未完成时填 `TBD`]
 - **Task Issue 策略**: [说明是现在创建 task issues，还是延后到 `spec -> plan -> tasks` 完整后]
 
-## 设计上下文 *(mandatory)*
+## 设计上下文 _(mandatory)_
 
 ### 设计来源
 
@@ -37,7 +37,7 @@
 - 本规格 MUST 显式标注任何有意偏离既有设计规则的点。
 - 新的系统级设计规则 MUST 写入 `DESIGN.md`；仅页面级变更 MUST 写入对应页面规范。
 
-## 用户场景与测试 *(mandatory)*
+## 用户场景与测试 _(mandatory)_
 
 <!--
   IMPORTANT: 用户故事应按重要性排序为优先级清晰的用户旅程。
@@ -107,7 +107,7 @@
 - 当 [边界条件] 发生时会怎样？
 - 系统如何处理 [错误场景]？
 
-## 需求 *(mandatory)*
+## 需求 _(mandatory)_
 
 <!--
   ACTION REQUIRED: 本节内容为占位项。
@@ -122,12 +122,12 @@
 - **FR-004**: 系统 MUST [数据要求，例如“持久化用户偏好”]
 - **FR-005**: 系统 MUST [行为要求，例如“记录所有安全事件”]
 
-*需求不明确时的标注示例：*
+_需求不明确时的标注示例：_
 
 - **FR-006**: 系统 MUST 通过 [NEEDS CLARIFICATION: 未指定认证方式 - email/password、SSO 还是 OAuth?] 对用户鉴权
 - **FR-007**: 系统 MUST 将用户数据保留 [NEEDS CLARIFICATION: 未指定保留时长]
 
-### 非功能需求 *(mandatory)*
+### 非功能需求 _(mandatory)_
 
 - **NFR-001 (代码质量)**: Feature MUST 定义 lint/static-analysis 门禁要求。
 - **NFR-002 (测试)**: Feature MUST 定义必需的单元测试与集成/契约测试。
@@ -137,12 +137,12 @@
 - **NFR-006 (并行隔离)**: Feature MUST 定义 worktree 隔离，并确认该 worktree 仅跟踪一个 active feature。
 - **NFR-007 (Issue 同步范围)**: Issue 同步 MUST 仅面向本 spec 目录，且 MUST NOT 跨多个 spec 混批任务。
 
-### 关键实体 *(如功能涉及数据请填写)*
+### 关键实体 _(如功能涉及数据请填写)_
 
 - **[Entity 1]**: [实体含义与关键属性（不含实现细节）]
 - **[Entity 2]**: [实体含义及与其他实体关系]
 
-## 成功标准 *(mandatory)*
+## 成功标准 _(mandatory)_
 
 <!--
   ACTION REQUIRED: 定义可度量的成功标准。

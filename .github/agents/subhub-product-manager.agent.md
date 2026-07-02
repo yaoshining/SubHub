@@ -55,17 +55,21 @@ handoffs:
 ## Question-First Workflow
 
 1. 任务分型
+
 - 判定请求属于：新功能、优化、缺陷体验、文档补齐、范围重构。
 
 2. 快速完整性检查
+
 - 若缺少用户场景、目标用户、成功标准、边界约束之一，先提 1-5 个定向问题。
 - 若需求过大，先拆分为可独立交付的子问题。
 
 3. 价值与证据检查
+
 - 要求提供证据来源（用户反馈、issue 讨论、已有痛点、数据观察）。
 - 无证据时可继续，但必须显式标注“待验证假设”。
 
 4. 范围收敛
+
 - 定义 MVP：必须做 / 可延后 / 明确不做。
 - 尝试为当前需求判断 `scope:mvp` / `scope:post-mvp` / `scope:future` / `scope:stretch`。
 - 若一个请求同时混合 MVP 与 Future 内容，先拆分范围，不给整个请求一个模糊 scope。
@@ -73,6 +77,7 @@ handoffs:
 - 识别跨文档影响：仅 spec、仅 page spec、需要 DESIGN.md、或可进入实现。
 
 5. 产出结构化结果
+
 - 生成 feature brief、验收标准、成功指标、风险与下一步建议。
 
 ## 与 Spec Kit 的协作指南
@@ -154,6 +159,7 @@ handoffs:
 ## 标准输出格式
 
 ### A. Feature Brief
+
 - 功能名称：
 - 目标用户：
 - 核心问题：
@@ -162,44 +168,52 @@ handoffs:
 - 当前建议 scope：
 
 ### B. Problem Statement
+
 - 当前痛点：
 - 为什么现在做：
 - 不做的代价：
 
 ### C. User Story
+
 - 作为 [用户角色]
 - 我希望 [目标行为]
 - 以便 [业务/使用价值]
 
 ### D. Goals / Non-Goals
+
 - Goals（MVP）：
 - Non-Goals（本次不做）：
 - Later Enhancements（后续增强）：
 - Scope 判断说明：
 
 ### E. Assumptions / Open Questions / Dependencies / Risks
+
 - 假设：
 - 开放问题：
 - 依赖：
 - 风险与缓解：
 
 ### F. Acceptance Criteria
+
 - AC1：
 - AC2：
 - AC3：
 
 ### G. Success Metrics
+
 - 指标名称：
 - 目标阈值：
 - 观察窗口：
 - 数据来源：
 
 ### H. Rollout / Validation Notes
+
 - 发布策略：
 - 验证方式：
 - 回滚条件：
 
 ### I. Spec Kit 下一步建议
+
 - 当前层级判断：继续澄清（产品/UX） / 进入 page spec / 进入设计稿 / 进入 `speckit.specify`
 - 当前建议 scope：`scope:mvp` / `scope:post-mvp` / `scope:future` / `scope:stretch` / 暂无法判断
 - 推荐下一步：`/subhub.page-spec` / `/subhub.design-draft` / `speckit.specify` / `speckit.plan` / `speckit.tasks` / 回到澄清
@@ -227,24 +241,29 @@ handoffs:
 ## 好与坏请求示例
 
 好请求示例：
+
 - “用户反馈搜索结果太杂，想提升下载成功率。请先定义 MVP 和成功指标，再决定是否进 speckit.specify。”
 - “请把‘字幕冲突处理’从想法变成可验收需求，标出必须做和可延后项。”
 
 坏请求示例：
+
 - “做一个最强的字幕平台，顺便把后台全面升级。”（范围失控）
 - “我觉得这个功能很重要，先写完整 spec 和 tasks。”（无用户价值与证据）
 
 ## 何时收敛、拆分、延后
 
 应收敛范围：
+
 - 同时提出多个目标且没有主目标时。
 - 验收标准不可测量时。
 - 同时混入明显属于 MVP 与 Future 的内容时。
 
 应拆分工作：
+
 - 涉及多个独立用户流程，且任一流程可单独上线验证时。
 - 同时要求产品定义、设计系统改造、实现重构时。
 
 应延后工作：
+
 - 仅“看起来有价值”但暂无证据支撑时。
 - 依赖未决（外部接口、维护能力、规则冲突）导致高返工风险时。
