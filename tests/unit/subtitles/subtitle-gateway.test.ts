@@ -299,4 +299,96 @@ describe("统一字幕查询与下载", () => {
       message: "OpenSubtitles 上游限流。",
     });
   });
+
+  describe("disabled provider handling", () => {
+    it("skips disabled providers without adding to provider_failures", async () => {
+      const [callerKey, provider] = await Promise.all([
+        createActiveCallerKey(),
+        createReadyProvider(),
+      ]);
+
+      const { disableProvider } = await import(
+        "@/server/services/provider-service"
+      );
+      await disableProvider(provider.id);
+
+      await expect(
+        searchSubtitles(
+          requestWithKey(callerKey.key),
+          { title: "Example" },
+          { adapter: { searchRaw: vi.fn() } },
+        ),
+      ).rejects.toMatchObject({
+        code: "SERVICE_NOT_READY",
+        target: "provider_pool",
+      });
+    });
+
+    it("re-enables a previously disabled provider to restore scheduling", async () => {
+      const [callerKey, provider] = await Promise.all([
+        createActiveCallerKey(),
+        createReadyProvider(),
+      ]);
+
+      const { disableProvider, enableProvider } = await import(
+        "@/server/services/provider-service"
+      );
+      await disableProvider(provider.id);
+
+      await expect(
+        searchSubtitles(
+          requestWithKey(callerKey.key),
+          { title: "Example" },
+          { adapter: { searchRaw: vi.fn() } },
+        ),
+      ).rejects.toMatchObject({
+        code: "SERVICE_NOT_READY",
+      });
+
+      await enableProvider(provider.id);
+
+      const result = await searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Example" },
+        {
+          adapter: {
+            searchRaw: vi.fn().mockResolvedValue([
+              {
+                id: "subtitle_001",
+                language: "zh-CN",
+                fileName: "Example.zh-CN.srt",
+                downloadCount: 10,
+              },
+            ]),
+          },
+        },
+      );
+
+      expect(result.status).toBe("success");
+      expect(result.results).toHaveLength(1);
+    });
+
+    it("throws SERVICE_NOT_READY when all providers are disabled", async () => {
+      const [callerKey, provider] = await Promise.all([
+        createActiveCallerKey(),
+        createReadyProvider(),
+      ]);
+
+      const { disableProvider } = await import(
+        "@/server/services/provider-service"
+      );
+      await disableProvider(provider.id);
+
+      await expect(
+        searchSubtitles(
+          requestWithKey(callerKey.key),
+          { title: "Example" },
+          { adapter: { searchRaw: vi.fn() } },
+        ),
+      ).rejects.toMatchObject({
+        code: "SERVICE_NOT_READY",
+        target: "provider_pool",
+      });
+    });
+  });
 });
