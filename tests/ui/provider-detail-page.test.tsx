@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProviderDetailClient } from "@/app/(admin)/providers/[providerId]/provider-detail-client";
 import { renderWithTheme } from "../helpers/ui";
+import { toast } from "sonner";
 
 const nowMs = Date.now();
 const recentUpdatedAt = new Date(nowMs - 30 * 60 * 1000).toISOString();
@@ -63,6 +64,8 @@ vi.mock("@/lib/api/providers", () => ({
   createProviderCredential: vi.fn(),
   isolateProviderCredential: vi.fn(),
   restoreProviderCredential: vi.fn(),
+  enableProvider: vi.fn(),
+  disableProvider: vi.fn(),
 }));
 
 const api = await import("@/lib/api/providers");
@@ -254,5 +257,71 @@ describe("Provider Detail 页面", () => {
     expect(
       screen.getByText("可用凭据 1 个。", { exact: false }),
     ).toBeInTheDocument();
+  });
+
+  describe("Enable/Disable 交互", () => {
+    it("点击启用/禁用按钮时显示确认对话框", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue({
+        ...provider,
+        status: "enabled",
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // Click disable button
+      await user.click(screen.getByRole("button", { name: "禁用" }));
+
+      // Should show confirmation dialog
+      expect(await screen.findByText("确认禁用 Provider")).toBeInTheDocument();
+      expect(
+        screen.getByText(/将停止参与负载均衡/, { exact: false }),
+      ).toBeInTheDocument();
+    });
+
+    it("启用/禁用操作后不进入 dirty 状态", async () => {
+      const user = userEvent.setup();
+      const enabledProvider = {
+        ...provider,
+        status: "enabled" as const,
+      };
+      vi.mocked(api.fetchProviderDetail)
+        .mockResolvedValueOnce(enabledProvider)
+        .mockResolvedValueOnce({
+          ...enabledProvider,
+          status: "disabled" as const,
+        });
+      vi.mocked(api.disableProvider).mockResolvedValue(undefined);
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // Should not show dirty state alert initially
+      expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
+
+      // Click disable button
+      await user.click(screen.getByRole("button", { name: "禁用" }));
+
+      // Confirm
+      await user.click(screen.getByRole("button", { name: "确认" }));
+
+      // Wait for operation to complete
+      await waitFor(() =>
+        expect(vi.mocked(api.disableProvider)).toHaveBeenCalledWith(
+          "provider_001",
+        ),
+      );
+
+      // Should not show dirty state alert after enable/disable
+      expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
+
+      // Success toast should be shown
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith("Provider 已禁用"),
+      );
+    });
   });
 });

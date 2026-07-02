@@ -350,4 +350,271 @@ describe("Provider 管理 API 契约", () => {
       "当前凭据已经不在活跃池中，无需重复隔离。",
     );
   });
+
+  describe("enable / disable contract", () => {
+    it("returns full provider summary on enable success", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      // Create a disabled provider with credentials
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "Test Provider for Enable",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "test-credential",
+              secret: "test-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{ data: { id: string } }>(created);
+      const providerId = createdPayload.data.id;
+
+      // Disable it first
+      await providerDisableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/disable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      // Now enable it
+      const enabled = await providerEnableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/enable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      expect(enabled.status).toBe(200);
+      const enabledPayload = await readJson<{
+        data: {
+          id: string;
+          name: string;
+          type: string;
+          status: string;
+          priority: number;
+          cooldownSeconds: number;
+          availableCredentialCount: number;
+          credentials: Array<{ id: string; label: string; status: string }>;
+        };
+      }>(enabled);
+
+      expect(enabledPayload.data).toMatchObject({
+        id: providerId,
+        name: "Test Provider for Enable",
+        type: "opensubtitles",
+        status: "enabled",
+        priority: expect.any(Number),
+        cooldownSeconds: expect.any(Number),
+        availableCredentialCount: 1,
+      });
+      expect(enabledPayload.data.credentials).toHaveLength(1);
+      expect(enabledPayload.data.credentials[0]).toMatchObject({
+        id: expect.any(String),
+        label: "test-credential",
+        status: "active",
+      });
+    });
+
+    it("returns full provider summary on disable success", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      // Create an enabled provider with credentials
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "Test Provider for Disable",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "test-credential",
+              secret: "test-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{ data: { id: string } }>(created);
+      const providerId = createdPayload.data.id;
+
+      // Disable it
+      const disabled = await providerDisableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/disable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      expect(disabled.status).toBe(200);
+      const disabledPayload = await readJson<{
+        data: {
+          id: string;
+          name: string;
+          type: string;
+          status: string;
+          priority: number;
+          cooldownSeconds: number;
+          availableCredentialCount: number;
+          credentials: Array<{ id: string; label: string; status: string }>;
+        };
+      }>(disabled);
+
+      expect(disabledPayload.data).toMatchObject({
+        id: providerId,
+        name: "Test Provider for Disable",
+        type: "opensubtitles",
+        status: "disabled",
+        priority: expect.any(Number),
+        cooldownSeconds: expect.any(Number),
+        availableCredentialCount: 1,
+      });
+      expect(disabledPayload.data.credentials).toHaveLength(1);
+    });
+
+    it("rejects enabling OS provider without active credentials", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      // Create a provider with credential
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "OS Provider Without Creds",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "to-be-isolated",
+              secret: "test-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{
+        data: { id: string; credentials: Array<{ id: string }> };
+      }>(created);
+      const providerId = createdPayload.data.id;
+      const credentialId = createdPayload.data.credentials[0]!.id;
+
+      // Isolate the only credential
+      await credentialIsolateRoute.POST(
+        jsonRequest(
+          `http://localhost/api/admin/providers/${providerId}/credentials/${credentialId}/isolate`,
+          { reason: "test isolation" },
+          cookie,
+        ),
+        { params: { providerId, credentialId } },
+      );
+
+      // Disable the provider
+      await providerDisableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/disable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      // Try to enable it without active credentials
+      const enableAttempt = await providerEnableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/enable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      await expectApiError(enableAttempt, "PROVIDER_CREDENTIAL_EXHAUSTED");
+    });
+
+    it("returns PROVIDER_UNAVAILABLE when enabling non-existent provider", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const enableAttempt = await providerEnableRoute.POST(
+        nextRequest(
+          "http://localhost/api/admin/providers/non-existent-provider/enable",
+          cookie,
+          "POST",
+        ),
+        { params: { providerId: "non-existent-provider" } },
+      );
+
+      await expectApiError(enableAttempt, "PROVIDER_UNAVAILABLE");
+    });
+
+    it("allows idempotent operations - enabling already-enabled provider returns 200", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      // Create an enabled provider
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "Already Enabled Provider",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "test-credential",
+              secret: "test-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{ data: { id: string } }>(created);
+      const providerId = createdPayload.data.id;
+
+      // Try to enable it again (it's already enabled) - should succeed idempotently
+      const enableAgain = await providerEnableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/enable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      expect(enableAgain.status).toBe(200);
+      const enableAgainPayload = await readJson<{
+        data: { status: string };
+      }>(enableAgain);
+      expect(enableAgainPayload.data.status).toBe("enabled");
+
+      // Disable it
+      await providerDisableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/disable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      // Try to disable it again (it's already disabled) - should succeed idempotently
+      const disableAgain = await providerDisableRoute.POST(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}/disable`,
+          cookie,
+          "POST",
+        ),
+        { params: { providerId } },
+      );
+
+      expect(disableAgain.status).toBe(200);
+      const disableAgainPayload = await readJson<{
+        data: { status: string };
+      }>(disableAgain);
+      expect(disableAgainPayload.data.status).toBe("disabled");
+    });
+  });
 });

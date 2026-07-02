@@ -2,7 +2,6 @@ import { AppError } from "@/lib/errors";
 import { requireCallerKey } from "@/server/api/caller-key-auth";
 import { createCallerKeyRepository } from "@/server/caller-keys/caller-key-repository";
 import {
-  hasCredentials,
   markCredentialFailure,
   markCredentialUsed,
   selectProviderCredential,
@@ -22,8 +21,9 @@ import {
   getStorageClient,
   type StorageDatabase,
 } from "@/server/storage/client";
-import type { CallerKey, Provider } from "@/server/storage/schema";
+import type { CallerKey } from "@/server/storage/schema";
 import { assertProductionRuntimeReady } from "@/server/services/runtime-readiness-service";
+import { getEnabledCandidates } from "@/server/services/provider-service";
 import {
   mapFailure,
   normalize,
@@ -96,22 +96,6 @@ export const buildAdapterInput = (
   };
 };
 
-const getProviderCandidates = async (
-  db: StorageDatabase,
-  now: Date,
-): Promise<Provider[]> => {
-  const repository = new ProviderRepository(db);
-  const providers = await repository.listProviders(undefined, now);
-
-  return providers.filter(
-    (provider) =>
-      (provider.status === "enabled" || provider.status === "degraded") &&
-      (hasCredentials(provider.type)
-        ? provider.availableCredentialCount > 0
-        : true),
-  );
-};
-
 const mapProviderFailureReason = (error: AppError): CredentialFailureReason => {
   if (error.code !== "PROVIDER_CREDENTIAL_EXHAUSTED") {
     return "upstream_failed";
@@ -182,7 +166,7 @@ const callOpenSubtitles = async (
   now: Date,
   options: SubtitleGatewayOptions,
 ): Promise<ProviderCallResult> => {
-  const candidates = await getProviderCandidates(db, now);
+  const candidates = await getEnabledCandidates(db, now);
   const provider = candidates.find((p) => p.type === "opensubtitles");
   if (!provider) {
     return {
@@ -281,7 +265,7 @@ const callXunlei = async (
   now: Date,
   options: SubtitleGatewayOptions,
 ): Promise<ProviderCallResult> => {
-  const candidates = await getProviderCandidates(db, now);
+  const candidates = await getEnabledCandidates(db, now);
   const xunleiProvider = candidates.find((p) => p.type === "xunlei");
 
   if (!xunleiProvider) {
