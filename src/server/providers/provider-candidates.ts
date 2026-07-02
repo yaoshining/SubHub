@@ -1,8 +1,9 @@
-import { StorageDatabase } from "@/server/storage";
+import type { StorageDatabase } from "@/server/storage/client";
 import { ProviderRepository } from "@/server/providers/provider-repository";
-import type { Provider } from "@/server/storage/schema";
+import type { ProviderWithCredentialSummary } from "@/server/providers/provider-repository";
+import { hasCredentials } from "@/server/providers/credential-pool";
 
-export type EnabledCandidate = Provider;
+export type EnabledCandidate = ProviderWithCredentialSummary;
 
 export async function getEnabledCandidates(
   db: StorageDatabase,
@@ -14,9 +15,7 @@ export async function getEnabledCandidates(
   return allProviders.filter((p) => {
     const qualifiesByStatus = p.status === "enabled" || p.status === "degraded";
     if (!qualifiesByStatus) return false;
-    const credentialRelevant = (p.type as string) === "opensubtitles";
-    const hasCredentials =
-      !credentialRelevant || (p.availableCredentialCount ?? 0) > 0;
-    return hasCredentials;
+    if (!hasCredentials(p.type)) return true;
+    return (p.availableCredentialCount ?? 0) > 0;
   });
 }

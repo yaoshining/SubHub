@@ -77,9 +77,9 @@ POST /api/admin/providers/{providerId}/disable
 ```
 
 **错误响应**:
-- `400` — OS enable 但无 active credential，body: `ErrorResponse`
-- `404` — provider 不存在
-- `409` — 当前状态已经是目标状态
+- `PROVIDER_CREDENTIAL_EXHAUSTED` — OS enable 但无 active credential（HTTP 503）
+- `PROVIDER_UNAVAILABLE` — provider 不存在（HTTP 503）
+- 幂等语义：当前已是目标状态时返回 200，不报错
 
 ### 2.2 PATCH 保持现有 `PATCH /api/admin/providers/{providerId}` 用于更新非 status 字段
 

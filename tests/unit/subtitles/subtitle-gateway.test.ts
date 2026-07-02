@@ -311,16 +311,33 @@ describe("统一字幕查询与下载", () => {
         await import("@/server/services/provider-service");
       await disableProvider(provider.id);
 
-      await expect(
-        searchSubtitles(
-          requestWithKey(callerKey.key),
-          { title: "Example" },
-          { adapter: { searchRaw: vi.fn() } },
-        ),
-      ).rejects.toMatchObject({
-        code: "SERVICE_NOT_READY",
-        target: "provider_pool",
-      });
+      // Xunlei seed provider is still enabled, so search succeeds via xunlei
+      const result = await searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Example" },
+        {
+          adapter: { searchRaw: vi.fn() },
+          xunleiAdapter: {
+            key: "xunlei",
+            search: vi.fn().mockResolvedValue({
+              ok: true,
+              skipped: false,
+              results: [
+                {
+                  id: "subtitle_001",
+                  language: "zh-CN",
+                  fileName: "Example.zh-CN.srt",
+                  downloadCount: 10,
+                },
+              ],
+            }),
+          },
+        },
+      );
+
+      expect(result.status).toBe("success");
+      expect(result.results).toHaveLength(1);
+      expect(result.provider_failures).toBeUndefined();
     });
 
     it("re-enables a previously disabled provider to restore scheduling", async () => {
@@ -374,7 +391,15 @@ describe("统一字幕查询与下载", () => {
 
       const { disableProvider } =
         await import("@/server/services/provider-service");
+      const { ProviderRepository } =
+        await import("@/server/providers/provider-repository");
       await disableProvider(provider.id);
+      // Also disable the xunlei seed provider so all providers are disabled
+      const repository = new ProviderRepository();
+      const xunleiProvider = await repository.findByProviderType("xunlei");
+      if (xunleiProvider) {
+        await disableProvider(xunleiProvider.id);
+      }
 
       await expect(
         searchSubtitles(

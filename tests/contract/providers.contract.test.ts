@@ -481,7 +481,7 @@ describe("Provider 管理 API 契约", () => {
       expect(disabledPayload.data.credentials).toHaveLength(1);
     });
 
-    it("returns 400 when enabling OS without active credential", async () => {
+    it("rejects enabling OS provider without active credentials", async () => {
       const cookie = await createAdminSessionCookie();
 
       // Create a provider with credential
@@ -538,7 +538,7 @@ describe("Provider 管理 API 契约", () => {
       await expectApiError(enableAttempt, "PROVIDER_CREDENTIAL_EXHAUSTED");
     });
 
-    it("returns 503 PROVIDER_UNAVAILABLE when enabling non-existent provider", async () => {
+    it("returns PROVIDER_UNAVAILABLE when enabling non-existent provider", async () => {
       const cookie = await createAdminSessionCookie();
 
       const enableAttempt = await providerEnableRoute.POST(

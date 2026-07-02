@@ -273,7 +273,7 @@ export function ProvidersClient() {
       } else {
         await enableProvider(id);
       }
-      void loadProviders();
+      await loadProviders();
     } catch (err) {
       const message =
         err instanceof AppError || err instanceof Error
