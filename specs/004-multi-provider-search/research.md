@@ -40,14 +40,14 @@
 引入 `SubtitleProviderAdapter` 接口（`src/server/providers/provider-adapter.ts`）与轻量 `provider-registry.ts` 注册表；不引入插件化框架；不引入 provider 配置描述文件。
 
 ```ts
-type SubtitleProviderKey = 'opensubtitles' | 'xunlei';
+type SubtitleProviderKey = "opensubtitles" | "xunlei";
 
 interface SubtitleProviderAdapter {
   readonly key: SubtitleProviderKey;
   search(
     credential: SelectedProviderCredential | null,
     input: SubtitleSearchInput,
-    options: { fetchImpl?: typeof fetch; timeoutMs?: number }
+    options: { fetchImpl?: typeof fetch; timeoutMs?: number },
   ): Promise<ProviderSearchOutcome>;
 }
 ```
@@ -112,8 +112,7 @@ interface SubtitleProviderAdapter {
 
 ### 未来路径
 
-若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.2.3`），届时才允许扩展 `providerTypes` enum 与新增 migration
----
+## 若后续需将迅雷 provider 元数据持久化（启用 / 禁用、priority、weight、concurrency limit、fallbackProviderId 等），必须由 post-`v0.2.2` 独立 spec 推进，且先升级 `versioning.md` 中 `v0.2.2` 范围（很可能升 `v0.2.3`），届时才允许扩展 `providerTypes` enum 与新增 migration
 
 ## R-5. `provider_failures` 暴露位置
 
@@ -258,6 +257,7 @@ API 契约链路遵循 `.github/copilot-instructions.md` 的 OpenAPI / Orval / S
 ### 决策
 
 性能预算：
+
 - 单 provider 搜索 p95 延迟 MUST 不高于 `v0.2.1` 同路径
 - 多 provider 串行调用端到端 p95 SHOULD 不高于"单 provider 最慢者 + 1s"
 - 单 provider 失败 MUST 不引入额外串行阻塞（快速失败）

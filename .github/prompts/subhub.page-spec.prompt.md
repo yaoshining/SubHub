@@ -28,15 +28,18 @@ tools: [read, search, todo]
 ## 步骤二：读取 ui-ux-pro-max 参考（如果存在）
 
 检查以下路径是否存在：
+
 - `.github/design-system/subhub/MASTER.md`
 - `.github/design-system/subhub/pages/<page>.md`
 
 如果存在，将其作为**中间参考输入**读取，吸收其中有价值的内容：
+
 - 页面级布局方向与视觉层次
 - 组件选型建议
 - 信息层级与主次操作提示
 
 **必须注意：**
+
 - 这些文件是工具生成的中间工件，**不是**项目最终真源
 - 不允许将其原样作为 page spec 输出
 - 吸收内容后，以 `DESIGN.md` 和 `docs/pages/*.md` 为权威收敛
@@ -94,6 +97,7 @@ tools: [read, search, todo]
 ### 如果目标页面 **已有** `docs/pages/<page>.md`：
 
 不输出完整文档，只输出增量：
+
 - **建议新增内容**（带说明）
 - **建议修改内容**（带原文对比）
 - **建议删除或合并内容**（带理由）
@@ -101,6 +105,7 @@ tools: [read, search, todo]
 ### 如果信息不足：
 
 不要硬写完整 page spec。只列出：
+
 - 目前已知的内容（可以作为基础的部分）
 - 最关键的缺失项（需要补充的具体信息）
 - 建议下一步（补原型、补 spec、澄清业务职责）

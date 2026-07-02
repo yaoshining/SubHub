@@ -1,7 +1,9 @@
 <!-- SPECKIT START -->
+
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
 at specs/005-provider-admin-baseline/plan.md
+
 <!-- SPECKIT END -->
 
 ## 语言规范
@@ -17,21 +19,21 @@ at specs/005-provider-admin-baseline/plan.md
 - 若文档、prompt、agent 输出或任务说明中存在 `npm` 示例，后续更新时应优先改写为 `pnpm` 对应写法。
 - 若某个执行环境暂时缺少全局 `pnpm`，应通过安装/启用 `pnpm` 解决，不得把 `corepack pnpm` 这类环境级 workaround 写入 `package.json`、测试断言、任务文档或其他仓库真源。
 - 若项目脚本已在 `package.json` 中定义，则默认使用：
-	- `pnpm install`
-	- `pnpm dev`
-	- `pnpm build`
-	- `pnpm format`
-	- `pnpm format:write`
-	- `pnpm lint`
-	- `pnpm typecheck`
-	- `pnpm test`
-	- `pnpm api:spec`
-	- `pnpm api:client`
-	- `pnpm api:docs`
-	- `pnpm api:check`
-	- `pnpm db:generate`
-	- `pnpm db:migrate`
-	- `pnpm db:check`
+  - `pnpm install`
+  - `pnpm dev`
+  - `pnpm build`
+  - `pnpm format`
+  - `pnpm format:write`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm api:spec`
+  - `pnpm api:client`
+  - `pnpm api:docs`
+  - `pnpm api:check`
+  - `pnpm db:generate`
+  - `pnpm db:migrate`
+  - `pnpm db:check`
 - 除非仓库中存在明确例外或用户明确要求，否则不要自行切换到 `npm`、`yarn` 或其他包管理器。
 - `corepack` 可作为某次临时执行环境中的启用手段，但不是本仓库脚本、文档或命令示例的默认写法。
 
@@ -88,6 +90,7 @@ at specs/005-provider-admin-baseline/plan.md
 - 新增页面设计稿应命名为 `design/<page-name>.pen` 或放入 `design/main.pen` 内的对应 Frame
 
 设计代理（UI 代理）在操作设计稿时，默认以 `design/main.pen` 为入口文件。
+
 ## 图标系统约定（Lucide）
 
 - 本项目默认图标系统为 **Lucide**。
@@ -104,14 +107,14 @@ at specs/005-provider-admin-baseline/plan.md
 
 ### 常用语义到 Lucide 图标名映射（默认）
 
-| 语义 | 默认 Lucide 名称 |
-|------|------------------|
-| 菜单/主导航入口 | `menu` |
-| 侧边栏/面板切换 | `panel-left` |
-| 系统设置 | `settings` |
-| 用户/成员管理 | `users` |
-| 安全/权限 | `shield` |
-| 凭据/API Key | `key-round` |
+| 语义            | 默认 Lucide 名称 |
+| --------------- | ---------------- |
+| 菜单/主导航入口 | `menu`           |
+| 侧边栏/面板切换 | `panel-left`     |
+| 系统设置        | `settings`       |
+| 用户/成员管理   | `users`          |
+| 安全/权限       | `shield`         |
+| 凭据/API Key    | `key-round`      |
 
 - 上述映射为默认优先映射；若页面场景确需不同图标，必须保持语义更清晰且在页面规范或实现说明中记录原因。
 - 同一语义在同一产品域内应保持图标名一致，避免跨页面漂移命名。
@@ -130,16 +133,16 @@ at specs/005-provider-admin-baseline/plan.md
 
 - `ui-ux-pro-max` 安装于 `.github/prompts/ui-ux-pro-max/`。
 - 当从 `.github` 目录运行时，其持久化产物通常写入 `.github/design-system/<project-name>/`，例如：
-	- `.github/design-system/subhub/MASTER.md`
-	- `.github/design-system/subhub/pages/*.md`
+  - `.github/design-system/subhub/MASTER.md`
+  - `.github/design-system/subhub/pages/*.md`
 - 这些文件默认视为工具生成的中间设计系统工件，不默认等同长期真源。
 - 本仓库长期设计真源仍为：`DESIGN.md` 与 `docs/pages/*.md`。
 - 代理可以读取 `.github/design-system/subhub/MASTER.md` 与 `.github/design-system/subhub/pages/*.md` 作为输入参考，但应将可复用内容吸收进 `DESIGN.md` 与 `docs/pages/*.md`。
 - 除非用户明确指定，否则不要把 `.github/design-system/subhub/` 作为第二套长期设计权威。
 - 若 `.github/design-system/<project-name>/` 仅包含中间生成结果，应视为可选提交；优先提交已吸收后的 `DESIGN.md` 与 `docs/pages/*.md`。
 - 引用 `ui-ux-pro-max` 结果时，需明确当前是在：
-	- 读取中间生成工件；或
-	- 更新最终项目设计文档。
+  - 读取中间生成工件；或
+  - 更新最终项目设计文档。
 - 若内容已吸收进入真源文档，不应反复要求用户回查 `.github/design-system/...`。
 - 本约定仅适用于 `ui-ux-pro-max` 生成工件（如 `.github/design-system/subhub/`），不泛化到所有 `.github/design-system/*` 内容。
 

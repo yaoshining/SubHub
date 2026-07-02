@@ -65,9 +65,9 @@ active feature 回退判定：
 
 - 若 `.specify/feature.json` 可用，优先使用。
 - 若不可用，回退到：
-  1) 当前分支名与 `specs/<feature-id>-<name>/` 的匹配；
-  2) 最近修改的 `specs/<feature-id>-<name>/` 目录；
-  3) 询问用户明确当前 active feature。
+  1. 当前分支名与 `specs/<feature-id>-<name>/` 的匹配；
+  2. 最近修改的 `specs/<feature-id>-<name>/` 目录；
+  3. 询问用户明确当前 active feature。
 
 执行顺序（必须按序，任一步失败即进入 Fallback）：
 
@@ -107,21 +107,21 @@ active feature 回退判定：
 
 阶段-证据-下一步映射（最小集）：
 
-| 阶段 | 关键证据 | 默认下一步 |
-| --- | --- | --- |
-| idea / rough request | 仅有口头需求，无稳定文档 | 进入 product clarification |
-| product clarification | 目标与范围已明确，但流程未定 | 进入 UX flow clarification |
-| UX flow clarification | 流程与状态覆盖明确，但页面规范缺失 | 进入 page spec generation |
-| prototype / wireframe | 有草图/原型，未落地设计真源 | 补 DESIGN.md 或 docs/pages |
-| DESIGN.md generation | DESIGN.md 缺失或不足 | 先完善 DESIGN.md |
-| page spec generation | DESIGN.md 已有，页面规范不足 | 进入页面规范补齐 |
-| feature spec | `spec.md` 存在，且无关键未决项（如 TODO / NEEDS CLARIFICATION） | 进入 plan |
-| plan | `plan.md` 存在，且包含技术路径与实施范围 | 进入 tasks |
-| tasks | `tasks.md` 存在，且每项有明确输入/输出与影响对象 | 进入 implementation 或 issue sync |
-| issue synchronization | task 已可追踪，待同步 issue | 进入 speckit.taskstoissues |
-| implementation | 满足 Decision Policy 中“可执行状态定义” | 进入 speckit.implement |
-| UI review / polish | 已有实现或设计稿待校验，且设计输入稳定（见 Decision Policy） | 进入 SubHub 界面评审 |
-| done / merge-ready | 关键工件齐全且风险可接受 | 进入提交/合并流程 |
+| 阶段                  | 关键证据                                                        | 默认下一步                        |
+| --------------------- | --------------------------------------------------------------- | --------------------------------- |
+| idea / rough request  | 仅有口头需求，无稳定文档                                        | 进入 product clarification        |
+| product clarification | 目标与范围已明确，但流程未定                                    | 进入 UX flow clarification        |
+| UX flow clarification | 流程与状态覆盖明确，但页面规范缺失                              | 进入 page spec generation         |
+| prototype / wireframe | 有草图/原型，未落地设计真源                                     | 补 DESIGN.md 或 docs/pages        |
+| DESIGN.md generation  | DESIGN.md 缺失或不足                                            | 先完善 DESIGN.md                  |
+| page spec generation  | DESIGN.md 已有，页面规范不足                                    | 进入页面规范补齐                  |
+| feature spec          | `spec.md` 存在，且无关键未决项（如 TODO / NEEDS CLARIFICATION） | 进入 plan                         |
+| plan                  | `plan.md` 存在，且包含技术路径与实施范围                        | 进入 tasks                        |
+| tasks                 | `tasks.md` 存在，且每项有明确输入/输出与影响对象                | 进入 implementation 或 issue sync |
+| issue synchronization | task 已可追踪，待同步 issue                                     | 进入 speckit.taskstoissues        |
+| implementation        | 满足 Decision Policy 中“可执行状态定义”                         | 进入 speckit.implement            |
+| UI review / polish    | 已有实现或设计稿待校验，且设计输入稳定（见 Decision Policy）    | 进入 SubHub 界面评审              |
+| done / merge-ready    | 关键工件齐全且风险可接受                                        | 进入提交/合并流程                 |
 
 ## Missing-Artifact Detection
 

@@ -206,14 +206,14 @@
 
 以下为可复用的空状态卡片结构，来源于 `design/main.pen → Empty States – Reference (Dark)`，适用于 Providers、API Keys、Users 等列表型页面的整页空状态或主区块空状态：
 
-| 层级 | 结构说明 | Token |
-|------|---------|-------|
-| 外层容器 | 垂直布局，居中对齐，padding 48/32，gap 20 | `fill: $--bg-surface`，`stroke: $--border-default`，`corner-radius: $--radius-lg` |
-| 图标容器 | 56×56，垂直居中 | `fill: $--bg-canvas`，`stroke: $--border-default`，`corner-radius: $--radius-lg` |
-| 图标 | 24×24，使用 **Lucide** 语义图标 | `fill: $--font-muted` |
-| 主标题 | Inter 15px / 600 | `fill: $--font-primary` |
-| 描述文字 | Inter 13px / regular，居中 | `fill: $--font-muted` |
-| CTA 按钮 | height 36，padding 16，图标（16×16）+ 文字 | `fill: $--accent`，`color: $--accent-foreground`，`corner-radius: $--radius-md` |
+| 层级     | 结构说明                                   | Token                                                                             |
+| -------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
+| 外层容器 | 垂直布局，居中对齐，padding 48/32，gap 20  | `fill: $--bg-surface`，`stroke: $--border-default`，`corner-radius: $--radius-lg` |
+| 图标容器 | 56×56，垂直居中                            | `fill: $--bg-canvas`，`stroke: $--border-default`，`corner-radius: $--radius-lg`  |
+| 图标     | 24×24，使用 **Lucide** 语义图标            | `fill: $--font-muted`                                                             |
+| 主标题   | Inter 15px / 600                           | `fill: $--font-primary`                                                           |
+| 描述文字 | Inter 13px / regular，居中                 | `fill: $--font-muted`                                                             |
+| CTA 按钮 | height 36，padding 16，图标（16×16）+ 文字 | `fill: $--accent`，`color: $--accent-foreground`，`corner-radius: $--radius-md`   |
 
 **图标约定**（优先使用 `design/main.pen → Assets / Icons / Lucide` 中已有资产）：
 

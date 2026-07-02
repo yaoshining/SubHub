@@ -8,7 +8,7 @@
 
 **输入**: 用户描述: "字幕搜索接口扩展检索字段"
 
-## 功能身份与可追溯性 *(mandatory)*
+## 功能身份与可追溯性 _(mandatory)_
 
 - **Feature ID**: `003`
 - **Spec 目录**: `specs/003-subtitle-search-fields/`
@@ -16,7 +16,7 @@
 - **主 Issue**: TBD
 - **Task Issue 策略**: spec review 通过后再进入 `/speckit.plan` 与 `/speckit.tasks`，task issues 延后到 tasks 阶段统一创建
 
-## 设计上下文 *(mandatory)*
+## 设计上下文 _(mandatory)_
 
 ### 设计来源
 
@@ -37,7 +37,7 @@
 - 不得直接把 OpenSubtitles 上游 query params 原样裸透传成长期对外契约；SubHub MUST 定义自己的稳定搜索请求模型。
 - 不得引入 breaking API 变更：老调用方不传新增字段时，旧行为 MUST 保持不变。
 
-## 用户场景与测试 *(mandatory)*
+## 用户场景与测试 _(mandatory)_
 
 ### 用户故事 1 - 媒体库自动化按 IMDb ID 找字幕 (Priority: P1)
 
@@ -110,7 +110,7 @@
 - 当 `filename` 为 `1.mp4` 这类无信息量文件名时：不报错，但文档标注价值有限
 - 当所有结构化字段都缺失、仅传 `query` 时：走原有 fallback 路径
 
-## 需求 *(mandatory)*
+## 需求 _(mandatory)_
 
 ### 功能需求
 
@@ -123,7 +123,7 @@
 - **FR-7**: 新增字段 MUST 在网关层校验：`imdb_id` 匹配 `tt` + 数字、`tmdb_id` 为正整数、`season_number`/`episode_number` 为非负整数、`type` 为 `movie` 或 `episode`、`year` 保持 1800-3000
 - **FR-8**: `filename` 若进入 Tier 2，文档 MUST 标注其价值有限，不应被当作主路径；当 `filename` 与 ID 字段同时存在时 ID 字段优先
 
-### 非功能需求 *(mandatory)*
+### 非功能需求 _(mandatory)_
 
 - **NFR-001 (代码质量)**: Feature MUST 通过 `pnpm lint` 与 `pnpm typecheck` 门禁
 - **NFR-002 (测试)**: Feature MUST 包含 contract tests（覆盖新字段）、unit tests（覆盖校验逻辑）、integration tests（覆盖 ID 定位路径与 query fallback 路径）
@@ -133,11 +133,11 @@
 - **NFR-006 (并行隔离)**: Feature MUST 在 `003-subtitle-search-fields` 分支/worktree 内独立推进
 - **NFR-007 (Issue 同步范围)**: Issue 同步 MUST 仅面向 `specs/003-subtitle-search-fields/`，且 MUST NOT 跨多个 spec 混批任务
 
-### 关键实体 *(如功能涉及数据请填写)*
+### 关键实体 _(如功能涉及数据请填写)_
 
 本功能不新增数据库实体。`SubtitleSearchInput`（网关层请求模型）与 `OpenSubtitlesSearchInput`（适配器层请求模型）为本次扩展的核心数据结构，但属于接口契约而非持久化实体。
 
-## 候选字段评估 *(mandatory)*
+## 候选字段评估 _(mandatory)_
 
 ### `query`
 
@@ -223,38 +223,38 @@
 - **是否首批暴露**：否（Tier 3）
 - **语义歧义/兼容性**：语义较窄且上游支持不稳定，待上游能力与需求明确后再评估
 
-## 推荐字段分层 *(mandatory)*
+## 推荐字段分层 _(mandatory)_
 
 ### Tier 1: 首批必须暴露
 
-| 字段 | 说明 |
-|------|------|
-| `query` | 保持现有 free-text 兜底字段 |
-| `imdb_id` | 新增；电影/剧集 ID 定位主路径 |
-| `tmdb_id` | 新增；剧集单集定位主路径 |
-| `season_number` | 结构化季编号（命名见 [NEEDS CLARIFICATION]） |
-| `episode_number` | 结构化集编号（命名见 [NEEDS CLARIFICATION]） |
-| `languages` | 保持现有语言过滤（命名见 [NEEDS CLARIFICATION]） |
-| `type` | 新增；`movie` / `episode` 类型过滤 |
-| `year` | 保持现有年份辅助字段 |
+| 字段             | 说明                                             |
+| ---------------- | ------------------------------------------------ |
+| `query`          | 保持现有 free-text 兜底字段                      |
+| `imdb_id`        | 新增；电影/剧集 ID 定位主路径                    |
+| `tmdb_id`        | 新增；剧集单集定位主路径                         |
+| `season_number`  | 结构化季编号（命名见 [NEEDS CLARIFICATION]）     |
+| `episode_number` | 结构化集编号（命名见 [NEEDS CLARIFICATION]）     |
+| `languages`      | 保持现有语言过滤（命名见 [NEEDS CLARIFICATION]） |
+| `type`           | 新增；`movie` / `episode` 类型过滤               |
+| `year`           | 保持现有年份辅助字段                             |
 
 **最小但正确的集合**：结构化 ID（`imdb_id` / `tmdb_id`）+ 季集（`season_number` / `episode_number`）+ 类型（`type`）+ 语言与年份（保持现有）+ `query` 兜底。这个集合覆盖了"已刮削元数据 → 自动找字幕"的主调用路径，且不引入 breaking 变更（除可能的字段改名需确认外）。
 
 ### Tier 2: 很快应补充
 
-| 字段 | 说明 |
-|------|------|
-| `filename` | 辅助字段；文档 MUST 标注价值有限，不应当作主路径 |
-| `hearing_impaired` | 偏好过滤字段；布尔值 |
+| 字段               | 说明                                             |
+| ------------------ | ------------------------------------------------ |
+| `filename`         | 辅助字段；文档 MUST 标注价值有限，不应当作主路径 |
+| `hearing_impaired` | 偏好过滤字段；布尔值                             |
 
 ### Tier 3: 暂不暴露 / 谨慎暴露
 
-| 字段 | 不暴露原因 |
-|------|------------|
-| `moviehash` | 需调用方客户端预计算哈希，SubHub 当前不提供哈希计算能力；首批价值有限且增加调用方负担 |
-| `foreign_parts_only` | 语义较窄且上游支持不稳定；待需求与上游能力明确后再评估 |
+| 字段                 | 不暴露原因                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `moviehash`          | 需调用方客户端预计算哈希，SubHub 当前不提供哈希计算能力；首批价值有限且增加调用方负担 |
+| `foreign_parts_only` | 语义较窄且上游支持不稳定；待需求与上游能力明确后再评估                                |
 
-## API 契约方向 *(mandatory)*
+## API 契约方向 _(mandatory)_
 
 ### 请求模型方向
 
@@ -288,7 +288,7 @@ SubtitleSearchRequest:
 - 不做前端复杂检索页面设计
 - 不做与字幕下载无关的媒体管理功能
 
-## 成功标准 *(mandatory)*
+## 成功标准 _(mandatory)_
 
 ### 可度量结果
 
@@ -343,11 +343,11 @@ SubtitleSearchRequest:
 
 ### 需要同步更新的层
 
-| 层 | 文件/模块 | 变更内容 |
-|----|-----------|----------|
-| Route | `src/app/api/subtitles/search/route.ts` | Zod schema 扩展新字段 |
-| Gateway | `src/server/subtitles/subtitle-gateway.ts` | `SubtitleSearchInput` 扩展、`buildSearchQuery` 重构为按定位路径分流 |
-| Adapter | `src/server/providers/opensubtitles-adapter.ts` | `OpenSubtitlesSearchInput` 扩展、`search` 实现透传新参数 |
-| OpenAPI | `docs/api/openapi.yaml` | `/api/subtitles/search` 请求参数扩展 |
-| Generated | `src/lib/api/generated/` | Orval 重新生成 client/types |
-| Tests | `tests/contract/subtitles.contract.test.ts`、`tests/unit/`、`tests/integration/` | 覆盖新字段、校验、ID 定位路径与 fallback 路径 |
+| 层        | 文件/模块                                                                        | 变更内容                                                            |
+| --------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Route     | `src/app/api/subtitles/search/route.ts`                                          | Zod schema 扩展新字段                                               |
+| Gateway   | `src/server/subtitles/subtitle-gateway.ts`                                       | `SubtitleSearchInput` 扩展、`buildSearchQuery` 重构为按定位路径分流 |
+| Adapter   | `src/server/providers/opensubtitles-adapter.ts`                                  | `OpenSubtitlesSearchInput` 扩展、`search` 实现透传新参数            |
+| OpenAPI   | `docs/api/openapi.yaml`                                                          | `/api/subtitles/search` 请求参数扩展                                |
+| Generated | `src/lib/api/generated/`                                                         | Orval 重新生成 client/types                                         |
+| Tests     | `tests/contract/subtitles.contract.test.ts`、`tests/unit/`、`tests/integration/` | 覆盖新字段、校验、ID 定位路径与 fallback 路径                       |

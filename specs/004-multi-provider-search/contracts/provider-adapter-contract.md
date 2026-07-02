@@ -34,15 +34,15 @@ adapter 返回的 provider 内原始结果：
 
 ```ts
 type ProviderSearchResult = {
-  id: string;                                    // provider 内字幕 ID（仅 adapter 内部使用，不直接暴露给 client）
+  id: string; // provider 内字幕 ID（仅 adapter 内部使用，不直接暴露给 client）
   language: string | null;
   releaseName: string | null;
-  format: string;                                // 字幕格式（srt / ass / sub）
-  providerDownloadUrl: string | null;            // 【adapter 内部字段】provider 原始下载地址；OpenSubtitles 通常为 null（走 SubHub 网关）
-                                                 // ⚠️ 此字段仅用于 adapter 内部与下载流程，绝对不允许作为公共 API 的 `downloadUrl` 直接透传给 client
-                                                 //    公共响应的 `downloadUrl` 一律由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId=...`
-  raw?: Record<string, unknown>;                 // provider 原始字段（仅 adapter 内部使用）；公共响应中的 `raw` 由 gateway 归一化后暴露
-  score?: number | null;                         // provider 原始评分（迅雷透传 score）
+  format: string; // 字幕格式（srt / ass / sub）
+  providerDownloadUrl: string | null; // 【adapter 内部字段】provider 原始下载地址；OpenSubtitles 通常为 null（走 SubHub 网关）
+  // ⚠️ 此字段仅用于 adapter 内部与下载流程，绝对不允许作为公共 API 的 `downloadUrl` 直接透传给 client
+  //    公共响应的 `downloadUrl` 一律由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId=...`
+  raw?: Record<string, unknown>; // provider 原始字段（仅 adapter 内部使用）；公共响应中的 `raw` 由 gateway 归一化后暴露
+  score?: number | null; // provider 原始评分（迅雷透传 score）
 };
 ```
 
@@ -52,13 +52,17 @@ adapter 三种返回语义：
 
 ```ts
 type SkippedReason =
-  | "missing_required_field"                     // 必要条件字段缺失（如迅雷缺 query / languages）
-  | "disabled"                                    // provider 被禁用
-  | "credential_missing";                         // 凭据缺失
+  | "missing_required_field" // 必要条件字段缺失（如迅雷缺 query / languages）
+  | "disabled" // provider 被禁用
+  | "credential_missing"; // 凭据缺失
 
 type ProviderSearchError = {
-  reason: "upstream_failed" | "timeout" | "rate_limited" | "authentication_failed";
-  message: string;                                // 不含堆栈
+  reason:
+    | "upstream_failed"
+    | "timeout"
+    | "rate_limited"
+    | "authentication_failed";
+  message: string; // 不含堆栈
 };
 
 type ProviderSearchOutcome =
@@ -76,7 +80,7 @@ interface SubtitleProviderAdapter {
   search(
     credential: SelectedProviderCredential | null,
     input: SubtitleSearchInput,
-    options?: { fetchImpl?: typeof fetch; timeoutMs?: number }
+    options?: { fetchImpl?: typeof fetch; timeoutMs?: number },
   ): Promise<ProviderSearchOutcome>;
 }
 ```
@@ -250,20 +254,20 @@ for (const providerKey of providerKeys) {
 
 adapter 返回的 `error.reason`（adapter 内部语义）映射到对外 `ProviderFailureInfo.reason`：
 
-| adapter `error.reason` | 对外 `ProviderFailureInfo.reason` |
-|------------------------|-----------------------------------|
-| `upstream_failed` | `upstream_failed` |
-| `timeout` | `timeout` |
-| `rate_limited` | `rate_limited` |
-| `authentication_failed` | `authentication_failed` |
+| adapter `error.reason`  | 对外 `ProviderFailureInfo.reason` |
+| ----------------------- | --------------------------------- |
+| `upstream_failed`       | `upstream_failed`                 |
+| `timeout`               | `timeout`                         |
+| `rate_limited`          | `rate_limited`                    |
+| `authentication_failed` | `authentication_failed`           |
 
 adapter `outcome.skipped` 映射：
 
 | adapter `outcome.skipped.reason` | 对外 `ProviderFailureInfo.reason` |
-|----------------------------------|-----------------------------------|
-| `missing_required_field` | `skipped_missing_fields` |
-| `disabled` | `skipped_disabled` |
-| `credential_missing` | `skipped_disabled` |
+| -------------------------------- | --------------------------------- |
+| `missing_required_field`         | `skipped_missing_fields`          |
+| `disabled`                       | `skipped_disabled`                |
+| `credential_missing`             | `skipped_disabled`                |
 
 ---
 
@@ -292,14 +296,14 @@ adapter `outcome.skipped` 映射：
 
 ## 7. 错误隔离保证
 
-| 场景 | 行为 |
-|------|------|
-| adapter 抛出未处理错误 | gateway 防御性兜底，视为 `upstream_failed` |
-| 上游返回 5xx | adapter 捕获，返回 `upstream_failed` |
-| 上游返回 4xx | adapter 捕获，分类（如 401 → `authentication_failed`、429 → `rate_limited`） |
-| 上游超时 | adapter 返回 `timeout` |
-| 必要条件缺失 | adapter 返回 `skipped: true` |
-| 上游返回非预期响应结构 | adapter 解析失败，返回 `upstream_failed` |
+| 场景                   | 行为                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| adapter 抛出未处理错误 | gateway 防御性兜底，视为 `upstream_failed`                                   |
+| 上游返回 5xx           | adapter 捕获，返回 `upstream_failed`                                         |
+| 上游返回 4xx           | adapter 捕获，分类（如 401 → `authentication_failed`、429 → `rate_limited`） |
+| 上游超时               | adapter 返回 `timeout`                                                       |
+| 必要条件缺失           | adapter 返回 `skipped: true`                                                 |
+| 上游返回非预期响应结构 | adapter 解析失败，返回 `upstream_failed`                                     |
 
 ---
 

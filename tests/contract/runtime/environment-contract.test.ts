@@ -31,7 +31,7 @@ describe("运行环境契约", () => {
     ]);
 
     expect(runtimeMapping).toContain(
-      "`preview` | `Preview` | staging database",
+      "`preview`               | `Preview`     | staging database",
     );
 
     for (const prefix of previewWhitelist) {

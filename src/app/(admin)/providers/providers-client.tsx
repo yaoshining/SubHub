@@ -2,19 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  ArrowRight,
-  CloudOff,
-  RefreshCw,
-  Server,
-} from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { AlertTriangle, RefreshCw, Search, Server, X } from "lucide-react";
 
-import type {
-  Provider,
-  ProviderDetail,
-  ProviderStatus,
-} from "@/lib/api/providers";
+import type { Provider, ProviderDetail } from "@/lib/api/providers";
 import { fetchProviders } from "@/lib/api/providers";
 import {
   EmptyStateActionButton,
@@ -24,10 +15,14 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { CreateProviderDrawer } from "@/components/providers/create-provider-drawer";
 import { ProviderList } from "@/components/providers/provider-list";
 import { ProviderPoolInspector } from "@/components/providers/provider-pool-inspector";
-import { providerStatusMeta } from "@/components/providers/provider-utils";
+import {
+  emptyStateMessages,
+  PROVIDER_TYPE_TABS,
+} from "@/components/providers/provider-utils";
+import type { ProviderTypeTab } from "@/components/providers/provider-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -35,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppError } from "@/lib/errors";
 
 const filterOptions = [
@@ -61,46 +57,34 @@ function ProvidersSkeleton() {
       role="status"
       aria-label="正在加载 Provider 列表"
     >
-      <div className="grid gap-4 tablet:grid-cols-2 desktop:grid-cols-4">
-        {[0, 1, 2, 3].map((item) => (
-          <div className="h-28 rounded-lg border bg-surface" key={item} />
+      <div className="grid gap-3">
+        {[0, 1, 2].map((item) => (
+          <div
+            className="h-24 animate-pulse rounded-lg border bg-surface"
+            key={item}
+          />
         ))}
       </div>
-      <div className="h-80 rounded-lg border bg-surface" />
     </div>
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  description,
-}: {
-  label: string;
-  value: string | number;
-  description: string;
-}) {
-  return (
-    <Card className="border-border bg-surface shadow-none">
-      <CardContent className="space-y-2 p-4">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="text-2xl font-semibold tracking-tight">{value}</p>
-        <p className="text-xs leading-5 text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
 export function ProvidersClient() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [providers, setProviders] = React.useState<Provider[]>([]);
   const [selectedProviderId, setSelectedProviderId] = React.useState<string>();
   const [filter, setFilter] = React.useState<ProviderFilter>("all");
+  const [typeTab, setTypeTab] = React.useState<ProviderTypeTab>("all");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [createdProvider, setCreatedProvider] =
     React.useState<ProviderDetail | null>(null);
   const mountedRef = React.useRef(true);
+  const initialSelectedRef = React.useRef(searchParams.get("selected"));
 
   const loadProviders = React.useCallback(async () => {
     setLoading(true);
@@ -111,7 +95,13 @@ export function ProvidersClient() {
         return;
       }
       setProviders(list.items);
+
+      // Restore selection from initial query string, then fallback to degraded > needs_config > first
+      const selectedId = initialSelectedRef.current;
       setSelectedProviderId((current) => {
+        if (selectedId && list.items.some((item) => item.id === selectedId)) {
+          return selectedId;
+        }
         if (current && list.items.some((item) => item.id === current)) {
           return current;
         }
@@ -143,24 +133,78 @@ export function ProvidersClient() {
     };
   }, [loadProviders]);
 
-  const filteredProviders = providers.filter((provider) =>
-    filter === "all" ? true : provider.status === filter,
+  // Sync selected ID to query string
+  const handleSelectProvider = React.useCallback(
+    (id: string) => {
+      setSelectedProviderId(id);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("selected", id);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
   );
-  const selectedProvider = providers.find(
+
+  // Composite filter: type + status + search text
+  const filteredProviders = providers.filter((provider) => {
+    if (typeTab !== "all" && provider.type !== typeTab) return false;
+    if (filter !== "all" && provider.status !== filter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (
+        !provider.name.toLowerCase().includes(q) &&
+        !provider.id.toLowerCase().includes(q)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const selectedProvider = filteredProviders.find(
     (provider) => provider.id === selectedProviderId,
   );
-  const totalCredentialCount = providers.reduce(
-    (sum, provider) => sum + provider.credentialCount,
-    0,
-  );
-  const activeCredentialCount = providers.reduce(
-    (sum, provider) => sum + provider.activeCredentialCount,
-    0,
-  );
-  const cooldownOrRiskCount = providers.filter(
-    (provider) =>
-      provider.status === "degraded" || provider.availableCredentialCount === 0,
+
+  // Compute status counts
+  const enabledCount = providers.filter((p) => p.status === "enabled").length;
+  const degradedCount = providers.filter((p) => p.status === "degraded").length;
+  const needsConfigCount = providers.filter(
+    (p) => p.status === "needs_config",
   ).length;
+  const disabledCount = providers.filter((p) => p.status === "disabled").length;
+
+  const statusChips = [
+    {
+      key: "enabled" as const,
+      label: "已启用",
+      count: enabledCount,
+      tone: "success" as const,
+    },
+    {
+      key: "degraded" as const,
+      label: "降级",
+      count: degradedCount,
+      tone: "warning" as const,
+    },
+    {
+      key: "needs_config" as const,
+      label: "待完善",
+      count: needsConfigCount,
+      tone: "warning" as const,
+    },
+    {
+      key: "disabled" as const,
+      label: "停用",
+      count: disabledCount,
+      tone: "destructive" as const,
+    },
+  ];
+
+  // Summary sentence
+  const needsAttention = degradedCount + needsConfigCount + disabledCount;
+  const summarySentence =
+    needsAttention > 0
+      ? `当前 ${providers.length} 个实例；${needsAttention} 个需要立即处理`
+      : `当前 ${providers.length} 个实例，全部运行正常`;
 
   const handleCreated = React.useCallback((provider: ProviderDetail) => {
     setProviders((current) => {
@@ -179,29 +223,94 @@ export function ProvidersClient() {
     );
   }, []);
 
+  const handleClearFilters = React.useCallback(() => {
+    setFilter("all");
+    setTypeTab("all");
+    setSearchQuery("");
+  }, []);
+
+  const handleClearSearch = React.useCallback(() => {
+    setSearchQuery("");
+  }, []);
+
+  // Determine which empty state to show
+  const hasProviders = providers.length > 0;
+  const hasFilteredResults = filteredProviders.length > 0;
+  const isSearchActive = searchQuery.length > 0;
+  const isFilterActive = filter !== "all" || typeTab !== "all";
+  const isEmptySearch = isSearchActive && !hasFilteredResults;
+
   return (
     <div className="grid gap-6" data-testid="providers-page">
-      <div className="flex flex-col gap-3 rounded-lg border bg-surface p-4 desktop:flex-row desktop:items-center desktop:justify-between">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge tone={providers.length > 0 ? "success" : "warning"}>
-              {providers.length > 0 ? "已有 Provider" : "未配置 Provider"}
-            </StatusBadge>
-            <span className="text-sm text-muted-foreground">
-              比较、分诊并承接 OpenSubtitles 深配。
-            </span>
+      {/* === Operational Pulse Strip === */}
+      <div className="sticky top-0 z-10 rounded-lg border bg-surface p-4">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-lg font-semibold">Providers</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {summarySentence}
+            </p>
           </div>
-          <p className="text-xs leading-5 text-muted-foreground">
-            列表选中用于池检查；配置详情用于保存策略与处理高风险凭据。
-          </p>
+          <CreateProviderDrawer
+            open={drawerOpen}
+            onOpenChange={setDrawerOpen}
+            onCreated={handleCreated}
+          />
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+
+        {/* Status chips */}
+        <div className="mb-3 flex flex-wrap gap-2">
+          {statusChips.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
+                filter === chip.key
+                  ? "border-strong bg-primary/5"
+                  : "border-border bg-muted/30 hover:bg-muted/50"
+              }`}
+              aria-pressed={filter === chip.key}
+              onClick={() =>
+                setFilter((f) => (f === chip.key ? "all" : chip.key))
+              }
+            >
+              <StatusBadge
+                tone={chip.tone}
+                className="!rounded-sm !px-1 !text-[10px]"
+              >
+                {chip.count}
+              </StatusBadge>
+              <span>{chip.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Filters row */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Tabs
+            value={typeTab}
+            onValueChange={(v) => setTypeTab(v as ProviderTypeTab)}
+            className="shrink-0"
+          >
+            <TabsList className="h-8">
+              {PROVIDER_TYPE_TABS.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="px-2.5 py-1 text-xs"
+                >
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
           <Select
             value={filter}
             onValueChange={(value) => setFilter(value as ProviderFilter)}
           >
             <SelectTrigger
-              className="w-full sm:w-44"
+              className="h-8 w-36 text-xs"
               aria-label="筛选 Provider 状态"
             >
               <SelectValue />
@@ -214,23 +323,44 @@ export function ProvidersClient() {
               ))}
             </SelectContent>
           </Select>
+
+          <div className="relative min-w-[12rem] max-w-xs flex-1">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              placeholder="搜索 Provider 名称或 ID"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pl-8 pr-8 text-xs"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                aria-label="清空搜索"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={handleClearSearch}
+              >
+                <X aria-hidden="true" className="size-3.5" />
+              </button>
+            )}
+          </div>
+
           <Button
             aria-label="刷新 Provider 列表"
             variant="outline"
             size="icon"
+            className="size-8"
             onClick={() => void loadProviders()}
             disabled={loading}
           >
-            <RefreshCw aria-hidden="true" className="size-4" />
+            <RefreshCw aria-hidden="true" className="size-3.5" />
           </Button>
-          <CreateProviderDrawer
-            open={drawerOpen}
-            onOpenChange={setDrawerOpen}
-            onCreated={handleCreated}
-          />
         </div>
       </div>
 
+      {/* Created success alert */}
       {createdProvider ? (
         <Alert variant="success" data-testid="provider-create-success">
           <Server aria-hidden="true" className="size-4" />
@@ -261,113 +391,101 @@ export function ProvidersClient() {
         </Alert>
       ) : null}
 
+      {/* Error state */}
       {error ? (
         <Alert variant="destructive" data-testid="providers-error">
           <AlertTriangle aria-hidden="true" className="size-4" />
           <AlertTitle>Provider 信息不可用</AlertTitle>
           <AlertDescription>
-            {error}。可重试刷新，或继续打开新增抽屉创建 OpenSubtitles Provider。
+            {error}。可{" "}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:no-underline"
+              onClick={() => void loadProviders()}
+            >
+              重试刷新
+            </button>
+            ，或继续创建新 Provider。
           </AlertDescription>
         </Alert>
       ) : null}
 
+      {/* Loading skeleton */}
       {loading && providers.length === 0 ? <ProvidersSkeleton /> : null}
 
-      {!loading && providers.length === 0 ? (
+      {/* No providers - empty database */}
+      {!loading && !hasProviders ? (
         <EmptyStateCard
           icon="cloud-off"
-          title="还没有配置 Provider"
-          description="先添加首个 OpenSubtitles Provider。创建后仍需进入详情页补充调度策略，才能稳定参与统一字幕出口服务。"
+          title={emptyStateMessages["no-providers"].title}
+          description={emptyStateMessages["no-providers"].description}
           action={
             <EmptyStateActionButton onClick={() => setDrawerOpen(true)}>
-              新增 OpenSubtitles
+              {emptyStateMessages["no-providers"].actionLabel}
             </EmptyStateActionButton>
           }
         />
       ) : null}
 
-      {providers.length > 0 ? (
+      {/* Has providers, show content */}
+      {hasProviders ? (
         <>
-          <section
-            className="grid gap-4 tablet:grid-cols-2 desktop:grid-cols-4"
-            aria-label="Token 池摘要"
-          >
-            <SummaryCard
-              label="Provider 总数"
-              value={providers.length}
-              description="包含启用、降级、停用与待完善配置实例。"
-            />
-            <SummaryCard
-              label="活跃 Token"
-              value={activeCredentialCount}
-              description={`总 Token ${totalCredentialCount} 个。`}
-            />
-            <SummaryCard
-              label="风险 Provider"
-              value={cooldownOrRiskCount}
-              description="降级、无可用凭据或需要人工处理的实例。"
-            />
-            <SummaryCard
-              label="最近切换"
-              value="暂无"
-              description="当前契约未提供切换次数读数，详情页展示最近行为轨迹。"
-            />
-          </section>
+          {/* Results count */}
+          <p className="text-xs text-muted-foreground">
+            {filteredProviders.length} 条结果
+            {isFilterActive || isSearchActive ? (
+              <button
+                type="button"
+                className="ml-2 underline underline-offset-2 hover:no-underline"
+                onClick={handleClearFilters}
+              >
+                清空筛选
+              </button>
+            ) : null}
+          </p>
 
           <div className="grid gap-6 desktop:grid-cols-[minmax(0,1.4fr)_minmax(22rem,0.8fr)]">
             <div className="grid gap-4">
-              {filteredProviders.length > 0 ? (
+              {/* No results after filtering */}
+              {!hasFilteredResults ? (
+                <EmptyStateCard
+                  icon="cloud-off"
+                  title={
+                    isEmptySearch
+                      ? `没有匹配 "${searchQuery}" 的 Provider`
+                      : emptyStateMessages["no-results"].title
+                  }
+                  description={
+                    isEmptySearch
+                      ? emptyStateMessages["no-matches"].description
+                      : emptyStateMessages["no-results"].description
+                  }
+                  action={
+                    <EmptyStateActionButton
+                      onClick={
+                        isEmptySearch ? handleClearSearch : handleClearFilters
+                      }
+                    >
+                      {isEmptySearch
+                        ? emptyStateMessages["no-matches"].actionLabel
+                        : emptyStateMessages["no-results"].actionLabel}
+                    </EmptyStateActionButton>
+                  }
+                />
+              ) : (
                 <ProviderList
                   providers={filteredProviders}
                   selectedProviderId={selectedProviderId}
-                  onSelectProvider={setSelectedProviderId}
+                  onSelectProvider={handleSelectProvider}
                 />
-              ) : (
-                <Card className="border-border bg-surface shadow-none">
-                  <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
-                    <CloudOff
-                      aria-hidden="true"
-                      className="size-6 text-muted-foreground"
-                    />
-                    <p className="text-sm font-medium">
-                      当前筛选下没有 Provider
-                    </p>
-                    <p className="text-xs leading-5 text-muted-foreground">
-                      可切换状态筛选或新增 OpenSubtitles Provider。
-                    </p>
-                  </CardContent>
-                </Card>
               )}
             </div>
+
             <ProviderPoolInspector
               provider={selectedProvider}
               onDetailLoaded={handleDetailLoaded}
             />
           </div>
-
-          {selectedProvider ? (
-            <Card className="border-border bg-surface shadow-none">
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-medium">切换原则与深配承接</p>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    {
-                      providerStatusMeta[
-                        selectedProvider.status as ProviderStatus
-                      ].description
-                    }
-                    进入详情页可保存调度策略并处理隔离 / 恢复动作。
-                  </p>
-                </div>
-                <Button asChild variant="outline">
-                  <Link href={`/providers/${selectedProvider.id}`}>
-                    配置 {selectedProvider.name}
-                    <ArrowRight aria-hidden="true" className="size-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : null}
         </>
       ) : null}
     </div>

@@ -71,12 +71,12 @@
 
 ### 断点行为
 
-| 断点 | Section Stack | Inspector | Save 按钮 |
-|------|---------------|-----------|-----------|
-| ≥ 1280px | 左 2/3 | 右 1/3 sticky | Section B 内联 |
-| 1024–1279px | 全宽单栏 | 下沉到 Section D 之后 | Section B 内联 |
-| 768–1023px | 全宽单栏 | 下沉到 Section D 之后；危险区移至 Section C 末尾 | Section B 内联 |
-| < 768px | 全宽单栏 | 下沉到 Section D 之后 | `fixed bottom-0 inset-x-0` sticky |
+| 断点        | Section Stack | Inspector                                        | Save 按钮                         |
+| ----------- | ------------- | ------------------------------------------------ | --------------------------------- |
+| ≥ 1280px    | 左 2/3        | 右 1/3 sticky                                    | Section B 内联                    |
+| 1024–1279px | 全宽单栏      | 下沉到 Section D 之后                            | Section B 内联                    |
+| 768–1023px  | 全宽单栏      | 下沉到 Section D 之后；危险区移至 Section C 末尾 | Section B 内联                    |
+| < 768px     | 全宽单栏      | 下沉到 Section D 之后                            | `fixed bottom-0 inset-x-0` sticky |
 
 ### 结构审美约束
 
@@ -89,6 +89,7 @@
 **组件**：`Switch` + `ProviderStatusBadge` + `HealthBlock.detailed`。
 
 **交互规则**：
+
 - Switch 切换立即调 API（`POST .../enable` / `POST .../disable`），**无 dirty state**，不进 unsavedChanges。
 - 切换前必须弹出 `AlertDialog` 确认。
   - 启用确认：「启用 {{ Type }} Provider？启用后该 provider 将立即参与聚合搜索调度。」
@@ -102,20 +103,22 @@
 
 **字段清单**：
 
-| 字段 | OpenSubtitles | Xunlei |
-|------|---------------|--------|
-| Priority（优先级） | Input `type="number"` | 同左 |
-| Weight（权重） | Input `type="number"` | 同左 |
-| Concurrency Limit（并发上限） | Input `type="number"` | 同左 |
-| Cooldown Seconds（冷却秒数） | Input `type="number"` | 同左 |
-| Fallback Provider（回退目标） | Select（按 type 分组列出其他 provider） | 同左 |
-| Rotation Enabled（凭据轮换） | Switch | ❌ 整行隐藏 |
+| 字段                          | OpenSubtitles                           | Xunlei      |
+| ----------------------------- | --------------------------------------- | ----------- |
+| Priority（优先级）            | Input `type="number"`                   | 同左        |
+| Weight（权重）                | Input `type="number"`                   | 同左        |
+| Concurrency Limit（并发上限） | Input `type="number"`                   | 同左        |
+| Cooldown Seconds（冷却秒数）  | Input `type="number"`                   | 同左        |
+| Fallback Provider（回退目标） | Select（按 type 分组列出其他 provider） | 同左        |
+| Rotation Enabled（凭据轮换）  | Switch                                  | ❌ 整行隐藏 |
 
 **type-aware 规则**：
+
 - `Rotation Enabled` 仅在 `type === 'opensubtitles'` 时渲染整行；`type === 'xunlei'` 时不渲染。
 - Fallback 的 Select 选项不得包含自身（禁用 + tooltip）。
 
 **Save 行为**：
+
 - Save 按钮在 Section B 右上角，**仅对本 Section 的 dirty state 生效**。
 - 保存成功 → Toast「调度策略已保存」+ dirty 徽章消失 + `updatedAt` 刷新。
 - 保存失败 → Toast「保存失败」+ 表单保留 + 字段级 inline 错误。
@@ -149,6 +152,7 @@
 ```
 
 组件：`ProviderCredentialTable`（既有，增强状态 Badge 对齐 §6.2）。
+
 - 无凭据时：`EmptyStateCard` scope=no-credentials, type=opensubtitles →「当前无活跃凭据，对外服务已中断，请添加至少一个 API Key。」
 
 ### Xunlei 分支
@@ -222,6 +226,7 @@ Status: Enabled
 ```
 
 **type-aware 危险区**：
+
 - OpenSubtitles：按钮仅 `status=disabled` 且 `availableCredentialCount === 0` 时启用；其余 disabled + tooltip「仅在停用且无活跃凭据时可删除」。
 - Xunlei：**不显示删除按钮**；显示文字「Xunlei 实例由 migration 预置，请联系运维删除。」
 

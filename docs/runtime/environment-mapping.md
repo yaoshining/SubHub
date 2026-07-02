@@ -15,12 +15,12 @@
 
 ## 正式环境映射
 
-| 场景 | 运行环境 | 数据库目标 | 说明 |
-| --- | --- | --- | --- |
-| `main` | `Production` | prod database | 正式生产入口，只允许映射到 prod |
-| `preview` | `Preview` | staging database | 固定作为 staging / 发布前验证入口 |
-| 本地 development | `Development` | dev database | 本地开发默认只允许连接 dev |
-| 普通 Preview 分支白名单 | `Preview` | dev database | 仅对白名单内前缀开放，且只允许映射到 dev |
+| 场景                    | 运行环境      | 数据库目标       | 说明                                     |
+| ----------------------- | ------------- | ---------------- | ---------------------------------------- |
+| `main`                  | `Production`  | prod database    | 正式生产入口，只允许映射到 prod          |
+| `preview`               | `Preview`     | staging database | 固定作为 staging / 发布前验证入口        |
+| 本地 development        | `Development` | dev database     | 本地开发默认只允许连接 dev               |
+| 普通 Preview 分支白名单 | `Preview`     | dev database     | 仅对白名单内前缀开放，且只允许映射到 dev |
 
 ## Preview 分支白名单
 

@@ -9,12 +9,12 @@
 
 ## 环境映射
 
-| 场景 | 部署环境 | 数据库 tier | 平台注入 |
-| --- | --- | --- | --- |
-| `main` | Vercel Production | prod | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
-| `preview` | Vercel Preview | staging | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
-| 普通 Preview 白名单分支：`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` | Vercel Preview | dev | `DATABASE_URL` + `DATABASE_URL_UNPOOLED` |
-| 本地 `NODE_ENV=development` | local | dev | `DEV_DATABASE_URL` + `DEV_DATABASE_URL_UNPOOLED` |
+| 场景                                                                                                        | 部署环境          | 数据库 tier | 平台注入                                         |
+| ----------------------------------------------------------------------------------------------------------- | ----------------- | ----------- | ------------------------------------------------ |
+| `main`                                                                                                      | Vercel Production | prod        | `DATABASE_URL` + `DATABASE_URL_UNPOOLED`         |
+| `preview`                                                                                                   | Vercel Preview    | staging     | `DATABASE_URL` + `DATABASE_URL_UNPOOLED`         |
+| 普通 Preview 白名单分支：`preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` | Vercel Preview    | dev         | `DATABASE_URL` + `DATABASE_URL_UNPOOLED`         |
+| 本地 `NODE_ENV=development`                                                                                 | local             | dev         | `DEV_DATABASE_URL` + `DEV_DATABASE_URL_UNPOOLED` |
 
 应用层只校验部署身份与当前注入的单一 URL 对，不在 prod / staging / dev 多套数据库 URL 之间自行路由。
 
@@ -106,13 +106,13 @@ CALLER_KEY_SECRET=replace-with-at-least-32-chars
 
 ### A. 入口与脚本真源
 
-| 目的 | 入口脚本 | 对应 `pnpm` 脚本 | URL 边界 |
-| --- | --- | --- | --- |
-| schema migration | `scripts/db/migrate.ts` | `pnpm db:migrate` | `DATABASE_URL_UNPOOLED`（直连） |
-| bootstrap / 首个管理员初始化 | `scripts/db/bootstrap.ts` | `pnpm db:bootstrap` | `DATABASE_URL_UNPOOLED`（直连） |
-| dev seed | `scripts/db/seed-dev.ts` | `pnpm db:seed:dev` | `DATABASE_URL_UNPOOLED`（直连） |
-| staging seed | `scripts/db/seed-staging.ts` | `pnpm db:seed:staging` | `DATABASE_URL_UNPOOLED`（直连） |
-| 运行时 readiness 探针 | `scripts/db/readiness.ts` | 由 deploy smoke 显式调用 | `DATABASE_URL`（pooled） |
+| 目的                         | 入口脚本                     | 对应 `pnpm` 脚本         | URL 边界                        |
+| ---------------------------- | ---------------------------- | ------------------------ | ------------------------------- |
+| schema migration             | `scripts/db/migrate.ts`      | `pnpm db:migrate`        | `DATABASE_URL_UNPOOLED`（直连） |
+| bootstrap / 首个管理员初始化 | `scripts/db/bootstrap.ts`    | `pnpm db:bootstrap`      | `DATABASE_URL_UNPOOLED`（直连） |
+| dev seed                     | `scripts/db/seed-dev.ts`     | `pnpm db:seed:dev`       | `DATABASE_URL_UNPOOLED`（直连） |
+| staging seed                 | `scripts/db/seed-staging.ts` | `pnpm db:seed:staging`   | `DATABASE_URL_UNPOOLED`（直连） |
+| 运行时 readiness 探针        | `scripts/db/readiness.ts`    | 由 deploy smoke 显式调用 | `DATABASE_URL`（pooled）        |
 
 > 说明：所有脚本都通过 `src/lib/env.ts` 的 `readEnv()` 解析运行时身份；任何脚本若尝试在 dev / staging / prod 多套 URL 间自行路由，应视为脚本误用。
 

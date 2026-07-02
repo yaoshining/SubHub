@@ -56,14 +56,14 @@
 
 数据库相关路径约定如下：
 
-| 目的 | 路径 |
-|------|------|
-| Drizzle schema | `src/server/storage/schema.ts` |
-| migration 文件 | `src/server/storage/migrations/` |
-| 数据库访问入口 | `src/server/storage/client.ts` |
-| Drizzle 配置 | `drizzle.config.ts` |
+| 目的               | 路径                                |
+| ------------------ | ----------------------------------- |
+| Drizzle schema     | `src/server/storage/schema.ts`      |
+| migration 文件     | `src/server/storage/migrations/`    |
+| 数据库访问入口     | `src/server/storage/client.ts`      |
+| Drizzle 配置       | `drizzle.config.ts`                 |
 | 数据库相关单元测试 | `tests/unit/storage/schema.test.ts` |
-| 集成测试数据库辅助 | `tests/setup.ts` |
+| 集成测试数据库辅助 | `tests/setup.ts`                    |
 
 实现约定：
 
@@ -95,17 +95,17 @@
 
 **用途**: 存储可登录管理控制台的后台成员，包括首个管理员和后续邀请加入的维护成员。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `admin_` 前缀 ULID/CUID |
-| `identifier` | text | not null, unique | 登录标识，邮箱或用户名；建议保存规范化小写值 |
-| `displayName` | text | not null | 后台显示名称 |
-| `passwordHash` | text | not null | 管理员密码哈希，不存明文 |
-| `status` | text | not null | `active`、`suspended` |
-| `role` | text | not null | MVP 预设角色，如 `admin`、`operator`；不承载完整 RBAC |
-| `createdAt` | text | not null | ISO 8601 UTC 时间 |
-| `updatedAt` | text | not null | ISO 8601 UTC 时间 |
-| `lastLoginAt` | text | nullable | 最近成功登录时间 |
+| 字段           | 类型建议 | 约束             | 说明                                                  |
+| -------------- | -------- | ---------------- | ----------------------------------------------------- |
+| `id`           | text     | primary key      | 稳定唯一标识，建议使用 `admin_` 前缀 ULID/CUID        |
+| `identifier`   | text     | not null, unique | 登录标识，邮箱或用户名；建议保存规范化小写值          |
+| `displayName`  | text     | not null         | 后台显示名称                                          |
+| `passwordHash` | text     | not null         | 管理员密码哈希，不存明文                              |
+| `status`       | text     | not null         | `active`、`suspended`                                 |
+| `role`         | text     | not null         | MVP 预设角色，如 `admin`、`operator`；不承载完整 RBAC |
+| `createdAt`    | text     | not null         | ISO 8601 UTC 时间                                     |
+| `updatedAt`    | text     | not null         | ISO 8601 UTC 时间                                     |
+| `lastLoginAt`  | text     | nullable         | 最近成功登录时间                                      |
 
 **主键**: `id`
 
@@ -129,20 +129,20 @@
 
 **用途**: 存储后台成员邀请。MVP 中只支持轻量邀请、预设角色和预设接入范围，不承载审批流、权限矩阵或完整身份治理。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `invite_` 前缀 |
-| `identifier` | text | not null | 被邀请成员的邮箱或登录标识，建议规范化小写 |
-| `status` | text | not null | `pending`、`accepted`、`expired`、`revoked` |
-| `rolePreset` | text | not null | MVP 预设角色，如 `admin`、`operator` |
-| `accessPreset` | text | not null | MVP 预设接入范围，如 `admin_console` |
-| `invitedByAdminUserId` | text | not null, foreign key | 创建邀请的管理员 |
-| `acceptedAdminUserId` | text | nullable, foreign key | 接受邀请后创建或绑定的后台成员 |
-| `expiresAt` | text | not null | 邀请过期时间 |
-| `acceptedAt` | text | nullable | 接受时间 |
-| `revokedAt` | text | nullable | 撤销时间 |
-| `createdAt` | text | not null | 创建时间 |
-| `updatedAt` | text | not null | 更新时间 |
+| 字段                   | 类型建议 | 约束                  | 说明                                        |
+| ---------------------- | -------- | --------------------- | ------------------------------------------- |
+| `id`                   | text     | primary key           | 稳定唯一标识，建议使用 `invite_` 前缀       |
+| `identifier`           | text     | not null              | 被邀请成员的邮箱或登录标识，建议规范化小写  |
+| `status`               | text     | not null              | `pending`、`accepted`、`expired`、`revoked` |
+| `rolePreset`           | text     | not null              | MVP 预设角色，如 `admin`、`operator`        |
+| `accessPreset`         | text     | not null              | MVP 预设接入范围，如 `admin_console`        |
+| `invitedByAdminUserId` | text     | not null, foreign key | 创建邀请的管理员                            |
+| `acceptedAdminUserId`  | text     | nullable, foreign key | 接受邀请后创建或绑定的后台成员              |
+| `expiresAt`            | text     | not null              | 邀请过期时间                                |
+| `acceptedAt`           | text     | nullable              | 接受时间                                    |
+| `revokedAt`            | text     | nullable              | 撤销时间                                    |
+| `createdAt`            | text     | not null              | 创建时间                                    |
+| `updatedAt`            | text     | not null              | 更新时间                                    |
 
 **主键**: `id`
 
@@ -170,19 +170,19 @@
 
 **用途**: 存储后台登录会话。MVP 中需要关注的会话仅用于基础处置，不代表完整风险评分、设备指纹或风控策略系统。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `session_` 前缀 |
-| `adminUserId` | text | not null, foreign key | 会话所属后台成员 |
-| `sessionTokenHash` | text | not null, unique | 会话令牌哈希，不存明文 cookie token |
-| `status` | text | not null | `active`、`revoked`、`expired`、`needs_attention`、`remediated` |
-| `createdAt` | text | not null | 创建时间 |
-| `expiresAt` | text | not null | 过期时间 |
-| `lastSeenAt` | text | nullable | 最近访问时间 |
-| `deviceLabel` | text | nullable | 简短设备/浏览器说明 |
-| `attentionReason` | text | nullable | 基础关注原因，对应 data-model 中 `riskReason` 的收窄实现 |
-| `remediatedAt` | text | nullable | 基础处置完成时间 |
-| `remediatedByAdminUserId` | text | nullable, foreign key | 执行处置的管理员 |
+| 字段                      | 类型建议 | 约束                  | 说明                                                            |
+| ------------------------- | -------- | --------------------- | --------------------------------------------------------------- |
+| `id`                      | text     | primary key           | 稳定唯一标识，建议使用 `session_` 前缀                          |
+| `adminUserId`             | text     | not null, foreign key | 会话所属后台成员                                                |
+| `sessionTokenHash`        | text     | not null, unique      | 会话令牌哈希，不存明文 cookie token                             |
+| `status`                  | text     | not null              | `active`、`revoked`、`expired`、`needs_attention`、`remediated` |
+| `createdAt`               | text     | not null              | 创建时间                                                        |
+| `expiresAt`               | text     | not null              | 过期时间                                                        |
+| `lastSeenAt`              | text     | nullable              | 最近访问时间                                                    |
+| `deviceLabel`             | text     | nullable              | 简短设备/浏览器说明                                             |
+| `attentionReason`         | text     | nullable              | 基础关注原因，对应 data-model 中 `riskReason` 的收窄实现        |
+| `remediatedAt`            | text     | nullable              | 基础处置完成时间                                                |
+| `remediatedByAdminUserId` | text     | nullable, foreign key | 执行处置的管理员                                                |
 
 **主键**: `id`
 
@@ -210,22 +210,22 @@
 
 **用途**: 存储上游字幕来源实例，首发只要求 OpenSubtitles。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `provider_` 前缀 |
-| `name` | text | not null | 管理端显示名称 |
-| `type` | text | not null | MVP 首发 `opensubtitles` |
-| `status` | text | not null | `enabled`、`disabled`、`needs_config`、`degraded` |
-| `priority` | integer | not null, default 100 | 调度优先级，数字越小越优先或按实现约定固定 |
-| `weight` | integer | not null, default 100 | 同类 Provider 权重 |
-| `concurrencyLimit` | integer | not null, default 1 | 并发限制 |
-| `rotationEnabled` | integer | not null, default 1 | SQLite boolean，0/1 |
-| `cooldownSeconds` | integer | not null, default 60 | 凭据失败后的默认冷却秒数 |
-| `fallbackProviderId` | text | nullable, foreign key | 后续多 Provider 时的 fallback；MVP 可为空 |
-| `lastHealthStatus` | text | nullable | 最近健康状态摘要 |
-| `lastErrorSummary` | text | nullable | 最近错误摘要，不含敏感凭据 |
-| `createdAt` | text | not null | 创建时间 |
-| `updatedAt` | text | not null | 更新时间 |
+| 字段                 | 类型建议 | 约束                  | 说明                                              |
+| -------------------- | -------- | --------------------- | ------------------------------------------------- |
+| `id`                 | text     | primary key           | 稳定唯一标识，建议使用 `provider_` 前缀           |
+| `name`               | text     | not null              | 管理端显示名称                                    |
+| `type`               | text     | not null              | MVP 首发 `opensubtitles`                          |
+| `status`             | text     | not null              | `enabled`、`disabled`、`needs_config`、`degraded` |
+| `priority`           | integer  | not null, default 100 | 调度优先级，数字越小越优先或按实现约定固定        |
+| `weight`             | integer  | not null, default 100 | 同类 Provider 权重                                |
+| `concurrencyLimit`   | integer  | not null, default 1   | 并发限制                                          |
+| `rotationEnabled`    | integer  | not null, default 1   | SQLite boolean，0/1                               |
+| `cooldownSeconds`    | integer  | not null, default 60  | 凭据失败后的默认冷却秒数                          |
+| `fallbackProviderId` | text     | nullable, foreign key | 后续多 Provider 时的 fallback；MVP 可为空         |
+| `lastHealthStatus`   | text     | nullable              | 最近健康状态摘要                                  |
+| `lastErrorSummary`   | text     | nullable              | 最近错误摘要，不含敏感凭据                        |
+| `createdAt`          | text     | not null              | 创建时间                                          |
+| `updatedAt`          | text     | not null              | 更新时间                                          |
 
 **主键**: `id`
 
@@ -253,23 +253,23 @@
 
 **用途**: 存储绑定到 Provider 的上游 Token / API Key，可独立参与调度、冷却、隔离、恢复或停用。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `cred_` 前缀 |
-| `providerId` | text | not null, foreign key | 所属 Provider |
-| `label` | text | not null | 管理端显示标签 |
-| `secretHash` | text | not null | 凭据哈希，用于去重或安全比对 |
-| `secretEncrypted` | text | not null | 加密后的上游凭据，用于实际调用 Provider |
-| `displayPrefix` | text | nullable | 受控展示前缀 |
-| `displaySuffix` | text | nullable | 受控展示后缀 |
-| `status` | text | not null | `active`、`cooldown`、`isolated`、`disabled`、`exhausted` |
-| `remainingQuota` | integer | nullable | 最近已知剩余额度 |
-| `lastUsedAt` | text | nullable | 最近使用时间 |
-| `lastErrorAt` | text | nullable | 最近错误时间 |
-| `lastErrorSummary` | text | nullable | 最近错误摘要，不含明文凭据 |
-| `cooldownUntil` | text | nullable | 冷却结束时间 |
-| `createdAt` | text | not null | 创建时间 |
-| `updatedAt` | text | not null | 更新时间 |
+| 字段               | 类型建议 | 约束                  | 说明                                                      |
+| ------------------ | -------- | --------------------- | --------------------------------------------------------- |
+| `id`               | text     | primary key           | 稳定唯一标识，建议使用 `cred_` 前缀                       |
+| `providerId`       | text     | not null, foreign key | 所属 Provider                                             |
+| `label`            | text     | not null              | 管理端显示标签                                            |
+| `secretHash`       | text     | not null              | 凭据哈希，用于去重或安全比对                              |
+| `secretEncrypted`  | text     | not null              | 加密后的上游凭据，用于实际调用 Provider                   |
+| `displayPrefix`    | text     | nullable              | 受控展示前缀                                              |
+| `displaySuffix`    | text     | nullable              | 受控展示后缀                                              |
+| `status`           | text     | not null              | `active`、`cooldown`、`isolated`、`disabled`、`exhausted` |
+| `remainingQuota`   | integer  | nullable              | 最近已知剩余额度                                          |
+| `lastUsedAt`       | text     | nullable              | 最近使用时间                                              |
+| `lastErrorAt`      | text     | nullable              | 最近错误时间                                              |
+| `lastErrorSummary` | text     | nullable              | 最近错误摘要，不含明文凭据                                |
+| `cooldownUntil`    | text     | nullable              | 冷却结束时间                                              |
+| `createdAt`        | text     | not null              | 创建时间                                                  |
+| `updatedAt`        | text     | not null              | 更新时间                                                  |
 
 **主键**: `id`
 
@@ -297,23 +297,23 @@
 
 **用途**: 存储分配给外部应用的下游访问凭据，用于统一字幕查询与下载 API 认证。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `ck_` 前缀 |
-| `callerName` | text | not null | 调用方名称 |
-| `environment` | text | not null | `production`、`staging`、`development` |
-| `scope` | text | not null | MVP 默认 `subtitles:read` |
-| `quotaPolicy` | text | not null | MVP 可为 `default` |
-| `keyHash` | text | not null, unique | Caller Key 哈希，用于认证 |
-| `keyPrefix` | text | nullable | 展示前缀 |
-| `keySuffix` | text | nullable | 展示后缀 |
-| `status` | text | not null | `active`、`suspended`、`rotated` |
-| `createdAt` | text | not null | 创建时间 |
-| `updatedAt` | text | not null | 更新时间 |
-| `lastUsedAt` | text | nullable | 最近使用时间 |
-| `lastRotatedAt` | text | nullable | 最近轮换时间 |
-| `revealUntil` | text | nullable | 新建或轮换后的受控明文展示截止时间 |
-| `revealTokenHash` | text | nullable | 可选，一次性 reveal 令牌哈希 |
+| 字段              | 类型建议 | 约束             | 说明                                   |
+| ----------------- | -------- | ---------------- | -------------------------------------- |
+| `id`              | text     | primary key      | 稳定唯一标识，建议使用 `ck_` 前缀      |
+| `callerName`      | text     | not null         | 调用方名称                             |
+| `environment`     | text     | not null         | `production`、`staging`、`development` |
+| `scope`           | text     | not null         | MVP 默认 `subtitles:read`              |
+| `quotaPolicy`     | text     | not null         | MVP 可为 `default`                     |
+| `keyHash`         | text     | not null, unique | Caller Key 哈希，用于认证              |
+| `keyPrefix`       | text     | nullable         | 展示前缀                               |
+| `keySuffix`       | text     | nullable         | 展示后缀                               |
+| `status`          | text     | not null         | `active`、`suspended`、`rotated`       |
+| `createdAt`       | text     | not null         | 创建时间                               |
+| `updatedAt`       | text     | not null         | 更新时间                               |
+| `lastUsedAt`      | text     | nullable         | 最近使用时间                           |
+| `lastRotatedAt`   | text     | nullable         | 最近轮换时间                           |
+| `revealUntil`     | text     | nullable         | 新建或轮换后的受控明文展示截止时间     |
+| `revealTokenHash` | text     | nullable         | 可选，一次性 reveal 令牌哈希           |
 
 **主键**: `id`
 
@@ -339,16 +339,16 @@
 
 **用途**: 记录调用方 Key 轮换结果，支持 API Keys 页面展示最近轮换和排障。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `ckr_` 前缀 |
-| `callerKeyId` | text | not null, foreign key | 被轮换的 Caller Key |
-| `oldKeySuffix` | text | nullable | 旧 Key 后缀 |
-| `newKeySuffix` | text | nullable | 新 Key 后缀 |
-| `result` | text | not null | `success`、`failed` |
-| `reason` | text | nullable | 失败或说明，不含明文 Key |
-| `createdAt` | text | not null | 轮换时间 |
-| `performedByAdminUserId` | text | nullable, foreign key | 操作管理员 |
+| 字段                     | 类型建议 | 约束                  | 说明                               |
+| ------------------------ | -------- | --------------------- | ---------------------------------- |
+| `id`                     | text     | primary key           | 稳定唯一标识，建议使用 `ckr_` 前缀 |
+| `callerKeyId`            | text     | not null, foreign key | 被轮换的 Caller Key                |
+| `oldKeySuffix`           | text     | nullable              | 旧 Key 后缀                        |
+| `newKeySuffix`           | text     | nullable              | 新 Key 后缀                        |
+| `result`                 | text     | not null              | `success`、`failed`                |
+| `reason`                 | text     | nullable              | 失败或说明，不含明文 Key           |
+| `createdAt`              | text     | not null              | 轮换时间                           |
+| `performedByAdminUserId` | text     | nullable, foreign key | 操作管理员                         |
 
 **主键**: `id`
 
@@ -372,21 +372,21 @@
 
 **用途**: 记录外部应用发起的统一字幕查询动作摘要，用于最近使用、服务质量排查和 Settings/Dashboard 状态判断。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `search_` 前缀 |
-| `callerKeyId` | text | nullable, foreign key | 认证成功时关联 Caller Key；未授权请求可为空 |
-| `mediaTitle` | text | not null | 查询标题 |
-| `mediaYear` | integer | nullable | 年份 |
-| `season` | integer | nullable | 季 |
-| `episode` | integer | nullable | 集 |
-| `language` | text | nullable | 字幕语言 |
-| `status` | text | not null | `success`、`no_results`、`service_not_ready`、`unauthorized`、`provider_failed` |
-| `resultCount` | integer | not null, default 0 | 返回结果数量 |
-| `providerId` | text | nullable, foreign key | 实际使用的 Provider |
-| `credentialId` | text | nullable, foreign key | 实际使用的 ProviderCredential |
-| `durationMs` | integer | nullable | 请求耗时 |
-| `createdAt` | text | not null | 创建时间 |
+| 字段           | 类型建议 | 约束                  | 说明                                                                            |
+| -------------- | -------- | --------------------- | ------------------------------------------------------------------------------- |
+| `id`           | text     | primary key           | 稳定唯一标识，建议使用 `search_` 前缀                                           |
+| `callerKeyId`  | text     | nullable, foreign key | 认证成功时关联 Caller Key；未授权请求可为空                                     |
+| `mediaTitle`   | text     | not null              | 查询标题                                                                        |
+| `mediaYear`    | integer  | nullable              | 年份                                                                            |
+| `season`       | integer  | nullable              | 季                                                                              |
+| `episode`      | integer  | nullable              | 集                                                                              |
+| `language`     | text     | nullable              | 字幕语言                                                                        |
+| `status`       | text     | not null              | `success`、`no_results`、`service_not_ready`、`unauthorized`、`provider_failed` |
+| `resultCount`  | integer  | not null, default 0   | 返回结果数量                                                                    |
+| `providerId`   | text     | nullable, foreign key | 实际使用的 Provider                                                             |
+| `credentialId` | text     | nullable, foreign key | 实际使用的 ProviderCredential                                                   |
+| `durationMs`   | integer  | nullable              | 请求耗时                                                                        |
+| `createdAt`    | text     | not null              | 创建时间                                                                        |
 
 **主键**: `id`
 
@@ -411,17 +411,17 @@
 
 **用途**: 记录外部应用发起的统一字幕下载动作摘要。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `download_` 前缀 |
-| `callerKeyId` | text | nullable, foreign key | 认证成功时关联 Caller Key；未授权请求可为空 |
-| `subtitleRef` | text | not null | Provider 返回或网关生成的字幕引用 |
-| `providerId` | text | nullable, foreign key | 实际使用的 Provider |
-| `credentialId` | text | nullable, foreign key | 实际使用的 ProviderCredential |
-| `status` | text | not null | `success`、`not_found`、`service_not_ready`、`unauthorized`、`provider_failed` |
-| `contentType` | text | nullable | 下载响应类型，如 `application/x-subrip` |
-| `durationMs` | integer | nullable | 请求耗时 |
-| `createdAt` | text | not null | 创建时间 |
+| 字段           | 类型建议 | 约束                  | 说明                                                                           |
+| -------------- | -------- | --------------------- | ------------------------------------------------------------------------------ |
+| `id`           | text     | primary key           | 稳定唯一标识，建议使用 `download_` 前缀                                        |
+| `callerKeyId`  | text     | nullable, foreign key | 认证成功时关联 Caller Key；未授权请求可为空                                    |
+| `subtitleRef`  | text     | not null              | Provider 返回或网关生成的字幕引用                                              |
+| `providerId`   | text     | nullable, foreign key | 实际使用的 Provider                                                            |
+| `credentialId` | text     | nullable, foreign key | 实际使用的 ProviderCredential                                                  |
+| `status`       | text     | not null              | `success`、`not_found`、`service_not_ready`、`unauthorized`、`provider_failed` |
+| `contentType`  | text     | nullable              | 下载响应类型，如 `application/x-subrip`                                        |
+| `durationMs`   | integer  | nullable              | 请求耗时                                                                       |
+| `createdAt`    | text     | not null              | 创建时间                                                                       |
 
 **主键**: `id`
 
@@ -446,16 +446,16 @@
 
 **用途**: 记录关键管理动作结果，用于后台反馈、最近行为、排障和 code review 可追溯性。它不是完整审计导出系统。
 
-| 字段 | 类型建议 | 约束 | 说明 |
-|------|----------|------|------|
-| `id` | text | primary key | 稳定唯一标识，建议使用 `aar_` 前缀 |
-| `actorAdminUserId` | text | nullable, foreign key | 执行动作的管理员；bootstrap 早期动作可为空 |
-| `actionType` | text | not null | 见下方 action type 列表 |
-| `targetType` | text | not null | `provider`、`provider_credential`、`caller_key`、`admin_invitation`、`admin_user`、`admin_session`、`auth`、`bootstrap` |
-| `targetId` | text | nullable | 目标对象 ID |
-| `result` | text | not null | `success`、`failed` |
-| `message` | text | nullable | 可读结果说明，不含敏感明文 |
-| `createdAt` | text | not null | 创建时间 |
+| 字段               | 类型建议 | 约束                  | 说明                                                                                                                    |
+| ------------------ | -------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`               | text     | primary key           | 稳定唯一标识，建议使用 `aar_` 前缀                                                                                      |
+| `actorAdminUserId` | text     | nullable, foreign key | 执行动作的管理员；bootstrap 早期动作可为空                                                                              |
+| `actionType`       | text     | not null              | 见下方 action type 列表                                                                                                 |
+| `targetType`       | text     | not null              | `provider`、`provider_credential`、`caller_key`、`admin_invitation`、`admin_user`、`admin_session`、`auth`、`bootstrap` |
+| `targetId`         | text     | nullable              | 目标对象 ID                                                                                                             |
+| `result`           | text     | not null              | `success`、`failed`                                                                                                     |
+| `message`          | text     | nullable              | 可读结果说明，不含敏感明文                                                                                              |
+| `createdAt`        | text     | not null              | 创建时间                                                                                                                |
 
 **主键**: `id`
 
@@ -495,14 +495,14 @@
 
 ### 6.1 必要唯一约束
 
-| 表 | 约束 | 理由 |
-|----|------|------|
-| `admin_users` | unique(`identifier`) | 登录查找与成员唯一身份 |
-| `admin_sessions` | unique(`sessionTokenHash`) | cookie/session token 校验 |
-| `providers` | unique(`type`, `name`) | 同类型 Provider 名称可区分 |
-| `provider_credentials` | unique(`providerId`, `label`) | 同 Provider 下凭据标签不可混淆 |
-| `provider_credentials` | unique(`providerId`, `secretHash`) | 避免重复录入同一上游凭据 |
-| `caller_keys` | unique(`keyHash`) | 对外 API Key 认证必须快速且唯一 |
+| 表                     | 约束                               | 理由                            |
+| ---------------------- | ---------------------------------- | ------------------------------- |
+| `admin_users`          | unique(`identifier`)               | 登录查找与成员唯一身份          |
+| `admin_sessions`       | unique(`sessionTokenHash`)         | cookie/session token 校验       |
+| `providers`            | unique(`type`, `name`)             | 同类型 Provider 名称可区分      |
+| `provider_credentials` | unique(`providerId`, `label`)      | 同 Provider 下凭据标签不可混淆  |
+| `provider_credentials` | unique(`providerId`, `secretHash`) | 避免重复录入同一上游凭据        |
+| `caller_keys`          | unique(`keyHash`)                  | 对外 API Key 认证必须快速且唯一 |
 
 ### 6.2 邀请 pending 唯一约束
 
@@ -521,28 +521,28 @@
 
 ### 6.3 常用查询索引
 
-| 表 | 建议索引 | 支持场景 |
-|----|----------|----------|
-| `admin_sessions` | index(`adminUserId`, `status`) | Users 页成员会话摘要、暂停成员后批量处理会话 |
-| `admin_sessions` | index(`status`, `lastSeenAt`) | 查询需要关注的后台会话 |
-| `admin_sessions` | index(`expiresAt`) | 会话过期扫描或登录校验 |
-| `providers` | index(`type`, `status`) | Provider 列表筛选、服务就绪度判断 |
-| `providers` | index(`status`, `priority`) | Provider 调度候选排序 |
-| `provider_credentials` | index(`providerId`, `status`) | 凭据池选择、Provider Detail 列表 |
-| `provider_credentials` | index(`providerId`, `status`, `cooldownUntil`) | 排除冷却中凭据并选择 active 候选 |
-| `provider_credentials` | index(`lastUsedAt`) | Provider Detail 最近使用展示 |
-| `caller_keys` | index(`status`, `environment`) | API Keys 页面筛选 |
-| `caller_keys` | index(`lastUsedAt`) | 最近使用摘要 |
-| `caller_key_rotations` | index(`callerKeyId`, `createdAt`) | Caller Key 详情最近轮换记录 |
-| `subtitle_search_requests` | index(`callerKeyId`, `createdAt`) | Caller Key 使用摘要、最近查询 |
-| `subtitle_search_requests` | index(`providerId`, `createdAt`) | Provider 最近行为与上游排障 |
-| `subtitle_search_requests` | index(`status`, `createdAt`) | Dashboard 近期失败和 no results 汇总 |
-| `subtitle_download_requests` | index(`callerKeyId`, `createdAt`) | Caller Key 下载使用摘要 |
-| `subtitle_download_requests` | index(`providerId`, `createdAt`) | Provider 下载行为排障 |
-| `subtitle_download_requests` | index(`status`, `createdAt`) | Dashboard 近期失败汇总 |
-| `admin_action_results` | index(`actorAdminUserId`, `createdAt`) | 管理员最近动作 |
-| `admin_action_results` | index(`targetType`, `targetId`, `createdAt`) | Provider/凭据/成员/会话详情的最近行为 |
-| `admin_action_results` | index(`actionType`, `createdAt`) | Dashboard 或详情页按动作类型筛选 |
+| 表                           | 建议索引                                       | 支持场景                                     |
+| ---------------------------- | ---------------------------------------------- | -------------------------------------------- |
+| `admin_sessions`             | index(`adminUserId`, `status`)                 | Users 页成员会话摘要、暂停成员后批量处理会话 |
+| `admin_sessions`             | index(`status`, `lastSeenAt`)                  | 查询需要关注的后台会话                       |
+| `admin_sessions`             | index(`expiresAt`)                             | 会话过期扫描或登录校验                       |
+| `providers`                  | index(`type`, `status`)                        | Provider 列表筛选、服务就绪度判断            |
+| `providers`                  | index(`status`, `priority`)                    | Provider 调度候选排序                        |
+| `provider_credentials`       | index(`providerId`, `status`)                  | 凭据池选择、Provider Detail 列表             |
+| `provider_credentials`       | index(`providerId`, `status`, `cooldownUntil`) | 排除冷却中凭据并选择 active 候选             |
+| `provider_credentials`       | index(`lastUsedAt`)                            | Provider Detail 最近使用展示                 |
+| `caller_keys`                | index(`status`, `environment`)                 | API Keys 页面筛选                            |
+| `caller_keys`                | index(`lastUsedAt`)                            | 最近使用摘要                                 |
+| `caller_key_rotations`       | index(`callerKeyId`, `createdAt`)              | Caller Key 详情最近轮换记录                  |
+| `subtitle_search_requests`   | index(`callerKeyId`, `createdAt`)              | Caller Key 使用摘要、最近查询                |
+| `subtitle_search_requests`   | index(`providerId`, `createdAt`)               | Provider 最近行为与上游排障                  |
+| `subtitle_search_requests`   | index(`status`, `createdAt`)                   | Dashboard 近期失败和 no results 汇总         |
+| `subtitle_download_requests` | index(`callerKeyId`, `createdAt`)              | Caller Key 下载使用摘要                      |
+| `subtitle_download_requests` | index(`providerId`, `createdAt`)               | Provider 下载行为排障                        |
+| `subtitle_download_requests` | index(`status`, `createdAt`)                   | Dashboard 近期失败汇总                       |
+| `admin_action_results`       | index(`actorAdminUserId`, `createdAt`)         | 管理员最近动作                               |
+| `admin_action_results`       | index(`targetType`, `targetId`, `createdAt`)   | Provider/凭据/成员/会话详情的最近行为        |
+| `admin_action_results`       | index(`actionType`, `createdAt`)               | Dashboard 或详情页按动作类型筛选             |
 
 ### 6.4 外键策略
 
@@ -559,18 +559,18 @@
 
 ### 7.1 只能存 hash 的字段
 
-| 对象 | 字段 | 处理要求 |
-|------|------|----------|
-| 管理员密码 | `admin_users.passwordHash` | 只保存密码哈希，不保存明文密码 |
-| 后台会话 token | `admin_sessions.sessionTokenHash` | 只保存 session token 哈希，不保存 cookie 中的原始 token |
-| Caller Key | `caller_keys.keyHash` | 只保存 Key 哈希用于认证 |
-| Reveal token | `caller_keys.revealTokenHash` | 如实现 reveal token，只保存哈希 |
-| Provider 凭据比对值 | `provider_credentials.secretHash` | 用于去重或安全比对，不用于实际上游调用 |
+| 对象                | 字段                              | 处理要求                                                |
+| ------------------- | --------------------------------- | ------------------------------------------------------- |
+| 管理员密码          | `admin_users.passwordHash`        | 只保存密码哈希，不保存明文密码                          |
+| 后台会话 token      | `admin_sessions.sessionTokenHash` | 只保存 session token 哈希，不保存 cookie 中的原始 token |
+| Caller Key          | `caller_keys.keyHash`             | 只保存 Key 哈希用于认证                                 |
+| Reveal token        | `caller_keys.revealTokenHash`     | 如实现 reveal token，只保存哈希                         |
+| Provider 凭据比对值 | `provider_credentials.secretHash` | 用于去重或安全比对，不用于实际上游调用                  |
 
 ### 7.2 需要加密存储的字段
 
-| 对象 | 字段 | 处理要求 |
-|------|------|----------|
+| 对象              | 字段                                   | 处理要求                                            |
+| ----------------- | -------------------------------------- | --------------------------------------------------- |
 | Provider 上游凭据 | `provider_credentials.secretEncrypted` | 必须加密存储，因为调用 OpenSubtitles 时需要解密使用 |
 
 加密要求：
@@ -582,11 +582,11 @@
 
 ### 7.3 只允许展示 prefix/suffix 的字段
 
-| 对象 | 字段 | 展示要求 |
-|------|------|----------|
-| Provider 凭据 | `displayPrefix`、`displaySuffix` | 列表和详情只显示片段 |
-| Caller Key | `keyPrefix`、`keySuffix` | 列表和详情只显示片段 |
-| Caller Key 轮换 | `oldKeySuffix`、`newKeySuffix` | 轮换记录只显示后缀 |
+| 对象            | 字段                             | 展示要求             |
+| --------------- | -------------------------------- | -------------------- |
+| Provider 凭据   | `displayPrefix`、`displaySuffix` | 列表和详情只显示片段 |
+| Caller Key      | `keyPrefix`、`keySuffix`         | 列表和详情只显示片段 |
+| Caller Key 轮换 | `oldKeySuffix`、`newKeySuffix`   | 轮换记录只显示后缀   |
 
 ### 7.4 Caller Key 明文与 reveal window
 
