@@ -307,9 +307,8 @@ describe("统一字幕查询与下载", () => {
         createReadyProvider(),
       ]);
 
-      const { disableProvider } = await import(
-        "@/server/services/provider-service"
-      );
+      const { disableProvider } =
+        await import("@/server/services/provider-service");
       await disableProvider(provider.id);
 
       await expect(
@@ -330,9 +329,8 @@ describe("统一字幕查询与下载", () => {
         createReadyProvider(),
       ]);
 
-      const { disableProvider, enableProvider } = await import(
-        "@/server/services/provider-service"
-      );
+      const { disableProvider, enableProvider } =
+        await import("@/server/services/provider-service");
       await disableProvider(provider.id);
 
       await expect(
@@ -374,9 +372,8 @@ describe("统一字幕查询与下载", () => {
         createReadyProvider(),
       ]);
 
-      const { disableProvider } = await import(
-        "@/server/services/provider-service"
-      );
+      const { disableProvider } =
+        await import("@/server/services/provider-service");
       await disableProvider(provider.id);
 
       await expect(
