@@ -293,7 +293,10 @@ describe("Provider Detail 页面", () => {
           ...enabledProvider,
           status: "disabled" as const,
         });
-      vi.mocked(api.disableProvider).mockResolvedValue(undefined);
+      vi.mocked(api.disableProvider).mockResolvedValue({
+        ...enabledProvider,
+        status: "disabled" as const,
+      });
 
       renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
 

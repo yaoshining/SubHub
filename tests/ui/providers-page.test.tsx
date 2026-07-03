@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProvidersClient } from "@/app/(admin)/providers/providers-client";
 import { renderWithTheme } from "../helpers/ui";
 import { toast } from "sonner";
+import type { ProviderDetail } from "@/lib/api/providers";
 
 // Mock useSearchParams with searchParams that has .get()
 const mockSearchParams = new URLSearchParams();
@@ -303,8 +304,8 @@ describe("Providers 页面", () => {
 
     it('API 调用期间按钮显示"处理中..."且禁用状态', async () => {
       const user = userEvent.setup();
-      let resolveDisable: (value: unknown) => void;
-      const disablePromise = new Promise((resolve) => {
+      let resolveDisable: (value: ProviderDetail) => void;
+      const disablePromise = new Promise<ProviderDetail>((resolve) => {
         resolveDisable = resolve;
       });
       vi.mocked(api.disableProvider).mockReturnValue(disablePromise);
@@ -328,12 +329,16 @@ describe("Providers 页面", () => {
       );
 
       // Resolve the promise
-      resolveDisable!(undefined);
+      resolveDisable!({ ...providerOS, status: "disabled", credentials: [] });
     });
 
     it("成功启用/禁用后更新状态", async () => {
       const user = userEvent.setup();
-      vi.mocked(api.disableProvider).mockResolvedValue(undefined);
+      vi.mocked(api.disableProvider).mockResolvedValue({
+        ...providerOS,
+        status: "disabled",
+        credentials: [],
+      });
       vi.mocked(api.fetchProviders).mockResolvedValue({
         items: [
           { ...providerOS, status: "disabled" },
