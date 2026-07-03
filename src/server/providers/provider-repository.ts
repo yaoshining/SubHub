@@ -535,9 +535,16 @@ export class ProviderRepository {
   }
 
   async findByStatus(
-    status: Provider["status"],
+    status: Provider["status"] | Provider["status"][],
     now = new Date(),
   ): Promise<ProviderWithCredentialSummary[]> {
+    // Handle array input by fetching all matching statuses
+    if (Array.isArray(status)) {
+      const results = await Promise.all(
+        status.map((s) => this.listProviders({ status: s }, now)),
+      );
+      return results.flat();
+    }
     return this.listProviders({ status }, now);
   }
 

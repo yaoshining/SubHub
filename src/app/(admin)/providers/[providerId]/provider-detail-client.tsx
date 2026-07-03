@@ -14,6 +14,8 @@ import {
   fetchProviderDetail,
   fetchProviders,
   updateProvider,
+  enableProvider,
+  disableProvider,
 } from "@/lib/api/providers";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { ProviderActivity } from "@/components/providers/provider-activity";
@@ -29,6 +31,16 @@ import {
   summarizeCredentials,
 } from "@/components/providers/provider-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -111,6 +123,11 @@ export function ProviderDetailClient({
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null,
   );
+  const [toggling, setToggling] = React.useState(false);
+  const [showToggleConfirm, setShowToggleConfirm] = React.useState(false);
+  const [pendingAction, setPendingAction] = React.useState<
+    "enable" | "disable" | null
+  >(null);
   const mountedRef = React.useRef(true);
 
   const loadDetail = React.useCallback(async () => {
@@ -216,6 +233,40 @@ export function ProviderDetailClient({
     }
   }
 
+  function handleToggleClick(action: "enable" | "disable") {
+    setPendingAction(action);
+    setShowToggleConfirm(true);
+  }
+
+  async function confirmToggle() {
+    if (!provider || !pendingAction) {
+      return;
+    }
+    setToggling(true);
+    setShowToggleConfirm(false);
+    setError(null);
+    try {
+      if (pendingAction === "enable") {
+        await enableProvider(provider.id);
+      } else {
+        await disableProvider(provider.id);
+      }
+      const updated = await fetchProviderDetail(provider.id);
+      setProvider(updated);
+      setDraft(toDraft(updated));
+      toast.success(
+        pendingAction === "enable" ? "Provider 已启用" : "Provider 已禁用",
+      );
+    } catch (toggleError) {
+      const message = getErrorMessage(toggleError);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setToggling(false);
+      setPendingAction(null);
+    }
+  }
+
   if (loading && !provider) {
     return <DetailSkeleton />;
   }
@@ -276,10 +327,32 @@ export function ProviderDetailClient({
               {formatDateTime(provider.updatedAt)}。
             </p>
           </div>
-          <Button onClick={() => void savePolicy()} disabled={saving || !dirty}>
-            <Save aria-hidden="true" className="size-4" />
-            {saving ? "保存中" : "保存配置"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {provider.status === "enabled" || provider.status === "degraded" ? (
+              <Button
+                variant="outline"
+                onClick={() => handleToggleClick("disable")}
+                disabled={toggling || saving || dirty}
+              >
+                {toggling ? "处理中..." : "禁用"}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => handleToggleClick("enable")}
+                disabled={toggling || saving || dirty}
+              >
+                {toggling ? "处理中..." : "启用"}
+              </Button>
+            )}
+            <Button
+              onClick={() => void savePolicy()}
+              disabled={saving || !dirty}
+            >
+              <Save aria-hidden="true" className="size-4" />
+              {saving ? "保存中" : "保存配置"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -401,6 +474,31 @@ export function ProviderDetailClient({
           </Card>
         </div>
       </div>
+
+      {/* Confirm dialog */}
+      <AlertDialog
+        open={showToggleConfirm}
+        onOpenChange={(open) => !open && setShowToggleConfirm(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingAction === "disable"
+                ? "确认禁用 Provider"
+                : "确认启用 Provider"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingAction === "disable"
+                ? `禁用后，Provider "${provider.name}" 将停止参与负载均衡。`
+                : `启用后，Provider "${provider.name}" 将开始参与负载均衡。`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmToggle}>确认</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

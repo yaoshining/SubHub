@@ -18,6 +18,7 @@ export type ProviderListProps = {
   selectedProviderId?: string;
   onSelectProvider: (providerId: string) => void;
   onToggleEnable?: (providerId: string) => void;
+  togglingProviderId?: string;
 };
 
 function ProviderRow({
@@ -25,11 +26,13 @@ function ProviderRow({
   selected,
   onSelect,
   onToggleEnable,
+  isToggling,
 }: {
   provider: Provider;
   selected: boolean;
   onSelect: () => void;
   onToggleEnable?: (providerId: string) => void;
+  isToggling?: boolean;
 }) {
   const isEnabled =
     provider.status === "enabled" || provider.status === "degraded";
@@ -103,8 +106,9 @@ function ProviderRow({
                 size="sm"
                 className="text-xs text-destructive hover:text-destructive"
                 onClick={() => onToggleEnable(provider.id)}
+                disabled={isToggling}
               >
-                禁用
+                {isToggling ? "处理中..." : "禁用"}
               </Button>
             ) : (
               <Button
@@ -112,8 +116,9 @@ function ProviderRow({
                 size="sm"
                 className="text-xs"
                 onClick={() => onToggleEnable(provider.id)}
+                disabled={isToggling}
               >
-                启用
+                {isToggling ? "处理中..." : "启用"}
               </Button>
             )
           ) : null}
@@ -134,6 +139,7 @@ export function ProviderList({
   selectedProviderId,
   onSelectProvider,
   onToggleEnable,
+  togglingProviderId,
 }: ProviderListProps) {
   return (
     <section className="grid gap-3" aria-label="Provider 列表" role="listbox">
@@ -144,6 +150,7 @@ export function ProviderList({
           selected={provider.id === selectedProviderId}
           onSelect={() => onSelectProvider(provider.id)}
           onToggleEnable={onToggleEnable}
+          isToggling={provider.id === togglingProviderId}
         />
       ))}
     </section>

@@ -4,9 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AlertTriangle, RefreshCw, Search, Server, X } from "lucide-react";
+import { toast } from "sonner";
 
 import type { Provider, ProviderDetail } from "@/lib/api/providers";
-import { fetchProviders } from "@/lib/api/providers";
+import {
+  fetchProviders,
+  enableProvider,
+  disableProvider,
+} from "@/lib/api/providers";
 import {
   EmptyStateActionButton,
   EmptyStateCard,
@@ -21,6 +26,16 @@ import {
 } from "@/components/providers/provider-utils";
 import type { ProviderTypeTab } from "@/components/providers/provider-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -83,6 +98,10 @@ export function ProvidersClient() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [createdProvider, setCreatedProvider] =
     React.useState<ProviderDetail | null>(null);
+  const [toggleConfirm, setToggleConfirm] = React.useState<Provider | null>(
+    null,
+  );
+  const [togglingId, setTogglingId] = React.useState<string | null>(null);
   const mountedRef = React.useRef(true);
   const initialSelectedRef = React.useRef(searchParams.get("selected"));
 
@@ -232,6 +251,39 @@ export function ProvidersClient() {
   const handleClearSearch = React.useCallback(() => {
     setSearchQuery("");
   }, []);
+
+  const handleToggleEnable = React.useCallback(
+    (providerId: string) => {
+      const provider = providers.find((p) => p.id === providerId);
+      if (provider) setToggleConfirm(provider);
+    },
+    [providers],
+  );
+
+  const confirmToggle = React.useCallback(async () => {
+    if (!toggleConfirm) return;
+    const id = toggleConfirm.id;
+    const isEnabled =
+      toggleConfirm.status === "enabled" || toggleConfirm.status === "degraded";
+    setTogglingId(id);
+    setToggleConfirm(null);
+    try {
+      if (isEnabled) {
+        await disableProvider(id);
+      } else {
+        await enableProvider(id);
+      }
+      await loadProviders();
+    } catch (err) {
+      const message =
+        err instanceof AppError || err instanceof Error
+          ? err.message
+          : "操作失败，请稍后重试";
+      toast.error(message);
+    } finally {
+      setTogglingId(null);
+    }
+  }, [toggleConfirm, loadProviders]);
 
   // Determine which empty state to show
   const hasProviders = providers.length > 0;
@@ -477,6 +529,8 @@ export function ProvidersClient() {
                   providers={filteredProviders}
                   selectedProviderId={selectedProviderId}
                   onSelectProvider={handleSelectProvider}
+                  onToggleEnable={handleToggleEnable}
+                  togglingProviderId={togglingId ?? undefined}
                 />
               )}
             </div>
@@ -488,6 +542,35 @@ export function ProvidersClient() {
           </div>
         </>
       ) : null}
+
+      {/* Confirm dialog */}
+      <AlertDialog
+        open={!!toggleConfirm}
+        onOpenChange={(open) => !open && setToggleConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {toggleConfirm &&
+              (toggleConfirm.status === "enabled" ||
+                toggleConfirm.status === "degraded")
+                ? "确认禁用 Provider"
+                : "确认启用 Provider"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {toggleConfirm &&
+              (toggleConfirm.status === "enabled" ||
+                toggleConfirm.status === "degraded")
+                ? `禁用后，Provider "${toggleConfirm.name}" 将停止参与负载均衡。`
+                : `启用后，Provider "${toggleConfirm?.name}" 将开始参与负载均衡。`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmToggle}>确认</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

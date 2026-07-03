@@ -247,4 +247,134 @@ describe("字幕出口端到端 API 流程", () => {
       "VALIDATION_FAILED",
     );
   });
+
+  it("完整流程：enable→search 成功→disable→search 失败", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createCallerKey({
+        callerName: "Jellyfin",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      }),
+      createProvider({
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      }),
+    ]);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [
+            {
+              id: "file_001",
+              attributes: {
+                language: "zh-CN",
+                files: [
+                  { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+
+    const searchSuccess = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Example",
+        callerKey.key,
+      ),
+    );
+    expect(searchSuccess.status).toBe(200);
+    const successPayload = (await searchSuccess.json()) as {
+      data: { results: Array<{ id: string }> };
+    };
+    expect(successPayload.data.results).toHaveLength(1);
+
+    const { disableProvider } =
+      await import("@/server/services/provider-service");
+    await disableProvider(provider.id);
+
+    await expectApiError(
+      await searchRoute.GET(
+        nextRequest(
+          "http://localhost/api/subtitles/search?title=Example",
+          callerKey.key,
+        ),
+      ),
+      "SERVICE_NOT_READY",
+    );
+  });
+
+  it("完整流程：disabled→enable→search 成功", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createCallerKey({
+        callerName: "Jellyfin",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      }),
+      createProvider({
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      }),
+    ]);
+
+    const { disableProvider, enableProvider } =
+      await import("@/server/services/provider-service");
+    await disableProvider(provider.id);
+
+    await expectApiError(
+      await searchRoute.GET(
+        nextRequest(
+          "http://localhost/api/subtitles/search?title=Example",
+          callerKey.key,
+        ),
+      ),
+      "SERVICE_NOT_READY",
+    );
+
+    await enableProvider(provider.id);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [
+            {
+              id: "file_001",
+              attributes: {
+                language: "zh-CN",
+                files: [
+                  { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+
+    const searchSuccess = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Example",
+        callerKey.key,
+      ),
+    );
+    expect(searchSuccess.status).toBe(200);
+    const successPayload = (await searchSuccess.json()) as {
+      data: { results: Array<{ id: string }> };
+    };
+    expect(successPayload.data.results).toHaveLength(1);
+  });
 });

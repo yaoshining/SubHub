@@ -19,6 +19,8 @@ import {
 import type { Provider } from "@/server/storage/schema";
 import type { ProviderFilter } from "@/server/providers/provider-repository";
 
+export { getEnabledCandidates } from "@/server/providers/provider-candidates";
+
 export type ProviderServiceOptions = {
   db?: StorageDatabase;
   now?: Date;
