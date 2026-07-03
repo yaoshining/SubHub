@@ -186,14 +186,30 @@ export function ProviderTypeBlock({
   );
 }
 
+function truncateSummary(text: string, maxLength: number) {
+  if (text.length <= maxLength) {
+    return { display: text, truncated: false };
+  }
+  return { display: `${text.slice(0, maxLength)}…`, truncated: true };
+}
+
+function healthDotClass(tone: AdminStatusTone) {
+  if (tone === "success") return "bg-success";
+  if (tone === "warning") return "bg-warning";
+  if (tone === "destructive") return "bg-destructive";
+  return "bg-muted-foreground";
+}
+
 /** Compact health indicator with dot + label + time */
 export function HealthBlock({
   lastHealthStatus,
   lastHealthCheckedAt,
+  lastErrorSummary,
   compact,
 }: {
   lastHealthStatus: string | null;
   lastHealthCheckedAt: string | null;
+  lastErrorSummary?: string | null;
   compact?: boolean;
 }) {
   const status = lastHealthStatus ?? "unknown";
@@ -202,27 +218,77 @@ export function HealthBlock({
     ? formatRelativeTime(lastHealthCheckedAt)
     : "尚未检查";
 
+  const errorText = lastErrorSummary?.trim() ?? "";
+  const errorInfo = errorText ? truncateSummary(errorText, 80) : null;
+
+  return (
+    <div className={`grid gap-1 ${compact ? "text-xs" : "text-sm"}`}>
+      <div className="flex items-center gap-2">
+        <span
+          className={`inline-block size-2 rounded-full ${healthDotClass(meta.tone)}`}
+        />
+        <span className="text-muted-foreground">
+          Health: {meta.label}
+          {compact && timeText ? (
+            <span className="ml-1">· {timeText}</span>
+          ) : null}
+        </span>
+      </div>
+      {errorInfo ? (
+        <p
+          className="pl-4 text-xs text-muted-foreground"
+          title={errorText}
+          data-truncated={errorInfo.truncated || undefined}
+        >
+          最近错误：{errorInfo.display}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Read-only health summary block for the provider detail context strip */
+export function HealthSummaryBlock({
+  lastHealthStatus,
+  lastHealthCheckedAt,
+  lastErrorSummary,
+}: {
+  lastHealthStatus: string | null;
+  lastHealthCheckedAt: string | null;
+  lastErrorSummary?: string | null;
+}) {
+  const status = lastHealthStatus ?? "unknown";
+  const meta = healthStatusMeta[status] ?? healthStatusMeta.unknown;
+  const timeText = lastHealthCheckedAt
+    ? formatRelativeTime(lastHealthCheckedAt)
+    : "尚未检查";
+
+  const errorText = lastErrorSummary?.trim() ?? "";
+  const errorInfo = errorText ? truncateSummary(errorText, 80) : null;
+
   return (
     <div
-      className={`flex items-center gap-2 ${compact ? "text-xs" : "text-sm"}`}
+      className="grid gap-1 text-sm"
+      data-testid="provider-detail-health-summary"
+      aria-label="Provider 健康摘要"
     >
-      <span
-        className={`inline-block size-2 rounded-full ${
-          meta.tone === "success"
-            ? "bg-success"
-            : meta.tone === "warning"
-              ? "bg-warning"
-              : meta.tone === "destructive"
-                ? "bg-destructive"
-                : "bg-muted-foreground"
-        }`}
-      />
-      <span className="text-muted-foreground">
-        Health: {meta.label}
-        {compact && timeText ? (
-          <span className="ml-1">· {timeText}</span>
-        ) : null}
-      </span>
+      <div className="flex items-center gap-2">
+        <span
+          className={`inline-block size-2 rounded-full ${healthDotClass(meta.tone)}`}
+          aria-hidden="true"
+        />
+        <span className="text-muted-foreground">
+          Health: {meta.label}
+          {timeText ? <span className="ml-1">· {timeText}</span> : null}
+        </span>
+      </div>
+      <p
+        className="pl-4 text-xs text-muted-foreground"
+        title={errorText || "无"}
+        data-truncated={errorInfo?.truncated || undefined}
+      >
+        Last Error: {errorInfo ? errorInfo.display : "无"}
+      </p>
     </div>
   );
 }

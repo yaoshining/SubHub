@@ -401,4 +401,93 @@ describe("Providers 页面", () => {
       ).toBeGreaterThan(0);
     });
   });
+
+  describe("Provider 健康状态展示", () => {
+    it("list 行 compact HealthBlock 渲染 health 状态与时间", async () => {
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findByTestId("provider-pool-inspector");
+
+      // 4 个 provider list 行（每行一个 HealthBlock）
+      const rows = screen.getAllByTestId("provider-list-row");
+      expect(rows).toHaveLength(4);
+
+      // 2 个 healthy (providerOS + providerNeedsConfig) + 1 个 degraded + 1 个 unknown
+      expect(
+        screen.getAllByText(/^Health: 健康/).length,
+      ).toBeGreaterThanOrEqual(2);
+      expect(
+        screen.getAllByText(/^Health: 降级/).length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        screen.getAllByText(/^Health: 未知/).length,
+      ).toBeGreaterThanOrEqual(1);
+    });
+
+    it("OpenSubtitles inspector 展示 HealthBlock 且包含 lastErrorSummary", async () => {
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerDegraded,
+        lastHealthStatus: "degraded",
+        lastErrorSummary: "429 限流：上游短时间内拒绝请求",
+        credentials: [credential],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findByTestId("provider-pool-inspector");
+      // 等 inspector 加载完 detail
+      await waitFor(() =>
+        expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(
+          "provider_dg",
+        ),
+      );
+
+      // 1 个 list 行 (degraded provider) + 1 个 inspector → 至少 2 个 "Health: 降级"
+      expect(
+        screen.getAllByText(/^Health: 降级/).length,
+      ).toBeGreaterThanOrEqual(2);
+      // inspector 的 non-compact HealthBlock 会渲染 lastErrorSummary
+      expect(await screen.findByText(/最近错误：429 限流/)).toBeInTheDocument();
+    });
+
+    it("Xunlei inspector 也展示 HealthBlock（含 lastErrorSummary）", async () => {
+      // 第一次 fetchProviderDetail（默认选中 provider_dg）→ OpenSubtitles inspector 数据
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerDegraded,
+        credentials: [credential],
+      });
+      // 第二次 fetchProviderDetail（点击 Xunlei row 后）→ Xunlei inspector 数据
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerXunlei,
+        lastHealthStatus: "unavailable",
+        lastErrorSummary: "上游握手失败，需要人工核对网络连通性",
+        credentials: [],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      // 等 list 渲染完（4 行）
+      const rows = await screen.findAllByTestId("provider-list-row");
+      // 默认选中策略下，Xunlei 不会自动被选中，模拟用户点击 Xunlei 行
+      const xunleiRow = rows.find((row) =>
+        row.textContent?.includes("Xunlei Official"),
+      );
+      expect(xunleiRow).toBeDefined();
+      xunleiRow!.click();
+
+      await waitFor(() =>
+        expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(
+          "provider_xl",
+        ),
+      );
+
+      // inspector 渲染 Xunlei 分支（list 行 + inspector 同时显示 Health: 不可用）
+      expect(
+        (await screen.findAllByText(/^Health: 不可用/)).length,
+      ).toBeGreaterThanOrEqual(2);
+      expect(
+        await screen.findByText(/最近错误：上游握手失败/),
+      ).toBeInTheDocument();
+    });
+  });
 });

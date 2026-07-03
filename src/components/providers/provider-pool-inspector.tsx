@@ -120,6 +120,7 @@ function OpenSubtitlesInspectorContent({
       <HealthBlock
         lastHealthStatus={source.lastHealthStatus}
         lastHealthCheckedAt={source.lastHealthCheckedAt}
+        lastErrorSummary={source.lastErrorSummary}
       />
 
       {/* Scheduling summary */}
@@ -144,6 +145,7 @@ function XunleiInspectorContent({ source }: { source: Provider }) {
       <HealthBlock
         lastHealthStatus={source.lastHealthStatus}
         lastHealthCheckedAt={source.lastHealthCheckedAt}
+        lastErrorSummary={source.lastErrorSummary}
       />
 
       {/* Scheduling summary */}
