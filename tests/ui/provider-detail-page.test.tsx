@@ -329,16 +329,19 @@ describe("Provider Detail 页面", () => {
   });
 
   describe("Provider 健康摘要 (US3)", () => {
-    it("默认 fixture 下 HealthSummaryBlock 显示未知/未检查/无 Last Error", async () => {
+    it("默认 fixture 下 HealthSummaryBlock 显示未知/未检查/无最近错误", async () => {
       renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
 
       const summary = await screen.findByTestId(
         "provider-detail-health-summary",
       );
       expect(summary).toHaveAttribute("aria-label", "Provider 健康摘要");
-      expect(summary).toHaveTextContent("Health: 未知");
+      expect(summary).toHaveTextContent("未知");
       expect(summary).toHaveTextContent("尚未检查");
-      expect(summary).toHaveTextContent("Last Error: 无");
+      expect(summary).toHaveTextContent("最近错误：无");
+      // a11y: Last Error p 在空态下应有 data-state="empty"
+      const errorNode = summary.querySelector("[data-state='empty']");
+      expect(errorNode).toBeInTheDocument();
     });
 
     it("有 lastErrorSummary 时 HealthSummaryBlock 展示错误摘要（脱敏截断 80 字）", async () => {
@@ -358,12 +361,12 @@ describe("Provider Detail 页面", () => {
       const summary = await screen.findByTestId(
         "provider-detail-health-summary",
       );
-      expect(summary).toHaveTextContent("Health: 降级");
+      expect(summary).toHaveTextContent("降级");
       // 摘要区只展示前 80 字符并加省略号
       expect(summary).toHaveTextContent(
-        /Last Error: upstream 5xx rate exceeded threshold/,
+        /最近错误：upstream 5xx rate exceeded threshold/,
       );
-      const errorNode = summary.querySelector("[data-truncated='true']")!;
+      const errorNode = summary.querySelector("[data-state='truncated']")!;
       expect(errorNode).toBeInTheDocument();
       expect(errorNode.textContent ?? "").toMatch(/…$/);
       // 完整文本进入 title 属性，便于 hover 查看
@@ -383,9 +386,9 @@ describe("Provider Detail 页面", () => {
 
       const list = await screen.findByTestId("provider-activity-list");
       expect(list).toBeInTheDocument();
-      // EventBadge 健康检查分支（secondary tone，"健康检查" 文案）
+      // EventBadge 健康检查分支（secondary tone + Activity 图标 + "健康检查" 文案）
       expect(within(list).getByText("健康检查")).toBeInTheDocument();
-      // health 事件消息为 `Health {label}`（`Health 健康`）
+      // health 事件消息为 `健康{label}` → 但消息文本是 `Health {label}`（来自 buildEvents）
       expect(within(list).getByText(/^Health 健康$/)).toBeInTheDocument();
     });
   });

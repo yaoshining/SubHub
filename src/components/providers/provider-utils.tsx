@@ -1,3 +1,4 @@
+import * as React from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -216,7 +217,7 @@ export function HealthBlock({
   const meta = healthStatusMeta[status] ?? healthStatusMeta.unknown;
   const timeText = lastHealthCheckedAt
     ? formatRelativeTime(lastHealthCheckedAt)
-    : "尚未检查";
+    : null;
 
   const errorText = lastErrorSummary?.trim() ?? "";
   const errorInfo = errorText ? truncateSummary(errorText, 80) : null;
@@ -226,12 +227,12 @@ export function HealthBlock({
       <div className="flex items-center gap-2">
         <span
           className={`inline-block size-2 rounded-full ${healthDotClass(meta.tone)}`}
+          aria-hidden="true"
         />
         <span className="text-muted-foreground">
-          Health: {meta.label}
-          {compact && timeText ? (
-            <span className="ml-1">· {timeText}</span>
-          ) : null}
+          {meta.label}
+          {timeText ? <span className="ml-1">· {timeText}</span> : null}
+          {!timeText ? <span className="ml-1">· 尚未检查</span> : null}
         </span>
       </div>
       {errorInfo ? (
@@ -239,6 +240,7 @@ export function HealthBlock({
           className="pl-4 text-xs text-muted-foreground"
           title={errorText}
           data-truncated={errorInfo.truncated || undefined}
+          data-state="filled"
         >
           最近错误：{errorInfo.display}
         </p>
@@ -261,16 +263,24 @@ export function HealthSummaryBlock({
   const meta = healthStatusMeta[status] ?? healthStatusMeta.unknown;
   const timeText = lastHealthCheckedAt
     ? formatRelativeTime(lastHealthCheckedAt)
-    : "尚未检查";
+    : null;
 
   const errorText = lastErrorSummary?.trim() ?? "";
   const errorInfo = errorText ? truncateSummary(errorText, 80) : null;
+  const lastErrorId = React.useId();
+  const lastErrorText = errorInfo ? errorInfo.display : "无";
+  const lastErrorState: "empty" | "truncated" | "filled" = errorInfo
+    ? errorInfo.truncated
+      ? "truncated"
+      : "filled"
+    : "empty";
 
   return (
     <div
       className="grid gap-1 text-sm"
       data-testid="provider-detail-health-summary"
       aria-label="Provider 健康摘要"
+      aria-describedby={lastErrorId}
     >
       <div className="flex items-center gap-2">
         <span
@@ -278,16 +288,19 @@ export function HealthSummaryBlock({
           aria-hidden="true"
         />
         <span className="text-muted-foreground">
-          Health: {meta.label}
+          {meta.label}
           {timeText ? <span className="ml-1">· {timeText}</span> : null}
+          {!timeText ? <span className="ml-1">· 尚未检查</span> : null}
         </span>
       </div>
       <p
+        id={lastErrorId}
         className="pl-4 text-xs text-muted-foreground"
-        title={errorText || "无"}
+        title={errorText || "最近错误：无"}
         data-truncated={errorInfo?.truncated || undefined}
+        data-state={lastErrorState}
       >
-        Last Error: {errorInfo ? errorInfo.display : "无"}
+        最近错误：{lastErrorText}
       </p>
     </div>
   );

@@ -103,7 +103,12 @@ function EventBadge({ type }: { type: ActivityEvent["type"] }) {
     return <StatusBadge tone="success">恢复</StatusBadge>;
   }
   if (type === "health") {
-    return <StatusBadge tone="secondary">健康检查</StatusBadge>;
+    return (
+      <StatusBadge tone="secondary">
+        <Activity aria-hidden="true" className="mr-1 size-3" />
+        健康检查
+      </StatusBadge>
+    );
   }
   return <StatusBadge tone="secondary">切换</StatusBadge>;
 }

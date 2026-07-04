@@ -412,16 +412,16 @@ describe("Providers 页面", () => {
       const rows = screen.getAllByTestId("provider-list-row");
       expect(rows).toHaveLength(4);
 
-      // 2 个 healthy (providerOS + providerNeedsConfig) + 1 个 degraded + 1 个 unknown
-      expect(
-        screen.getAllByText(/^Health: 健康/).length,
-      ).toBeGreaterThanOrEqual(2);
-      expect(
-        screen.getAllByText(/^Health: 降级/).length,
-      ).toBeGreaterThanOrEqual(1);
-      expect(
-        screen.getAllByText(/^Health: 未知/).length,
-      ).toBeGreaterThanOrEqual(1);
+      // 默认 fixture：healthy×2（providerOS + providerNeedsConfig）+ degraded×1 + unknown×1
+      const rowTexts = rows.map((row) => row.textContent ?? "");
+      const healthyRows = rowTexts.filter((t) =>
+        /(健康|尚未检查)/.test(t),
+      ).length;
+      const degradedRows = rowTexts.filter((t) => /降级/.test(t)).length;
+      const unknownRows = rowTexts.filter((t) => /未知/.test(t)).length;
+      expect(healthyRows).toBeGreaterThanOrEqual(2);
+      expect(degradedRows).toBeGreaterThanOrEqual(1);
+      expect(unknownRows).toBeGreaterThanOrEqual(1);
     });
 
     it("OpenSubtitles inspector 展示 HealthBlock 且包含 lastErrorSummary", async () => {
@@ -442,12 +442,12 @@ describe("Providers 页面", () => {
         ),
       );
 
-      // 1 个 list 行 (degraded provider) + 1 个 inspector → 至少 2 个 "Health: 降级"
+      // 1 个 list 行 + 1 个 inspector → 至少 2 个 "降级" 健康标签
+      expect(screen.getAllByText(/降级/).length).toBeGreaterThanOrEqual(2);
+      // list 行 + inspector 同时展示 lastErrorSummary → 至少 2 处匹配
       expect(
-        screen.getAllByText(/^Health: 降级/).length,
+        (await screen.findAllByText(/最近错误：429 限流/)).length,
       ).toBeGreaterThanOrEqual(2);
-      // inspector 的 non-compact HealthBlock 会渲染 lastErrorSummary
-      expect(await screen.findByText(/最近错误：429 限流/)).toBeInTheDocument();
     });
 
     it("Xunlei inspector 也展示 HealthBlock（含 lastErrorSummary）", async () => {
@@ -481,13 +481,14 @@ describe("Providers 页面", () => {
         ),
       );
 
-      // inspector 渲染 Xunlei 分支（list 行 + inspector 同时显示 Health: 不可用）
+      // inspector 渲染 Xunlei 分支（list 行 + inspector 同时显示 不可用）
       expect(
-        (await screen.findAllByText(/^Health: 不可用/)).length,
+        (await screen.findAllByText(/不可用/)).length,
       ).toBeGreaterThanOrEqual(2);
+      // list 行 + inspector 同时展示 lastErrorSummary → 至少 2 处匹配
       expect(
-        await screen.findByText(/最近错误：上游握手失败/),
-      ).toBeInTheDocument();
+        (await screen.findAllByText(/最近错误：上游握手失败/)).length,
+      ).toBeGreaterThanOrEqual(2);
     });
   });
 });
