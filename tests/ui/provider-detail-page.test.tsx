@@ -388,8 +388,8 @@ describe("Provider Detail 页面", () => {
       expect(list).toBeInTheDocument();
       // EventBadge 健康检查分支（secondary tone + Activity 图标 + "健康检查" 文案）
       expect(within(list).getByText("健康检查")).toBeInTheDocument();
-      // health 事件消息为 `健康{label}` → 但消息文本是 `Health {label}`（来自 buildEvents）
-      expect(within(list).getByText(/^Health 健康$/)).toBeInTheDocument();
+      // health 事件消息：`健康 · {label}`（来自 buildEvents），US3 后去掉 "Health " 英文前缀
+      expect(within(list).getByText(/^健康 · 健康$/)).toBeInTheDocument();
     });
   });
 });

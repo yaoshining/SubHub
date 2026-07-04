@@ -280,7 +280,7 @@ export function HealthSummaryBlock({
       className="grid gap-1 text-sm"
       data-testid="provider-detail-health-summary"
       aria-label="Provider 健康摘要"
-      aria-describedby={lastErrorId}
+      aria-describedby={errorInfo ? lastErrorId : undefined}
     >
       <div className="flex items-center gap-2">
         <span

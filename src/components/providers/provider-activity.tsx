@@ -54,7 +54,7 @@ function buildEvents(provider: ProviderDetail): ActivityEvent[] {
       time: provider.lastHealthCheckedAt,
       type: "health",
       credential: "provider",
-      message: `Health ${healthMeta.label}${errorPart}`,
+      message: `健康 · ${healthMeta.label}${errorPart}`,
     });
   }
 

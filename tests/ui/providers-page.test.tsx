@@ -490,5 +490,65 @@ describe("Providers 页面", () => {
         (await screen.findAllByText(/最近错误：上游握手失败/)).length,
       ).toBeGreaterThanOrEqual(2);
     });
+
+    it("list row compact HealthBlock 透传 lastErrorSummary 时 data-truncated 与 title 属性正确", async () => {
+      // 长度 > 80 字符，触发 truncated=true 路径；并覆盖 row 内联展示能力
+      const longError =
+        "upstream 5xx rate exceeded threshold: 80% failures in 600s window (480+ of 600 requests failed). auto-fallback engaged per policy.";
+      const rowProvider = {
+        ...providerOS,
+        lastHealthStatus: "degraded" as const,
+        lastErrorSummary: longError,
+        lastHealthCheckedAt: "2026-07-01T10:00:00.000Z",
+      };
+      vi.mocked(api.fetchProviders).mockResolvedValueOnce({
+        items: [rowProvider, providerXunlei],
+        total: 2,
+      });
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...rowProvider,
+        credentials: [credential],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      const rows = await screen.findAllByTestId("provider-list-row");
+      expect(rows.length).toBeGreaterThanOrEqual(1);
+
+      // 找含 rowProvider 名字的行
+      const targetRow = rows.find((row) =>
+        row.textContent?.includes("OpenSubtitles Primary"),
+      );
+      expect(targetRow).toBeDefined();
+
+      // compact HealthBlock 透传 lastErrorSummary，应在 row 内联展示 truncated 80 字 + …
+      const truncatedNode = targetRow!.querySelector(
+        "[data-truncated='true']",
+      ) as HTMLElement | null;
+      expect(truncatedNode).not.toBeNull();
+      expect(truncatedNode!.textContent ?? "").toMatch(/…$/);
+      expect(truncatedNode!.getAttribute("title")).toBe(longError);
+
+      // row 内联展示应含"最近错误：…" + 截断后的前缀内容
+      expect(targetRow!.textContent ?? "").toMatch(
+        /最近错误：upstream 5xx rate exceeded threshold/,
+      );
+    });
+
+    it("list row compact HealthBlock 在 lastErrorSummary 为空时不渲染错误段", async () => {
+      // 默认 fixture：providerOS / providerNeedsConfig lastErrorSummary=null
+      // row 不应包含"最近错误："文案（其 lastErrorSummary 为 null）
+      renderWithTheme(<ProvidersClient />);
+
+      const rows = await screen.findAllByTestId("provider-list-row");
+      const targetRow = rows.find((row) =>
+        row.textContent?.includes("OpenSubtitles Primary"),
+      );
+      expect(targetRow).toBeDefined();
+      // 该行 lastErrorSummary=null → 不渲染"<p>最近错误：...</p>"
+      expect(targetRow!.querySelector("[data-truncated='true']")).toBeNull();
+      expect(targetRow!.querySelector("[data-state='truncated']")).toBeNull();
+      expect(targetRow!.querySelector("[data-state='filled']")).toBeNull();
+    });
   });
 });
