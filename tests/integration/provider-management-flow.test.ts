@@ -140,6 +140,77 @@ describe("Provider 管理闭环", () => {
     expect(xunleiDetail.type).toBe("xunlei");
     expect(xunleiDetail.credentials).toEqual([]);
   });
+
+  it("create-provider two-step flow 服务端闭环：默认字段、列表自动可见与 Xunlei seeded 不重复 (US5)", async () => {
+    // Step 2 对应的服务端语义：仅传 name + initialCredential，调度字段由 repository 默认值落库
+    const created = await createProvider({
+      name: "OpenSubtitles Two-Step Flow",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "two-step-api-key" },
+    });
+
+    // 1. 默认字段与 spec / repository 默认一致
+    expect(created).toMatchObject({
+      type: "opensubtitles",
+      status: "enabled",
+      priority: 100,
+      weight: 100,
+      concurrencyLimit: 1,
+      rotationEnabled: true,
+      cooldownSeconds: 60,
+      fallbackProviderId: null,
+    });
+    expect(created.credentials).toHaveLength(1);
+    expect(created.credentials[0]!.status).toBe("active");
+    expect(created.availableCredentialCount).toBe(1);
+    // 上游凭据明文不得回显
+    expect(JSON.stringify(created)).not.toContain("two-step-api-key");
+
+    // 2. 列表自动可见：包含新建实例与 Xunlei seeded
+    const { items, total } = await listProviders();
+    expect(items.map((p) => p.id)).toContain(created.id);
+    expect(items.map((p) => p.id)).toContain("xunlei-default");
+    expect(total).toBeGreaterThanOrEqual(2);
+
+    // 3. Xunlei seeded 单实例不重复：仍是 xunlei-default 唯一行
+    const xunleiProviders = await listProviders({ type: "xunlei" });
+    expect(xunleiProviders.items).toHaveLength(1);
+    expect(xunleiProviders.items[0]!.id).toBe("xunlei-default");
+
+    // 4. 创建不会破坏旧凭据池流程：可继续新增/隔离/恢复
+    const secondary = await addProviderCredential(created.id, {
+      label: "secondary",
+      secret: "secondary-api-key",
+    });
+    expect(secondary.status).toBe("active");
+
+    const isolated = await isolateProviderCredential(
+      created.id,
+      created.credentials[0]!.id,
+      "首轮凭据异常",
+    );
+    expect(isolated.provider.availableCredentialCount).toBe(1);
+
+    const restored = await restoreProviderCredential(
+      created.id,
+      created.credentials[0]!.id,
+    );
+    expect(restored.provider.availableCredentialCount).toBe(2);
+
+    // 5. 调度字段可后续在详情页修改
+    const afterUpdate = await updateProvider(created.id, {
+      priority: 10,
+      weight: 1,
+      concurrencyLimit: 3,
+      cooldownSeconds: 30,
+    });
+    expect(afterUpdate).toMatchObject({
+      priority: 10,
+      weight: 1,
+      concurrencyLimit: 3,
+      cooldownSeconds: 30,
+    });
+  });
 });
 
 describe("Provider 策略保存与 fallback 校验", () => {

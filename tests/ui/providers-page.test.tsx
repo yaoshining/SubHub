@@ -11,9 +11,10 @@ import type { ProviderDetail } from "@/lib/api/providers";
 // Mock useSearchParams with searchParams that has .get()
 const mockSearchParams = new URLSearchParams();
 const mockRouterReplace = vi.fn();
+const mockRouterPush = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mockRouterReplace }),
+  useRouter: () => ({ replace: mockRouterReplace, push: mockRouterPush }),
   useSearchParams: () => mockSearchParams,
   usePathname: () => "/providers",
 }));
@@ -194,23 +195,115 @@ describe("Providers 页面", () => {
     );
   });
 
-  it("创建成功后自动选中新实例并提供继续配置 CTA", async () => {
+  it("创建入口按钮文案为「创建 Provider」(不预设 type)", async () => {
+    renderWithTheme(<ProvidersClient />);
+
+    await screen.findAllByText("OpenSubtitles Primary");
+    const trigger = screen.getByRole("button", { name: "创建 Provider" });
+    expect(trigger).toBeInTheDocument();
+  });
+
+  it("two-step flow：Step 1 选 type → Step 2 建档 → 创建成功回流列表并选中新实例", async () => {
     const user = userEvent.setup();
     renderWithTheme(<ProvidersClient />);
 
     await screen.findAllByText("OpenSubtitles Primary");
     await user.click(screen.getByRole("button", { name: "创建 Provider" }));
-    await user.clear(screen.getByLabelText("Provider 名称"));
+
+    // Step 1: type selector 出现，含 OS 卡片与 Xunlei locked 卡片
+    await screen.findByTestId("provider-type-selector");
+    expect(
+      screen.getByTestId("provider-type-option-opensubtitles"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("provider-type-option-xunlei")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(screen.getByText("已接入 / 不可重复创建")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Xunlei 为预置 provider，单实例不可重复创建/),
+    ).toBeInTheDocument();
+
+    // Xunlei 卡片点击不应进入 Step 2
+    await user.click(screen.getByTestId("provider-type-option-xunlei"));
+    expect(
+      screen.queryByTestId("create-provider-form"),
+    ).not.toBeInTheDocument();
+
+    // 选择 OpenSubtitles → 进入 Step 2
+    await user.click(screen.getByTestId("provider-type-option-opensubtitles"));
+    const form = await screen.findByTestId("create-provider-form");
+    expect(form).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("Provider Name"));
     await user.type(
-      screen.getByLabelText("Provider 名称"),
+      screen.getByLabelText("Provider Name"),
       "OpenSubtitles 新池",
     );
-    await user.clear(screen.getByLabelText("OpenSubtitles API Key"));
+    await user.clear(screen.getByLabelText("Initial API Key"));
     await user.type(
-      screen.getByLabelText("OpenSubtitles API Key"),
+      screen.getByLabelText("Initial API Key"),
       "provider-secret",
     );
-    await user.click(screen.getByRole("button", { name: "创建并返回列表" }));
+    await user.click(screen.getByRole("button", { name: "Create Provider" }));
+
+    expect(
+      await screen.findByTestId("provider-create-success"),
+    ).toHaveTextContent("已成功创建，策略待补充");
+    const success = await screen.findByTestId("provider-create-success");
+    expect(success.querySelector("a")).toHaveAttribute(
+      "href",
+      "/providers/provider_new?created=1",
+    );
+
+    // 列表自动选中新实例：inspector 向新实例拉取 detail
+    await waitFor(() =>
+      expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(
+        "provider_new",
+      ),
+    );
+    // 不强制 router.push 到详情页
+    expect(mockRouterPush).not.toHaveBeenCalled();
+
+    // createProvider 调用契约：仅 name/type/initialCredential，不传调度初始值
+    await waitFor(() =>
+      expect(vi.mocked(api.createProvider)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "OpenSubtitles 新池",
+          type: "opensubtitles",
+          initialCredential: {
+            label: "primary",
+            secret: "provider-secret",
+          },
+        }),
+      ),
+    );
+    const createCall = vi.mocked(api.createProvider).mock.calls[0]?.[0];
+    expect(createCall).not.toHaveProperty("priority");
+    expect(createCall).not.toHaveProperty("weight");
+    expect(createCall).not.toHaveProperty("concurrencyLimit");
+    expect(createCall).not.toHaveProperty("cooldownSeconds");
+  });
+
+  it("创建成功后自动选中新实例并提供继续配置 CTA（two-step flow）", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<ProvidersClient />);
+
+    await screen.findAllByText("OpenSubtitles Primary");
+    await user.click(screen.getByRole("button", { name: "创建 Provider" }));
+    await user.click(screen.getByTestId("provider-type-option-opensubtitles"));
+    await screen.findByTestId("create-provider-form");
+    await user.clear(screen.getByLabelText("Provider Name"));
+    await user.type(
+      screen.getByLabelText("Provider Name"),
+      "OpenSubtitles 新池",
+    );
+    await user.clear(screen.getByLabelText("Initial API Key"));
+    await user.type(
+      screen.getByLabelText("Initial API Key"),
+      "provider-secret",
+    );
+    await user.click(screen.getByRole("button", { name: "Create Provider" }));
 
     expect(
       await screen.findByTestId("provider-create-success"),
