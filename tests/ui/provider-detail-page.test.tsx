@@ -3,6 +3,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AppError } from "@/lib/errors";
 import { ProviderDetailClient } from "@/app/(admin)/providers/[providerId]/provider-detail-client";
 import { renderWithTheme } from "../helpers/ui";
 import { toast } from "sonner";
@@ -390,6 +391,135 @@ describe("Provider Detail 页面", () => {
       expect(within(list).getByText("健康检查")).toBeInTheDocument();
       // health 事件消息：`健康 · {label}`（来自 buildEvents），US3 后去掉 "Health " 英文前缀
       expect(within(list).getByText(/^健康 · 健康$/)).toBeInTheDocument();
+    });
+  });
+
+  describe("Provider 策略保存与 dirty state (T029)", () => {
+    it("dirty 时 beforeunload 阻止离开，保存成功后不再阻止", async () => {
+      const user = userEvent.setup();
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // 尚未编辑：不应阻止离开
+      const beforeEdit = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(beforeEdit);
+      expect(beforeEdit.defaultPrevented).toBe(false);
+
+      const weightInputs = screen.getAllByLabelText("权重");
+      await user.clear(weightInputs[0]!);
+      await user.type(weightInputs[0]!, "75");
+
+      expect(screen.getByTestId("dirty-state-alert")).toBeInTheDocument();
+
+      // dirty 时应阻止离开
+      const whileDirty = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(whileDirty);
+      expect(whileDirty.defaultPrevented).toBe(true);
+
+      await user.click(screen.getByTestId("provider-policy-save"));
+
+      await waitFor(() =>
+        expect(vi.mocked(api.updateProvider)).toHaveBeenCalledWith(
+          "provider_001",
+          expect.objectContaining({ weight: 75 }),
+        ),
+      );
+
+      // 保存成功后不再阻止离开
+      await waitFor(() =>
+        expect(
+          screen.queryByTestId("dirty-state-alert"),
+        ).not.toBeInTheDocument(),
+      );
+      const afterSave = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(afterSave);
+      expect(afterSave.defaultPrevented).toBe(false);
+    });
+
+    it("Xunlei 类型整行隐藏凭据轮换 Switch", async () => {
+      const xunleiProvider = {
+        ...provider,
+        id: "xunlei-default",
+        name: "Xunlei",
+        type: "xunlei" as const,
+        credentials: [],
+        rotationEnabled: false,
+        credentialCount: 0,
+        activeCredentialCount: 0,
+        availableCredentialCount: 0,
+      };
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue(xunleiProvider);
+      vi.mocked(api.fetchProviders).mockResolvedValue({
+        items: [xunleiProvider],
+        total: 1,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="xunlei-default" />);
+
+      await screen.findByTestId("provider-policy-form");
+
+      // Xunlei 不适用凭据轮换，整行 Switch 应被隐藏
+      expect(screen.queryByLabelText("启用凭据轮换")).not.toBeInTheDocument();
+      // 冷却窗口仍应可见（属于 rotation section 但不受 showRotationSwitch 影响）
+      expect(screen.getAllByLabelText("冷却窗口（秒）").length).toBeGreaterThan(
+        0,
+      );
+    });
+
+    it("保存失败且返回 fallback 字段级错误时，紧贴字段渲染 inline 错误", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.updateProvider).mockRejectedValueOnce(
+        new AppError(
+          "VALIDATION_FAILED",
+          "Provider 不能自引用作为 fallback。",
+          "fallbackProviderId",
+        ),
+      );
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // 任意编辑使 Section B 进入 dirty，解锁 Section 内联 Save 按钮
+      const weightInputs = screen.getAllByLabelText("权重");
+      await user.clear(weightInputs[0]!);
+      await user.type(weightInputs[0]!, "75");
+
+      await user.click(screen.getByTestId("provider-policy-save"));
+
+      const fieldErrors = await screen.findAllByTestId(
+        "provider-fallback-field-error",
+      );
+      expect(fieldErrors.length).toBeGreaterThan(0);
+      expect(fieldErrors[0]).toHaveTextContent(/自引用/);
+      // 表单内容应保留，dirty 仍存在以便用户修正后重试
+      expect(screen.getByTestId("dirty-state-alert")).toBeInTheDocument();
+    });
+
+    it("Section 内联保存按钮触发 updateProvider 并清 dirty", async () => {
+      const user = userEvent.setup();
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      const weightInputs = screen.getAllByLabelText("权重");
+      await user.clear(weightInputs[0]!);
+      await user.type(weightInputs[0]!, "80");
+
+      await user.click(screen.getByTestId("provider-policy-save"));
+
+      await waitFor(() =>
+        expect(vi.mocked(api.updateProvider)).toHaveBeenCalledWith(
+          "provider_001",
+          expect.objectContaining({ weight: 80 }),
+        ),
+      );
+
+      expect(
+        await screen.findByTestId("provider-save-success"),
+      ).toHaveTextContent("保存成功");
+      expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
     });
   });
 });

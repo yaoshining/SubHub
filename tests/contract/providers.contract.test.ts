@@ -803,4 +803,192 @@ describe("Provider 管理 API 契约", () => {
       assertNullableIsoDateTime(xunlei?.lastHealthCheckedAt);
     });
   });
+
+  describe("PATCH /api/admin/providers/{providerId} 配置保存契约", () => {
+    const createOpenSubtitles = async (
+      cookie: string,
+      name: string,
+    ): Promise<string> => {
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name,
+            type: "opensubtitles",
+            initialCredential: {
+              label: `${name}-key`,
+              secret: `${name}-api-key`,
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{ data: { id: string } }>(created);
+      expect(created.status).toBe(201);
+      return createdPayload.data.id;
+    };
+
+    const patchProvider = (
+      providerId: string,
+      body: Record<string, unknown>,
+      cookie: string,
+    ) =>
+      providerDetailRoute.PATCH(
+        jsonRequest(
+          `http://localhost/api/admin/providers/${providerId}`,
+          body,
+          cookie,
+        ),
+        { params: { providerId } },
+      );
+
+    const getProvider = async (
+      providerId: string,
+      cookie: string,
+    ): Promise<{
+      priority: number;
+      weight: number;
+      concurrencyLimit: number;
+      cooldownSeconds: number;
+      rotationEnabled: boolean;
+      fallbackProviderId: string | null;
+      updatedAt: string;
+    }> => {
+      const detail = await providerDetailRoute.GET(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}`,
+          cookie,
+        ),
+        { params: { providerId } },
+      );
+      const payload = await readJson<{ data: Record<string, unknown> }>(detail);
+      return payload.data as Awaited<ReturnType<typeof getProvider>>;
+    };
+
+    it("合法保存 priority/weight/concurrency/cooldown/rotation/fallback 可持久化并刷新 updatedAt", async () => {
+      const cookie = await createAdminSessionCookie();
+      const providerAId = await createOpenSubtitles(cookie, "OS Alpha");
+      const providerBId = await createOpenSubtitles(cookie, "OS Beta");
+      const before = await getProvider(providerAId, cookie);
+
+      const updated = await patchProvider(
+        providerAId,
+        {
+          priority: 30,
+          weight: 7,
+          concurrencyLimit: 3,
+          cooldownSeconds: 90,
+          rotationEnabled: false,
+          fallbackProviderId: providerBId,
+        },
+        cookie,
+      );
+      expect(updated.status).toBe(200);
+      const updatedPayload = await readJson<{
+        data: {
+          priority: number;
+          weight: number;
+          concurrencyLimit: number;
+          cooldownSeconds: number;
+          rotationEnabled: boolean;
+          fallbackProviderId: string;
+          updatedAt: string;
+        };
+      }>(updated);
+      expect(updatedPayload.data).toMatchObject({
+        priority: 30,
+        weight: 7,
+        concurrencyLimit: 3,
+        cooldownSeconds: 90,
+        rotationEnabled: false,
+        fallbackProviderId: providerBId,
+      });
+      expect(updatedPayload.data.updatedAt).not.toBe(before.updatedAt);
+
+      // 重新读取应反映持久化结果
+      const after = await getProvider(providerAId, cookie);
+      expect(after).toMatchObject({
+        priority: 30,
+        weight: 7,
+        concurrencyLimit: 3,
+        cooldownSeconds: 90,
+        rotationEnabled: false,
+        fallbackProviderId: providerBId,
+      });
+    });
+
+    it("fallback 指向不存在的 provider 时返回字段级错误", async () => {
+      const cookie = await createAdminSessionCookie();
+      const providerAId = await createOpenSubtitles(cookie, "OS Alpha");
+
+      const response = await patchProvider(
+        providerAId,
+        { fallbackProviderId: "provider_does_not_exist" },
+        cookie,
+      );
+
+      expect(response.status).toBe(400);
+      const payload = await expectApiError(response, "VALIDATION_FAILED");
+      expect(payload.error.target).toBe("fallbackProviderId");
+    });
+
+    it("fallback 自引用时返回字段级错误", async () => {
+      const cookie = await createAdminSessionCookie();
+      const providerAId = await createOpenSubtitles(cookie, "OS Alpha");
+
+      const response = await patchProvider(
+        providerAId,
+        { fallbackProviderId: providerAId },
+        cookie,
+      );
+
+      expect(response.status).toBe(400);
+      const payload = await expectApiError(response, "VALIDATION_FAILED");
+      expect(payload.error.target).toBe("fallbackProviderId");
+      expect(payload.error.message).toMatch(/自引用|自身/);
+    });
+
+    it("fallback 形成循环引用时返回字段级错误", async () => {
+      const cookie = await createAdminSessionCookie();
+      const providerAId = await createOpenSubtitles(cookie, "OS Alpha");
+      const providerBId = await createOpenSubtitles(cookie, "OS Beta");
+
+      // A → B
+      const first = await patchProvider(
+        providerAId,
+        { fallbackProviderId: providerBId },
+        cookie,
+      );
+      expect(first.status).toBe(200);
+
+      // B → A 应形成 A → B → A 循环，被拒绝
+      const response = await patchProvider(
+        providerBId,
+        { fallbackProviderId: providerAId },
+        cookie,
+      );
+
+      expect(response.status).toBe(400);
+      const payload = await expectApiError(response, "VALIDATION_FAILED");
+      expect(payload.error.target).toBe("fallbackProviderId");
+      expect(payload.error.message).toMatch(/循环/);
+    });
+
+    it("Xunlei 提交 rotationEnabled 时被静默忽略且不报错", async () => {
+      const cookie = await createAdminSessionCookie();
+      const before = await getProvider("xunlei-default", cookie);
+      expect(before.rotationEnabled).toBe(false);
+
+      const response = await patchProvider(
+        "xunlei-default",
+        { rotationEnabled: true },
+        cookie,
+      );
+
+      expect(response.status).toBe(200);
+      const after = await getProvider("xunlei-default", cookie);
+      // rotationEnabled 对 Xunlei 当前不适用，不应被写入
+      expect(after.rotationEnabled).toBe(false);
+    });
+  });
 });
