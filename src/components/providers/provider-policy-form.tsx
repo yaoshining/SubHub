@@ -335,15 +335,17 @@ export function ProviderPolicyForm(props: ProviderPolicyFormProps) {
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base">运行策略</CardTitle>
-          <Button
-            type="button"
-            onClick={() => onSave?.()}
-            disabled={saving || !dirty}
-            data-testid="provider-policy-save"
-          >
-            <Save aria-hidden="true" className="size-4" />
-            {saving ? "保存中" : "保存配置"}
-          </Button>
+          {onSave ? (
+            <Button
+              type="button"
+              onClick={() => onSave()}
+              disabled={saving || !dirty}
+              data-testid="provider-policy-save"
+            >
+              <Save aria-hidden="true" className="size-4" />
+              {saving ? "保存中" : "保存配置"}
+            </Button>
+          ) : null}
         </div>
       </CardHeader>
       <Separator />
