@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronLeft, Save, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import type {
@@ -23,6 +23,7 @@ import { ProviderCredentialTable } from "@/components/providers/provider-credent
 import {
   ProviderPolicyForm,
   type ProviderPolicyDraft,
+  type ProviderPolicyFieldError,
 } from "@/components/providers/provider-policy-form";
 import {
   formatDateTime,
@@ -58,6 +59,13 @@ const getErrorMessage = (error: unknown) => {
     return error.message;
   }
   return "Provider 详情请求失败，请稍后重试。";
+};
+
+const extractFieldError = (error: unknown): ProviderPolicyFieldError | null => {
+  if (error instanceof AppError && error.target) {
+    return { target: error.target, message: error.message };
+  }
+  return null;
 };
 
 function toDraft(provider: ProviderDetail): ProviderPolicyDraft {
@@ -124,6 +132,8 @@ export function ProviderDetailClient({
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null,
   );
+  const [fieldError, setFieldError] =
+    React.useState<ProviderPolicyFieldError | null>(null);
   const [toggling, setToggling] = React.useState(false);
   const [showToggleConfirm, setShowToggleConfirm] = React.useState(false);
   const [pendingAction, setPendingAction] = React.useState<
@@ -183,6 +193,7 @@ export function ProviderDetailClient({
   function updateDraft(nextDraft: ProviderPolicyDraft, fieldLabel: string) {
     setDraft(nextDraft);
     setSuccessMessage(null);
+    setFieldError(null);
     setDirtyFields((current) =>
       current.includes(fieldLabel) ? current : [...current, fieldLabel],
     );
@@ -212,6 +223,7 @@ export function ProviderDetailClient({
     }
     setSaving(true);
     setError(null);
+    setFieldError(null);
     try {
       const updated = await updateProvider(provider.id, draft);
       setProvider((current) => ({
@@ -228,6 +240,7 @@ export function ProviderDetailClient({
     } catch (saveError) {
       const message = getErrorMessage(saveError);
       setError(message);
+      setFieldError(extractFieldError(saveError));
       toast.error(message);
     } finally {
       setSaving(false);
@@ -333,7 +346,7 @@ export function ProviderDetailClient({
               <Button
                 variant="outline"
                 onClick={() => handleToggleClick("disable")}
-                disabled={toggling || saving || dirty}
+                disabled={toggling || saving}
               >
                 {toggling ? "处理中..." : "禁用"}
               </Button>
@@ -341,18 +354,11 @@ export function ProviderDetailClient({
               <Button
                 variant="outline"
                 onClick={() => handleToggleClick("enable")}
-                disabled={toggling || saving || dirty}
+                disabled={toggling || saving}
               >
                 {toggling ? "处理中..." : "启用"}
               </Button>
             )}
-            <Button
-              onClick={() => void savePolicy()}
-              disabled={saving || !dirty}
-            >
-              <Save aria-hidden="true" className="size-4" />
-              {saving ? "保存中" : "保存配置"}
-            </Button>
           </div>
         </div>
         <div className="border-t pt-4">
@@ -449,7 +455,11 @@ export function ProviderDetailClient({
             provider={provider}
             draft={draft}
             fallbackCandidates={fallbackCandidates}
+            dirty={dirty}
+            saving={saving}
+            fieldError={fieldError}
             onDraftChange={updateDraft}
+            onSave={() => void savePolicy()}
           />
           <ProviderCredentialTable
             providerId={provider.id}

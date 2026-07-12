@@ -15,6 +15,7 @@ import {
   adminActionResults,
   type AdminActionResult,
 } from "@/server/storage/schema";
+import { AppError } from "@/lib/errors";
 import {
   addProviderCredential,
   createProvider,
@@ -138,5 +139,125 @@ describe("Provider 管理闭环", () => {
     expect(xunleiDetail.id).toBe("xunlei-default");
     expect(xunleiDetail.type).toBe("xunlei");
     expect(xunleiDetail.credentials).toEqual([]);
+  });
+});
+
+describe("Provider 策略保存与 fallback 校验", () => {
+  it("priority/weight/concurrency/cooldown/rotation/fallback 全部字段可保存并重新读取", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+    const fallback = await createProvider({
+      name: "OpenSubtitles Beta",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "beta-api-key" },
+    });
+
+    const before = await getProviderDetail(provider.id);
+    expect(before.fallbackProviderId).toBeNull();
+
+    const updated = await updateProvider(provider.id, {
+      priority: 30,
+      weight: 7,
+      concurrencyLimit: 3,
+      cooldownSeconds: 90,
+      rotationEnabled: false,
+      fallbackProviderId: fallback.id,
+    });
+
+    expect(updated).toMatchObject({
+      priority: 30,
+      weight: 7,
+      concurrencyLimit: 3,
+      cooldownSeconds: 90,
+      rotationEnabled: false,
+      fallbackProviderId: fallback.id,
+    });
+    expect(updated.updatedAt).not.toBe(before.updatedAt);
+
+    const after = await getProviderDetail(provider.id);
+    expect(after).toMatchObject({
+      priority: 30,
+      weight: 7,
+      concurrencyLimit: 3,
+      cooldownSeconds: 90,
+      rotationEnabled: false,
+      fallbackProviderId: fallback.id,
+    });
+  });
+
+  it("fallback 自引用被拒绝并返回字段级错误", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+
+    const error = await updateProvider(provider.id, {
+      fallbackProviderId: provider.id,
+    }).catch((err: unknown) => err as AppError);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as AppError).code).toBe("VALIDATION_FAILED");
+    expect((error as AppError).target).toBe("fallbackProviderId");
+    expect((error as AppError).message).toMatch(/自引用|自身/);
+  });
+
+  it("fallback 指向不存在的 provider 被拒绝", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+
+    const error = await updateProvider(provider.id, {
+      fallbackProviderId: "provider_does_not_exist",
+    }).catch((err: unknown) => err as AppError);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as AppError).code).toBe("VALIDATION_FAILED");
+    expect((error as AppError).target).toBe("fallbackProviderId");
+  });
+
+  it("fallback 形成循环引用被拒绝", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+    const fallback = await createProvider({
+      name: "OpenSubtitles Beta",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "beta-api-key" },
+    });
+
+    // A → B
+    await updateProvider(provider.id, { fallbackProviderId: fallback.id });
+
+    // B → A 应形成 A → B → A 循环，被拒绝
+    const error = await updateProvider(fallback.id, {
+      fallbackProviderId: provider.id,
+    }).catch((err: unknown) => err as AppError);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as AppError).code).toBe("VALIDATION_FAILED");
+    expect((error as AppError).target).toBe("fallbackProviderId");
+    expect((error as AppError).message).toMatch(/循环/);
+  });
+
+  it("Xunlei 提交 rotationEnabled 被静默忽略且不报错", async () => {
+    const before = await getProviderDetail("xunlei-default");
+    expect(before.rotationEnabled).toBe(false);
+
+    const updated = await updateProvider("xunlei-default", {
+      rotationEnabled: true,
+    });
+
+    expect(updated.rotationEnabled).toBe(false);
+
+    const after = await getProviderDetail("xunlei-default");
+    expect(after.rotationEnabled).toBe(false);
   });
 });
