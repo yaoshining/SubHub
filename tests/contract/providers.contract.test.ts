@@ -631,9 +631,10 @@ describe("Provider 管理 API 契约", () => {
       expect(typeof value).toBe("string");
       // Accept strict ISO 8601 ("T" separator, "+HH:MM" tz) as declared by
       // OpenAPI `format: date-time`, plus PGlite's space-separator / short
-      // offset form ("+08"). The decisive check is `new Date(...)` below.
+      // offset form ("+08"). Timezone is required: either `Z`/`z` or a
+      // numeric offset, so missing-tz strings cannot slip through.
       expect(value as string).toMatch(
-        /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}(:?\d{2})?)?$/,
+        /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}(:?\d{2})?)$/,
       );
       expect(Number.isFinite(new Date(value as string).getTime())).toBe(true);
     };

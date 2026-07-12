@@ -414,14 +414,18 @@ describe("Providers 页面", () => {
 
       // 默认 fixture：healthy×2（providerOS + providerNeedsConfig）+ degraded×1 + unknown×1
       const rowTexts = rows.map((row) => row.textContent ?? "");
-      const healthyRows = rowTexts.filter((t) =>
-        /(健康|尚未检查)/.test(t),
-      ).length;
+      // "健康" 仅出现在 lastHealthStatus=healthy 的行；不把"尚未检查"纳入
+      // 健康数量统计，因为"尚未检查"会跟随任何 lastHealthCheckedAt 为空的
+      // provider（包括未知/降级），混在一起会掩盖健康标签渲染错误。
+      const healthyRows = rowTexts.filter((t) => /健康/.test(t)).length;
       const degradedRows = rowTexts.filter((t) => /降级/.test(t)).length;
       const unknownRows = rowTexts.filter((t) => /未知/.test(t)).length;
-      expect(healthyRows).toBeGreaterThanOrEqual(2);
-      expect(degradedRows).toBeGreaterThanOrEqual(1);
-      expect(unknownRows).toBeGreaterThanOrEqual(1);
+      const notCheckedRows = rowTexts.filter((t) => /尚未检查/.test(t)).length;
+      expect(healthyRows).toBe(2);
+      expect(degradedRows).toBe(1);
+      expect(unknownRows).toBe(1);
+      // "尚未检查" 独立断言：仅 lastHealthCheckedAt 为空的行（本 fixture 为 Xunlei）
+      expect(notCheckedRows).toBe(1);
     });
 
     it("OpenSubtitles inspector 展示 HealthBlock 且包含 lastErrorSummary", async () => {
@@ -473,7 +477,8 @@ describe("Providers 页面", () => {
         row.textContent?.includes("Xunlei Official"),
       );
       expect(xunleiRow).toBeDefined();
-      xunleiRow!.click();
+      const user = userEvent.setup();
+      await user.click(xunleiRow!);
 
       await waitFor(() =>
         expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(

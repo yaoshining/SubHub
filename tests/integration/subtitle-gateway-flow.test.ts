@@ -476,9 +476,10 @@ describe("字幕出口端到端 API 流程", () => {
     // OpenAPI declares `format: date-time` (strict ISO 8601 with `T` and a
     // `+HH:MM` timezone). PGlite emits a slightly different shape
     // ("YYYY-MM-DD HH:MM:SS.sss+08" with a space and short tz). Accept both
-    // shapes, then defer to `new Date(...)` for the real parse check.
+    // shapes, require a timezone (`Z` or numeric offset), then defer to
+    // `new Date(...)` for the real parse check.
     expect(afterRow?.lastHealthCheckedAt).toMatch(
-      /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}(:?\d{2})?)?$/,
+      /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}(:?\d{2})?)$/,
     );
 
     // checkedAt must be >= the time we captured right before the search
