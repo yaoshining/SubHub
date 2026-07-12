@@ -78,6 +78,7 @@ function ProviderRow({
         <HealthBlock
           lastHealthStatus={provider.lastHealthStatus}
           lastHealthCheckedAt={provider.lastHealthCheckedAt}
+          lastErrorSummary={provider.lastErrorSummary}
           compact
         />
       </div>

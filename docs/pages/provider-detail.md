@@ -244,6 +244,11 @@ Status: Enabled
 4. 隔离异常凭据是显式动作，执行后立即从活跃池移出（不进 dirty state）。
 5. 若某 provider 当前无活跃凭据，Section C 顶部优先提示风险。
 
+### Allowed overrides
+
+- **Module A 文案承载**：US3 起 Health 摘要与 Last Error 文案由 `§14.5 HealthBlock` 实现统一承载。文案格式 `健康 · {时间}` / `最近错误：{摘要或 无}`。本规范中较早的 `Health: ... / Last Error: ...` 英文前缀示例视为废弃，统一以 §14.5 中文 label 为准。
+- **Section A 健康摘要位置**：US3 起 `HealthSummaryBlock` 在 Context Strip 之下以 `border-t pt-4` 分隔独立成块；不再与 Status Switch 同行嵌进同一行。该位置在后续 US / feature 调整 Section A 视觉权重时可继续调整，但不应回退到与 Switch 同行。
+
 ## Page-Specific Design Rules
 
 - **Relevant global rules**: `DESIGN.md §14`

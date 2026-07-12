@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   formatDateTime,
   formatTokenFragment,
+  healthStatusMeta,
 } from "@/components/providers/provider-utils";
 
 export type ProviderActivityProps = {
@@ -26,23 +27,46 @@ export type ProviderActivityProps = {
 type ActivityEvent = {
   id: string;
   time: string;
-  type: "switch" | "error" | "restore";
+  type: "switch" | "error" | "restore" | "health";
   credential: string;
   message: string;
 };
 
+function truncateMessage(text: string, maxLength: number) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength)}…`;
+}
+
 function buildEvents(provider: ProviderDetail): ActivityEvent[] {
-  const events: ActivityEvent[] = [
-    {
-      id: `${provider.id}-updated`,
-      time: provider.updatedAt,
-      type: provider.status === "degraded" ? "error" : "restore",
+  const events: ActivityEvent[] = [];
+
+  if (provider.lastHealthCheckedAt) {
+    const healthMeta =
+      healthStatusMeta[provider.lastHealthStatus ?? "unknown"] ??
+      healthStatusMeta.unknown;
+    const errorPart = provider.lastErrorSummary
+      ? ` · ${truncateMessage(provider.lastErrorSummary, 60)}`
+      : "";
+    events.push({
+      id: `${provider.id}-health`,
+      time: provider.lastHealthCheckedAt,
+      type: "health",
       credential: "provider",
-      message:
-        provider.lastErrorSummary ??
-        `Provider 策略最近更新，当前状态为 ${provider.status}。`,
-    },
-  ];
+      message: `健康 · ${healthMeta.label}${errorPart}`,
+    });
+  }
+
+  events.push({
+    id: `${provider.id}-updated`,
+    time: provider.updatedAt,
+    type: provider.status === "degraded" ? "error" : "restore",
+    credential: "provider",
+    message:
+      provider.lastErrorSummary ??
+      `Provider 策略最近更新，当前状态为 ${provider.status}。`,
+  });
 
   provider.credentials.forEach((credential) => {
     if (credential.lastErrorAt) {
@@ -77,6 +101,14 @@ function EventBadge({ type }: { type: ActivityEvent["type"] }) {
   }
   if (type === "restore") {
     return <StatusBadge tone="success">恢复</StatusBadge>;
+  }
+  if (type === "health") {
+    return (
+      <StatusBadge tone="secondary">
+        <Activity aria-hidden="true" className="mr-1 size-3" />
+        健康检查
+      </StatusBadge>
+    );
   }
   return <StatusBadge tone="secondary">切换</StatusBadge>;
 }

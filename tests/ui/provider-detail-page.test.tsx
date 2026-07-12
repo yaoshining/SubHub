@@ -1,5 +1,5 @@
 import * as React from "react";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -325,6 +325,71 @@ describe("Provider Detail 页面", () => {
       await waitFor(() =>
         expect(toast.success).toHaveBeenCalledWith("Provider 已禁用"),
       );
+    });
+  });
+
+  describe("Provider 健康摘要 (US3)", () => {
+    it("默认 fixture 下 HealthSummaryBlock 显示未知/未检查/无最近错误", async () => {
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      const summary = await screen.findByTestId(
+        "provider-detail-health-summary",
+      );
+      expect(summary).toHaveAttribute("aria-label", "Provider 健康摘要");
+      expect(summary).toHaveTextContent("未知");
+      expect(summary).toHaveTextContent("尚未检查");
+      expect(summary).toHaveTextContent("最近错误：无");
+      // a11y: Last Error p 在空态下应有 data-state="empty"
+      const errorNode = summary.querySelector("[data-state='empty']");
+      expect(errorNode).toBeInTheDocument();
+    });
+
+    it("有 lastErrorSummary 时 HealthSummaryBlock 展示错误摘要（脱敏截断 80 字）", async () => {
+      // 长度 > 80，触发 truncateSummary 的 truncated=true 分支
+      const longError =
+        "upstream 5xx rate exceeded threshold: 80% failures in 600s window (480+ of 600 requests failed). auto-fallback engaged per policy.";
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...provider,
+        status: "degraded" as const,
+        lastHealthStatus: "degraded" as const,
+        lastErrorSummary: longError,
+        lastHealthCheckedAt: new Date(nowMs - 5 * 60 * 1000).toISOString(),
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      const summary = await screen.findByTestId(
+        "provider-detail-health-summary",
+      );
+      expect(summary).toHaveTextContent("降级");
+      // 摘要区只展示前 80 字符并加省略号
+      expect(summary).toHaveTextContent(
+        /最近错误：upstream 5xx rate exceeded threshold/,
+      );
+      const errorNode = summary.querySelector("[data-state='truncated']")!;
+      expect(errorNode).toBeInTheDocument();
+      expect(errorNode.textContent ?? "").toMatch(/…$/);
+      // 完整文本进入 title 属性，便于 hover 查看
+      expect(errorNode.getAttribute("title")).toBe(longError);
+    });
+
+    it("ProviderActivity 在有 lastHealthCheckedAt 时渲染健康检查事件", async () => {
+      const recentCheckedAt = new Date(nowMs - 5 * 60 * 1000).toISOString();
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...provider,
+        lastHealthStatus: "healthy" as const,
+        lastErrorSummary: null,
+        lastHealthCheckedAt: recentCheckedAt,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      const list = await screen.findByTestId("provider-activity-list");
+      expect(list).toBeInTheDocument();
+      // EventBadge 健康检查分支（secondary tone + Activity 图标 + "健康检查" 文案）
+      expect(within(list).getByText("健康检查")).toBeInTheDocument();
+      // health 事件消息：`健康 · {label}`（来自 buildEvents），US3 后去掉 "Health " 英文前缀
+      expect(within(list).getByText(/^健康 · 健康$/)).toBeInTheDocument();
     });
   });
 });

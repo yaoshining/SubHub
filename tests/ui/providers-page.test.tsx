@@ -401,4 +401,159 @@ describe("Providers 页面", () => {
       ).toBeGreaterThan(0);
     });
   });
+
+  describe("Provider 健康状态展示", () => {
+    it("list 行 compact HealthBlock 渲染 health 状态与时间", async () => {
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findByTestId("provider-pool-inspector");
+
+      // 4 个 provider list 行（每行一个 HealthBlock）
+      const rows = screen.getAllByTestId("provider-list-row");
+      expect(rows).toHaveLength(4);
+
+      // 默认 fixture：healthy×2（providerOS + providerNeedsConfig）+ degraded×1 + unknown×1
+      const rowTexts = rows.map((row) => row.textContent ?? "");
+      // "健康" 仅出现在 lastHealthStatus=healthy 的行；不把"尚未检查"纳入
+      // 健康数量统计，因为"尚未检查"会跟随任何 lastHealthCheckedAt 为空的
+      // provider（包括未知/降级），混在一起会掩盖健康标签渲染错误。
+      const healthyRows = rowTexts.filter((t) => /健康/.test(t)).length;
+      const degradedRows = rowTexts.filter((t) => /降级/.test(t)).length;
+      const unknownRows = rowTexts.filter((t) => /未知/.test(t)).length;
+      const notCheckedRows = rowTexts.filter((t) => /尚未检查/.test(t)).length;
+      expect(healthyRows).toBe(2);
+      expect(degradedRows).toBe(1);
+      expect(unknownRows).toBe(1);
+      // "尚未检查" 独立断言：仅 lastHealthCheckedAt 为空的行（本 fixture 为 Xunlei）
+      expect(notCheckedRows).toBe(1);
+    });
+
+    it("OpenSubtitles inspector 展示 HealthBlock 且包含 lastErrorSummary", async () => {
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerDegraded,
+        lastHealthStatus: "degraded",
+        lastErrorSummary: "429 限流：上游短时间内拒绝请求",
+        credentials: [credential],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findByTestId("provider-pool-inspector");
+      // 等 inspector 加载完 detail
+      await waitFor(() =>
+        expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(
+          "provider_dg",
+        ),
+      );
+
+      // 1 个 list 行 + 1 个 inspector → 至少 2 个 "降级" 健康标签
+      expect(screen.getAllByText(/降级/).length).toBeGreaterThanOrEqual(2);
+      // list 行 + inspector 同时展示 lastErrorSummary → 至少 2 处匹配
+      expect(
+        (await screen.findAllByText(/最近错误：429 限流/)).length,
+      ).toBeGreaterThanOrEqual(2);
+    });
+
+    it("Xunlei inspector 也展示 HealthBlock（含 lastErrorSummary）", async () => {
+      // 第一次 fetchProviderDetail（默认选中 provider_dg）→ OpenSubtitles inspector 数据
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerDegraded,
+        credentials: [credential],
+      });
+      // 第二次 fetchProviderDetail（点击 Xunlei row 后）→ Xunlei inspector 数据
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerXunlei,
+        lastHealthStatus: "unavailable",
+        lastErrorSummary: "上游握手失败，需要人工核对网络连通性",
+        credentials: [],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      // 等 list 渲染完（4 行）
+      const rows = await screen.findAllByTestId("provider-list-row");
+      // 默认选中策略下，Xunlei 不会自动被选中，模拟用户点击 Xunlei 行
+      const xunleiRow = rows.find((row) =>
+        row.textContent?.includes("Xunlei Official"),
+      );
+      expect(xunleiRow).toBeDefined();
+      const user = userEvent.setup();
+      await user.click(xunleiRow!);
+
+      await waitFor(() =>
+        expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(
+          "provider_xl",
+        ),
+      );
+
+      // inspector 渲染 Xunlei 分支（list 行 + inspector 同时显示 不可用）
+      expect(
+        (await screen.findAllByText(/不可用/)).length,
+      ).toBeGreaterThanOrEqual(2);
+      // list 行 + inspector 同时展示 lastErrorSummary → 至少 2 处匹配
+      expect(
+        (await screen.findAllByText(/最近错误：上游握手失败/)).length,
+      ).toBeGreaterThanOrEqual(2);
+    });
+
+    it("list row compact HealthBlock 透传 lastErrorSummary 时 data-truncated 与 title 属性正确", async () => {
+      // 长度 > 80 字符，触发 truncated=true 路径；并覆盖 row 内联展示能力
+      const longError =
+        "upstream 5xx rate exceeded threshold: 80% failures in 600s window (480+ of 600 requests failed). auto-fallback engaged per policy.";
+      const rowProvider = {
+        ...providerOS,
+        lastHealthStatus: "degraded" as const,
+        lastErrorSummary: longError,
+        lastHealthCheckedAt: "2026-07-01T10:00:00.000Z",
+      };
+      vi.mocked(api.fetchProviders).mockResolvedValueOnce({
+        items: [rowProvider, providerXunlei],
+        total: 2,
+      });
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...rowProvider,
+        credentials: [credential],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      const rows = await screen.findAllByTestId("provider-list-row");
+      expect(rows.length).toBeGreaterThanOrEqual(1);
+
+      // 找含 rowProvider 名字的行
+      const targetRow = rows.find((row) =>
+        row.textContent?.includes("OpenSubtitles Primary"),
+      );
+      expect(targetRow).toBeDefined();
+
+      // compact HealthBlock 透传 lastErrorSummary，应在 row 内联展示 truncated 80 字 + …
+      const truncatedNode = targetRow!.querySelector(
+        "[data-truncated='true']",
+      ) as HTMLElement | null;
+      expect(truncatedNode).not.toBeNull();
+      expect(truncatedNode!.textContent ?? "").toMatch(/…$/);
+      expect(truncatedNode!.getAttribute("title")).toBe(longError);
+
+      // row 内联展示应含"最近错误：…" + 截断后的前缀内容
+      expect(targetRow!.textContent ?? "").toMatch(
+        /最近错误：upstream 5xx rate exceeded threshold/,
+      );
+    });
+
+    it("list row compact HealthBlock 在 lastErrorSummary 为空时不渲染错误段", async () => {
+      // 默认 fixture：providerOS / providerNeedsConfig lastErrorSummary=null
+      // row 不应包含"最近错误："文案（其 lastErrorSummary 为 null）
+      renderWithTheme(<ProvidersClient />);
+
+      const rows = await screen.findAllByTestId("provider-list-row");
+      const targetRow = rows.find((row) =>
+        row.textContent?.includes("OpenSubtitles Primary"),
+      );
+      expect(targetRow).toBeDefined();
+      // 该行 lastErrorSummary=null → 不渲染"<p>最近错误：...</p>"
+      expect(targetRow!.querySelector("[data-truncated='true']")).toBeNull();
+      expect(targetRow!.querySelector("[data-state='truncated']")).toBeNull();
+      expect(targetRow!.querySelector("[data-state='filled']")).toBeNull();
+    });
+  });
 });

@@ -617,4 +617,190 @@ describe("Provider 管理 API 契约", () => {
       expect(disableAgainPayload.data.status).toBe("disabled");
     });
   });
+
+  describe("健康字段契约", () => {
+    // Helpers: OpenAPI declares `lastHealthStatus / lastErrorSummary` as
+    // nullable string and `lastHealthCheckedAt` as nullable string (date-time).
+    // We assert each value is either null or a string; for lastHealthCheckedAt
+    // we also confirm it's a valid ISO date-time when present.
+    const assertNullableString = (value: unknown) => {
+      expect(value === null || typeof value === "string").toBe(true);
+    };
+    const assertNullableIsoDateTime = (value: unknown) => {
+      if (value === null) return;
+      expect(typeof value).toBe("string");
+      // Accept strict ISO 8601 ("T" separator, "+HH:MM" tz) as declared by
+      // OpenAPI `format: date-time`, plus PGlite's space-separator / short
+      // offset form ("+08"). Timezone is required: either `Z`/`z` or a
+      // numeric offset, so missing-tz strings cannot slip through.
+      expect(value as string).toMatch(
+        /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}(:?\d{2})?)$/,
+      );
+      expect(Number.isFinite(new Date(value as string).getTime())).toBe(true);
+    };
+
+    it("GET /api/admin/providers list items include lastHealthStatus / lastErrorSummary / lastHealthCheckedAt", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "OpenSubtitles Primary",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "primary",
+              secret: "opensubtitles-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{ data: { id: string } }>(created);
+      const providerId = createdPayload.data.id;
+
+      const list = await providersRoute.GET(
+        nextRequest("http://localhost/api/admin/providers", cookie),
+      );
+      const listPayload = await readJson<{
+        data: {
+          items: Array<{
+            id: string;
+            lastHealthStatus: unknown;
+            lastErrorSummary: unknown;
+            lastHealthCheckedAt: unknown;
+          }>;
+        };
+      }>(list);
+
+      expect(listPayload.data.items.length).toBeGreaterThanOrEqual(2);
+
+      for (const item of listPayload.data.items) {
+        assertNullableString(item.lastHealthStatus);
+        assertNullableString(item.lastErrorSummary);
+        assertNullableIsoDateTime(item.lastHealthCheckedAt);
+      }
+
+      // The newly created provider should expose a normalized "ready" state
+      // because we passed an initialCredential at creation time.
+      const newItem = listPayload.data.items.find(
+        (item) => item.id === providerId,
+      );
+      expect(newItem).toBeDefined();
+      expect(newItem?.lastHealthStatus).toBe("ready");
+      expect(newItem?.lastErrorSummary).toBeNull();
+      assertNullableIsoDateTime(newItem?.lastHealthCheckedAt ?? null);
+    });
+
+    it("GET /api/admin/providers/{providerId} detail includes lastHealthStatus / lastErrorSummary / lastHealthCheckedAt", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "OpenSubtitles Primary",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "primary",
+              secret: "opensubtitles-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{ data: { id: string } }>(created);
+      const providerId = createdPayload.data.id;
+
+      const detail = await providerDetailRoute.GET(
+        nextRequest(
+          `http://localhost/api/admin/providers/${providerId}`,
+          cookie,
+        ),
+        { params: { providerId } },
+      );
+      const detailPayload = await readJson<{
+        data: {
+          lastHealthStatus: unknown;
+          lastErrorSummary: unknown;
+          lastHealthCheckedAt: unknown;
+        };
+      }>(detail);
+
+      expect(detail.status).toBe(200);
+      expect(detailPayload.data.lastHealthStatus).toBe("ready");
+      expect(detailPayload.data.lastErrorSummary).toBeNull();
+      assertNullableIsoDateTime(detailPayload.data.lastHealthCheckedAt);
+    });
+
+    it("新建带 initialCredential 的 provider 初始化健康字段为 ready / errorSummary=null / checkedAt 符合 schema 真源", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "OpenSubtitles Primary",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "primary",
+              secret: "opensubtitles-api-key",
+            },
+          },
+          cookie,
+        ),
+      );
+      const createdPayload = await readJson<{
+        data: {
+          lastHealthStatus: unknown;
+          lastErrorSummary: unknown;
+          lastHealthCheckedAt: unknown;
+        };
+      }>(created);
+
+      expect(created.status).toBe(201);
+      expect(createdPayload.data.lastHealthStatus).toBe("ready");
+      expect(createdPayload.data.lastErrorSummary).toBeNull();
+      // provider-repository.createProvider does not set lastHealthCheckedAt
+      // on insert; per schema/migration the column defaults to NULL until a
+      // health check actually runs. Accept either NULL (current code path)
+      // or a valid ISO date-time string (forward-compatible).
+      assertNullableIsoDateTime(createdPayload.data.lastHealthCheckedAt);
+    });
+
+    it("Xunlei seeded instance 的健康字段存在且符合 schema 真源", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const list = await providersRoute.GET(
+        nextRequest("http://localhost/api/admin/providers", cookie),
+      );
+      const listPayload = await readJson<{
+        data: {
+          items: Array<{
+            id: string;
+            type: string;
+            lastHealthStatus: unknown;
+            lastErrorSummary: unknown;
+            lastHealthCheckedAt: unknown;
+          }>;
+        };
+      }>(list);
+
+      const xunlei = listPayload.data.items.find(
+        (item) => item.id === "xunlei-default",
+      );
+      expect(xunlei).toBeDefined();
+
+      // After migration 003 the seeded xunlei row has last_health_status =
+      // 'unknown' (set by the migration's UPDATE). applyManagedSeed (bootstrap
+      // path) writes 'seeded'. We accept any known runtime / seed status or
+      // null to keep the assertion informative without coupling to a single
+      // bootstrap branch.
+      expect(xunlei?.lastHealthStatus).toMatch(
+        /^(unknown|seeded|ready|healthy|degraded)$/,
+      );
+      assertNullableString(xunlei?.lastErrorSummary);
+      assertNullableIsoDateTime(xunlei?.lastHealthCheckedAt);
+    });
+  });
 });

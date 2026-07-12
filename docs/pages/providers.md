@@ -251,6 +251,7 @@
 
 - **Relevant global rules**: `DESIGN.md §14`
 - **Allowed overrides**: 列表页可采用高信息密度、全宽数据布局；允许列表与检查区并排展示以支持控制台工作流。
+- **US3 健康文案承载（Module 1 / Module 3）**: US3 起 Layer 3 / Inspector 的 Health 展示由 `§14.5 HealthBlock` 实现统一承载，格式为 `{label} · {时间或"尚未检查"}`；错误摘要（若有）独立在第二行展示，格式 `最近错误：{80 字截断 + …或 无}`。本规范中较早示例文本里的 `Health: ... / 错误: ...` 英文前缀视为废弃，统一以 §14.5 中文 label 为准；list row（Layer 3）与 Inspector Health 同时透传 lastErrorSummary。
 - **Forbidden deviations**:
   - ❌ 不得用 Table 列替代卡片行
   - ❌ 不得把凭据池压力隐藏到二级页面

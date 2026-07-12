@@ -26,6 +26,7 @@ import {
 } from "@/components/providers/provider-policy-form";
 import {
   formatDateTime,
+  HealthSummaryBlock,
   ProviderStatusBadge,
   providerTypeLabel,
   summarizeCredentials,
@@ -353,6 +354,13 @@ export function ProviderDetailClient({
               {saving ? "保存中" : "保存配置"}
             </Button>
           </div>
+        </div>
+        <div className="border-t pt-4">
+          <HealthSummaryBlock
+            lastHealthStatus={provider.lastHealthStatus}
+            lastHealthCheckedAt={provider.lastHealthCheckedAt}
+            lastErrorSummary={provider.lastErrorSummary}
+          />
         </div>
       </div>
 
