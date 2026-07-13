@@ -5,7 +5,7 @@
 - **Page**: Providers
 - **Route / Entry Point**: `/providers`
 - **Status**: Active (v0.2.3 — Multi-Provider)
-- **Last Updated**: 2026-07-01
+- **Last Updated**: 2026-07-14
 - **Related Feature Specs**: `specs/005-provider-admin-baseline/spec.md`
 - **Global Design Rules**: `DESIGN.md §14`
 - **Cross-Page Dependencies**: `docs/pages/provider-detail.md`、`docs/pages/create-provider.md`
@@ -243,8 +243,11 @@
 3. 降级、高风险和"待完善配置" Provider 必须在列表中一眼可识别（颜色 + Badge）。
 4. 未启用、无可用凭据或仅完成首轮建档的 Provider 必须保持可见，但不得伪装成正常稳定状态。
 5. 启用/禁用是即时动作，无 dirty state，调 API 完成即反馈（Toast）。
-6. 启停必须带确认对话框（`AlertDialog`），具体文案见 `DESIGN.md §14.5` Hover/Focus/Selected/Disabled 矩阵。
-7. 创建成功后不得强制跳转详情页；默认回到列表页、自动选中新实例。
+6. 启停必须带确认对话框（`AlertDialog`），确认文案为：
+   - 禁用：「禁用后，Provider "{name}" 将停止参与负载均衡。」
+   - 启用：「启用后，Provider "{name}" 将开始参与负载均衡。」
+   - 列表行内禁用按钮 `variant="ghost"` + destructive text hover；启用按钮 `variant="default"`。
+7. 创建成功后不得强制跳转详情页；默认回到列表页、自动选中新实例，并在列表上方展示 success Alert 含「留在列表」与「继续配置」两个承接按钮。
 8. Inspector 必须始终跟随当前选中的 Provider 实例，而非泛化的 provider 类型。
 
 ## Page-Specific Design Rules
@@ -252,6 +255,9 @@
 - **Relevant global rules**: `DESIGN.md §14`
 - **Allowed overrides**: 列表页可采用高信息密度、全宽数据布局；允许列表与检查区并排展示以支持控制台工作流。
 - **US3 健康文案承载（Module 1 / Module 3）**: US3 起 Layer 3 / Inspector 的 Health 展示由 `§14.5 HealthBlock` 实现统一承载，格式为 `{label} · {时间或"尚未检查"}`；错误摘要（若有）独立在第二行展示，格式 `最近错误：{80 字截断 + …或 无}`。本规范中较早示例文本里的 `Health: ... / 错误: ...` 英文前缀视为废弃，统一以 §14.5 中文 label 为准；list row（Layer 3）与 Inspector Health 同时透传 lastErrorSummary。
+- **Inspector 凭据池与调度摘要文案（Module 3）**: Inspector 内凭据池统计与调度摘要目前使用英文 label（`active / cooling / isolated / quota⚠`、`priority / weight / concurrency / cooldown / fallback`），待后续统一收口为中文。此偏差记录在案，不在 v0.2.3 阻塞交付。
+- **Inspector 凭据池健康标签（Module 3）**: Inspector 选中上下文头的 `Pool healthy / Pool unhealthy` 为英文临时标签，待后续统一收口为中文（如 `凭据池健康 / 凭据池异常`）。此偏差记录在案，不在 v0.2.3 阻塞交付。
+- **Xunlei 列表行凭据区文案（Module 2 Layer 4）**: Xunlei 行在 Layer 4 显示 `无凭据可配（不需要 API Key）`，与 spec 中 `无凭据可配` 略有扩充，增加了括号说明，属于可接受的实现补充，不对齐为偏差。
 - **Forbidden deviations**:
   - ❌ 不得用 Table 列替代卡片行
   - ❌ 不得把凭据池压力隐藏到二级页面

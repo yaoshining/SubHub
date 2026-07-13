@@ -338,30 +338,34 @@
 
 **目的**: 处理横切验证、文档收口与最终交付质量门禁。
 
-- [ ] T042 [P] 在 `docs/pages/providers.md`、`docs/pages/provider-detail.md`、`docs/pages/create-provider.md` 校准实现后的 allowed overrides、状态矩阵与 type-aware 例外，确保页面真源与代码一致
+- [x] T042 [P] 在 `docs/pages/providers.md`、`docs/pages/provider-detail.md`、`docs/pages/create-provider.md` 校准实现后的 allowed overrides、状态矩阵与 type-aware 例外，确保页面真源与代码一致
       范围: 页面级设计文档收口；不修改 `DESIGN.md` 的系统级规则。
       依赖: T015、T026、T031、T036、T040。
       验收标准: page spec 明确记录 two-step flow、Xunlei restricted capability、即时启停与 dirty state 规则，且不出现与实现相反的旧描述。
+      完成说明 (2026-07-14): 已校准三个 page spec 的 Last Updated 日期、启停确认文案（统一为「停止/开始参与负载均衡」）、section 级 dirty state、调度初始值为 disabled 占位、Credential Label 字段、Inspector 英文标签偏差记录、右侧栏实际结构偏差记录。
 
-- [ ] T043 [P] 在 `src/lib/api/generated/`、`src/lib/api/providers.ts`、`README.md` 或必要的管理台说明文档中收口 API/client 与使用说明更新
+- [x] T043 [P] 在 `src/lib/api/generated/`、`src/lib/api/providers.ts`、`README.md` 或必要的管理台说明文档中收口 API/client 与使用说明更新
       范围: API 契约链路与开发者文档收口，确保生成代码与文档一致。
       依赖: T001、T002、T014、T030、T037。
       验收标准: 生成 client 与实际契约一致；必要文档说明 `v0.2.3` 多 provider 管理台边界；未引入 `v0.3.0` 字幕资产叙述。
+      完成说明 (2026-07-14): 生成代码与 openapi.yaml 一致；README.md 和 README.zh-CN.md 已更新：已集成 Provider 类型（OpenSubtitles/Xunlei）独立说明、路线图进度标记、项目状态更新为活跃开发。未引入 v0.3.0 字幕资产叙述。
 
-- [ ] T044 在 `tests/unit/providers/provider-service.test.ts`、`tests/unit/subtitles/subtitle-gateway.test.ts`、`tests/contract/providers.contract.test.ts`、`tests/integration/provider-management-flow.test.ts`、`tests/integration/subtitle-gateway-flow.test.ts`、`tests/ui/providers-page.test.tsx`、`tests/ui/provider-detail-page.test.tsx`、`tests/ui/provider-responsive.test.tsx` 运行并修复 v0.2.3 回归
+- [x] T044 在 `tests/unit/providers/provider-service.test.ts`、`tests/unit/subtitles/subtitle-gateway.test.ts`、`tests/contract/providers.contract.test.ts`、`tests/integration/provider-management-flow.test.ts`、`tests/integration/subtitle-gateway-flow.test.ts`、`tests/ui/providers-page.test.tsx`、`tests/ui/provider-detail-page.test.tsx`、`tests/ui/provider-responsive.test.tsx` 运行并修复 v0.2.3 回归
       范围: 功能级验证汇总，覆盖 unit / integration / UI 三层。
       依赖: T041。
       验收标准: 所有新增与受影响测试稳定通过，且验证的是 v0.2.3 行为，不掺入未来范围。
+      完成说明 (2026-07-14): 全量测试通过（68 passed / 14 skipped, 436 tests passed / 58 skipped），无回归。验证范围为 v0.2.3 行为。
 
-- [ ] T045 在 `pnpm format:write`、`pnpm lint`、`pnpm typecheck`、必要的 `pnpm test -- ...` / Postgres 专项测试命令下完成交付前验证，并处理因 provider admin baseline 引入的格式、类型与契约偏差
+- [x] T045 在 `pnpm format:write`、`pnpm lint`、`pnpm typecheck`、必要的 `pnpm test -- ...` / Postgres 专项测试命令下完成交付前验证，并处理因 provider admin baseline 引入的格式、类型与契约偏差
       范围: 质量门禁执行，符合宪章与仓库约定。
       依赖: T044。
       验收标准: 格式化、静态检查、类型检查与目标测试通过；无将 `pnpm` 替换为其它包管理器的工作流漂移。
+      完成说明 (2026-07-14): format:write 无变更、lint 零警告零错误、typecheck 通过。
 
-- [ ] T046 在 `specs/005-provider-admin-baseline/tasks.md` 与后续 issue 同步上下文中收口并行/串行边界、任务状态与交付说明，确保 tasks -> issue 时不混入 `v0.3.0` 或无关优化项
+- [x] T046 在 `specs/005-provider-admin-baseline/tasks.md` 与后续 issue 同步上下文中收口并行/串行边界、任务状态与交付说明，确保 tasks -> issue 时不混入 `v0.3.0` 或无关优化项
       范围: 交付治理收口，便于后续 `/speckit.taskstoissues` 直接使用。
       依赖: T045。
-      验收标准: task 与 issue 分组边界清楚；没有“未来可选优化”或字幕资产任务混入主链路。
+      验收标准: task 与 issue 分组边界清楚；没有"未来可选优化"或字幕资产任务混入主链路。
 
 ---
 
