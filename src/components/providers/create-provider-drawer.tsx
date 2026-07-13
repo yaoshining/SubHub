@@ -46,6 +46,7 @@ type Step = "select" | "form";
 
 const NAME_MIN = 2;
 const NAME_MAX = 45;
+const CREDENTIAL_LABEL_DEFAULT = "primary";
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof AppError || error instanceof Error) {
@@ -64,6 +65,7 @@ export function CreateProviderDrawer({
   const [step, setStep] = React.useState<Step>("select");
   const [name, setName] = React.useState("");
   const [secret, setSecret] = React.useState("");
+  const [credentialLabel, setCredentialLabel] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -72,6 +74,7 @@ export function CreateProviderDrawer({
       setStep("select");
       setName("");
       setSecret("");
+      setCredentialLabel("");
       setError(null);
       setSubmitting(false);
     }
@@ -104,7 +107,7 @@ export function CreateProviderDrawer({
         name: trimmedName,
         type: "opensubtitles",
         initialCredential: {
-          label: "primary",
+          label: credentialLabel.trim() || CREDENTIAL_LABEL_DEFAULT,
           secret: secret.trim(),
         },
       });
@@ -227,6 +230,28 @@ export function CreateProviderDrawer({
                   />
                   <p className="text-xs text-muted-foreground">
                     明文凭据只用于本次提交；响应与列表仅展示受控片段。
+                  </p>
+                </div>
+
+                <div className="grid gap-2">
+                  <label
+                    className="text-sm font-medium"
+                    htmlFor="create-provider-credential-label"
+                  >
+                    Credential Label
+                  </label>
+                  <Input
+                    id="create-provider-credential-label"
+                    value={credentialLabel}
+                    onChange={(event) => setCredentialLabel(event.target.value)}
+                    placeholder={CREDENTIAL_LABEL_DEFAULT}
+                    maxLength={45}
+                    disabled={submitting}
+                    autoComplete="off"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    首条凭据在凭据池中的显示名；留空时默认提交 「
+                    {CREDENTIAL_LABEL_DEFAULT}」。
                   </p>
                 </div>
               </section>

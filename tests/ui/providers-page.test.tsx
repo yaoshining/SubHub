@@ -323,6 +323,75 @@ describe("Providers 页面", () => {
     );
   });
 
+  it("Credential Label 留空时默认提交 primary（two-step flow）", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<ProvidersClient />);
+
+    await screen.findAllByText("OpenSubtitles Primary");
+    await user.click(screen.getByRole("button", { name: "创建 Provider" }));
+    await user.click(screen.getByTestId("provider-type-option-opensubtitles"));
+    await screen.findByTestId("create-provider-form");
+
+    await user.clear(screen.getByLabelText("Provider Name"));
+    await user.type(
+      screen.getByLabelText("Provider Name"),
+      "OpenSubtitles 备用",
+    );
+    await user.clear(screen.getByLabelText("Initial API Key"));
+    await user.type(
+      screen.getByLabelText("Initial API Key"),
+      "provider-secret",
+    );
+
+    // Credential Label 留空 -> 提交 primary
+    expect(screen.getByLabelText("Credential Label")).toHaveValue("");
+    await user.click(screen.getByRole("button", { name: "Create Provider" }));
+    await waitFor(() =>
+      expect(vi.mocked(api.createProvider)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initialCredential: {
+            label: "primary",
+            secret: "provider-secret",
+          },
+        }),
+      ),
+    );
+  });
+
+  it("Credential Label 输入自定义值时提交用户输入（two-step flow）", async () => {
+    const user = userEvent.setup();
+    renderWithTheme(<ProvidersClient />);
+
+    await screen.findAllByText("OpenSubtitles Primary");
+    await user.click(screen.getByRole("button", { name: "创建 Provider" }));
+    await user.click(screen.getByTestId("provider-type-option-opensubtitles"));
+    await screen.findByTestId("create-provider-form");
+
+    await user.clear(screen.getByLabelText("Provider Name"));
+    await user.type(
+      screen.getByLabelText("Provider Name"),
+      "OpenSubtitles 边缘",
+    );
+    await user.clear(screen.getByLabelText("Initial API Key"));
+    await user.type(
+      screen.getByLabelText("Initial API Key"),
+      "provider-secret-2",
+    );
+    await user.clear(screen.getByLabelText("Credential Label"));
+    await user.type(screen.getByLabelText("Credential Label"), "edge-us-1");
+    await user.click(screen.getByRole("button", { name: "Create Provider" }));
+    await waitFor(() =>
+      expect(vi.mocked(api.createProvider)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initialCredential: {
+            label: "edge-us-1",
+            secret: "provider-secret-2",
+          },
+        }),
+      ),
+    );
+  });
+
   it("筛选 type tabs 之后列表应过滤", async () => {
     const user = userEvent.setup();
     renderWithTheme(<ProvidersClient />);
