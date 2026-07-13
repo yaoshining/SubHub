@@ -5,7 +5,7 @@
 - **Page**: Provider Detail
 - **Route / Entry Point**: `/providers/:providerId`
 - **Status**: Active (v0.2.3 — Multi-Provider)
-- **Last Updated**: 2026-07-01
+- **Last Updated**: 2026-07-14
 - **Related Feature Specs**: `specs/005-provider-admin-baseline/spec.md`
 - **Global Design Rules**: `DESIGN.md §14`
 - **Cross-Page Dependencies**: `docs/pages/providers.md`、`docs/pages/create-provider.md`
@@ -92,9 +92,9 @@
 
 - Switch 切换立即调 API（`POST .../enable` / `POST .../disable`），**无 dirty state**，不进 unsavedChanges。
 - 切换前必须弹出 `AlertDialog` 确认。
-  - 启用确认：「启用 {{ Type }} Provider？启用后该 provider 将立即参与聚合搜索调度。」
-  - 禁用确认：「禁用 {{ Type }} Provider？禁用后聚合搜索将不再调用此 provider。相关凭据不会被删除，可随时重新启用。」
-  - 禁用按钮 `variant="destructive"`；启用按钮 `variant="default"`。
+  - 启用确认：「启用后，Provider "{name}" 将开始参与负载均衡。」
+  - 禁用确认：「禁用后，Provider "{name}" 将停止参与负载均衡。」
+  - 禁用按钮 `variant="outline"`；启用按钮 `variant="outline"`。
 - Health 与 Last Error 为只读展示。Health 显示 dot + 状态 + 时间；Error 显示无/截断 80 字 + tooltip。
 
 ## Module B: 调度策略（核心配置）
@@ -248,6 +248,8 @@ Status: Enabled
 
 - **Module A 文案承载**：US3 起 Health 摘要与 Last Error 文案由 `§14.5 HealthBlock` 实现统一承载。文案格式 `健康 · {时间}` / `最近错误：{摘要或 无}`。本规范中较早的 `Health: ... / Last Error: ...` 英文前缀示例视为废弃，统一以 §14.5 中文 label 为准。
 - **Section A 健康摘要位置**：US3 起 `HealthSummaryBlock` 在 Context Strip 之下以 `border-t pt-4` 分隔独立成块；不再与 Status Switch 同行嵌进同一行。该位置在后续 US / feature 调整 Section A 视觉权重时可继续调整，但不应回退到与 Switch 同行。
+- **Context Strip 启停按钮位置**：实现中启停按钮位于 Context Strip 右侧区域，与 spec 中的 Module A Switch 位置略有差异；启停仍为即时动作，无 dirty state，且需 AlertDialog 确认。
+- **Dirty state 细粒度**：实现采用 section 级 dirty（仅调度策略 Save 区域标记 dirty），而非全局 dirty 徽章。Context Strip 顶部 `含未保存变更` 状态徽章基于 `dirtyFields` 列表判断，受影响模块名以中文连接展示（如「名称、优先级」）。
 
 ## Page-Specific Design Rules
 
@@ -255,6 +257,8 @@ Status: Enabled
 - **Allowed overrides**:
   - Section B 的 Save 按钮按 section 局部 dirty，非全局 dirty（与 `provider-detail.md` 前版本的"全局未保存变更指示"略有差异；此处选择更细粒度方案）。
   - Xunlei 的 Credential Pool 区整段替换为 `RestrictedCapabilityCallout`，与 OpenSubtitles 结构完全不同。
+  - 右侧 Inspector 实际结构为 `ProviderActivity`（最近行为 Timeline）+ 配置说明 Card（只读 Textarea，MVP 不支持编辑），而非 spec 原始设计中的"健康摘要 + 元信息 + 危险区"布局。此偏差记录在案：健康摘要已在 Context Strip 下独立展示，元信息分散在 MetricCard 区域与 Context Strip，危险区（删除 Provider）暂未实现。
+  - Xunlei 删除按钮：spec 要求"不显示删除按钮，显示文字「Xunlei 实例由 migration 预置，请联系运维删除。」"；实现中当前未渲染删除按钮区域，此行为与 spec 一致（均不在 Xunlei 场景显示删除入口）。
 - **Forbidden deviations**:
   - ❌ 不得把 Provider 凭据与下游调用方 Key 混在一张表里
   - ❌ 不得把异常隔离设计成隐式自动消失

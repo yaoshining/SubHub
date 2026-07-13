@@ -5,7 +5,7 @@
 - **Page**: Create Provider
 - **Route / Entry Point**: Operated via `create-provider-drawer.tsx`(dialog, no dedicated route); entry from `/providers` page header
 - **Status**: New (v0.2.3 — Multi-Provider)
-- **Last Updated**: 2026-07-01
+- **Last Updated**: 2026-07-14
 - **Related Feature Specs**: `specs/005-provider-admin-baseline/spec.md` FR-13 ~ FR-20
 - **Global Design Rules**: `DESIGN.md §14`
 
@@ -102,10 +102,10 @@ Card Grid（2 columns, ≥640px 保持横向）
 | Provider Name   | Input                   | ✅      | 1–45 字符                                  |
 | Initial API Key | Input `type="password"` | ✅      | 首个上游凭据                                      |
 | Credential Label | Input                  | ❌      | 首条凭据显示名，留空提交 `primary`，用于凭据池识别 |
-| Priority        | Input `number`          | 默认 10 |                                                   |
-| Weight          | Input `number`          | 默认 1  |                                                   |
-| Concurrency     | Input `number`          | 默认 3  |                                                   |
-| Cooldown (s)    | Input `number`          | 默认 30 |                                                   |
+| Priority        | Input `number`          | 默认 10 | 仅为占位展示（disabled），不写入创建请求；创建后在详情页配置 |
+| Weight          | Input `number`          | 默认 1  | 仅为占位展示（disabled），不写入创建请求；创建后在详情页配置 |
+| Concurrency     | Input `number`          | 默认 3  | 仅为占位展示（disabled），不写入创建请求；创建后在详情页配置 |
+| Cooldown (s)    | Input `number`          | 默认 30 | 仅为占位展示（disabled），不写入创建请求；创建后在详情页配置 |
 
 **表单区划**（`Separator` 分隔）：
 
@@ -168,6 +168,8 @@ Next Steps（后续说明）
 - **Allowed overrides**:
   - 只有 OS 需要第二步表单；Xunlei 路径不存在第二步
   - 调度策略字段在 OS 创建时与 detail 页重复，但此处作为初始值设置（detail 页可后改）
+  - Step 2 调度初始值在实际实现中为 disabled 占位字段（placeholder 显示默认值），不随创建请求提交；文案明确提示「创建后前往详情页继续配置」
+  - Credential Label 字段已在实现中作为可选项加入 Step 2，留空时默认提交 `primary`
 - **Forbidden deviations**:
   - ❌ 不得把 Base URL 作为字段暴露
   - ❌ 不得在 OS 创建过程中创建 Xunlei 实例
