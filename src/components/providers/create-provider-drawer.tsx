@@ -44,7 +44,7 @@ export type CreateProviderDrawerProps = {
 
 type Step = "select" | "form";
 
-const NAME_MIN = 2;
+const NAME_MIN = 1;
 const NAME_MAX = 45;
 const CREDENTIAL_LABEL_DEFAULT = "primary";
 

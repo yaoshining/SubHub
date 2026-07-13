@@ -99,7 +99,7 @@ Card Grid（2 columns, ≥640px 保持横向）
 
 | 字段            | 类型                    | 必填    | 备注                                              |
 | --------------- | ----------------------- | ------- | ------------------------------------------------- |
-| Provider Name   | Input                   | ✅      | 2–45 字符                                         |
+| Provider Name   | Input                   | ✅      | 1–45 字符                                  |
 | Initial API Key | Input `type="password"` | ✅      | 首个上游凭据                                      |
 | Credential Label | Input                  | ❌      | 首条凭据显示名，留空提交 `primary`，用于凭据池识别 |
 | Priority        | Input `number`          | 默认 10 |                                                   |
