@@ -354,7 +354,7 @@ export function RestrictedCapabilityCallout({
             </ul>
           </>
         ) : (
-          <p>{providerName}由 migration 预置，当前无凭据池结构。</p>
+          <p>{providerName} 由 migration 预置，当前无凭据池结构。</p>
         )}
       </AlertDescription>
     </Alert>
