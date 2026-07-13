@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Activity } from "lucide-react";
+import { Activity, Info } from "lucide-react";
 
 import type { ProviderDetail } from "@/lib/api/providers";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -159,6 +160,22 @@ export function ProviderActivity({ provider }: ProviderActivityProps) {
       </CardHeader>
       <Separator />
       <CardContent className="pt-6">
+        {provider.type === "xunlei" ? (
+          <Alert
+            variant="default"
+            className="mb-4 border-border/50 bg-muted/30"
+            data-testid="provider-activity-restricted"
+          >
+            <Info aria-hidden="true" className="size-4" />
+            <AlertTitle className="text-xs font-medium">
+              凭据相关行为不适用
+            </AlertTitle>
+            <AlertDescription className="mt-1 text-xs leading-5 text-muted-foreground">
+              Xunlei
+              不维护凭据池，凭据轮换、隔离与恢复等行为不会出现在时间线中；仅记录健康检查与状态更新。
+            </AlertDescription>
+          </Alert>
+        ) : null}
         {events.length > 0 ? (
           <div className="grid gap-3" data-testid="provider-activity-list">
             {events.map((event) => (

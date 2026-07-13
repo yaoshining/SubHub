@@ -67,6 +67,32 @@ const providerDetail = {
   credentials: [activeCredential, isolatedCredential],
 };
 
+const xunleiProvider = {
+  id: "xunlei-default",
+  name: "Xunlei Official",
+  type: "xunlei" as const,
+  status: "enabled" as const,
+  priority: 5,
+  weight: 50,
+  concurrencyLimit: 1,
+  rotationEnabled: false,
+  cooldownSeconds: 30,
+  fallbackProviderId: null,
+  lastHealthStatus: null,
+  lastErrorSummary: null,
+  lastHealthCheckedAt: null,
+  createdAt: "2026-06-01T00:00:00.000Z",
+  updatedAt: "2026-06-01T00:00:00.000Z",
+  credentialCount: 0,
+  activeCredentialCount: 0,
+  availableCredentialCount: 0,
+};
+
+const xunleiProviderDetail = {
+  ...xunleiProvider,
+  credentials: [],
+};
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -240,5 +266,77 @@ describe("Provider 响应式行为", () => {
         }),
       ),
     );
+  });
+
+  it("多断点下 Xunlei 详情页凭据池区整段替换为受限说明，OS 保留凭据表", async () => {
+    // Desktop 断点：Xunlei 详情页渲染受限模块，不渲染凭据表
+    vi.mocked(api.fetchProviderDetail).mockResolvedValue(xunleiProviderDetail);
+    vi.mocked(api.fetchProviders).mockResolvedValue({
+      items: [xunleiProvider],
+      total: 1,
+    });
+
+    const { unmount } = renderWithTheme(
+      <ProviderDetailClient providerId="xunlei-default" />,
+    );
+
+    await screen.findByTestId("provider-detail-page");
+    expect(
+      await screen.findByTestId("provider-restricted-capability"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("provider-credential-table"),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    // Mobile 断点（375px）：Xunlei 受限模块仍可见，凭据表仍不渲染
+    mockViewport(375, 812);
+    vi.mocked(api.fetchProviderDetail).mockResolvedValue(xunleiProviderDetail);
+    renderWithTheme(<ProviderDetailClient providerId="xunlei-default" />);
+
+    await screen.findByTestId("provider-detail-page");
+    expect(
+      await screen.findByTestId("provider-restricted-capability"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("provider-credential-table"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("Mobile 断点下 OS 详情页凭据表与隔离/恢复动作仍可达", async () => {
+    mockViewport(375, 812);
+
+    renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+    await screen.findByTestId("provider-credential-table");
+    expect(screen.getByText("Token 池")).toBeInTheDocument();
+    // Mobile 下凭据动作仍可操作
+    expect(
+      screen.getAllByRole("button", { name: "隔离" }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByTestId("provider-restricted-capability"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("Mobile 断点下 create-provider drawer Xunlei locked 卡片可达且提示受限", async () => {
+    mockViewport(375, 812);
+
+    const user = userEvent.setup();
+    renderWithTheme(<ProvidersClient />);
+
+    await screen.findAllByText("OpenSubtitles Primary");
+    await user.click(screen.getByRole("button", { name: "创建 Provider" }));
+
+    const xunleiCard = await screen.findByTestId("provider-type-option-xunlei");
+    expect(xunleiCard).toHaveAttribute("aria-disabled", "true");
+    // 点击 locked 卡片不进入 Step 2，而是展示已预置提示
+    await user.click(xunleiCard);
+    expect(
+      await screen.findByTestId("xunlei-provisioned-notice"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("create-provider-form"),
+    ).not.toBeInTheDocument();
   });
 });

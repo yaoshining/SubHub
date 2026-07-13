@@ -19,7 +19,7 @@ import {
 } from "@/lib/api/providers";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { ProviderActivity } from "@/components/providers/provider-activity";
-import { ProviderCredentialTable } from "@/components/providers/provider-credential-table";
+import { ProviderCredentialPoolSection } from "@/components/providers/provider-credential-table";
 import {
   ProviderPolicyForm,
   type ProviderPolicyDraft,
@@ -461,9 +461,8 @@ export function ProviderDetailClient({
             onDraftChange={updateDraft}
             onSave={() => void savePolicy()}
           />
-          <ProviderCredentialTable
-            providerId={provider.id}
-            credentials={provider.credentials}
+          <ProviderCredentialPoolSection
+            provider={provider}
             onProviderChange={updateProviderSummary}
             onCredentialsChange={updateCredentials}
           />

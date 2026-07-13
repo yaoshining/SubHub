@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, KeyRound, Plus } from "lucide-react";
+import { AlertTriangle, KeyRound, Lock, Plus } from "lucide-react";
 
-import type { ProviderCredential } from "@/lib/api/providers";
+import type { ProviderCredential, ProviderDetail } from "@/lib/api/providers";
 import {
   createProviderCredential,
   isolateProviderCredential,
@@ -36,6 +36,7 @@ import {
 import { AppError } from "@/lib/errors";
 import {
   CredentialStatusBadge,
+  RestrictedCapabilityCallout,
   formatDateTime,
   formatTokenFragment,
 } from "@/components/providers/provider-utils";
@@ -400,5 +401,65 @@ export function ProviderCredentialTable({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export type ProviderCredentialPoolSectionProps = {
+  provider: ProviderDetail;
+  readOnly?: boolean;
+  onProviderChange?: (dirtyLabel: string, provider: ProviderDetail) => void;
+  onCredentialsChange: (
+    credentials: ProviderCredential[],
+    dirtyLabel: string,
+  ) => void;
+};
+
+/**
+ * Type-aware Module C：OpenSubtitles → 凭据池表格；Xunlei → 受限能力说明卡。
+ * 按 §14.3.7「整段替换」，不在同一组件内 if-else 隐藏字段。
+ */
+export function ProviderCredentialPoolSection({
+  provider,
+  readOnly,
+  onProviderChange,
+  onCredentialsChange,
+}: ProviderCredentialPoolSectionProps) {
+  if (provider.type === "xunlei") {
+    return (
+      <Card
+        className="border-border bg-surface shadow-none"
+        data-testid="provider-restricted-capability"
+      >
+        <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle className="text-base">凭据池</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              此 provider 不维护凭据池结构。
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 self-start rounded-md border border-border/50 bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
+            <Lock aria-hidden="true" className="size-3" />
+            不适用
+          </span>
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-6">
+          <RestrictedCapabilityCallout
+            providerName={provider.name}
+            variant="detail"
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <ProviderCredentialTable
+      providerId={provider.id}
+      credentials={provider.credentials}
+      readOnly={readOnly}
+      onProviderChange={onProviderChange}
+      onCredentialsChange={onCredentialsChange}
+    />
   );
 }
