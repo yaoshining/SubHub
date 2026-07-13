@@ -86,7 +86,7 @@ Card Grid（2 columns, ≥640px 保持横向）
 
 - 点击 OS Card → 高亮边框 `border-primary` + Step 2 出现（淡入动画 `fadeIn 200ms`）
 - 点击 Xunlei Card → 无选中效果
-- 如果 `hasExistingXunlei === true`，Xunlei Card 下方显示 `Alert variant="info"`：「已有 Xunlei 实例在运行。Xunlei 为预置 provider，单实例不可重复创建。如需重新接入请联系运维。」
+- 如果 `hasExistingXunlei === true`，Xunlei Card 下方显示**信息提示 Alert**（`default` variant + Lucide `info` 图标，不使用 `variant="info"`，见 `DESIGN.md §14.5.1`）：「已有 Xunlei 实例在运行。Xunlei 为预置 provider，单实例不可重复创建。如需重新接入请联系运维。」
 - Step 1 画面必须保留一个**已选对象摘要卡**位置，用于承接进入 Step 2 前的上下文连续性。
 
 **空态 / 无 provider type 可选时**（极端情况）→ `EmptyStateCard` scope=no-types：「暂无可创建的 provider 类型，请联系系统管理员」。
@@ -97,14 +97,15 @@ Card Grid（2 columns, ≥640px 保持横向）
 
 **字段清单**：
 
-| 字段            | 类型                    | 必填    | 备注         |
-| --------------- | ----------------------- | ------- | ------------ |
-| Provider Name   | Input                   | ✅      | 2–45 字符    |
-| Initial API Key | Input `type="password"` | ✅      | 首个上游凭据 |
-| Priority        | Input `number`          | 默认 10 |              |
-| Weight          | Input `number`          | 默认 1  |              |
-| Concurrency     | Input `number`          | 默认 3  |              |
-| Cooldown (s)    | Input `number`          | 默认 30 |              |
+| 字段            | 类型                    | 必填    | 备注                                              |
+| --------------- | ----------------------- | ------- | ------------------------------------------------- |
+| Provider Name   | Input                   | ✅      | 1–45 字符                                  |
+| Initial API Key | Input `type="password"` | ✅      | 首个上游凭据                                      |
+| Credential Label | Input                  | ❌      | 首条凭据显示名，留空提交 `primary`，用于凭据池识别 |
+| Priority        | Input `number`          | 默认 10 |                                                   |
+| Weight          | Input `number`          | 默认 1  |                                                   |
+| Concurrency     | Input `number`          | 默认 3  |                                                   |
+| Cooldown (s)    | Input `number`          | 默认 30 |                                                   |
 
 **表单区划**（`Separator` 分隔）：
 
@@ -115,6 +116,7 @@ Selected Provider（对象摘要）
 Basic Info（基础信息）
   Provider Name
   Initial API Key
+  Credential Label（可选，placeholder="primary"，留空提交 `primary`）
 
 Scheduling Defaults（初始调度值）
   Priority  Weight  Concurrency  Cooldown
@@ -145,7 +147,7 @@ Next Steps（后续说明）
 当用户访问创建入口时，若后端返回 `hasExistingXunlei: true`：
 
 - Step 1 Xunlei Card: `disabled` + `cursor-not-allowed` + locked icon
-- Card 下方: `Alert variant="info"`：「当前已有 Xunlei 实例运行中，Xunlei 为预置 provider，不支持通过此界面额外创建。」
+- Card 下方: **信息提示 Alert**（`default` variant + Lucide `info` 图标，见 `DESIGN.md §14.5.1`）：「当前已有 Xunlei 实例运行中，Xunlei 为预置 provider，不支持通过此界面额外创建。」
 - OS Card: 不受影响
 - 若**所有** provider type 均已 provisioned（技术上不可能但有此情况的安全路径）→ `EmptyStateCard` scope=all-provisioned：「所有 provider 类型已就绪，无需创建新实例。如有新增类型需求，请查阅 provider 接入文档。」
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProviderDetailClient } from "@/app/(admin)/providers/[providerId]/provider-detail-client";
 import { ProvidersClient } from "@/app/(admin)/providers/providers-client";
-import { renderWithTheme } from "../helpers/ui";
+import { mockViewport, renderWithTheme } from "../helpers/ui";
 
 // 模拟 useRouter 和 useSearchParams（Vitest 不会从 ui.tsx 导入 vi.mock 的提升）
 const mockRouterReplace = vi.fn();
@@ -110,23 +110,25 @@ beforeEach(() => {
 });
 
 describe("Provider 响应式行为", () => {
-  it("创建成功后以内联 Banner 呈现 Mobile 流程，并保持次主动作顺序", async () => {
+  it("创建成功后以内联 Banner 呈现 Mobile 流程，并保持次主动作顺序（two-step flow）", async () => {
     const user = userEvent.setup();
     renderWithTheme(<ProvidersClient />);
 
     await screen.findAllByText("OpenSubtitles Primary");
     await user.click(screen.getByRole("button", { name: "创建 Provider" }));
-    await user.clear(screen.getByLabelText("Provider 名称"));
+    await user.click(screen.getByTestId("provider-type-option-opensubtitles"));
+    await screen.findByTestId("create-provider-form");
+    await user.clear(screen.getByLabelText("Provider Name"));
     await user.type(
-      screen.getByLabelText("Provider 名称"),
+      screen.getByLabelText("Provider Name"),
       "OpenSubtitles 新池",
     );
-    await user.clear(screen.getByLabelText("OpenSubtitles API Key"));
+    await user.clear(screen.getByLabelText("Initial API Key"));
     await user.type(
-      screen.getByLabelText("OpenSubtitles API Key"),
+      screen.getByLabelText("Initial API Key"),
       "provider-secret",
     );
-    await user.click(screen.getByRole("button", { name: "创建并返回列表" }));
+    await user.click(screen.getByRole("button", { name: "Create Provider" }));
 
     const banner = await screen.findByTestId("provider-create-success");
     expect(banner).toHaveTextContent("已成功创建，策略待补充");
@@ -139,6 +141,48 @@ describe("Provider 响应式行为", () => {
       "href",
       "/providers/provider_new?created=1",
     );
+  });
+
+  it("Mobile 断点下 create-provider drawer two-step flow 仍可用", async () => {
+    mockViewport(375, 812);
+
+    const user = userEvent.setup();
+    renderWithTheme(<ProvidersClient />);
+
+    await screen.findAllByText("OpenSubtitles Primary");
+    await user.click(screen.getByRole("button", { name: "创建 Provider" }));
+
+    // Step 1 selector 卡片堆叠（sm:grid-cols-2 在 <640px 退回单列）
+    const selector = await screen.findByTestId("provider-type-selector");
+    expect(selector).toBeInTheDocument();
+    expect(
+      screen.getByTestId("provider-type-option-opensubtitles"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("provider-type-option-xunlei")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+
+    // 进入 Step 2，表单存在且 Footer 主次按钮可达
+    await user.click(screen.getByTestId("provider-type-option-opensubtitles"));
+    const form = await screen.findByTestId("create-provider-form");
+    expect(form).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText("Provider Name"),
+      "OpenSubtitles 新池",
+    );
+    await user.type(
+      screen.getByLabelText("Initial API Key"),
+      "provider-secret",
+    );
+
+    const createButton = screen.getByRole("button", {
+      name: "Create Provider",
+    });
+    const backButton = screen.getByRole("button", { name: /^Back/ });
+    expect(createButton).not.toBeDisabled();
+    expect(backButton).not.toBeDisabled();
   });
 
   it("Provider Detail 在 Tablet 下不保留桌面双栏，次级栏仅到 Desktop 才固定", async () => {

@@ -720,6 +720,20 @@ OpenSubtitles 与 Xunlei 在凭据池区块不得套用同一个组件加 if-els
 | `ProviderContextStrip`         | `Card` + `Badge` + `Text`        | Detail 页顶部对象上下文条                                           |
 | `TypeSelectorCard`             | `Card` + `Alert`                 | Create Drawer Step 1 类型卡片                                       |
 
+#### 14.5.1 Alert Variant 使用策略
+
+Alert variant 体系沿用 shadcn/ui 原生四档：`default` / `destructive` / `success` / `warning`。**不扩展 `info` variant**，保持上游可升级性。
+
+| 场景                         | 用法                                   | 说明                                                          |
+| ---------------------------- | -------------------------------------- | ------------------------------------------------------------- |
+| 信息性提示（非阻塞/非错误）  | `Alert`（`default`）+ Lucide `info` 图标 | Xunlei 预置说明、受限能力说明等；不在页面层写 `variant="info"` |
+| 破坏性/不可逆操作后果        | `Alert`（`destructive`）               | 删除 provider、清除凭据池等危险说明                            |
+| 操作成功反馈（需常驻）        | `Alert`（`success`）                  | 瞬时成功反馈优先用 Toast，常驻成功条才用 Alert                |
+| 警告但可继续                  | `Alert`（`warning`）                   | 凭据池 degraded、rotation 未配置等                             |
+
+- 信息性提示统一借助 `RestrictedCapabilityCallout` 等复合组件承载，页面层只引用组件名，不直接写 `variant="info"`。
+- 页面规范与实现层均不得出现 `Alert variant="info"`；历史文档中遗留的 `variant="info"` 表述一律改写为「信息提示 Alert（`default` variant + Lucide `info` 图标）」。
+
 ### 14.6 v0.2.3 设计文档索引
 
 | 设计资源               | 路径                            | 职责                                                                      |

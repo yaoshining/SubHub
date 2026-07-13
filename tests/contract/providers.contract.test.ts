@@ -303,6 +303,84 @@ describe("Provider 管理 API 契约", () => {
     });
   });
 
+  describe("create provider type 限制契约 (US5)", () => {
+    it("POST type=xunlei 被拒绝并返回明确限制语义 (VALIDATION_FAILED + target=type)", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const response = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "Xunlei Duplicate",
+            type: "xunlei",
+            initialCredential: {
+              label: "primary",
+              secret: "xunlei-not-creatable",
+            },
+          },
+          cookie,
+        ),
+      );
+
+      expect(response.status).toBe(400);
+      const payload = await expectApiError(
+        response,
+        "VALIDATION_FAILED",
+        "Xunlei 为预置 provider，单实例由 migration 接入；不支持通过此接口创建，如需恢复请走运维迁移。",
+      );
+      expect(payload.error.target).toBe("type");
+    });
+
+    it("POST 仍只允许创建 OpenSubtitles，OS 初始凭据创建路径兼容", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const created = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "OpenSubtitles Contract Probe",
+            type: "opensubtitles",
+            initialCredential: {
+              label: "primary",
+              secret: "os-contract-probe-key",
+            },
+          },
+          cookie,
+        ),
+      );
+
+      expect(created.status).toBe(201);
+      const createdPayload = await readJson<{
+        data: { type: string; status: string; credentials: unknown[] };
+      }>(created);
+      expect(createdPayload.data.type).toBe("opensubtitles");
+      expect(createdPayload.data.status).toBe("enabled");
+      expect(createdPayload.data.credentials).toHaveLength(1);
+      // 上游凭据明文不得回显
+      expect(JSON.stringify(createdPayload)).not.toContain(
+        "os-contract-probe-key",
+      );
+    });
+
+    it("POST body 缺失 type 时以 VALIDATION_FAILED 拒绝 (不创造无 type 与 Xunlei 入口)", async () => {
+      const cookie = await createAdminSessionCookie();
+
+      const response = await providersRoute.POST(
+        jsonRequest(
+          "http://localhost/api/admin/providers",
+          {
+            name: "No Type Provider",
+            initialCredential: { label: "primary", secret: "no-type-key" },
+          },
+          cookie,
+        ),
+      );
+
+      expect(response.status).toBe(400);
+      await expectApiError(response, "VALIDATION_FAILED");
+    });
+  });
+
   it("拒绝重复隔离已移出活跃池的凭据并返回明确原因", async () => {
     const cookie = await createAdminSessionCookie();
 
