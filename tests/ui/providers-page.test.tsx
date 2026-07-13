@@ -1,5 +1,5 @@
 import * as React from "react";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -716,6 +716,81 @@ describe("Providers 页面", () => {
       expect(targetRow!.querySelector("[data-truncated='true']")).toBeNull();
       expect(targetRow!.querySelector("[data-state='truncated']")).toBeNull();
       expect(targetRow!.querySelector("[data-state='filled']")).toBeNull();
+    });
+  });
+
+  describe("Type-aware 差异表达 (US6 / T038)", () => {
+    it("OpenSubtitles 与 Xunlei 并存时凭据池区由结构差异表达，而非同一组件", async () => {
+      // 默认选中 degraded（OS）→ inspector 渲染 OS 凭据池摘要
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerDegraded,
+        credentials: [credential],
+      });
+      // 点击 Xunlei 行后 → inspector 渲染 Xunlei restricted callout
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...providerXunlei,
+        credentials: [],
+      });
+
+      const user = userEvent.setup();
+      renderWithTheme(<ProvidersClient />);
+
+      // 列表行：OS 显示凭据池规模，Xunlei 显示「无凭据可配」（不渲染成坏掉的 OS 行）
+      const rows = await screen.findAllByTestId("provider-list-row");
+      const osRow = rows.find((r) =>
+        r.textContent?.includes("OpenSubtitles Primary"),
+      );
+      const xunleiRow = rows.find((r) =>
+        r.textContent?.includes("Xunlei Official"),
+      );
+      expect(osRow).toBeDefined();
+      expect(xunleiRow).toBeDefined();
+      expect(osRow!.textContent).toMatch(/Pool:\s*\d+\s*active/);
+      expect(xunleiRow!.textContent).toMatch(/无凭据可配/);
+
+      // Inspector 默认选中 OS（degraded）→ 凭据池摘要，无受限 callout
+      const inspector = await screen.findByTestId("provider-pool-inspector");
+      await within(inspector).findByText("凭据池摘要");
+      expect(
+        within(inspector).queryByText(/不需要 API Key/),
+      ).not.toBeInTheDocument();
+
+      // 切换到 Xunlei → 受限 callout 整段替换，凭据池摘要消失
+      await user.click(xunleiRow!);
+      await waitFor(() =>
+        expect(vi.mocked(api.fetchProviderDetail)).toHaveBeenCalledWith(
+          "provider_xl",
+        ),
+      );
+      await within(inspector).findByText(/不需要 API Key/);
+      expect(
+        within(inspector).queryByText("凭据池摘要"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("Xunlei 单实例时列表与 Inspector 都不渲染新增凭据入口", async () => {
+      vi.mocked(api.fetchProviders).mockResolvedValue({
+        items: [providerXunlei],
+        total: 1,
+      });
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue({
+        ...providerXunlei,
+        credentials: [],
+      });
+
+      renderWithTheme(<ProvidersClient />);
+
+      await screen.findByText("Xunlei Official");
+      // 列表页不存在「新增凭据」入口（那是详情页凭据表的职责）
+      expect(
+        screen.queryByRole("button", { name: /新增凭据/ }),
+      ).not.toBeInTheDocument();
+      // Inspector 渲染受限 callout，不渲染凭据池摘要
+      const inspector = await screen.findByTestId("provider-pool-inspector");
+      await within(inspector).findByText(/不需要 API Key/);
+      expect(
+        within(inspector).queryByText("凭据池摘要"),
+      ).not.toBeInTheDocument();
     });
   });
 });

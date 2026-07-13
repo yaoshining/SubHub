@@ -522,4 +522,56 @@ describe("Provider Detail 页面", () => {
       expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
     });
   });
+
+  describe("Type-aware 凭据池区 (US6 / T038)", () => {
+    it("Xunlei 详情页凭据池区整段替换为 RestrictedCapabilityCallout，不渲染凭据表/新增凭据", async () => {
+      const xunleiProvider = {
+        ...provider,
+        id: "xunlei-default",
+        name: "Xunlei",
+        type: "xunlei" as const,
+        credentials: [],
+        rotationEnabled: false,
+        credentialCount: 0,
+        activeCredentialCount: 0,
+        availableCredentialCount: 0,
+      };
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue(xunleiProvider);
+      vi.mocked(api.fetchProviders).mockResolvedValue({
+        items: [xunleiProvider],
+        total: 1,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="xunlei-default" />);
+
+      await screen.findByTestId("provider-detail-page");
+
+      // Module C 整段替换：不渲染凭据表与新增凭据按钮
+      expect(
+        screen.queryByTestId("provider-credential-table"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /新增凭据/ }),
+      ).not.toBeInTheDocument();
+
+      // 渲染受限能力说明模块
+      expect(
+        await screen.findByTestId("provider-restricted-capability"),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/不需要 API Key/)).toBeInTheDocument();
+    });
+
+    it("OpenSubtitles 详情页保留凭据池表格与新增凭据动作，不渲染受限模块", async () => {
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByTestId("provider-credential-table");
+      expect(screen.getByText("Token 池")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /新增凭据/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId("provider-restricted-capability"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

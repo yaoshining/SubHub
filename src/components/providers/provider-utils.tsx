@@ -327,17 +327,35 @@ export function PoolSizeIndicator({
 /** Callout for providers that don't need credentials (e.g. Xunlei) */
 export function RestrictedCapabilityCallout({
   providerName,
+  variant = "inspector",
 }: {
   providerName: string;
+  variant?: "inspector" | "detail";
 }) {
+  const title =
+    variant === "detail"
+      ? `${providerName} 不需要 API Key`
+      : "该 provider 不需要 API Key";
   return (
     <Alert variant="default" className="border-border/50 bg-muted/30">
       <Info aria-hidden="true" className="size-4" />
-      <AlertTitle className="text-xs font-medium">
-        该 provider 不需要 API Key
-      </AlertTitle>
-      <AlertDescription className="mt-1 text-xs leading-5 text-muted-foreground">
-        {providerName}由 migration 预置，当前无凭据池结构。
+      <AlertTitle className="text-xs font-medium">{title}</AlertTitle>
+      <AlertDescription className="mt-1 space-y-2 text-xs leading-5 text-muted-foreground">
+        {variant === "detail" ? (
+          <>
+            <p>
+              此 provider
+              调用上游官方接口，认证由网关层处理。当前版本下不维护凭据池结构，因此：
+            </p>
+            <ul className="ml-4 list-disc space-y-1">
+              <li>不显示「新增凭据」按钮</li>
+              <li>不显示凭据列表</li>
+              <li>Rotation / 隔离 / 恢复等动作不适用</li>
+            </ul>
+          </>
+        ) : (
+          <p>{providerName}由 migration 预置，当前无凭据池结构。</p>
+        )}
       </AlertDescription>
     </Alert>
   );

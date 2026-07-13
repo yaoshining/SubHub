@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 
 import type { Provider } from "@/lib/api/providers";
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,17 @@ function ProviderRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-base font-medium">{provider.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-base font-medium">
+                  {provider.name}
+                </p>
+                {provider.type === "xunlei" ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                    <Lock aria-hidden="true" className="size-2.5" />
+                    受限
+                  </span>
+                ) : null}
+              </div>
               <p className="truncate font-mono text-xs text-muted-foreground">
                 id: {provider.id}
               </p>
