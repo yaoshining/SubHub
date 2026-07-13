@@ -246,7 +246,7 @@
 6. 启停必须带确认对话框（`AlertDialog`），确认文案为：
    - 禁用：「禁用后，Provider "{name}" 将停止参与负载均衡。」
    - 启用：「启用后，Provider "{name}" 将开始参与负载均衡。」
-   - 禁用按钮 `variant="outline"`；启用按钮 `variant="outline"`。
+   - 列表行内禁用按钮 `variant="ghost"` + destructive text hover；启用按钮 `variant="default"`。
 7. 创建成功后不得强制跳转详情页；默认回到列表页、自动选中新实例，并在列表上方展示 success Alert 含「留在列表」与「继续配置」两个承接按钮。
 8. Inspector 必须始终跟随当前选中的 Provider 实例，而非泛化的 provider 类型。
 
