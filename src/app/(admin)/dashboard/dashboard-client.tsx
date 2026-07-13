@@ -235,11 +235,20 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
 
   const actions = (
     <div className="flex flex-col gap-3 rounded-lg border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="space-y-1">
-        <p className="text-sm font-medium">Dashboard 摘要</p>
-        <p className="text-xs leading-5 text-muted-foreground">
-          本页只做状态发现与跳转，不承载深度编辑。
-        </p>
+      <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        {summary ? (
+          <StatusBadge
+            tone={summary.readiness.gatewayReady ? "success" : "warning"}
+          >
+            {summary.readiness.gatewayReady ? "已就绪" : "未就绪"}
+          </StatusBadge>
+        ) : null}
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Dashboard 摘要</p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            本页只做状态发现与跳转，不承载深度编辑。
+          </p>
+        </div>
       </div>
       <Button
         aria-label="刷新 Dashboard 摘要"
@@ -255,16 +264,7 @@ export function DashboardClient({ initialSummary }: DashboardClientProps) {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col gap-3 desktop:flex-row desktop:items-start desktop:justify-between">
-        {summary ? (
-          <StatusBadge
-            tone={summary.readiness.gatewayReady ? "success" : "warning"}
-          >
-            {summary.readiness.gatewayReady ? "已就绪" : "未就绪"}
-          </StatusBadge>
-        ) : null}
-        {actions}
-      </div>
+      {actions}
 
       {loading && !summary ? <DashboardSkeleton /> : null}
 
