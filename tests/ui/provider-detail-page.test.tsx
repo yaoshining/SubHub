@@ -1,10 +1,12 @@
 import * as React from "react";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AppError } from "@/lib/errors";
 import { ProviderDetailClient } from "@/app/(admin)/providers/[providerId]/provider-detail-client";
 import { renderWithTheme } from "../helpers/ui";
+import { toast } from "sonner";
 
 const nowMs = Date.now();
 const recentUpdatedAt = new Date(nowMs - 30 * 60 * 1000).toISOString();
@@ -24,6 +26,7 @@ const provider = {
   fallbackProviderId: null,
   lastHealthStatus: null,
   lastErrorSummary: null,
+  lastHealthCheckedAt: null,
   createdAt,
   updatedAt: recentUpdatedAt,
   credentialCount: 1,
@@ -62,6 +65,8 @@ vi.mock("@/lib/api/providers", () => ({
   createProviderCredential: vi.fn(),
   isolateProviderCredential: vi.fn(),
   restoreProviderCredential: vi.fn(),
+  enableProvider: vi.fn(),
+  disableProvider: vi.fn(),
 }));
 
 const api = await import("@/lib/api/providers");
@@ -253,5 +258,320 @@ describe("Provider Detail 页面", () => {
     expect(
       screen.getByText("可用凭据 1 个。", { exact: false }),
     ).toBeInTheDocument();
+  });
+
+  describe("Enable/Disable 交互", () => {
+    it("点击启用/禁用按钮时显示确认对话框", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue({
+        ...provider,
+        status: "enabled",
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // Click disable button
+      await user.click(screen.getByRole("button", { name: "禁用" }));
+
+      // Should show confirmation dialog
+      expect(await screen.findByText("确认禁用 Provider")).toBeInTheDocument();
+      expect(
+        screen.getByText(/将停止参与负载均衡/, { exact: false }),
+      ).toBeInTheDocument();
+    });
+
+    it("启用/禁用操作后不进入 dirty 状态", async () => {
+      const user = userEvent.setup();
+      const enabledProvider = {
+        ...provider,
+        status: "enabled" as const,
+      };
+      vi.mocked(api.fetchProviderDetail)
+        .mockResolvedValueOnce(enabledProvider)
+        .mockResolvedValueOnce({
+          ...enabledProvider,
+          status: "disabled" as const,
+        });
+      vi.mocked(api.disableProvider).mockResolvedValue({
+        ...enabledProvider,
+        status: "disabled" as const,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // Should not show dirty state alert initially
+      expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
+
+      // Click disable button
+      await user.click(screen.getByRole("button", { name: "禁用" }));
+
+      // Confirm
+      await user.click(screen.getByRole("button", { name: "确认" }));
+
+      // Wait for operation to complete
+      await waitFor(() =>
+        expect(vi.mocked(api.disableProvider)).toHaveBeenCalledWith(
+          "provider_001",
+        ),
+      );
+
+      // Should not show dirty state alert after enable/disable
+      expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
+
+      // Success toast should be shown
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith("Provider 已禁用"),
+      );
+    });
+  });
+
+  describe("Provider 健康摘要 (US3)", () => {
+    it("默认 fixture 下 HealthSummaryBlock 显示未知/未检查/无最近错误", async () => {
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      const summary = await screen.findByTestId(
+        "provider-detail-health-summary",
+      );
+      expect(summary).toHaveAttribute("aria-label", "Provider 健康摘要");
+      expect(summary).toHaveTextContent("未知");
+      expect(summary).toHaveTextContent("尚未检查");
+      expect(summary).toHaveTextContent("最近错误：无");
+      // a11y: Last Error p 在空态下应有 data-state="empty"
+      const errorNode = summary.querySelector("[data-state='empty']");
+      expect(errorNode).toBeInTheDocument();
+    });
+
+    it("有 lastErrorSummary 时 HealthSummaryBlock 展示错误摘要（脱敏截断 80 字）", async () => {
+      // 长度 > 80，触发 truncateSummary 的 truncated=true 分支
+      const longError =
+        "upstream 5xx rate exceeded threshold: 80% failures in 600s window (480+ of 600 requests failed). auto-fallback engaged per policy.";
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...provider,
+        status: "degraded" as const,
+        lastHealthStatus: "degraded" as const,
+        lastErrorSummary: longError,
+        lastHealthCheckedAt: new Date(nowMs - 5 * 60 * 1000).toISOString(),
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      const summary = await screen.findByTestId(
+        "provider-detail-health-summary",
+      );
+      expect(summary).toHaveTextContent("降级");
+      // 摘要区只展示前 80 字符并加省略号
+      expect(summary).toHaveTextContent(
+        /最近错误：upstream 5xx rate exceeded threshold/,
+      );
+      const errorNode = summary.querySelector("[data-state='truncated']")!;
+      expect(errorNode).toBeInTheDocument();
+      expect(errorNode.textContent ?? "").toMatch(/…$/);
+      // 完整文本进入 title 属性，便于 hover 查看
+      expect(errorNode.getAttribute("title")).toBe(longError);
+    });
+
+    it("ProviderActivity 在有 lastHealthCheckedAt 时渲染健康检查事件", async () => {
+      const recentCheckedAt = new Date(nowMs - 5 * 60 * 1000).toISOString();
+      vi.mocked(api.fetchProviderDetail).mockResolvedValueOnce({
+        ...provider,
+        lastHealthStatus: "healthy" as const,
+        lastErrorSummary: null,
+        lastHealthCheckedAt: recentCheckedAt,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      const list = await screen.findByTestId("provider-activity-list");
+      expect(list).toBeInTheDocument();
+      // EventBadge 健康检查分支（secondary tone + Activity 图标 + "健康检查" 文案）
+      expect(within(list).getByText("健康检查")).toBeInTheDocument();
+      // health 事件消息：`健康 · {label}`（来自 buildEvents），US3 后去掉 "Health " 英文前缀
+      expect(within(list).getByText(/^健康 · 健康$/)).toBeInTheDocument();
+    });
+  });
+
+  describe("Provider 策略保存与 dirty state (T029)", () => {
+    it("dirty 时 beforeunload 阻止离开，保存成功后不再阻止", async () => {
+      const user = userEvent.setup();
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // 尚未编辑：不应阻止离开
+      const beforeEdit = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(beforeEdit);
+      expect(beforeEdit.defaultPrevented).toBe(false);
+
+      const weightInputs = screen.getAllByLabelText("权重");
+      await user.clear(weightInputs[0]!);
+      await user.type(weightInputs[0]!, "75");
+
+      expect(screen.getByTestId("dirty-state-alert")).toBeInTheDocument();
+
+      // dirty 时应阻止离开
+      const whileDirty = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(whileDirty);
+      expect(whileDirty.defaultPrevented).toBe(true);
+
+      await user.click(screen.getByTestId("provider-policy-save"));
+
+      await waitFor(() =>
+        expect(vi.mocked(api.updateProvider)).toHaveBeenCalledWith(
+          "provider_001",
+          expect.objectContaining({ weight: 75 }),
+        ),
+      );
+
+      // 保存成功后不再阻止离开
+      await waitFor(() =>
+        expect(
+          screen.queryByTestId("dirty-state-alert"),
+        ).not.toBeInTheDocument(),
+      );
+      const afterSave = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(afterSave);
+      expect(afterSave.defaultPrevented).toBe(false);
+    });
+
+    it("Xunlei 类型整行隐藏凭据轮换 Switch", async () => {
+      const xunleiProvider = {
+        ...provider,
+        id: "xunlei-default",
+        name: "Xunlei",
+        type: "xunlei" as const,
+        credentials: [],
+        rotationEnabled: false,
+        credentialCount: 0,
+        activeCredentialCount: 0,
+        availableCredentialCount: 0,
+      };
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue(xunleiProvider);
+      vi.mocked(api.fetchProviders).mockResolvedValue({
+        items: [xunleiProvider],
+        total: 1,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="xunlei-default" />);
+
+      await screen.findByTestId("provider-policy-form");
+
+      // Xunlei 不适用凭据轮换，整行 Switch 应被隐藏
+      expect(screen.queryByLabelText("启用凭据轮换")).not.toBeInTheDocument();
+      // 冷却窗口仍应可见（属于 rotation section 但不受 showRotationSwitch 影响）
+      expect(screen.getAllByLabelText("冷却窗口（秒）").length).toBeGreaterThan(
+        0,
+      );
+    });
+
+    it("保存失败且返回 fallback 字段级错误时，紧贴字段渲染 inline 错误", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.updateProvider).mockRejectedValueOnce(
+        new AppError(
+          "VALIDATION_FAILED",
+          "Provider 不能自引用作为 fallback。",
+          "fallbackProviderId",
+        ),
+      );
+
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      // 任意编辑使 Section B 进入 dirty，解锁 Section 内联 Save 按钮
+      const weightInputs = screen.getAllByLabelText("权重");
+      await user.clear(weightInputs[0]!);
+      await user.type(weightInputs[0]!, "75");
+
+      await user.click(screen.getByTestId("provider-policy-save"));
+
+      const fieldErrors = await screen.findAllByTestId(
+        "provider-fallback-field-error",
+      );
+      expect(fieldErrors.length).toBeGreaterThan(0);
+      expect(fieldErrors[0]).toHaveTextContent(/自引用/);
+      // 表单内容应保留，dirty 仍存在以便用户修正后重试
+      expect(screen.getByTestId("dirty-state-alert")).toBeInTheDocument();
+    });
+
+    it("Section 内联保存按钮触发 updateProvider 并清 dirty", async () => {
+      const user = userEvent.setup();
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByText("OpenSubtitles Primary");
+
+      const weightInputs = screen.getAllByLabelText("权重");
+      await user.clear(weightInputs[0]!);
+      await user.type(weightInputs[0]!, "80");
+
+      await user.click(screen.getByTestId("provider-policy-save"));
+
+      await waitFor(() =>
+        expect(vi.mocked(api.updateProvider)).toHaveBeenCalledWith(
+          "provider_001",
+          expect.objectContaining({ weight: 80 }),
+        ),
+      );
+
+      expect(
+        await screen.findByTestId("provider-save-success"),
+      ).toHaveTextContent("保存成功");
+      expect(screen.queryByTestId("dirty-state-alert")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Type-aware 凭据池区 (US6 / T038)", () => {
+    it("Xunlei 详情页凭据池区整段替换为 RestrictedCapabilityCallout，不渲染凭据表/新增凭据", async () => {
+      const xunleiProvider = {
+        ...provider,
+        id: "xunlei-default",
+        name: "Xunlei",
+        type: "xunlei" as const,
+        credentials: [],
+        rotationEnabled: false,
+        credentialCount: 0,
+        activeCredentialCount: 0,
+        availableCredentialCount: 0,
+      };
+      vi.mocked(api.fetchProviderDetail).mockResolvedValue(xunleiProvider);
+      vi.mocked(api.fetchProviders).mockResolvedValue({
+        items: [xunleiProvider],
+        total: 1,
+      });
+
+      renderWithTheme(<ProviderDetailClient providerId="xunlei-default" />);
+
+      await screen.findByTestId("provider-detail-page");
+
+      // Module C 整段替换：不渲染凭据表与新增凭据按钮
+      expect(
+        screen.queryByTestId("provider-credential-table"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /新增凭据/ }),
+      ).not.toBeInTheDocument();
+
+      // 渲染受限能力说明模块
+      expect(
+        await screen.findByTestId("provider-restricted-capability"),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/不需要 API Key/)).toBeInTheDocument();
+    });
+
+    it("OpenSubtitles 详情页保留凭据池表格与新增凭据动作，不渲染受限模块", async () => {
+      renderWithTheme(<ProviderDetailClient providerId="provider_001" />);
+
+      await screen.findByTestId("provider-credential-table");
+      expect(screen.getByText("Token 池")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /新增凭据/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId("provider-restricted-capability"),
+      ).not.toBeInTheDocument();
+    });
   });
 });

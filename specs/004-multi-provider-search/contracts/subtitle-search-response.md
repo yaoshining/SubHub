@@ -138,15 +138,15 @@ ProviderFailureInfo:
 
 ## 3. 状态码语义
 
-| 状态码 | 触发场景 |
-|--------|----------|
-| 200 | 搜索成功（`status: success` 或 `status: partial`） |
-| 400 | 请求校验失败（如 `type=movie` + `season`/`episode` 冲突、必填字段缺失） |
-| 401 | caller key 无效或缺失 |
-| 403 | caller key 被暂停 |
-| 404 | 无可用 provider 或上游返回 no results |
-| 502 | 所有 provider 均失败（`UPSTREAM_FAILED`） |
-| 503 | 服务未就绪（`SERVICE_NOT_READY`） |
+| 状态码 | 触发场景                                                                |
+| ------ | ----------------------------------------------------------------------- |
+| 200    | 搜索成功（`status: success` 或 `status: partial`）                      |
+| 400    | 请求校验失败（如 `type=movie` + `season`/`episode` 冲突、必填字段缺失） |
+| 401    | caller key 无效或缺失                                                   |
+| 403    | caller key 被暂停                                                       |
+| 404    | 无可用 provider 或上游返回 no results                                   |
+| 502    | 所有 provider 均失败（`UPSTREAM_FAILED`）                               |
+| 503    | 服务未就绪（`SERVICE_NOT_READY`）                                       |
 
 > **`status: partial` 不阻塞 200**：单个 provider 失败但其他 provider 返回结果时，HTTP 仍为 200；调用方通过 `data.provider_failures[]` 感知失败细节。
 
@@ -179,9 +179,9 @@ for (const result of results) {
 
 ### 5.1 `provider` enum 扩展
 
-| 版本 | `provider` 取值 |
-|------|-----------------|
-| `v0.2.1` | `opensubtitles` |
+| 版本     | `provider` 取值            |
+| -------- | -------------------------- |
+| `v0.2.1` | `opensubtitles`            |
 | `v0.2.2` | `opensubtitles` / `xunlei` |
 
 **兼容性**: 老调用方若使用 switch-case 或硬编码枚举，MUST 在 `v0.2.2` 后增加 `xunlei` 分支；使用字面量比较的代码（如 `provider === "opensubtitles"`）继续工作。

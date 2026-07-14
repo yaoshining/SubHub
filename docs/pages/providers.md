@@ -1,80 +1,272 @@
-# Page Spec
+# Page Spec: Providers
 
 ## Metadata
 
 - **Page**: Providers
-- **Route / Entry Point**: `providers.html` / `/providers`
-- **Status**: Active
-- **Last Updated**: 2026-05-23
-- **Related Feature Specs**: `specs/001-mvp-admin-console/spec.md`
+- **Route / Entry Point**: `/providers`
+- **Status**: Active (v0.2.3 — Multi-Provider)
+- **Last Updated**: 2026-07-14
+- **Related Feature Specs**: `specs/005-provider-admin-baseline/spec.md`
+- **Global Design Rules**: `DESIGN.md §14`
+- **Cross-Page Dependencies**: `docs/pages/provider-detail.md`、`docs/pages/create-provider.md`
 
 ## Goal
 
-让管理员在同一页内完成 Provider 的**比较、分诊、首轮建档与深配承接**：先判断哪个来源有风险，再快速创建新的 OpenSubtitles 实例，并明确下一步是否需要进入详情页补充调度策略。
+让管理员在一页内完成所有 provider（OpenSubtitles / Xunlei）的**扫描、分诊与承接**：2 秒内知道哪些 provider 出问题、凭据池是否健康、以及是否需要进入详情深配或创建新 provider。
 
-## Audience / Scenario
+核心设计矛盾：OpenSubtitles 与 Xunlei 共用同一组页面，但能力不等价。页面必须做到"一眼可辨差异，不因统一而混淆"。
 
-- **Primary user**: 管理员 / 运维维护者
-- **Primary scenario**: 监控上游来源健康度，创建新的 OpenSubtitles 实例，判断当前应停留在列表分诊还是进入详情深配
-- **Frequency / importance**: 高频运营页；是 Provider 治理主入口，也是新增 Provider 的首个入口
+## Aesthetic Direction
 
-## Modules / Sections
+本页不是普通的 CRUD 列表，而是**运维驾驶舱**。在不突破 `DESIGN.md` 既有字体、图标和 token 约束的前提下，页面审美必须主动规避“平均化后台模板感”。
 
-1. **页头与操作区**: 展示页面目的、状态筛选、模拟失败切换动作，以及“新增 OpenSubtitles”主入口。
-2. **创建成功反馈区**: 在完成新增后展示成功提示、继续配置 CTA 和“留在列表”动作，明确“建档已完成，策略待补充”的当前进度。
-3. **Token 池摘要卡**: 展示活跃 Token 总数、冷却中的 Token、接近额度上限的 Token 和最近切换次数。
-4. **Provider 列表区**: 按行展示每个 Provider 实例的健康状态、池规模、成功率 / 抖动状态、当前风险和动作入口。
-5. **选中 Provider 池检查区**: 随当前选中项展示凭据池摘要、状态芯片、Token 表格与关键说明。
-6. **切换原则与深配承接区**: 概括当前 Provider 的调度规则，并提供进入 `provider-detail` 的明确跳转。
-7. **新增 Provider 抽屉**: 以模板化方式创建 OpenSubtitles Provider，仅收集名称与至少一个 API Key，不承载高级策略配置。
+- 采用**非对称主次结构**：顶部必须有一个主导性的全局状态区，不得只是 4 个同权重统计卡平铺。
+- 视觉气质以**冷静中性底 + 单一电蓝强调**为主；不要混入第二套品牌强调色。
+- 列表行要像“可操作对象”而不是“表格替代品”：type identity、状态、健康、动作必须形成明确纵深。
+- Inspector 是“当前选中对象的上下文舞台”，不是右侧随手塞信息的附属栏。
+- 卡片只在承担层级和承接职责时使用；避免把每一块文字都再包一层弱卡片。
 
-## Key States
+## Layout
 
-- **Default state**: 展示全部已配置 Provider，并高亮当前选中的或最需要关注的来源；右侧同步显示该来源的池检查结果。
-- **Loading state**: 先显示 Provider 行骨架、摘要卡占位和检查区占位，再填充状态信息。
-- **Empty state**: 尚未配置任何 Provider 时，展示“先添加首个 OpenSubtitles Provider”的空状态与入口，并说明创建后仍需进入详情页补充策略。
-- **Create drawer state**: 点击“新增 OpenSubtitles”后打开右侧抽屉；抽屉仅允许填写 Provider 名称和 API Key 列表。
-- **Create success state**: 创建成功后关闭抽屉，返回列表并自动选中新建实例，显示成功反馈与“继续配置”CTA。
-  - **Mobile 表达**：不使用右侧面板；成功反馈以内联 Callout Banner 形式出现在列表顶部（对应 Module 2），展示“已成功创建，策略待补充”说明，并提供次操作按钮“留在列表”（左）和主操作按钮“继续配置”（右）。此 Banner 在用户执行任一操作后或离开页面时消失，不持久展示。
-  - **语义约束**：“继续配置”为 primary（跳转 provider-detail）；“留在列表”为 secondary（关闭 Banner 留页）。两者层级不可互换。
-- **Needs-config state**: 刚创建的 Provider 必须以“待完善配置 / 基础可用”呈现，不得伪装为已完全稳定运行。
-  - **Mobile 卡片按钮顺序**：行内操作区排列为“更多”（次操作 / 左）+“继续配置”（主操作 / 右），遵循 DESIGN.md § 7.1 移动端主操作右对齐规则。
-- **Error state**: Provider 列表、摘要卡、创建动作或池检查区加载失败时，说明哪些信息不可用，并保留新增或重试入口。
-- **Permission / access state**: 无权限用户不可编辑 Provider；只读用户可浏览状态，但不能执行新增、模拟切换或高风险操作。
+**非对称三段式控制台布局**（对应 `DESIGN.md §6.2.2 列表治理页`），桌面 1280+ 三栏并列：
 
-## Content Hierarchy
+```
++--Operational Pulse Strip (全宽, sticky top)-------------------------------+
+| Providers  当前 4 个实例；1 个需要立即处理                 [创建 Provider]   |
+| 全局脉冲: 降级 1 · 待完善 0 · 停用 0     类型: [全部▾]  状态: [全部▾]       |
+|                                                   [搜索 Provider...]      |
++----------------------------------------------------------------------------+
+|  +--Master List (左 2/3) -----------------------------------------------+  |
+|  | [OS] OpenSubtitles Main Pool            ● Enabled  Health: ● OK       |  |
+|  |       id: provider-abc123               12 min ago                    |  |
+|  |       Pool: 8 active · 1 cooling · 0 quarantined   [禁用] [详情 →]   |  |
+|  | [XL] Xunlei (官方接口)                   ● Enabled  Health: ● Unknown |  |
+|  |       id: provider-xyz789               尚未检查                      |  |
+|  |       Pool: 无凭据可配（不需要 API Key）  [禁用] [详情 →]              |  |
+|  +--------------------------------------------------------------------+  |
+|  +--Inspector (右 1/3) ------------------------------------------------+  |
+|  |  当前选中:                                                           |  |
+|  |  OS OpenSubtitles Main Pool / XL Xunlei (type-aware)                |  |
+|  |  ...凭据池摘要 / 受限说明...                                          |  |
+|  |  [进入配置详情 →]                                                    |  |
+|  +--------------------------------------------------------------------+  |
++----------------------------------------------------------------------------+
+```
 
-- **Primary information**: 哪些 Provider 可服务、哪些处于降级或待完善配置状态、当前选中的 Provider 是否值得立即处理。
-- **Secondary information**: 成功率 / 抖动状态、活跃 / 冷却 / 预警 Token 数量、最近 429 或异常说明、创建后的下一步建议。
-- **Tertiary information**: 优先级标签、来源类型标签、补充描述、切换原则说明。
-- **Primary actions**: 查看池子、进入配置详情、新增 OpenSubtitles、继续配置。
-- **Secondary actions**: 状态筛选、模拟切换、留在列表。
+### 断点行为
+
+| 断点        | Summary Strip                                | Master List   | Inspector               | Create Drawer          |
+| ----------- | -------------------------------------------- | ------------- | ----------------------- | ---------------------- |
+| ≥ 1280px    | 水平单行，SummaryTile 水平铺开 + 筛选 + 按钮 | 左 2/3 卡片行 | 右 1/3 sticky           | Drawer 居中 `max-w-xl` |
+| 1024–1279px | 水平单行                                     | 全宽          | 下沉到 List 下方        | Drawer `max-w-xl` 居中 |
+| 768–1023px  | 2×2 网格，筛选和按钮换行                     | 全宽单列      | 点击触发的 Bottom Sheet | Drawer 90vw 居右       |
+| < 768px     | 单列堆叠                                     | 全宽单列      | Bottom Sheet            | Drawer 全屏            |
+
+## Module 1: Operational Pulse Strip（顶部状态条）
+
+**目的**：在 2 秒内传达全局状态，并承载筛选/搜索/创建入口。
+
+**结构**：1 个主导性的 `Operational Pulse` 面板 + 3 个紧凑状态 Tile + Type Tabs + 搜索输入 + 主按钮。
+
+### Operational Pulse 主面板
+
+主面板必须明显大于其余状态块，承担页面第一视觉焦点。
+
+- 左侧：`Providers` 标题、当前实例总数、系统摘要句
+- 右侧：主按钮 `创建 Provider`
+- 第二行：一组可点击状态 chips（`已启用 / 降级 / 待完善 / 停用`）
+- 文案风格必须短、硬、可操作，例如：
+  - `当前 4 个实例；1 个需要立即处理`
+  - `Xunlei 已接入，无需凭据池；OpenSubtitles 需重点关注池健康`
+
+### Compact Status Tile 矩阵
+
+| Tile                    | Token       | 内容                        | 可点击                 |
+| ----------------------- | ----------- | --------------------------- | ---------------------- |
+| Enabled                 | success     | `已启用 N`                  | 是 → 筛选切到 enabled  |
+| Degraded                | warning     | `降级 N`（0 时 muted）      | 是 → 筛选切到 degraded |
+| Disabled / Needs-config | destructive | `停用 N / 待完善 N`（复合） | 是 → 筛选切到 disabled |
+
+- 点击 Tile ⇒ 全局状态筛选切换到对应值；当前激活 Tile 用 `border-strong` 强化。
+- 这些 Tile 必须是**紧凑补充信息**，不能和主面板抢视觉权重。
+- 视觉：`surface-elevated` 容器 + `text-xl font-semibold` 数字 + `text-[11px]` label + 顶部 2px 状态线。
+
+### 筛选与搜索
+
+- Type Tabs：`全部 / OpenSubtitles / Xunlei`（`Tabs` 组件，非 `Select`）
+- Status Segmented Control：`全部 / Enabled / Degraded / Needs-config / Disabled`（`Select` 或 segmented，建议 `Select` 减少空间占用）
+- Search Input：Lucide `Search` + placeholder `搜索 Provider 名称或 ID`；输入即时过滤
+- 组合规则：type + status + keyword 三者 AND；结果数显示在列表顶部 `N 条结果`
+
+### 主按钮
+
+- 文案：**「创建 Provider」**（禁止写"创建 OpenSubtitles"）
+- 位置：Summary Strip 右端
+- 点击：打开 Create Provider Drawer（详见 `docs/pages/create-provider.md`）
+
+### 审美约束
+
+- 不得把顶部区做成 4 个等宽、等高、等语气的信息盒子。
+- 顶部标题区必须存在一句“运营判断句”，而不只是数值罗列。
+- 搜索、筛选、主按钮要形成右侧一条干净操作带，避免散落。
+
+## Module 2: Master List（中央主区）
+
+**布局**：使用**卡片行（Card-based rows）**而非传统 Table。理由：每行承载 6 类信息（type identity / name+id / status / health / pool / actions），Table 列会被压扁。
+
+### 单行结构（四层信息）
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  ┌────┐                                                                ↕ │
+│  │ OS │  OpenSubtitles Main Pool        ● Enabled     Health: ● OK      │
+│  │    │  id: provider-abc123                        12 min ago          │
+│  └────┘  Pool: 8 active · 1 cooling · 0 quarantined [禁用] [详情 →]      │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+**四层信息分解**：
+
+| 层                        | 位置       | 内容                                                                                             | 样式                                                                                         |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Layer 1 — Type            | 左端 48×48 | `ProviderTypeBlock`：OS=蓝底白字"OS"；XL=橙底白字"XL"+右下 Lock 图标                             | `rounded-md`，底部 4px status-color 状态条                                                   |
+| Layer 2 — Identity        | 左中       | 名称（主）+ ID（副）                                                                             | 名称 `text-base font-medium`；ID `text-xs font-mono text-muted-foreground`，单行省略+tooltip |
+| Layer 3 — Status & Health | 右中上     | `ProviderStatusBadge` + `HealthBlock.compact`                                                    | `gap-2` 垂直堆叠                                                                             |
+| Layer 4 — Pool & Actions  | 右下       | OpenSubtitles：`PoolSizeIndicator`；Xunlei：固定文案「无凭据可配」；动作：[禁用/启用] + [详情 →] | 辅助行 `text-xs text-muted-foreground`                                                       |
+
+### 行级审美提升规则
+
+- 行容器要优先依靠**左侧 type block、纵向间距和底部动作线**建立层次，不靠重阴影。
+- 名称与 ID 要形成一主一副的节奏，ID 不能和状态抢视觉层级。
+- `详情 →` 必须比 `启用/禁用` 更安静；真正的高风险动作只能有一个视觉高点。
+- Xunlei 行不能长得像“坏掉的 OpenSubtitles 行”，要像“能力不同的另一类对象”。
+
+### 行内动作
+
+- "禁用"按钮：`Button variant="ghost" size="sm"` + destructive hover — 仅 status=enabled/degraded 时显示
+- "启用"按钮：`Button variant="default" size="sm"` — 仅 status=disabled/needs_config 时显示
+- "详情 →"按钮：`Button variant="outline" size="sm"` — 始终显示
+
+### 选中态
+
+- 行背景 → `surface-elevated`
+- 左侧 3px `border-l` 使用 `border-strong`
+- 键盘：↑/↓ 切换选中、Enter 进入详情、Space 切换 enable/disable（带确认）
+- 选中态存 query string `?selected=<id>`，刷新后保留
+
+### 排序
+
+- 默认 `priority ASC, name ASC`
+- 无列头；点击主名称右侧微小的 Chevron 图标可在「优先级 / 名称 / 更新时间」间切换
+
+### 空态与无结果
+
+详见 `DESIGN.md §14.5` 中 `EmptyStateCard` 扩展矩阵。
+
+- `no-providers`：无任何 provider → "还没有任何 Provider。先添加第一个 OpenSubtitles Provider。" + [创建 Provider]
+- `no-results`：筛选后无匹配 → "没有符合筛选条件的 Provider。" + [清空筛选]
+- `no-matches`：搜索后无匹配 → "没有匹配 'xxx' 的 Provider。" + [清空搜索]
+
+## Module 3: Inspector（右侧检查区）
+
+**位置**：右 1/3，sticky 顶部对齐，与 List 同步滚动。
+
+**渲染规则**：按当前选中的 `provider.type` 分支渲染。
+
+**审美定位**：Inspector 是“对象舞台”，而不是附属说明栏。它必须通过更宽松的留白、更清晰的 section 节奏，让用户在列表扫描后能快速完成二次判断。
+
+### OpenSubtitles 选中
+
+```
+┌─────────────────────────────────────────┐
+│  当前选中                                │
+│  OS OpenSubtitles Main Pool             │
+│  ● Enabled · Pool healthy               │
+│                                          │
+│  凭据池摘要                              │
+│  8 active · 1 cooling · 0 quarantined   │
+│  [████████░░░░░░░░░░░░] 88%             │
+│                                          │
+│  健康                                    │
+│  ● OK · 12 min ago   最近错误: 无        │
+│                                          │
+│  调度摘要                                │
+│  priority 10 · weight 1 · concurrency 3 │
+│  cooldown 30s · fallback: 无            │
+│                                          │
+│  [进入配置详情 →]                        │
+└─────────────────────────────────────────┘
+```
+
+组件：`SelectedContextHeader` + `PoolSizeIndicator` + `HealthBlock.compact` + `SchedulingSummaryList` + `CtaEnterDetail`。
+
+### Xunlei 选中
+
+```
+┌─────────────────────────────────────────┐
+│  当前选中                                │
+│  XL Xunlei (官方接口) 🔒 受限           │
+│  ● Enabled · Pool healthy               │
+│                                          │
+│  凭据池                                  │
+│  ┌────────────────────────────────────┐ │
+│  │  ℹ 该 provider 不需要 API Key       │ │
+│  │  Xunlei 由 v0.2.3 migration 预置， │ │
+│  │  当前无凭据池结构。                 │ │
+│  │                                    │ │
+│  │  [了解受限能力范围 →]               │ │
+│  └────────────────────────────────────┘ │
+│                                          │
+│  健康                                    │
+│  ● Unknown · 尚未执行检查                │
+│                                          │
+│  [进入配置详情 →]                        │
+└─────────────────────────────────────────┘
+```
+
+关键差异：
+
+- 凭据池区用 `RestrictedCapabilityCallout`（非空态卡片）
+- 顶部 `🔒 受限` 徽章
+- 调度摘要保持字段一致
+
+### Inspector 审美约束
+
+- Inspector 内部 section 建议采用“标题在上、内容在下、线性分隔”的方式，避免再堆 3 张同样的 Card。
+- 进入详情按钮应放在 Inspector 视觉收束点，作为自然承接动作。
+- OpenSubtitles 与 Xunlei 的 Inspector 必须共享同一骨架，但中心信息块必须不同，形成“相同框架，不同对象性格”。
 
 ## Interaction Rules
 
-- 列表筛选必须即时生效，不应跳转页面或打断当前选择。
-- Provider 行的选中与“配置详情”是两层动作：选中用于比较与检查，详情用于编辑。
-- 降级、高风险和“待完善配置” Provider 必须在列表中一眼可识别，不能埋在二级信息中。
-- 对未启用、无可用凭据或仅完成首轮建档的 Provider，应保留可见性，但不得伪装成正常稳定状态。
-- 本页必须明确暴露 Token 池规模与压力，不能退化为只有名称和开关的列表。
-- MVP 的新增流程必须是**OpenSubtitles 模板化创建**；不得在本页暴露 Custom Adapter、认证方式切换、Base URL 或其他通用接入模型。
-- 创建抽屉的最小必填项只有 Provider 名称和至少一个 API Key；权重、并发、冷却、失败切换和回退目标必须留到 `provider-detail` 中配置。
-- 创建成功后不得强制跳转详情页；默认回到列表页、自动选中新实例，并以清晰 CTA 引导继续配置。
-- 右侧池检查区和“进入 Provider 配置”链接必须始终跟随当前选中的 Provider 实例，而不是指向泛化的 Provider 类型。
+1. 列表筛选必须即时生效，不应跳转页面或打断当前选择。
+2. Provider 行的**选中**与**进入详情**是两层动作（选中用于比较与检查，详情用于编辑）。
+3. 降级、高风险和"待完善配置" Provider 必须在列表中一眼可识别（颜色 + Badge）。
+4. 未启用、无可用凭据或仅完成首轮建档的 Provider 必须保持可见，但不得伪装成正常稳定状态。
+5. 启用/禁用是即时动作，无 dirty state，调 API 完成即反馈（Toast）。
+6. 启停必须带确认对话框（`AlertDialog`），确认文案为：
+   - 禁用：「禁用后，Provider "{name}" 将停止参与负载均衡。」
+   - 启用：「启用后，Provider "{name}" 将开始参与负载均衡。」
+   - 列表行内禁用按钮 `variant="ghost"` + destructive text hover；启用按钮 `variant="default"`。
+7. 创建成功后不得强制跳转详情页；默认回到列表页、自动选中新实例，并在列表上方展示 success Alert 含「留在列表」与「继续配置」两个承接按钮。
+8. Inspector 必须始终跟随当前选中的 Provider 实例，而非泛化的 provider 类型。
 
 ## Page-Specific Design Rules
 
-- **Relevant global rules from `DESIGN.md`**: `2. 产品定位与界面原则`、`6. 布局与密度原则`、`7.2 卡片与面板`、`7.3 输入框、选择器与表单`、`7.4 表格与列表`、`7.5 状态标签、Badge、Chip`、`8. 状态与反馈规则`
-- **Allowed overrides**: Providers 页可采用高信息密度、全宽数据布局，并允许列表与检查区并排展示，以支持“Scan > Diagnose > Drill Down”的控制台工作流。
-- **Forbidden deviations**: 不得退化为简单设置列表；不得把凭据池压力隐藏到二级页面后才能感知；不得把新增流程做成多步骤向导或通用 Provider 平台入口。
+- **Relevant global rules**: `DESIGN.md §14`
+- **Allowed overrides**: 列表页可采用高信息密度、全宽数据布局；允许列表与检查区并排展示以支持控制台工作流。
+- **US3 健康文案承载（Module 1 / Module 3）**: US3 起 Layer 3 / Inspector 的 Health 展示由 `§14.5 HealthBlock` 实现统一承载，格式为 `{label} · {时间或"尚未检查"}`；错误摘要（若有）独立在第二行展示，格式 `最近错误：{80 字截断 + …或 无}`。本规范中较早示例文本里的 `Health: ... / 错误: ...` 英文前缀视为废弃，统一以 §14.5 中文 label 为准；list row（Layer 3）与 Inspector Health 同时透传 lastErrorSummary。
+- **Inspector 凭据池与调度摘要文案（Module 3）**: Inspector 内凭据池统计与调度摘要目前使用英文 label（`active / cooling / isolated / quota⚠`、`priority / weight / concurrency / cooldown / fallback`），待后续统一收口为中文。此偏差记录在案，不在 v0.2.3 阻塞交付。
+- **Inspector 凭据池健康标签（Module 3）**: Inspector 选中上下文头的 `Pool healthy / Pool unhealthy` 为英文临时标签，待后续统一收口为中文（如 `凭据池健康 / 凭据池异常`）。此偏差记录在案，不在 v0.2.3 阻塞交付。
+- **Xunlei 列表行凭据区文案（Module 2 Layer 4）**: Xunlei 行在 Layer 4 显示 `无凭据可配（不需要 API Key）`，与 spec 中 `无凭据可配` 略有扩充，增加了括号说明，属于可接受的实现补充，不对齐为偏差。
+- **Forbidden deviations**:
+  - ❌ 不得用 Table 列替代卡片行
+  - ❌ 不得把凭据池压力隐藏到二级页面
+  - ❌ 不得用"创建 OpenSubtitles"作为入口文案
+  - ❌ 不得在 Inspector 中塞凭据池完整表格
+  - ❌ 不得用同一空态硬塞 OS 与 Xunlei 的差异
 
 ## Data / Dependencies
 
-- **Data sources**: Provider 列表、健康度、成功率 / 抖动状态、Token 池摘要、配额预警、最近切换情况、当前选中 Provider 的池明细、创建成功反馈上下文
-- **External dependencies**: 上游字幕来源健康状态
-- **Cross-page dependencies**: `docs/pages/provider-detail.md`、`docs/pages/dashboard.md`
-
-## Notes
-
-- 首版至少应覆盖 OpenSubtitles 的配置与状态展示，并允许以实例方式创建多个 OpenSubtitles 池。
-- 若后续接入更多 Provider，本页继续承担“比较与分诊”的职责；新增模板范围由 feature spec 单独扩展，不在本页默认开放。
+- **Data sources**: Provider 列表、type、status、health、credential pool summary、scheduling summary
+- **External dependencies**: Provider 管理 API
+- **Cross-page dependencies**: `docs/pages/provider-detail.md`、`docs/pages/create-provider.md`

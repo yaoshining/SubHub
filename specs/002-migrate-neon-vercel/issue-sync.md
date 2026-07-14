@@ -255,15 +255,15 @@
 
 ## 任务到 issue 的映射摘要
 
-| Issue | 任务范围 | 主层级 | 阻塞关系 |
-|---|---|---|---|
-| 主追踪 issue | feature 全量 | 追踪 / 协调 | 无 |
-| 002A | T001-T018 | 环境映射层 + Postgres 接入层 + bootstrap 真源 | 主追踪 issue |
-| 002B | T019-T028 | production runtime + workflow gate | 002A |
-| 002C | T029-T037 | preview/dev 环境映射与护栏 | 002A |
-| 002D | T038-T048 | SQLite 搬迁层 + cutover 校验层 | 002A |
-| 002E | T049-T058 | bootstrap/seed/release gate 层 | 002A，建议晚于 002B/002D |
-| 002F | T059-T064 | 文档、回归、RC 验证 | 002B/002C/002D/002E |
+| Issue        | 任务范围     | 主层级                                        | 阻塞关系                 |
+| ------------ | ------------ | --------------------------------------------- | ------------------------ |
+| 主追踪 issue | feature 全量 | 追踪 / 协调                                   | 无                       |
+| 002A         | T001-T018    | 环境映射层 + Postgres 接入层 + bootstrap 真源 | 主追踪 issue             |
+| 002B         | T019-T028    | production runtime + workflow gate            | 002A                     |
+| 002C         | T029-T037    | preview/dev 环境映射与护栏                    | 002A                     |
+| 002D         | T038-T048    | SQLite 搬迁层 + cutover 校验层                | 002A                     |
+| 002E         | T049-T058    | bootstrap/seed/release gate 层                | 002A，建议晚于 002B/002D |
+| 002F         | T059-T064    | 文档、回归、RC 验证                           | 002B/002C/002D/002E      |
 
 ## 不应进入当前 issue 批次的内容
 

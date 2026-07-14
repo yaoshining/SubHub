@@ -8,7 +8,7 @@
 
 **输入**: 用户描述: "请为 SubHub 新建一个独立 feature spec，主题是：数据库迁移到 Neon Postgres，部署环境采用 Vercel，保持当前 MVP 功能范围不变，收敛运行时、环境管理、数据库迁移、初始化与部署流程。"
 
-## 功能身份与可追溯性 *(mandatory)*
+## 功能身份与可追溯性 _(mandatory)_
 
 - **Feature ID**: `002`
 - **Spec 目录**: `specs/002-migrate-neon-vercel/`
@@ -16,7 +16,7 @@
 - **主 Issue**: `待创建：002 运行时迁移主追踪 issue`（不得复用 `001-mvp-admin-console` 或 `#3`）
 - **Task Issue 策略**: 先完成 `spec -> plan -> tasks`，确认基础设施迁移边界后再决定是否拆分 task issues；不得与 `001-mvp-admin-console` 混批同步
 
-## 设计上下文 *(mandatory)*
+## 设计上下文 _(mandatory)_
 
 ### 设计来源
 
@@ -39,7 +39,7 @@
 - 若迁移导致页面或 API 的可见行为发生变化，该变化 MUST 仅限于运行环境、初始化、错误提示或就绪状态表达，不得引入新的产品工作流。
 - 实现 MUST 继续遵循 `DESIGN.md`、`docs/layouts/admin-layout.md` 与既有 page spec；若无需变更设计规则，则不得更新这些文档的功能边界。
 
-## 用户场景与测试 *(mandatory)*
+## 用户场景与测试 _(mandatory)_
 
 ### 测试分层策略
 
@@ -134,7 +134,7 @@
 - 当使用 pooled 与 unpooled 数据库连接时，系统必须对它们的职责边界做明确区分，避免在不适合的流程中复用错误连接。
 - 当未来引入每个 PR 独立数据库 branch 时，现有三层环境模型必须仍然成立，而不是被当前命名或配置方式锁死。
 
-## 需求 *(mandatory)*
+## 需求 _(mandatory)_
 
 ### 功能需求
 
@@ -170,7 +170,7 @@
 - **FR-028**: 系统 MUST 为本地 Docker Postgres 测试容器定义受控生命周期规则：测试前必须确认容器可用并完成 reset / migrate / 必要 seed；测试后必须至少通过 reset database、truncate / reseed、stop container 或 remove container 之一恢复到可重复的干净基线，但不机械要求每次都销毁容器。
 - **FR-029**: 系统 MUST 明确本地真实数据库测试的核心要求是“数据库测试状态干净、隔离、可重复”，而不是固定容器销毁策略；允许采用“容器常驻 + 测试前 reset”或“测试前启动、测试后停止/删除”等方式，但不得完全交由个人习惯决定。
 
-### 非功能需求 *(mandatory)*
+### 非功能需求 _(mandatory)_
 
 - **NFR-001 (代码质量)**: Feature MUST 要求运行时迁移相关改动继续遵循 `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm db:generate`、`pnpm db:migrate`、`pnpm db:check`、`pnpm api:check` 等门禁，并在正式实现前明确最小执行矩阵。
 - **NFR-002 (测试)**: Feature MUST 要求至少覆盖环境映射、数据库 URL 解析、Postgres schema/migration、bootstrap 流程、production/preview/development 可用性验证、本地 Docker Postgres 与 GitHub Actions Postgres service 的真实数据库测试主线、独立 `test` 数据库隔离与 reset 策略、容器可用性与测试后清理规则，以及现有 MVP 回归验证。
@@ -182,7 +182,7 @@
 - **NFR-008 (测试分层边界)**: Feature MUST 保持测试分层清晰：PGlite 仅用于快速数据库单测层；本地 Docker Postgres 是本地真实数据库测试主线；GitHub Actions Postgres service 是 CI 真实数据库测试主线；Neon 仅保留给 staging / preview / production / deploy / release gate 验证。
 - **NFR-009 (本地测试生命周期)**: Feature MUST 保证本地 Docker Postgres 测试容器的使用规范可执行、可文档化、可重复；不允许形成“长期脏测试库”“手动随缘清理”或“默认复用共享数据库”的隐式习惯。
 
-### 关键实体 *(如功能涉及数据请填写)*
+### 关键实体 _(如功能涉及数据请填写)_
 
 - **运行环境配置**: 描述应用处于 production、preview 或 development 的运行身份，以及该身份对应的部署目标、数据库目标和环境变量集合；同时说明测试运行如何映射到独立 `test` 数据库语义。
 - **数据库目标**: 描述 prod、staging、dev、test 四类 Neon 数据库的职责边界、使用场景与禁止串用规则。
@@ -190,7 +190,7 @@
 - **初始化状态**: 描述一个数据库环境是否已完成必需的 schema 建立、bootstrap、管理员初始化与最小可运行条件检查。
 - **发布准备状态**: 描述从 Postgres schema baseline、bootstrap 到生产可用性验证之间的受控发布阶段、验证动作和阻断条件。
 
-## 成功标准 *(mandatory)*
+## 成功标准 _(mandatory)_
 
 ### 可度量结果
 

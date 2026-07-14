@@ -23,34 +23,34 @@
 
 ### 2.1 必填字段
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `title` | string | ✅ | free-text 兜底；与 `v0.2.1` 一致 |
+| 字段    | 类型   | 必填 | 说明                             |
+| ------- | ------ | ---- | -------------------------------- |
+| `title` | string | ✅   | free-text 兜底；与 `v0.2.1` 一致 |
 
 ### 2.2 可选字段（首批纳入）
 
-| 字段 | 类型 | 必填 | 校验 | provider 消费 |
-|------|------|------|------|---------------|
-| `year` | integer | 否 | 范围 1800-3000 | OpenSubtitles；迅雷忽略 |
-| `season` | integer | 否 | 非负整数 | OpenSubtitles；迅雷忽略 |
-| `episode` | integer | 否 | 非负整数 | OpenSubtitles；迅雷忽略 |
-| `language` | string | 否 | minLength 1 | OpenSubtitles + 迅雷 |
-| `imdb_id` | string | 否 | `^tt\d+$` | OpenSubtitles；迅雷忽略 |
-| `tmdb_id` | integer | 否 | ≥ 1 | OpenSubtitles；迅雷忽略 |
-| `type` | enum `movie` / `episode` | 否 | — | OpenSubtitles；迅雷忽略 |
-| `query` | string | 否 | minLength 1 | OpenSubtitles + 迅雷（迅雷映射为 `name`） |
+| 字段       | 类型                     | 必填 | 校验           | provider 消费                             |
+| ---------- | ------------------------ | ---- | -------------- | ----------------------------------------- |
+| `year`     | integer                  | 否   | 范围 1800-3000 | OpenSubtitles；迅雷忽略                   |
+| `season`   | integer                  | 否   | 非负整数       | OpenSubtitles；迅雷忽略                   |
+| `episode`  | integer                  | 否   | 非负整数       | OpenSubtitles；迅雷忽略                   |
+| `language` | string                   | 否   | minLength 1    | OpenSubtitles + 迅雷                      |
+| `imdb_id`  | string                   | 否   | `^tt\d+$`      | OpenSubtitles；迅雷忽略                   |
+| `tmdb_id`  | integer                  | 否   | ≥ 1            | OpenSubtitles；迅雷忽略                   |
+| `type`     | enum `movie` / `episode` | 否   | —              | OpenSubtitles；迅雷忽略                   |
+| `query`    | string                   | 否   | minLength 1    | OpenSubtitles + 迅雷（迅雷映射为 `name`） |
 
 ### 2.3 不暴露字段（首批不在请求模型中）
 
-| 字段 | 不暴露原因 |
-|------|-----------|
-| `season_number` | 字段改名阶段处理；保持 `season` 避免 breaking |
-| `episode_number` | 字段改名阶段处理；保持 `episode` |
-| `languages`（复数） | 与 `language` 命名冲突；字段改名阶段处理 |
-| `filename` | 价值有限；待评估 |
-| `moviehash` | 需调用方客户端预计算哈希 |
-| `hearing_impaired` | 偏好过滤，非定位字段 |
-| `foreign_parts_only` | 语义较窄，上游支持不稳定 |
+| 字段                 | 不暴露原因                                    |
+| -------------------- | --------------------------------------------- |
+| `season_number`      | 字段改名阶段处理；保持 `season` 避免 breaking |
+| `episode_number`     | 字段改名阶段处理；保持 `episode`              |
+| `languages`（复数）  | 与 `language` 命名冲突；字段改名阶段处理      |
+| `filename`           | 价值有限；待评估                              |
+| `moviehash`          | 需调用方客户端预计算哈希                      |
+| `hearing_impaired`   | 偏好过滤，非定位字段                          |
+| `foreign_parts_only` | 语义较窄，上游支持不稳定                      |
 
 ---
 
@@ -91,12 +91,12 @@
 
 ## 5. `query` 与 `title` 的关系
 
-| 调用方传入 | gateway 行为 |
-|------------|--------------|
-| 仅 `title` | OpenSubtitles：参与 `buildSearchQuery`；迅雷：因缺 `query` 跳过 |
-| 仅 `query` | OpenSubtitles：以 `query` 视为 `title`；迅雷：走 `name` 路径 |
+| 调用方传入        | gateway 行为                                                                |
+| ----------------- | --------------------------------------------------------------------------- |
+| 仅 `title`        | OpenSubtitles：参与 `buildSearchQuery`；迅雷：因缺 `query` 跳过             |
+| 仅 `query`        | OpenSubtitles：以 `query` 视为 `title`；迅雷：走 `name` 路径                |
 | `query` + `title` | OpenSubtitles：以 `title` 为优先拼入 query；迅雷：以 `query` 为 `name` 路径 |
-| 两者皆无 | OpenSubtitles：必填校验失败（400）；迅雷：因缺 `query` 跳过 |
+| 两者皆无          | OpenSubtitles：必填校验失败（400）；迅雷：因缺 `query` 跳过                 |
 
 ---
 
@@ -179,13 +179,13 @@ description: |
 
 ## 7. 兼容性保证
 
-| 兼容性维度 | 保证 |
-|------------|------|
-| 字段命名 | `season` / `episode` / `language` 保持现状命名，不升级 |
-| 必填字段 | 不引入新必填字段 |
-| 响应结构 | 老调用方消费路径（`id` / `language` / `releaseName` / `format` / `downloadUrl`） MUST 100% 不变 |
-| `provider` 字段 | 当前值 `opensubtitles` MUST 保持有效；新增 `xunlei` 值 |
-| OpenSubtitles 字段消费 | `v0.2.1` 字段消费行为 MUST 100% 等价 |
+| 兼容性维度             | 保证                                                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------------------- |
+| 字段命名               | `season` / `episode` / `language` 保持现状命名，不升级                                          |
+| 必填字段               | 不引入新必填字段                                                                                |
+| 响应结构               | 老调用方消费路径（`id` / `language` / `releaseName` / `format` / `downloadUrl`） MUST 100% 不变 |
+| `provider` 字段        | 当前值 `opensubtitles` MUST 保持有效；新增 `xunlei` 值                                          |
+| OpenSubtitles 字段消费 | `v0.2.1` 字段消费行为 MUST 100% 等价                                                            |
 
 ---
 

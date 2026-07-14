@@ -1,5 +1,4 @@
 ---
-
 description: "功能实现任务清单模板"
 ---
 
@@ -91,8 +90,8 @@ description: "功能实现任务清单模板"
 
 > **NOTE: 先写测试，并在实现前确认测试失败**
 
-- [ ] T013 [P] [US1] 在 tests/contract/test_[name].py 为 [endpoint] 编写契约测试
-- [ ] T014 [P] [US1] 在 tests/integration/test_[name].py 为 [user journey] 编写集成测试
+- [ ] T013 [P] [US1] 在 tests/contract/test\_[name].py 为 [endpoint] 编写契约测试
+- [ ] T014 [P] [US1] 在 tests/integration/test\_[name].py 为 [user journey] 编写集成测试
 
 ### 用户故事 1 的实现
 
@@ -116,8 +115,8 @@ description: "功能实现任务清单模板"
 
 ### 用户故事 2 的测试 (REQUIRED) ⚠️
 
-- [ ] T022 [P] [US2] 在 tests/contract/test_[name].py 为 [endpoint] 编写契约测试
-- [ ] T023 [P] [US2] 在 tests/integration/test_[name].py 为 [user journey] 编写集成测试
+- [ ] T022 [P] [US2] 在 tests/contract/test\_[name].py 为 [endpoint] 编写契约测试
+- [ ] T023 [P] [US2] 在 tests/integration/test\_[name].py 为 [user journey] 编写集成测试
 
 ### 用户故事 2 的实现
 
@@ -139,8 +138,8 @@ description: "功能实现任务清单模板"
 
 ### 用户故事 3 的测试 (REQUIRED) ⚠️
 
-- [ ] T029 [P] [US3] 在 tests/contract/test_[name].py 为 [endpoint] 编写契约测试
-- [ ] T030 [P] [US3] 在 tests/integration/test_[name].py 为 [user journey] 编写集成测试
+- [ ] T029 [P] [US3] 在 tests/contract/test\_[name].py 为 [endpoint] 编写契约测试
+- [ ] T030 [P] [US3] 在 tests/integration/test\_[name].py 为 [user journey] 编写集成测试
 
 ### 用户故事 3 的实现
 
@@ -248,9 +247,11 @@ Task: "在 src/models/[entity2].py 创建 [Entity2] 模型"
 
 1. 团队共同完成 Setup + Foundational
 2. Foundational 完成后：
-  - 开发者 A：用户故事 1
-  - 开发者 B：用户故事 2
-  - 开发者 C：用户故事 3
+
+- 开发者 A：用户故事 1
+- 开发者 B：用户故事 2
+- 开发者 C：用户故事 3
+
 3. 各故事独立完成并独立集成
 
 ---

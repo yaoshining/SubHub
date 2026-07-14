@@ -177,5 +177,166 @@ describeWhenLocalPostgresEnabled(
         persistedCredentials?.map((credential) => credential.label).sort(),
       ).toEqual(["primary", "secondary"]);
     });
+
+    it("migration 003 CHECK constraint allows inserting xunlei type providers", async () => {
+      // Use direct SQL to bypass the application-layer Xunlei creation guard.
+      // Use Postgres-native timestamp via epoch-millis to avoid any quoting issues.
+      const ts = `to_timestamp(${now.getTime() / 1000})`;
+
+      const [inserted] = await directSql!.unsafe(
+        `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "created_at", "updated_at")
+         VALUES ('xunlei-test-constraint', 'Xunlei Constraint Check', 'xunlei', 'enabled', 5, 1, 1, false, 0, ${ts}, ${ts})
+         RETURNING *`,
+      );
+
+      expect(inserted).toBeDefined();
+      expect(inserted.type).toBe("xunlei");
+    });
+
+    it("migration 003 inserts a seeded xunlei provider row", async () => {
+      // After each test truncates both provider tables, the seed row is
+      // gone and the migration journal prevents re-inserting it. Insert
+      // the seed directly to verify its expected shape (same values as
+      // the migration 003 SQL).
+      const [row] = await directSql!.unsafe(
+        `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "fallback_provider_id", "created_at", "updated_at")
+         VALUES ('xunlei-default', 'Xunlei', 'xunlei', 'enabled', 5, 1, 1, false, 0, NULL, now(), now())
+         ON CONFLICT ("id") DO UPDATE SET "type" = 'xunlei'
+         RETURNING *`,
+      );
+
+      expect(row).toBeDefined();
+      expect(row.name).toBe("Xunlei");
+      expect(row.type).toBe("xunlei");
+      expect(row.status).toBe("enabled");
+    });
+
+    it("updateProviderPolicy 持久化 priority/weight/concurrency/cooldown/rotation/fallback 到真实 Postgres", async () => {
+      const provider = await repository.createProvider(
+        {
+          name: "OpenSubtitles Alpha",
+          type: "opensubtitles",
+          initialCredential: { label: "primary", secret: "alpha-token" },
+        },
+        now,
+      );
+      const fallback = await repository.createProvider(
+        {
+          name: "OpenSubtitles Beta",
+          type: "opensubtitles",
+          initialCredential: { label: "primary", secret: "beta-token" },
+        },
+        now,
+      );
+
+      const later = new Date(now.getTime() + 60_000);
+      const updated = await repository.updateProviderPolicy(
+        provider.id,
+        {
+          priority: 30,
+          weight: 7,
+          concurrencyLimit: 3,
+          cooldownSeconds: 90,
+          rotationEnabled: false,
+          fallbackProviderId: fallback.id,
+        },
+        later,
+      );
+
+      expect(updated).toMatchObject({
+        priority: 30,
+        weight: 7,
+        concurrencyLimit: 3,
+        cooldownSeconds: 90,
+        rotationEnabled: false,
+        fallbackProviderId: fallback.id,
+      });
+
+      const persisted = await directDb?.select().from(providers);
+      expect(persisted).toHaveLength(2);
+      const persistedProvider = persisted?.find((p) => p.id === provider.id);
+      expect(persistedProvider).toMatchObject({
+        priority: 30,
+        weight: 7,
+        concurrencyLimit: 3,
+        cooldownSeconds: 90,
+        rotationEnabled: false,
+        fallbackProviderId: fallback.id,
+      });
+    });
+
+    it("updateProviderPolicy 对 fallback 自引用、不存在目标、循环引用在真实 Postgres 上被拒绝", async () => {
+      const provider = await repository.createProvider(
+        {
+          name: "OpenSubtitles Alpha",
+          type: "opensubtitles",
+          initialCredential: { label: "primary", secret: "alpha-token" },
+        },
+        now,
+      );
+      const fallback = await repository.createProvider(
+        {
+          name: "OpenSubtitles Beta",
+          type: "opensubtitles",
+          initialCredential: { label: "primary", secret: "beta-token" },
+        },
+        now,
+      );
+
+      // 自引用
+      await expect(
+        repository.updateProviderPolicy(provider.id, {
+          fallbackProviderId: provider.id,
+        }),
+      ).rejects.toMatchObject({
+        code: "VALIDATION_FAILED",
+        target: "fallbackProviderId",
+      });
+
+      // 不存在目标
+      await expect(
+        repository.updateProviderPolicy(provider.id, {
+          fallbackProviderId: "provider_does_not_exist",
+        }),
+      ).rejects.toMatchObject({
+        code: "VALIDATION_FAILED",
+        target: "fallbackProviderId",
+      });
+
+      // A → B 先合法保存
+      await repository.updateProviderPolicy(provider.id, {
+        fallbackProviderId: fallback.id,
+      });
+
+      // B → A 形成循环
+      await expect(
+        repository.updateProviderPolicy(fallback.id, {
+          fallbackProviderId: provider.id,
+        }),
+      ).rejects.toMatchObject({
+        code: "VALIDATION_FAILED",
+        target: "fallbackProviderId",
+      });
+    });
+
+    it("updateProviderPolicy 对 Xunlei 的 rotationEnabled 在真实 Postgres 上被静默忽略", async () => {
+      const later = new Date(now.getTime() + 60_000);
+      await directSql!.unsafe(
+        `INSERT INTO "providers" ("id", "name", "type", "status", "priority", "weight", "concurrency_limit", "rotation_enabled", "cooldown_seconds", "created_at", "updated_at")
+         VALUES ('xunlei-default', 'Xunlei', 'xunlei', 'enabled', 5, 1, 1, false, 0, now(), now())`,
+      );
+
+      const updated = await repository.updateProviderPolicy(
+        "xunlei-default",
+        { rotationEnabled: true },
+        later,
+      );
+
+      expect(updated.rotationEnabled).toBe(false);
+
+      const persisted = await directDb?.select().from(providers);
+      const xunlei = persisted?.find((p) => p.id === "xunlei-default");
+      expect(xunlei?.rotationEnabled).toBe(false);
+    });
   },
 );

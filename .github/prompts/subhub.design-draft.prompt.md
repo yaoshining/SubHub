@@ -36,6 +36,7 @@ tools: [read, search, todo]
 - 页面目标、信息层级、关键状态已基本明确
 
 **如果条件不满足，停止并输出：**
+
 - 当前缺失的具体内容
 - 推荐回退路径：
   - 补 page spec → `/subhub.page-spec` 或 `SubHub 界面设计管家`
@@ -47,15 +48,18 @@ tools: [read, search, todo]
 ## 步骤三：读取 ui-ux-pro-max 参考（如果存在）
 
 检查以下路径：
+
 - `.github/design-system/subhub/MASTER.md`
 - `.github/design-system/subhub/pages/<page>.md`
 
 如果存在，作为**中间参考输入**，吸收其中有价值的内容：
+
 - 页面级布局建议与区块节奏
 - 组件选型与视觉层级建议
 - 设计系统偏移点（与 `DESIGN.md` 的差异）
 
 **约束：**
+
 - 这些文件是工具生成的中间工件，**不是**项目最终真源
 - 不允许原样作为设计稿规范输出
 - 所有吸收内容必须在 `DESIGN.md` 和 `docs/pages/<page>.md` 框架内收敛
@@ -79,6 +83,7 @@ tools: [read, search, todo]
 当页面结构正确，但视觉偏弱、层级感不足、气质过于模板化时，使用 `taste` 进行审美强化。
 
 重点优化方向：
+
 - 字体层级与粗细对比
 - 间距节奏（紧凑 vs 宽松，与页面密度目标匹配）
 - 卡片、表格、表单、导航的视觉质量
@@ -94,6 +99,7 @@ tools: [read, search, todo]
 当需要对设计进行审查、问题识别或细节抛光时，使用 `impeccable`。
 
 输出应帮助判断：
+
 - 哪些地方还不够稳定或缺乏一致性
 - 哪些地方存在视觉或交互的设计债务
 - 哪些地方可以保持不动，无需调整
@@ -103,6 +109,7 @@ tools: [read, search, todo]
 ## 步骤七：Pencil 出稿
 
 **仅当以下条件全部满足时，才进入 Pencil：**
+
 - 页面结构已稳定
 - page spec 已存在且明确
 - 视觉方向已经过 taste / impeccable 确认（如需要）
@@ -110,6 +117,7 @@ tools: [read, search, todo]
 Pencil 只作为**设计稿执行层**，目标是生成或更新 `.pen` 设计稿。
 
 设计稿必须基于：
+
 - `DESIGN.md`（全局规则）
 - `docs/pages/<page>.md`（页面规范）
 - feature `spec.md` / `plan.md` / `tasks.md`（功能上下文）

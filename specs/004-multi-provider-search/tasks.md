@@ -337,7 +337,7 @@ description: "多字幕 provider 搜索入口模型基础版（含迅雷字幕 p
 > 本节在 `/speckit.taskstoissues` 阶段填充。Task ID → GitHub Issue 编号映射。
 
 | Task ID | 阶段 | Issue # | Title |
-|---------|------|---------|-------|
-| TBD | TBD | TBD | TBD |
+| ------- | ---- | ------- | ----- |
+| TBD     | TBD  | TBD     | TBD   |
 
 > 全部 task issues 同步至 milestone `v0.2.2`。若 `v0.2.2` milestone 尚未在 GitHub 仓库创建，需先创建并按 `.github/copilot-instructions.md` 仓库级 GitHub milestone 规则对齐。

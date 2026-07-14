@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Activity } from "lucide-react";
+import { Activity, Info } from "lucide-react";
 
 import type { ProviderDetail } from "@/lib/api/providers";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -17,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   formatDateTime,
   formatTokenFragment,
+  healthStatusMeta,
 } from "@/components/providers/provider-utils";
 
 export type ProviderActivityProps = {
@@ -26,23 +28,46 @@ export type ProviderActivityProps = {
 type ActivityEvent = {
   id: string;
   time: string;
-  type: "switch" | "error" | "restore";
+  type: "switch" | "error" | "restore" | "health";
   credential: string;
   message: string;
 };
 
+function truncateMessage(text: string, maxLength: number) {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, maxLength)}…`;
+}
+
 function buildEvents(provider: ProviderDetail): ActivityEvent[] {
-  const events: ActivityEvent[] = [
-    {
-      id: `${provider.id}-updated`,
-      time: provider.updatedAt,
-      type: provider.status === "degraded" ? "error" : "restore",
+  const events: ActivityEvent[] = [];
+
+  if (provider.lastHealthCheckedAt) {
+    const healthMeta =
+      healthStatusMeta[provider.lastHealthStatus ?? "unknown"] ??
+      healthStatusMeta.unknown;
+    const errorPart = provider.lastErrorSummary
+      ? ` · ${truncateMessage(provider.lastErrorSummary, 60)}`
+      : "";
+    events.push({
+      id: `${provider.id}-health`,
+      time: provider.lastHealthCheckedAt,
+      type: "health",
       credential: "provider",
-      message:
-        provider.lastErrorSummary ??
-        `Provider 策略最近更新，当前状态为 ${provider.status}。`,
-    },
-  ];
+      message: `健康 · ${healthMeta.label}${errorPart}`,
+    });
+  }
+
+  events.push({
+    id: `${provider.id}-updated`,
+    time: provider.updatedAt,
+    type: provider.status === "degraded" ? "error" : "restore",
+    credential: "provider",
+    message:
+      provider.lastErrorSummary ??
+      `Provider 策略最近更新，当前状态为 ${provider.status}。`,
+  });
 
   provider.credentials.forEach((credential) => {
     if (credential.lastErrorAt) {
@@ -77,6 +102,14 @@ function EventBadge({ type }: { type: ActivityEvent["type"] }) {
   }
   if (type === "restore") {
     return <StatusBadge tone="success">恢复</StatusBadge>;
+  }
+  if (type === "health") {
+    return (
+      <StatusBadge tone="secondary">
+        <Activity aria-hidden="true" className="mr-1 size-3" />
+        健康检查
+      </StatusBadge>
+    );
   }
   return <StatusBadge tone="secondary">切换</StatusBadge>;
 }
@@ -127,6 +160,22 @@ export function ProviderActivity({ provider }: ProviderActivityProps) {
       </CardHeader>
       <Separator />
       <CardContent className="pt-6">
+        {provider.type === "xunlei" ? (
+          <Alert
+            variant="default"
+            className="mb-4 border-border/50 bg-muted/30"
+            data-testid="provider-activity-restricted"
+          >
+            <Info aria-hidden="true" className="size-4" />
+            <AlertTitle className="text-xs font-medium">
+              凭据相关行为不适用
+            </AlertTitle>
+            <AlertDescription className="mt-1 text-xs leading-5 text-muted-foreground">
+              Xunlei
+              不维护凭据池，凭据轮换、隔离与恢复等行为不会出现在时间线中；仅记录健康检查与状态更新。
+            </AlertDescription>
+          </Alert>
+        ) : null}
         {events.length > 0 ? (
           <div className="grid gap-3" data-testid="provider-activity-list">
             {events.map((event) => (

@@ -1,6 +1,6 @@
 {
-  "id": "b70993de-4d5f-4b6e-8175-fd8d8a779de9",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "fb606bf4-e577-4d55-a5e1-ba7f21af0282",
+  "prevId": "b70993de-4d5f-4b6e-8175-fd8d8a779de9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1193,6 +1193,12 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "last_health_checked_at": {
+          "name": "last_health_checked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {

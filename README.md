@@ -1,6 +1,6 @@
 <h1 align="left">SubHub</h1>
 
-A self-hosted subtitle gateway for aggregating subtitle providers, caching downloads, and managing manual uploads. 
+A self-hosted subtitle gateway for aggregating subtitle providers, caching downloads, and managing manual uploads.
 
 <p align="left">
   🇺🇸 <a href="./README.md">English</a> | 🇨🇳 <a href="./README.zh-CN.md">简体中文</a>
@@ -42,14 +42,17 @@ SubHub addresses these problems by introducing a provider abstraction layer and 
 - Allow self-hosted deployment for private media workflows
 - Offer a clean base for custom provider integrations
 
-## Planned Provider Types
+## Supported Provider Types
 
-- Official provider APIs
-  - Example: OpenSubtitles
-- Community subtitle sites
-  - Example: ASSRT, Shooter, Xunlei, SubtitleBest
-- Local upload source
-- Local cache source
+### Currently Integrated
+
+- **OpenSubtitles** — Official API source; supports credential pool, health check, rotation and scheduling policies. Multiple instances can be created through the admin dashboard.
+- **Xunlei** — Pre-seeded single instance via migration; calls upstream official interface with gateway-managed authentication. No credential pool, rotation, or per-instance creation.
+
+### Planned
+
+- ASSRT, Shooter, SubtitleBest and other community subtitle sources
+- Local upload and cache sources
 
 ## Typical Use Cases
 
@@ -85,16 +88,17 @@ SubHub is intended to follow a modular architecture:
 
 ## Roadmap
 
-- Provider adapter interface
-- OpenSubtitles integration
-- Local file cache
-- Manual upload API
-- Subtitle metadata normalization
-- Search and download history
-- Authentication and access control
-- Admin dashboard
-- More domestic provider adapters
-- Webhook or media-server integration
+- [x] Provider adapter interface
+- [x] OpenSubtitles integration
+- [x] Xunlei integration (pre-seeded)
+- [x] Multi-provider admin dashboard (list, detail, create, scheduling policy, credential pool)
+- [x] Local file cache
+- [ ] Manual upload API
+- [ ] Subtitle metadata normalization
+- [ ] Search and download history
+- [x] Authentication and access control
+- [ ] More domestic provider adapters
+- [ ] Webhook or media-server integration
 
 ## Non-Goals
 
@@ -117,7 +121,7 @@ Some subtitle sources may not provide official public APIs. Integrating such sou
 
 ## Status
 
-This project is currently in the planning / early development stage.
+This project is currently in active development (v0.2.x). The multi-provider admin dashboard, OpenSubtitles and Xunlei adapters, and credential pool management are functional.
 
 ## Contributing
 

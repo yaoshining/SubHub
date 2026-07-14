@@ -22,12 +22,12 @@
 
 ### 2.2 平台注入规则
 
-| 场景 | 平台注入的唯一数据库目标 |
-|------|------|
-| `main` -> Vercel Production | prod database |
-| `preview` 分支 -> Vercel Preview | staging database |
-| 其他命中仓库级 Preview 分支白名单的分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` -> Vercel Preview | dev database |
-| 本地 `NODE_ENV=development` | dev database |
+| 场景                                                                                                                                         | 平台注入的唯一数据库目标 |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `main` -> Vercel Production                                                                                                                  | prod database            |
+| `preview` 分支 -> Vercel Preview                                                                                                             | staging database         |
+| 其他命中仓库级 Preview 分支白名单的分支 `preview/*`、`feature/*`、`agent/*`、`copilot/*`、`fix/*`、`chore/*`、`renovate/*` -> Vercel Preview | dev database             |
+| 本地 `NODE_ENV=development`                                                                                                                  | dev database             |
 
 数据库相关测试与 CI 真实数据库校验不走上述应用运行主路由；它们必须显式连接独立 `test` 数据库。
 

@@ -12,30 +12,30 @@ GET /api/subtitles/search
 
 ### 现有字段（保持不变）
 
-| 参数 | 位置 | 类型 | 必填 | 校验 | 说明 |
-|------|------|------|------|------|------|
-| `title` | query | string | yes | `minLength: 1` | free-text 兜底 + 审计用作品名 |
-| `year` | query | integer | no | `min: 1800, max: 3000` | 辅助区分同名作品 |
-| `season` | query | integer | no | `min: 0` | 剧集季编号，映射到上游 `season_number` |
-| `episode` | query | integer | no | `min: 0` | 剧集集编号，映射到上游 `episode_number` |
-| `language` | query | string | no | `minLength: 1` | 语言码，映射到上游 `languages` |
+| 参数       | 位置  | 类型    | 必填 | 校验                   | 说明                                    |
+| ---------- | ----- | ------- | ---- | ---------------------- | --------------------------------------- |
+| `title`    | query | string  | yes  | `minLength: 1`         | free-text 兜底 + 审计用作品名           |
+| `year`     | query | integer | no   | `min: 1800, max: 3000` | 辅助区分同名作品                        |
+| `season`   | query | integer | no   | `min: 0`               | 剧集季编号，映射到上游 `season_number`  |
+| `episode`  | query | integer | no   | `min: 0`               | 剧集集编号，映射到上游 `episode_number` |
+| `language` | query | string  | no   | `minLength: 1`         | 语言码，映射到上游 `languages`          |
 
 ### 新增字段
 
-| 参数 | 位置 | 类型 | 必填 | 校验 | 说明 |
-|------|------|------|------|------|------|
-| `imdb_id` | query | string | no | `pattern: ^tt\d+$` | IMDb ID 定位，优先于 `title` 的 query 构造 |
-| `tmdb_id` | query | integer | no | `min: 1` | TMDb ID 定位，配合 `season`/`episode` 可定位单集 |
-| `type` | query | enum | no | `movie` \| `episode` | 媒体类型过滤 |
+| 参数      | 位置  | 类型    | 必填 | 校验                 | 说明                                             |
+| --------- | ----- | ------- | ---- | -------------------- | ------------------------------------------------ |
+| `imdb_id` | query | string  | no   | `pattern: ^tt\d+$`   | IMDb ID 定位，优先于 `title` 的 query 构造       |
+| `tmdb_id` | query | integer | no   | `min: 1`             | TMDb ID 定位，配合 `season`/`episode` 可定位单集 |
+| `type`    | query | enum    | no   | `movie` \| `episode` | 媒体类型过滤                                     |
 
 ### 跨字段校验
 
-| 条件 | HTTP | 错误码 |
-|------|------|--------|
-| `type=movie` + (`season` 或 `episode` 存在) | 400 | `VALIDATION_FAILED` |
-| `type=episode` + 缺 `season`/`episode` + 缺 `imdb_id`/`tmdb_id` | 400 | `VALIDATION_FAILED` |
-| `imdb_id` 格式不合法 | 400 | `VALIDATION_FAILED` |
-| `tmdb_id` < 1 | 400 | `VALIDATION_FAILED` |
+| 条件                                                            | HTTP | 错误码              |
+| --------------------------------------------------------------- | ---- | ------------------- |
+| `type=movie` + (`season` 或 `episode` 存在)                     | 400  | `VALIDATION_FAILED` |
+| `type=episode` + 缺 `season`/`episode` + 缺 `imdb_id`/`tmdb_id` | 400  | `VALIDATION_FAILED` |
+| `imdb_id` 格式不合法                                            | 400  | `VALIDATION_FAILED` |
+| `tmdb_id` < 1                                                   | 400  | `VALIDATION_FAILED` |
 
 ## 响应
 

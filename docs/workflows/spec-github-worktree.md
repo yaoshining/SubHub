@@ -20,25 +20,25 @@
 
 推荐保持如下映射：
 
-| 实体 | 对应关系 |
-| --- | --- |
-| Feature | 一个产品功能或变更主题 |
-| Spec | `specs/<feature-id>-<name>/` |
-| Worktree | 一个独立工作目录 |
-| Branch | 一个 feature branch |
-| Spec 主 Issue | 一个 feature 的 GitHub 主 issue |
-| Task Issues | `tasks.md` 拆分出的并行任务 issue |
+| 实体          | 对应关系                          |
+| ------------- | --------------------------------- |
+| Feature       | 一个产品功能或变更主题            |
+| Spec          | `specs/<feature-id>-<name>/`      |
+| Worktree      | 一个独立工作目录                  |
+| Branch        | 一个 feature branch               |
+| Spec 主 Issue | 一个 feature 的 GitHub 主 issue   |
+| Task Issues   | `tasks.md` 拆分出的并行任务 issue |
 
 示例：
 
-| 项目元素 | 示例 |
-| --- | --- |
-| Feature ID | `003` |
-| Spec 目录 | `specs/003-search-improvements/` |
-| Branch | `feat/003-search-improvements` |
-| Worktree | `../subhub-003-search-improvements` |
-| 主 Issue | `[Spec 003] 搜索体验改进` |
-| 子 Issue | `[003][T012] 实现搜索筛选状态持久化` |
+| 项目元素   | 示例                                 |
+| ---------- | ------------------------------------ |
+| Feature ID | `003`                                |
+| Spec 目录  | `specs/003-search-improvements/`     |
+| Branch     | `feat/003-search-improvements`       |
+| Worktree   | `../subhub-003-search-improvements`  |
+| 主 Issue   | `[Spec 003] 搜索体验改进`            |
+| 子 Issue   | `[003][T012] 实现搜索筛选状态持久化` |
 
 ## 推荐命名规则
 

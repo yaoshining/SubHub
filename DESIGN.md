@@ -89,34 +89,34 @@ SubHub 是一个面向运营者、集成负责人和平台管理员的**自托�
 
 SubHub 的品牌图标称为 **Timeline S**：由多条水平错位分段条构成 S 轮廓，中轴有克制的竖向同步线，整体抽象呈现 subtitle timeline / workflow segment 的视觉语义。
 
-| 属性 | 规范 |
-|---|---|
-| 图标源文件 | `design/logo-light.png`（浅色主题）/ `design/logo-dark.png`（深色主题） |
-| 尺寸规格 | sidebar 内使用 `width: 23px, height: 24px`；其他场景按比例 650:673 缩放 |
-| 颜色方案（浅色） | 深海军蓝主体 `#06101F` / 电蓝条块 `#1748E8` / 浅白底板 |
-| 颜色方案（深色） | 近白主体 `#F8FAFC` / 青蓝条块 `#3672FC` / 深色底板 |
-| 禁止行为 | 不得重新着色、拉伸变形、用纯文字代替图标、用通用 SaaS 图标替代 |
+| 属性             | 规范                                                                    |
+| ---------------- | ----------------------------------------------------------------------- |
+| 图标源文件       | `design/logo-light.png`（浅色主题）/ `design/logo-dark.png`（深色主题） |
+| 尺寸规格         | sidebar 内使用 `width: 23px, height: 24px`；其他场景按比例 650:673 缩放 |
+| 颜色方案（浅色） | 深海军蓝主体 `#06101F` / 电蓝条块 `#1748E8` / 浅白底板                  |
+| 颜色方案（深色） | 近白主体 `#F8FAFC` / 青蓝条块 `#3672FC` / 深色底板                      |
+| 禁止行为         | 不得重新着色、拉伸变形、用纯文字代替图标、用通用 SaaS 图标替代          |
 
 ### 2.1.2 Wordmark（"SubHub"）
 
-| 属性 | 规范 |
-|---|---|
-| 字体 | **Space Grotesk Semibold**（`fontWeight: 600`） |
-| 字号（sidebar） | `18px` |
-| 双色规则 | "Sub" 与 "Hub" 分为独立 text 节点，颜色独立定义 |
-| 浅色主题 | Sub: `#06101F`，Hub: `#1748E8` |
-| 深色主题 | Sub: `$--font-primary`（近白），Hub: `#3672FC` |
-| 禁止行为 | 不得将 "SubHub" 改为单一颜色；不得使用 Inter 等非 Space Grotesk 字体作为 wordmark 字体 |
+| 属性            | 规范                                                                                   |
+| --------------- | -------------------------------------------------------------------------------------- |
+| 字体            | **Space Grotesk Semibold**（`fontWeight: 600`）                                        |
+| 字号（sidebar） | `18px`                                                                                 |
+| 双色规则        | "Sub" 与 "Hub" 分为独立 text 节点，颜色独立定义                                        |
+| 浅色主题        | Sub: `#06101F`，Hub: `#1748E8`                                                         |
+| 深色主题        | Sub: `$--font-primary`（近白），Hub: `#3672FC`                                         |
+| 禁止行为        | 不得将 "SubHub" 改为单一颜色；不得使用 Inter 等非 Space Grotesk 字体作为 wordmark 字体 |
 
 ### 2.1.3 Logo 组合规则（sidebar Logo Area）
 
-| 属性 | 规范 |
-|---|---|
-| 布局 | icon + wordmark 水平排列，`gap: 8px`，`alignItems: center` |
-| 容器高度 | `56px`，与侧边栏顶部同高 |
-| 内边距 | `padding: [0, 20px]`（水平） |
-| 底部边界线 | `stroke bottom 1px`，颜色使用 `$--border-default` |
-| 主题隔离 | 浅色/深色主题必须使用对应版本的 logo 图片文件，禁止跨主题混用 |
+| 属性       | 规范                                                          |
+| ---------- | ------------------------------------------------------------- |
+| 布局       | icon + wordmark 水平排列，`gap: 8px`，`alignItems: center`    |
+| 容器高度   | `56px`，与侧边栏顶部同高                                      |
+| 内边距     | `padding: [0, 20px]`（水平）                                  |
+| 底部边界线 | `stroke bottom 1px`，颜色使用 `$--border-default`             |
+| 主题隔离   | 浅色/深色主题必须使用对应版本的 logo 图片文件，禁止跨主题混用 |
 
 ### 2.1.4 品牌字体范围约束
 
@@ -181,54 +181,54 @@ Token 命名遵循 shadcn/ui 规范，可直接映射至 CSS 变量（如 `--bac
 
 #### 画布与表面
 
-| Token | Dark | Light | 用途 |
-|---|---|---|---|
-| `background` | `#0B1020` | `#F5F7FB` | 应用最外层画布 |
-| `surface` | `#121A2B` | `#FFFFFF` | 卡片、内容面板、表格容器、侧栏主体 |
-| `surface-elevated` | `#182235` | `#FCFDFE` | 浮层、激活面板、关键摘要块 |
-| `surface-muted` | `#0F1726` | `#EEF2F7` | 次级区块、嵌套容器、低优先背景 |
+| Token              | Dark      | Light     | 用途                               |
+| ------------------ | --------- | --------- | ---------------------------------- |
+| `background`       | `#0B1020` | `#F5F7FB` | 应用最外层画布                     |
+| `surface`          | `#121A2B` | `#FFFFFF` | 卡片、内容面板、表格容器、侧栏主体 |
+| `surface-elevated` | `#182235` | `#FCFDFE` | 浮层、激活面板、关键摘要块         |
+| `surface-muted`    | `#0F1726` | `#EEF2F7` | 次级区块、嵌套容器、低优先背景     |
 
 #### 边框与结构
 
-| Token | Dark | Light | 用途 |
-|---|---|---|---|
-| `border` | `#25324A` | `#D9E1EC` | 面板轮廓、表格分隔、输入框边界 |
-| `border-strong` | `#334766` | `#C3CEDD` | 选中态、关键分区、结构强化 |
+| Token           | Dark      | Light     | 用途                           |
+| --------------- | --------- | --------- | ------------------------------ |
+| `border`        | `#25324A` | `#D9E1EC` | 面板轮廓、表格分隔、输入框边界 |
+| `border-strong` | `#334766` | `#C3CEDD` | 选中态、关键分区、结构强化     |
 
 #### 文本层级
 
-| Token | Dark | Light | 用途 |
-|---|---|---|---|
-| `foreground` | `#E8EEF8` | `#0F172A` | 标题、关键数字、主要说明 |
-| `foreground-muted` | `#A7B4C8` | `#475569` | 辅助描述、次级标签 |
+| Token               | Dark      | Light     | 用途                     |
+| ------------------- | --------- | --------- | ------------------------ |
+| `foreground`        | `#E8EEF8` | `#0F172A` | 标题、关键数字、主要说明 |
+| `foreground-muted`  | `#A7B4C8` | `#475569` | 辅助描述、次级标签       |
 | `foreground-subtle` | `#7F8CA3` | `#64748B` | 元信息、占位、非关键注释 |
 
 #### 品牌与强调
 
-| Token | Dark | Light | 用途 |
-|---|---|---|---|
-| `primary` | `#5AA9FF` | `#2563EB` | 主操作、激活态、关键链接 |
+| Token                | Dark      | Light     | 用途                        |
+| -------------------- | --------- | --------- | --------------------------- |
+| `primary`            | `#5AA9FF` | `#2563EB` | 主操作、激活态、关键链接    |
 | `primary-foreground` | `#08111F` | `#F8FAFF` | primary 承载块上的文字/图标 |
-| `accent` | `#7C8CFF` | `#4F46E5` | 辅助高亮、选中、关系型强调 |
-| `accent-foreground` | `#F5F7FF` | `#F7F7FF` | accent 承载块上的文字/图标 |
+| `accent`             | `#7C8CFF` | `#4F46E5` | 辅助高亮、选中、关系型强调  |
+| `accent-foreground`  | `#F5F7FF` | `#F7F7FF` | accent 承载块上的文字/图标  |
 
 #### 状态反馈
 
-| Token | Dark | Light | 用途 |
-|---|---|---|---|
-| `success` / `success-foreground` | `#35C58A` / `#071B13` | `#1F9D68` / `#F3FFF9` | 健康、成功、已启用 |
-| `warning` / `warning-foreground` | `#F0B24A` / `#211505` | `#C98512` / `#FFF9ED` | 预警、额度逼近、风险上升 |
-| `destructive` / `destructive-foreground` | `#E46876` / `#25090E` | `#D1435B` / `#FFF4F6` | 失败、删除、停用 |
-| `info` / `info-foreground` | `#59C3E6` / `#071920` | `#0F8FB8` / `#F2FBFF` | 中性提示、说明性状态 |
+| Token                                    | Dark                  | Light                 | 用途                     |
+| ---------------------------------------- | --------------------- | --------------------- | ------------------------ |
+| `success` / `success-foreground`         | `#35C58A` / `#071B13` | `#1F9D68` / `#F3FFF9` | 健康、成功、已启用       |
+| `warning` / `warning-foreground`         | `#F0B24A` / `#211505` | `#C98512` / `#FFF9ED` | 预警、额度逼近、风险上升 |
+| `destructive` / `destructive-foreground` | `#E46876` / `#25090E` | `#D1435B` / `#FFF4F6` | 失败、删除、停用         |
+| `info` / `info-foreground`               | `#59C3E6` / `#071920` | `#0F8FB8` / `#F2FBFF` | 中性提示、说明性状态     |
 
 #### 交互与工具
 
-| Token | Dark | Light | 用途 |
-|---|---|---|---|
-| `ring` | `#6FB4FF` | `#3B82F6` | 键盘焦点、可访问性高亮 |
-| `input` | `#1A263A` | `#FFFFFF` | 输入框、选择器内部底色 |
-| `muted` | `#162133` | `#EEF2F7` | 标签底、辅助区块、次级提示背景 |
-| `muted-foreground` | `#92A0B6` | `#5B6B80` | muted 容器中的辅助文本 |
+| Token              | Dark      | Light     | 用途                           |
+| ------------------ | --------- | --------- | ------------------------------ |
+| `ring`             | `#6FB4FF` | `#3B82F6` | 键盘焦点、可访问性高亮         |
+| `input`            | `#1A263A` | `#FFFFFF` | 输入框、选择器内部底色         |
+| `muted`            | `#162133` | `#EEF2F7` | 标签底、辅助区块、次级提示背景 |
+| `muted-foreground` | `#92A0B6` | `#5B6B80` | muted 容器中的辅助文本         |
 
 #### 使用约束
 
@@ -461,14 +461,14 @@ SubHub 长期支持以下几类布局：
   | Settings | 设置 |
   | Access Control | 访问控制 |
 - **侧边栏图标统一使用 Lucide**：导航项图标与主题切换图标使用以下命名映射，避免页面间语义漂移：
-   | 场景 | Lucide 名称 |
-   |------|-------------|
-   | Dashboard | `layout-dashboard` |
-   | Providers | `server` |
-   | API Keys | `key-round` |
-   | Users | `users` |
-   | Theme Toggle（深色） | `moon` |
-   | Theme Toggle（浅色） | `sun` |
+  | 场景 | Lucide 名称 |
+  |------|-------------|
+  | Dashboard | `layout-dashboard` |
+  | Providers | `server` |
+  | API Keys | `key-round` |
+  | Users | `users` |
+  | Theme Toggle（深色） | `moon` |
+  | Theme Toggle（浅色） | `sun` |
 - **Sidebar 组件化维护**：Sidebar 应作为可复用组件维护，页面内优先使用组件实例而非复制新结构；需要页面特定高亮态时，通过实例覆写实现，不再维护多份独立 Sidebar 结构。
 - **Sidebar 组件命名规范**：统一采用 `Sidebar / <Theme> / <Active Route>` 命名（例如 `Sidebar / Dark / Users`、`Sidebar / Light / API Keys`）；禁止使用 `Master`、临时后缀或与主题不一致的命名。
 - **Sidebar 选中态规则**：各页面必须保证与当前路由一致的导航项为选中态（含图标与文字高亮、背景与描边状态）；组件化后通过实例覆写维护选中项，不得在多个独立 Sidebar 副本中分散维护。
@@ -640,3 +640,117 @@ SubHub 是高信息密度后台，因此数字、状态、时间、来源、额�
 - **页面级例外全部下放到 `docs/pages/*.md`**
 
 本文件应持续保持在这个抽象层级，不再回到“页面大全”或“原型清单”式写法。
+
+---
+
+## 14. v0.2.3 Provider Admin Baseline 设计目标与原则
+
+### 14.1 版本背景
+
+v0.2.3 将管理台从"OpenSubtitles 单 provider"升级为**多 provider（OpenSubtitles / Xunlei）统一管理视角**。这是 SubHub 第一次在同一个界面层中处理两类能力不等价的 provider，设计上需解决以下核心矛盾：
+
+- **统一性**：OpenSubtitles 与 Xunlei 共用同一组页面（providers list / provider detail），不建独立页面，不 split 路由。
+- **差异性**：OpenSubtitles 支持凭据池、多实例、凭据轮换；Xunlei 为受限的单实例 provider，无凭据池、无 rotation、baseUrl 不落入 UI。
+- **认知安全**：管理员必须一眼知道自己面对的是哪类 provider，哪些能力可用、哪些不可用。
+
+### 14.2 适用范围
+
+- **受影响页面**：`/providers`（列表）、`/providers/:providerId`（详情）、Create Provider Drawer（列表页触发）
+- **受影响组件**：全部 provider-related 组件（`provider-list`、`provider-policy-form`、`provider-credential-table`、`provider-activity`、`provider-pool-inspector`、`status-badge`、`empty-state-card`）
+- **不涉及页面**：Dashboard、Settings、API Keys、Users — 设计不变
+
+详细页面级设计见 `docs/pages/providers.md`、`docs/pages/provider-detail.md`、`docs/pages/create-provider.md`。
+
+### 14.3 全局设计原则（v0.2.3 新增 / 增强）
+
+#### 14.3.1 冷色画布 + 暖色状态
+
+画布全程用 `background / surface / surface-elevated / surface-muted` 四层冷色建立层级；状态只用 `success / warning / destructive / info` 四个暖色语义表达。禁止用 brand 色或装饰渐变替代状态色。
+
+#### 14.3.2 高信息密度 + 大点击热区
+
+行高、字段间距走 `DESIGN.md §5.1` 中 `gap-3 / gap-4` 步进；任何可点击目标 ≥ 32×32 px。可扫描 ≠ 可压缩。
+
+#### 14.3.3 状态优先于品牌
+
+列表行的第一视觉锚点必须是"provider 当前能不能服务"（状态徽章 + 状态点），而不是名称或 logo。
+
+#### 14.3.4 差异通过形状与图标表达，不用色块
+
+OpenSubtitles / Xunlei 的差异通过「类型徽章的图标 / 边框样式 / 受限锁形符号」表达，颜色仍然只用主品牌与中性灰。禁止依靠不同色块区分 provider 类型。
+
+#### 14.3.5 专业感来自克制，不是装饰
+
+不放 emoji、不放彩色 banner、不放 mock 数据插画；空态用一行精准文案 + 一个明确 CTA。
+
+#### 14.3.6 启停无 dirty state
+
+启用/禁用不可与表单 dirty state 混淆。Switch 切换是即时动作，不进 unsavedChanges，不依赖 Save 按钮。
+
+#### 14.3.7 凭据池 / 受限说明区块必须 type-aware，结构明显不同
+
+OpenSubtitles 与 Xunlei 在凭据池区块不得套用同一个组件加 if-else 隐藏字段。必须整段替换。OpenSubtitles → 凭据池表格；Xunlei → `RestrictedCapabilityCallout` 受限说明卡。
+
+### 14.4 OpenSubtitles / Xunlei 差异化设计规则
+
+| 维度     | OpenSubtitles                      | Xunlei                                            |
+| -------- | ---------------------------------- | ------------------------------------------------- |
+| 类型     | 正常 provider，多实例              | 受限 provider，单实例（migration 预置）           |
+| 类型标识 | 48×48 `OS` 块                      | 48×48 `XL` 块 + Lock 图标                         |
+| 凭据池   | 完整 CRUD：新增/隔离/恢复/冷却显示 | `RestrictedCapabilityCallout`：「不需要 API Key」 |
+| Rotation | 可编辑 Switch                      | 整行隐藏                                          |
+| Fallback | 可选（可指向 Xunlei 或其它 OS）    | 可选（可指向 OS 或 null）                         |
+| 创建入口 | 正常创建（Type Selector 中可点击） | 不可创建；Type Selector 中卡片 disabled + 解释    |
+| 删除     | 条件可用（disabled + 无凭据时）    | 不暴露删除按钮（运维脚本处理）                    |
+| 凭据提醒 | empty state + 引导 CTA             | 不适用，无凭据提醒                                |
+| baseUrl  | 环境变量，不入 UI                  | 环境变量，不入 UI                                 |
+
+### 14.5 跨组件共享规范
+
+以下复合组件以既有 shadcn/ui 原语组合而成，在 providers / provider-detail / create-provider 三页间复用：
+
+| 组件                           | 基于                             | 职责                                                                |
+| ------------------------------ | -------------------------------- | ------------------------------------------------------------------- |
+| `ProviderTypeBlock`            | `Card` + `Badge` + Lucide 图标   | 48×48 类型标识块（OS/XL），含底部 4px 状态条；Xunlei 附加 Lock 图标 |
+| `ProviderStatusBadge`          | `Badge` + Lucide 图标            | 4 状态（enabled/disabled/degraded/needs_config）复合徽章            |
+| `HealthBlock`                  | `Tooltip` + Lucide 图标 + `Text` | 两种形态：`compact`（单行 dot+时间）和 `detailed`（含错误摘要）     |
+| `PoolSizeIndicator`            | `Progress` + `Text`              | 三段凭据池规模可视化（active/cooling/quarantined）                  |
+| `RestrictedCapabilityCallout`  | `Card` + `Alert`                 | 受限能力说明卡，用于 Xunlei 凭据池区与 Inspector                    |
+| `SummaryStrip` + `SummaryTile` | `Card` + `Text`                  | 列表页顶部摘要条（Total/Enabled/Degraded/Disabled）                 |
+| `ProviderContextStrip`         | `Card` + `Badge` + `Text`        | Detail 页顶部对象上下文条                                           |
+| `TypeSelectorCard`             | `Card` + `Alert`                 | Create Drawer Step 1 类型卡片                                       |
+
+#### 14.5.1 Alert Variant 使用策略
+
+Alert variant 体系沿用 shadcn/ui 原生四档：`default` / `destructive` / `success` / `warning`。**不扩展 `info` variant**，保持上游可升级性。
+
+| 场景                         | 用法                                   | 说明                                                          |
+| ---------------------------- | -------------------------------------- | ------------------------------------------------------------- |
+| 信息性提示（非阻塞/非错误）  | `Alert`（`default`）+ Lucide `info` 图标 | Xunlei 预置说明、受限能力说明等；不在页面层写 `variant="info"` |
+| 破坏性/不可逆操作后果        | `Alert`（`destructive`）               | 删除 provider、清除凭据池等危险说明                            |
+| 操作成功反馈（需常驻）        | `Alert`（`success`）                  | 瞬时成功反馈优先用 Toast，常驻成功条才用 Alert                |
+| 警告但可继续                  | `Alert`（`warning`）                   | 凭据池 degraded、rotation 未配置等                             |
+
+- 信息性提示统一借助 `RestrictedCapabilityCallout` 等复合组件承载，页面层只引用组件名，不直接写 `variant="info"`。
+- 页面规范与实现层均不得出现 `Alert variant="info"`；历史文档中遗留的 `variant="info"` 表述一律改写为「信息提示 Alert（`default` variant + Lucide `info` 图标）」。
+
+### 14.6 v0.2.3 设计文档索引
+
+| 设计资源               | 路径                            | 职责                                                                      |
+| ---------------------- | ------------------------------- | ------------------------------------------------------------------------- |
+| 全局设计规则（本文档） | `DESIGN.md`                     | 视觉 token、布局模式、组件原则、状态反馈规则、v0.2.3 全局原则与差异化规则 |
+| 共享布局               | `docs/layouts/admin-layout.md`  | 后台 Shell、响应式骨架、列表/详情/设置布局基线                            |
+| Providers 列表页       | `docs/pages/providers.md`       | Summary Strip、Master List、Inspector、筛选/搜索/空态                     |
+| Provider 详情页        | `docs/pages/provider-detail.md` | Context Strip、Section A/B/C/D stack、Inspector                           |
+| Create Provider        | `docs/pages/create-provider.md` | Two-Step Drawer、Type Selector、Instance Form                             |
+| Provider 组件索引      | `src/components/providers/`     | 实现层面的组件清单（非设计文档）                                          |
+
+### 14.7 v0.2.3 禁止反模式
+
+- ❌ 用「单一空态卡片」硬塞 OS 和 Xunlei 的差异（必须整段替换）
+- ❌ 把 Status Switch 与表单 dirty state 混在一起（启停是即时动作）
+- ❌ 在 List 行用传统 Table 列硬塞多类信息（必须用卡片行承载四层信息）
+- ❌ 让 Xunlei 卡片可点击进入 Create Step 2 后用 disabled 字段凑合（Step 1 即 disabled + 解释）
+- ❌ 在 List Inspector 中塞凭据池完整表格（仅放摘要，Detail 才看完整）
+- ❌ 用 brand 色或装饰渐变做"漂亮"
+- ❌ 把「创建 OpenSubtitles」作为入口文案（必须统一为「创建 Provider」）

@@ -41,6 +41,37 @@
       },
       "registered_skills": [],
       "installed_at": "2026-06-22T16:30:07.440630+00:00"
+    },
+    "tinyspec": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:a78c4ede6a5e07f1430e187be0269b910dcef3e75f4e0609588e58fbce48b742",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "agy": [
+          "speckit.tinyspec.tinyspec",
+          "speckit.tinyspec.implement",
+          "speckit.tinyspec.classify"
+        ],
+        "codex": [
+          "speckit.tinyspec.tinyspec",
+          "speckit.tinyspec.implement",
+          "speckit.tinyspec.classify"
+        ],
+        "copilot": [
+          "speckit.tinyspec.tinyspec",
+          "speckit.tinyspec.implement",
+          "speckit.tinyspec.classify"
+        ],
+        "zed": [
+          "speckit.tinyspec.tinyspec",
+          "speckit.tinyspec.implement",
+          "speckit.tinyspec.classify"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-07-13T18:39:00.346295+00:00"
     }
   }
 }

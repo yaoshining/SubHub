@@ -9,6 +9,7 @@
 **测试**: REQUIRED。任务必须显式覆盖环境映射、数据库 URL 解析、Postgres schema / migration、bootstrap / seed、三层环境可用性验证、独立 `test` 数据库隔离 / reset 策略，以及 `001-mvp-admin-console` 主链路回归。
 
 **测试分层约束**:
+
 - 当前已完成 PGlite 最小试点验证，已通过 `tests/unit/providers/credential-pool.test.ts` 与 `tests/unit/caller-keys/caller-key-service.test.ts` 两组聚焦测试。
 - PGlite 当前仅作为快速数据库单测层的已验证选项，后续是否继续扩展覆盖面，属于增量优化，不是当前 feature 的强制交付项。
 - 当前阶段不要求将所有数据库测试迁移到 PGlite。

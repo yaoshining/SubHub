@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,6 +15,7 @@ import {
 
 import { createCallerKey } from "@/server/services/caller-key-service";
 import { createProvider } from "@/server/services/provider-service";
+import { providers } from "@/server/storage/schema";
 import * as searchRoute from "@/app/api/subtitles/search/route";
 import * as downloadRoute from "@/app/api/subtitles/download/route";
 import { expectApiError } from "../helpers/api";
@@ -246,5 +248,244 @@ describe("字幕出口端到端 API 流程", () => {
       ),
       "VALIDATION_FAILED",
     );
+  });
+
+  it("完整流程：enable→search 成功→disable→search 失败", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createCallerKey({
+        callerName: "Jellyfin",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      }),
+      createProvider({
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      }),
+    ]);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [
+            {
+              id: "file_001",
+              attributes: {
+                language: "zh-CN",
+                files: [
+                  { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+
+    const searchSuccess = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Example",
+        callerKey.key,
+      ),
+    );
+    expect(searchSuccess.status).toBe(200);
+    const successPayload = (await searchSuccess.json()) as {
+      data: { results: Array<{ id: string }> };
+    };
+    expect(successPayload.data.results).toHaveLength(1);
+
+    const { disableProvider } =
+      await import("@/server/services/provider-service");
+    await disableProvider(provider.id);
+
+    await expectApiError(
+      await searchRoute.GET(
+        nextRequest(
+          "http://localhost/api/subtitles/search?title=Example",
+          callerKey.key,
+        ),
+      ),
+      "SERVICE_NOT_READY",
+    );
+  });
+
+  it("完整流程：disabled→enable→search 成功", async () => {
+    const [callerKey, provider] = await Promise.all([
+      createCallerKey({
+        callerName: "Jellyfin",
+        environment: "production",
+        scope: "subtitles:read",
+        quotaPolicy: "default",
+      }),
+      createProvider({
+        name: "OpenSubtitles Primary",
+        type: "opensubtitles",
+        initialCredential: {
+          label: "primary",
+          secret: "opensubtitles-api-key",
+        },
+      }),
+    ]);
+
+    const { disableProvider, enableProvider } =
+      await import("@/server/services/provider-service");
+    await disableProvider(provider.id);
+
+    await expectApiError(
+      await searchRoute.GET(
+        nextRequest(
+          "http://localhost/api/subtitles/search?title=Example",
+          callerKey.key,
+        ),
+      ),
+      "SERVICE_NOT_READY",
+    );
+
+    await enableProvider(provider.id);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [
+            {
+              id: "file_001",
+              attributes: {
+                language: "zh-CN",
+                files: [
+                  { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+
+    const searchSuccess = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Example",
+        callerKey.key,
+      ),
+    );
+    expect(searchSuccess.status).toBe(200);
+    const successPayload = (await searchSuccess.json()) as {
+      data: { results: Array<{ id: string }> };
+    };
+    expect(successPayload.data.results).toHaveLength(1);
+  });
+
+  it("成功搜索后会回写 OpenSubtitles provider 健康字段为 ready 并刷新 checkedAt", async () => {
+    const callerKey = await createCallerKey({
+      callerName: "Jellyfin",
+      environment: "production",
+      scope: "subtitles:read",
+      quotaPolicy: "default",
+    });
+
+    const provider = await createProvider({
+      name: "OpenSubtitles Primary",
+      type: "opensubtitles",
+      initialCredential: {
+        label: "primary",
+        secret: "opensubtitles-api-key",
+      },
+    });
+
+    const db = getStorageClient().db;
+
+    // Snapshot the health fields *before* the search call so we can assert
+    // the gateway actually refreshed them on the success path.
+    const beforeRows = await db
+      .select()
+      .from(providers)
+      .where(eq(providers.id, provider.id))
+      .limit(1);
+    const beforeRow = beforeRows[0];
+    expect(beforeRow).toBeDefined();
+    // At creation time provider-repository only sets lastHealthStatus
+    // (="ready") and lastErrorSummary (=null); lastHealthCheckedAt is left
+    // NULL until the first health sync runs.
+    expect(beforeRow?.lastHealthStatus).toBe("ready");
+    expect(beforeRow?.lastErrorSummary).toBeNull();
+    expect(beforeRow?.lastHealthCheckedAt).toBeNull();
+
+    const beforeCallAt = Date.now();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [
+            {
+              id: "file_001",
+              attributes: {
+                language: "zh-CN",
+                files: [
+                  { file_id: "file_001", file_name: "Example.zh-CN.srt" },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+
+    const search = await searchRoute.GET(
+      nextRequest(
+        "http://localhost/api/subtitles/search?title=Example",
+        callerKey.key,
+      ),
+    );
+    expect(search.status).toBe(200);
+    const payload = (await search.json()) as {
+      data: { results: Array<{ id: string }> };
+    };
+    expect(payload.data.results).toHaveLength(1);
+
+    // subtitle-gateway syncs provider health as a fire-and-forget Promise.all
+    // after the response is returned, so poll the providers table until the
+    // lastHealthCheckedAt flips from NULL to a valid ISO timestamp (which
+    // implies the gateway has also written lastHealthStatus="ready").
+    const pollTimeoutMs = 2_000;
+    const pollStartedAt = Date.now();
+    let afterRow: typeof beforeRow | undefined;
+    while (Date.now() - pollStartedAt < pollTimeoutMs) {
+      const rows = await db
+        .select()
+        .from(providers)
+        .where(eq(providers.id, provider.id))
+        .limit(1);
+      const candidate = rows[0];
+      if (candidate?.lastHealthCheckedAt) {
+        afterRow = candidate;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    expect(afterRow).toBeDefined();
+    expect(afterRow?.lastHealthStatus).toBe("ready");
+    expect(afterRow?.lastErrorSummary).toBeNull();
+    expect(afterRow?.lastHealthCheckedAt).not.toBeNull();
+    // OpenAPI declares `format: date-time` (strict ISO 8601 with `T` and a
+    // `+HH:MM` timezone). PGlite emits a slightly different shape
+    // ("YYYY-MM-DD HH:MM:SS.sss+08" with a space and short tz). Accept both
+    // shapes, require a timezone (`Z` or numeric offset), then defer to
+    // `new Date(...)` for the real parse check.
+    expect(afterRow?.lastHealthCheckedAt).toMatch(
+      /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([Zz]|[+-]\d{2}(:?\d{2})?)$/,
+    );
+
+    // checkedAt must be >= the time we captured right before the search
+    // call. Allow a 1s skew to absorb clock jitter / test runner scheduling.
+    const checkedAtMs = new Date(afterRow!.lastHealthCheckedAt!).getTime();
+    expect(Number.isFinite(checkedAtMs)).toBe(true);
+    expect(checkedAtMs).toBeGreaterThanOrEqual(beforeCallAt - 1000);
   });
 });

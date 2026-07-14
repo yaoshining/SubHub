@@ -19,6 +19,7 @@ pnpm api:docs
 ```
 
 预期结果：
+
 - `docs/api/openapi.yaml` 可校验。
 - `src/lib/api/generated/` 已生成。
 - `/docs/api` 可展示 Scalar 文档。
@@ -30,6 +31,7 @@ pnpm dev
 ```
 
 预期结果：
+
 - 后台登录入口可通过 `/login` 访问。
 - API 文档可通过 `/docs/api` 访问。
 
@@ -41,6 +43,7 @@ pnpm dev
 4. 登录成功后进入 `/dashboard` 或原受保护目标页。
 
 预期结果：
+
 - 未登录访问 `/dashboard`、`/providers`、`/api-keys`、`/users`、`/settings` 会被要求先认证。
 - 已登录访问 `/login` 会重定向。
 
@@ -55,6 +58,7 @@ pnpm dev
 7. 隔离其中一个凭据。
 
 预期结果：
+
 - 被隔离凭据立即从活跃池移出。
 - 其他 active 凭据继续参与服务。
 - Provider Detail 显示最近异常、未保存变更、保存成功/失败状态。
@@ -68,6 +72,7 @@ pnpm dev
 5. 停用旧 Key 或当前 Key。
 
 预期结果：
+
 - inventory 默认只展示受控片段。
 - 新建/轮换后的完整明文只在受控窗口内可见。
 - 停用 Key 后，新的外部查询/下载请求被拒绝。
@@ -82,6 +87,7 @@ curl -H "Authorization: Bearer <caller-key>" \
 ```
 
 预期结果：
+
 - 有字幕时返回统一结果集。
 - 无字幕时返回统一错误结构，错误码为 `NO_RESULTS`。
 - 未配置 Provider 时返回 `SERVICE_NOT_READY`。
@@ -96,6 +102,7 @@ curl -H "Authorization: Bearer <caller-key>" \
 ```
 
 预期结果：
+
 - 可用字幕返回文件内容。
 - 不可用字幕返回明确失败原因。
 
@@ -105,6 +112,7 @@ curl -H "Authorization: Bearer <caller-key>" \
 2. 进入 `/settings`，确认环境、版本、管理员初始化状态、Provider 可用性、调用方 Key 可用性和统一出口状态。
 
 预期结果：
+
 - Settings 不提供深配置表单，只提供状态确认和明确分流。
 - 当系统缺少 Provider 或调用方 Key 时，Dashboard 与 Settings 都能指出未就绪原因。
 
@@ -131,6 +139,7 @@ pnpm db:check
 ```
 
 预期结果：
+
 - 所有质量门禁通过。
 - UI review 已对照 `DESIGN.md`、`docs/layouts/admin-layout.md`、`docs/pages/*.md`、`design/main.pen`。
 - Code review 已检查 API 契约链路、状态流转、测试覆盖、响应式与 Lucide 命名一致性。

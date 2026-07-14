@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Save } from "lucide-react";
 
 import type {
   Provider,
@@ -15,6 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,13 +42,24 @@ export type ProviderPolicyDraft = Required<
   fallbackProviderId: string | null;
 };
 
+export type ProviderPolicyFieldError = {
+  target: string;
+  message: string;
+};
+
 export type ProviderPolicyFormProps = {
   provider: ProviderDetail;
   draft: ProviderPolicyDraft;
   fallbackCandidates: Provider[];
   readOnly?: boolean;
+  dirty?: boolean;
+  saving?: boolean;
+  fieldError?: ProviderPolicyFieldError | null;
   onDraftChange: (draft: ProviderPolicyDraft, fieldLabel: string) => void;
+  onSave?: () => void;
 };
+
+const FALLBACK_FIELD_TARGET = "fallbackProviderId";
 
 const noneFallbackValue = "__none__";
 
@@ -107,16 +119,24 @@ function PolicyGroups({
   fallbackCandidates,
   readOnly,
   onDraftChange,
+  fieldError,
   sections = ["weight", "rotation", "fallback"],
-}: ProviderPolicyFormProps & { sections?: PolicySection[] }) {
+}: ProviderPolicyFormProps & {
+  fieldError?: ProviderPolicyFieldError | null;
+  sections?: PolicySection[];
+}) {
+  // Xunlei 当前无凭据池，rotationEnabled 不适用 —— 整行隐藏而非只读。
+  const showRotationSwitch = provider.type !== "xunlei";
   const update = <TKey extends keyof ProviderPolicyDraft>(
     key: TKey,
     value: ProviderPolicyDraft[TKey],
     fieldLabel: string,
   ) => onDraftChange({ ...draft, [key]: value }, fieldLabel);
   const showWeight = sections.includes("weight");
-  const showRotation = sections.includes("rotation");
+  const showRotationSection = sections.includes("rotation");
   const showFallback = sections.includes("fallback");
+  const fallbackError =
+    fieldError?.target === FALLBACK_FIELD_TARGET ? fieldError : null;
 
   return (
     <div className="grid gap-6">
@@ -197,9 +217,11 @@ function PolicyGroups({
         </section>
       ) : null}
 
-      {showWeight && (showRotation || showFallback) ? <Separator /> : null}
+      {showWeight && (showRotationSection || showFallback) ? (
+        <Separator />
+      ) : null}
 
-      {showRotation ? (
+      {showRotationSection ? (
         <section className="grid gap-4" id="policy-rotation-cooldown">
           <div>
             <h3 className="text-sm font-medium">轮换与冷却</h3>
@@ -207,22 +229,24 @@ function PolicyGroups({
               异常或限流后应避免持续命中同一凭据。
             </p>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 p-4">
-            <div>
-              <p className="text-sm font-medium">启用凭据轮换</p>
-              <p className="text-xs text-muted-foreground">
-                在多个 active Token 间分散请求压力。
-              </p>
+          {showRotationSwitch ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 p-4">
+              <div>
+                <p className="text-sm font-medium">启用凭据轮换</p>
+                <p className="text-xs text-muted-foreground">
+                  在多个 active Token 间分散请求压力。
+                </p>
+              </div>
+              <Switch
+                aria-label="启用凭据轮换"
+                checked={draft.rotationEnabled}
+                disabled={readOnly}
+                onCheckedChange={(checked) =>
+                  update("rotationEnabled", checked, "凭据轮换")
+                }
+              />
             </div>
-            <Switch
-              aria-label="启用凭据轮换"
-              checked={draft.rotationEnabled}
-              disabled={readOnly}
-              onCheckedChange={(checked) =>
-                update("rotationEnabled", checked, "凭据轮换")
-              }
-            />
-          </div>
+          ) : null}
           <Field id="provider-cooldown" label="冷却窗口（秒）">
             <Input
               id="provider-cooldown"
@@ -242,7 +266,7 @@ function PolicyGroups({
         </section>
       ) : null}
 
-      {showRotation && showFallback ? <Separator /> : null}
+      {showRotationSection && showFallback ? <Separator /> : null}
 
       {showFallback ? (
         <section className="grid gap-4" id="policy-fallback">
@@ -286,6 +310,15 @@ function PolicyGroups({
               </SelectContent>
             </Select>
           </Field>
+          {fallbackError ? (
+            <Alert
+              variant="destructive"
+              data-testid="provider-fallback-field-error"
+            >
+              <AlertTriangle aria-hidden="true" className="size-4" />
+              <AlertDescription>{fallbackError.message}</AlertDescription>
+            </Alert>
+          ) : null}
         </section>
       ) : null}
     </div>
@@ -293,19 +326,33 @@ function PolicyGroups({
 }
 
 export function ProviderPolicyForm(props: ProviderPolicyFormProps) {
+  const { dirty = false, saving = false, onSave } = props;
   return (
     <Card
       className="border-border bg-surface shadow-none"
       data-testid="provider-policy-form"
     >
       <CardHeader>
-        <CardTitle className="text-base">运行策略</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-base">运行策略</CardTitle>
+          {onSave ? (
+            <Button
+              type="button"
+              onClick={() => onSave()}
+              disabled={saving || !dirty}
+              data-testid="provider-policy-save"
+            >
+              <Save aria-hidden="true" className="size-4" />
+              {saving ? "保存中" : "保存配置"}
+            </Button>
+          ) : null}
+        </div>
       </CardHeader>
       <Separator />
       <CardContent className="grid gap-6 pt-6">
         {props.provider.status === "needs_config" ? <NeedsConfigAlert /> : null}
         <div className="mobile:hidden">
-          <PolicyGroups {...props} />
+          <PolicyGroups {...props} fieldError={props.fieldError ?? null} />
         </div>
         <Accordion
           type="multiple"

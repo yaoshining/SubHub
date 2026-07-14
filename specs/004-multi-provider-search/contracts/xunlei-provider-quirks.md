@@ -34,30 +34,30 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 
 ### 2.1 SubHub → 迅雷上游
 
-| SubHub 字段 | 迅雷上游字段 | 必需 | 处理 |
-|-------------|--------------|------|------|
-| `input.query` | `name` | ✅ | trim 后非空才传；缺失返回 `skipped` |
-| `input.language` | `languages` | ✅ | trim 后非空才传；缺失返回 `skipped` |
-| `input.imdbId` | — | 否 | MUST 忽略，不传上游 |
-| `input.tmdbId` | — | 否 | MUST 忽略，不传上游 |
-| `input.season` | — | 否 | MUST 忽略 |
-| `input.episode` | — | 否 | MUST 忽略 |
-| `input.type` | — | 否 | MUST 忽略 |
-| `input.year` | — | 否 | MUST 忽略 |
-| `input.title` | — | 否 | MUST 忽略（迅雷只识别 `query`） |
+| SubHub 字段      | 迅雷上游字段 | 必需 | 处理                                |
+| ---------------- | ------------ | ---- | ----------------------------------- |
+| `input.query`    | `name`       | ✅   | trim 后非空才传；缺失返回 `skipped` |
+| `input.language` | `languages`  | ✅   | trim 后非空才传；缺失返回 `skipped` |
+| `input.imdbId`   | —            | 否   | MUST 忽略，不传上游                 |
+| `input.tmdbId`   | —            | 否   | MUST 忽略，不传上游                 |
+| `input.season`   | —            | 否   | MUST 忽略                           |
+| `input.episode`  | —            | 否   | MUST 忽略                           |
+| `input.type`     | —            | 否   | MUST 忽略                           |
+| `input.year`     | —            | 否   | MUST 忽略                           |
+| `input.title`    | —            | 否   | MUST 忽略（迅雷只识别 `query`）     |
 
 ### 2.2 迅雷上游 → SubHub `ProviderSearchResult`
 
-| 迅雷上游字段 | `ProviderSearchResult` 字段 | 处理 |
-|--------------|------------------------------|------|
-| `gcid` | `id` | 优先使用 |
-| `cid` | `id` | `gcid` 缺失时回退 |
-| `ext` | `format` | 缺失时默认 `srt` |
-| `name` | `releaseName` | 缺失时为 `null` |
-| `languages` | `language` | 取第一个语言码；保留在 `raw.languages` |
-| `score` | `score` + `raw.score` | 顶层 `score` 透传；原始保留 |
-| `url` | adapter 内部 `providerDownloadUrl`（**绝不暴露给 client**） | 迅雷的 `url` 是 provider 原始下载地址，仅在 adapter 内部使用；adapter 将其放入 `ProviderSearchResult.providerDownloadUrl`（adapter 内部字段，不进入公共响应）。公共响应的 `downloadUrl` 由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={xunlei:providerId:gcid\|cid}`；download 路由根据 `subtitleId` 前缀判断 provider 后再走 adapter 的 URL 拉取。迅雷原始 `url` 仅保留在 `AggregatedSubtitleResult.raw.url`（用于调试与审计，不直接是下载入口） |
-| `cid` / `gcid` / `url` / `ext` / `name` / `duration` / `languages` / `source` / `score` / `fingerprintf_score` / `extra_name` / `mt` | `raw.*` | 全量保留 |
+| 迅雷上游字段                                                                                                                         | `ProviderSearchResult` 字段                                 | 处理                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gcid`                                                                                                                               | `id`                                                        | 优先使用                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `cid`                                                                                                                                | `id`                                                        | `gcid` 缺失时回退                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `ext`                                                                                                                                | `format`                                                    | 缺失时默认 `srt`                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `name`                                                                                                                               | `releaseName`                                               | 缺失时为 `null`                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `languages`                                                                                                                          | `language`                                                  | 取第一个语言码；保留在 `raw.languages`                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `score`                                                                                                                              | `score` + `raw.score`                                       | 顶层 `score` 透传；原始保留                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `url`                                                                                                                                | adapter 内部 `providerDownloadUrl`（**绝不暴露给 client**） | 迅雷的 `url` 是 provider 原始下载地址，仅在 adapter 内部使用；adapter 将其放入 `ProviderSearchResult.providerDownloadUrl`（adapter 内部字段，不进入公共响应）。公共响应的 `downloadUrl` 由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={xunlei:providerId:gcid\|cid}`；download 路由根据 `subtitleId` 前缀判断 provider 后再走 adapter 的 URL 拉取。迅雷原始 `url` 仅保留在 `AggregatedSubtitleResult.raw.url`（用于调试与审计，不直接是下载入口） |
+| `cid` / `gcid` / `url` / `ext` / `name` / `duration` / `languages` / `source` / `score` / `fingerprintf_score` / `extra_name` / `mt` | `raw.*`                                                     | 全量保留                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ### 2.3 `id` 生成规则
 
@@ -74,10 +74,10 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 
 ### 3.1 必要条件字段
 
-| 字段 | 必需 | 缺失时行为 |
-|------|------|------------|
-| `query` | ✅ | adapter 返回 `{ skipped: true, reason: 'missing_required_field' }` |
-| `language` | ✅ | adapter 返回 `{ skipped: true, reason: 'missing_required_field' }` |
+| 字段       | 必需 | 缺失时行为                                                         |
+| ---------- | ---- | ------------------------------------------------------------------ |
+| `query`    | ✅   | adapter 返回 `{ skipped: true, reason: 'missing_required_field' }` |
+| `language` | ✅   | adapter 返回 `{ skipped: true, reason: 'missing_required_field' }` |
 
 ### 3.2 跳过语义
 
@@ -89,26 +89,26 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 
 ### 3.3 跳过 vs 错误
 
-| 维度 | 跳过（skipped） | 错误（error） |
-|------|------------------|---------------|
-| 触发原因 | 必要条件缺失 | 上游 5xx / 超时 / 解析失败 |
-| 计入失败 | 否 | 是 |
-| 计入 `provider_failures` | 可选（`skipped_missing_fields`） | 是 |
-| gateway 后续处理 | 继续处理其他 provider | 继续处理其他 provider |
-| `status` 影响 | 不影响（仍为 success） | 至少一个失败时为 partial |
+| 维度                     | 跳过（skipped）                  | 错误（error）              |
+| ------------------------ | -------------------------------- | -------------------------- |
+| 触发原因                 | 必要条件缺失                     | 上游 5xx / 超时 / 解析失败 |
+| 计入失败                 | 否                               | 是                         |
+| 计入 `provider_failures` | 可选（`skipped_missing_fields`） | 是                         |
+| gateway 后续处理         | 继续处理其他 provider            | 继续处理其他 provider      |
+| `status` 影响            | 不影响（仍为 success）           | 至少一个失败时为 partial   |
 
 ---
 
 ## 4. 错误分类
 
-| 上游表现 | adapter 返回 | reason |
-|----------|--------------|--------|
-| HTTP 5xx | `{ ok: false, error: { reason: 'upstream_failed', message: ... } }` | `upstream_failed` |
-| HTTP 4xx（401） | `{ ok: false, error: { reason: 'authentication_failed', message: ... } }` | `authentication_failed` |
-| HTTP 4xx（429） | `{ ok: false, error: { reason: 'rate_limited', message: ... } }` | `rate_limited` |
-| 请求超时（> timeoutMs） | `{ ok: false, error: { reason: 'timeout', message: ... } }` | `timeout` |
-| 响应解析失败（非预期 JSON） | `{ ok: false, error: { reason: 'upstream_failed', message: ... } }` | `upstream_failed` |
-| 网络中断 / DNS 失败 | `{ ok: false, error: { reason: 'upstream_failed', message: ... } }` | `upstream_failed` |
+| 上游表现                    | adapter 返回                                                              | reason                  |
+| --------------------------- | ------------------------------------------------------------------------- | ----------------------- |
+| HTTP 5xx                    | `{ ok: false, error: { reason: 'upstream_failed', message: ... } }`       | `upstream_failed`       |
+| HTTP 4xx（401）             | `{ ok: false, error: { reason: 'authentication_failed', message: ... } }` | `authentication_failed` |
+| HTTP 4xx（429）             | `{ ok: false, error: { reason: 'rate_limited', message: ... } }`          | `rate_limited`          |
+| 请求超时（> timeoutMs）     | `{ ok: false, error: { reason: 'timeout', message: ... } }`               | `timeout`               |
+| 响应解析失败（非预期 JSON） | `{ ok: false, error: { reason: 'upstream_failed', message: ... } }`       | `upstream_failed`       |
+| 网络中断 / DNS 失败         | `{ ok: false, error: { reason: 'upstream_failed', message: ... } }`       | `upstream_failed`       |
 
 ---
 

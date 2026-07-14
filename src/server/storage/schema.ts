@@ -26,7 +26,7 @@ export const adminSessionStatuses = [
   "needs_attention",
   "remediated",
 ] as const;
-export const providerTypes = ["opensubtitles"] as const;
+export const providerTypes = ["opensubtitles", "xunlei"] as const;
 export const providerStatuses = [
   "enabled",
   "disabled",
@@ -230,6 +230,7 @@ export const providers = pgTable(
     fallbackProviderId: text("fallback_provider_id"),
     lastHealthStatus: text("last_health_status"),
     lastErrorSummary: text("last_error_summary"),
+    lastHealthCheckedAt: timestamptz("last_health_checked_at"),
     createdAt: timestamptz("created_at").notNull(),
     updatedAt: timestamptz("updated_at").notNull(),
   },

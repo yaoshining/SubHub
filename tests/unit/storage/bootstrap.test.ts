@@ -114,6 +114,11 @@ describe("storage/bootstrap", () => {
     });
     expect(seededProviders).toEqual([
       {
+        id: "xunlei-default",
+        name: "Xunlei",
+        status: "enabled",
+      },
+      {
         id: "seed_provider_development_opensubtitles",
         name: "Seed development OpenSubtitles",
         status: "needs_config",

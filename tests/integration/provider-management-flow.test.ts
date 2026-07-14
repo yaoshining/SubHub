@@ -15,10 +15,14 @@ import {
   adminActionResults,
   type AdminActionResult,
 } from "@/server/storage/schema";
+import { AppError } from "@/lib/errors";
 import {
   addProviderCredential,
   createProvider,
+  disableProvider,
+  getProviderDetail,
   isolateProviderCredential,
+  listProviders,
   restoreProviderCredential,
   updateProvider,
 } from "@/server/services/provider-service";
@@ -87,5 +91,244 @@ describe("Provider 管理闭环", () => {
     expect(
       actions.every((action: AdminActionResult) => action.result === "success"),
     ).toBe(true);
+  });
+
+  it("Xunlei 与 OpenSubtitles 并存时列表同时包含两者，Xunlei detail 的 credentials 为空数组", async () => {
+    const created = await createProvider({
+      name: "OpenSubtitles Primary",
+      type: "opensubtitles",
+      initialCredential: {
+        label: "primary",
+        secret: "opensubtitles-api-key",
+      },
+    });
+
+    // List all providers — should include both
+    const { items } = await listProviders();
+    const providerIds = items.map((p) => p.id);
+    expect(providerIds).toContain("xunlei-default");
+    expect(providerIds).toContain(created.id);
+
+    // List with type filter
+    const xunleiProviders = await listProviders({ type: "xunlei" });
+    expect(xunleiProviders.items).toHaveLength(1);
+    expect(xunleiProviders.items[0]!.type).toBe("xunlei");
+
+    const opensubtitlesProviders = await listProviders({
+      type: "opensubtitles",
+    });
+    expect(opensubtitlesProviders.items.length).toBeGreaterThanOrEqual(1);
+    expect(
+      opensubtitlesProviders.items.every(
+        (p: { type: string }) => p.type === "opensubtitles",
+      ),
+    ).toBe(true);
+
+    // List with status filter — first disable the created provider
+    await disableProvider(created.id);
+    const disabledProviders = await listProviders({ status: "disabled" });
+    expect(disabledProviders.items.length).toBeGreaterThan(0);
+    expect(
+      disabledProviders.items.every(
+        (p: { status: string }) => p.status === "disabled",
+      ),
+    ).toBe(true);
+
+    // Xunlei detail — credentials should be empty
+    const xunleiDetail = await getProviderDetail("xunlei-default");
+    expect(xunleiDetail.id).toBe("xunlei-default");
+    expect(xunleiDetail.type).toBe("xunlei");
+    expect(xunleiDetail.credentials).toEqual([]);
+  });
+
+  it("create-provider two-step flow 服务端闭环：默认字段、列表自动可见与 Xunlei seeded 不重复 (US5)", async () => {
+    // Step 2 对应的服务端语义：仅传 name + initialCredential，调度字段由 repository 默认值落库
+    const created = await createProvider({
+      name: "OpenSubtitles Two-Step Flow",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "two-step-api-key" },
+    });
+
+    // 1. 默认字段与 spec / repository 默认一致
+    expect(created).toMatchObject({
+      type: "opensubtitles",
+      status: "enabled",
+      priority: 100,
+      weight: 100,
+      concurrencyLimit: 1,
+      rotationEnabled: true,
+      cooldownSeconds: 60,
+      fallbackProviderId: null,
+    });
+    expect(created.credentials).toHaveLength(1);
+    expect(created.credentials[0]!.status).toBe("active");
+    expect(created.availableCredentialCount).toBe(1);
+    // 上游凭据明文不得回显
+    expect(JSON.stringify(created)).not.toContain("two-step-api-key");
+
+    // 2. 列表自动可见：包含新建实例与 Xunlei seeded
+    const { items, total } = await listProviders();
+    expect(items.map((p) => p.id)).toContain(created.id);
+    expect(items.map((p) => p.id)).toContain("xunlei-default");
+    expect(total).toBeGreaterThanOrEqual(2);
+
+    // 3. Xunlei seeded 单实例不重复：仍是 xunlei-default 唯一行
+    const xunleiProviders = await listProviders({ type: "xunlei" });
+    expect(xunleiProviders.items).toHaveLength(1);
+    expect(xunleiProviders.items[0]!.id).toBe("xunlei-default");
+
+    // 4. 创建不会破坏旧凭据池流程：可继续新增/隔离/恢复
+    const secondary = await addProviderCredential(created.id, {
+      label: "secondary",
+      secret: "secondary-api-key",
+    });
+    expect(secondary.status).toBe("active");
+
+    const isolated = await isolateProviderCredential(
+      created.id,
+      created.credentials[0]!.id,
+      "首轮凭据异常",
+    );
+    expect(isolated.provider.availableCredentialCount).toBe(1);
+
+    const restored = await restoreProviderCredential(
+      created.id,
+      created.credentials[0]!.id,
+    );
+    expect(restored.provider.availableCredentialCount).toBe(2);
+
+    // 5. 调度字段可后续在详情页修改
+    const afterUpdate = await updateProvider(created.id, {
+      priority: 10,
+      weight: 1,
+      concurrencyLimit: 3,
+      cooldownSeconds: 30,
+    });
+    expect(afterUpdate).toMatchObject({
+      priority: 10,
+      weight: 1,
+      concurrencyLimit: 3,
+      cooldownSeconds: 30,
+    });
+  });
+});
+
+describe("Provider 策略保存与 fallback 校验", () => {
+  it("priority/weight/concurrency/cooldown/rotation/fallback 全部字段可保存并重新读取", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+    const fallback = await createProvider({
+      name: "OpenSubtitles Beta",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "beta-api-key" },
+    });
+
+    const before = await getProviderDetail(provider.id);
+    expect(before.fallbackProviderId).toBeNull();
+
+    const updated = await updateProvider(provider.id, {
+      priority: 30,
+      weight: 7,
+      concurrencyLimit: 3,
+      cooldownSeconds: 90,
+      rotationEnabled: false,
+      fallbackProviderId: fallback.id,
+    });
+
+    expect(updated).toMatchObject({
+      priority: 30,
+      weight: 7,
+      concurrencyLimit: 3,
+      cooldownSeconds: 90,
+      rotationEnabled: false,
+      fallbackProviderId: fallback.id,
+    });
+    expect(updated.updatedAt).not.toBe(before.updatedAt);
+
+    const after = await getProviderDetail(provider.id);
+    expect(after).toMatchObject({
+      priority: 30,
+      weight: 7,
+      concurrencyLimit: 3,
+      cooldownSeconds: 90,
+      rotationEnabled: false,
+      fallbackProviderId: fallback.id,
+    });
+  });
+
+  it("fallback 自引用被拒绝并返回字段级错误", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+
+    const error = await updateProvider(provider.id, {
+      fallbackProviderId: provider.id,
+    }).catch((err: unknown) => err as AppError);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as AppError).code).toBe("VALIDATION_FAILED");
+    expect((error as AppError).target).toBe("fallbackProviderId");
+    expect((error as AppError).message).toMatch(/自引用|自身/);
+  });
+
+  it("fallback 指向不存在的 provider 被拒绝", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+
+    const error = await updateProvider(provider.id, {
+      fallbackProviderId: "provider_does_not_exist",
+    }).catch((err: unknown) => err as AppError);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as AppError).code).toBe("VALIDATION_FAILED");
+    expect((error as AppError).target).toBe("fallbackProviderId");
+  });
+
+  it("fallback 形成循环引用被拒绝", async () => {
+    const provider = await createProvider({
+      name: "OpenSubtitles Alpha",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "alpha-api-key" },
+    });
+    const fallback = await createProvider({
+      name: "OpenSubtitles Beta",
+      type: "opensubtitles",
+      initialCredential: { label: "primary", secret: "beta-api-key" },
+    });
+
+    // A → B
+    await updateProvider(provider.id, { fallbackProviderId: fallback.id });
+
+    // B → A 应形成 A → B → A 循环，被拒绝
+    const error = await updateProvider(fallback.id, {
+      fallbackProviderId: provider.id,
+    }).catch((err: unknown) => err as AppError);
+
+    expect(error).toBeInstanceOf(AppError);
+    expect((error as AppError).code).toBe("VALIDATION_FAILED");
+    expect((error as AppError).target).toBe("fallbackProviderId");
+    expect((error as AppError).message).toMatch(/循环/);
+  });
+
+  it("Xunlei 提交 rotationEnabled 被静默忽略且不报错", async () => {
+    const before = await getProviderDetail("xunlei-default");
+    expect(before.rotationEnabled).toBe(false);
+
+    const updated = await updateProvider("xunlei-default", {
+      rotationEnabled: true,
+    });
+
+    expect(updated.rotationEnabled).toBe(false);
+
+    const after = await getProviderDetail("xunlei-default");
+    expect(after.rotationEnabled).toBe(false);
   });
 });
