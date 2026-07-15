@@ -1235,6 +1235,35 @@ components:
         - skipped_missing_fields
         - skipped_disabled
         - authentication_failed
+    SubtitleValidatorSearchField:
+      type: string
+      enum:
+        - title
+        - query
+        - language
+        - type
+        - year
+        - season
+        - episode
+        - imdbId
+        - tmdbId
+    SubtitleValidatorErrorCategory:
+      type: string
+      enum:
+        - invalid_params
+        - empty_results
+        - timeout
+        - provider_error
+        - provider_unavailable
+        - missing_download
+        - invalid_url
+        - download_failed
+        - unknown
+    SubtitleValidatorDownloadMode:
+      type: string
+      enum:
+        - browser_download
+        - url_check
     SubtitleValidatorProviderCapability:
       type: object
       required:
@@ -1249,6 +1278,10 @@ components:
         - supportsSearch
         - supportsDownloadValidation
         - supportsDirectDownloadUrl
+        - baseFields
+        - extendedFields
+        - baseFieldNotice
+        - extendedFieldNotice
         - notes
         - lastHealthCheckAt
         - lastHealthErrorSummary
@@ -1277,6 +1310,18 @@ components:
           type: boolean
         supportsDirectDownloadUrl:
           type: boolean
+        baseFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorSearchField"
+        extendedFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorSearchField"
+        baseFieldNotice:
+          type: string
+        extendedFieldNotice:
+          type: string
         notes:
           type: array
           items:
@@ -1388,6 +1433,8 @@ components:
         - provider
         - reason
         - message
+        - errorCategory
+        - nextActionHint
       properties:
         provider:
           $ref: "#/components/schemas/ProviderType"
@@ -1395,12 +1442,76 @@ components:
           $ref: "#/components/schemas/SubtitleValidatorProviderFailureReason"
         message:
           type: string
+        errorCategory:
+          $ref: "#/components/schemas/SubtitleValidatorErrorCategory"
+        nextActionHint:
+          type: string
+          nullable: true
+    SubtitleValidatorDiagnosticSummary:
+      type: object
+      required:
+        - action
+        - provider
+        - providerName
+        - providerStatus
+        - status
+        - resultCount
+        - elapsedMs
+        - summary
+        - errorCategory
+        - nextActionHint
+        - fileName
+        - downloadMode
+      properties:
+        action:
+          type: string
+          enum:
+            - search
+            - download_validation
+        provider:
+          $ref: "#/components/schemas/ProviderType"
+        providerName:
+          type: string
+        providerStatus:
+          $ref: "#/components/schemas/SubtitleValidatorProviderStatus"
+        status:
+          type: string
+          enum:
+            - idle
+            - loading
+            - success
+            - empty
+            - error
+        resultCount:
+          type: integer
+          minimum: 0
+        elapsedMs:
+          type: integer
+          minimum: 0
+          nullable: true
+        summary:
+          type: string
+        errorCategory:
+          allOf:
+            - $ref: "#/components/schemas/SubtitleValidatorErrorCategory"
+          nullable: true
+        nextActionHint:
+          type: string
+          nullable: true
+        fileName:
+          type: string
+          nullable: true
+        downloadMode:
+          allOf:
+            - $ref: "#/components/schemas/SubtitleValidatorDownloadMode"
+          nullable: true
     SubtitleValidatorSearchResultData:
       type: object
       required:
         - status
         - results
         - providerFailures
+        - diagnostic
       properties:
         status:
           type: string
@@ -1415,6 +1526,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SubtitleValidatorProviderFailure"
+        diagnostic:
+          allOf:
+            - $ref: "#/components/schemas/SubtitleValidatorDiagnosticSummary"
+          nullable: true
     SubtitleValidatorSearchResponse:
       type: object
       required:
@@ -1438,6 +1553,8 @@ components:
         - fileName
         - contentType
         - contentLength
+        - downloadMode
+        - diagnostic
       properties:
         subtitleRef:
           type: string
@@ -1450,6 +1567,10 @@ components:
         contentLength:
           type: integer
           minimum: 0
+        downloadMode:
+          $ref: "#/components/schemas/SubtitleValidatorDownloadMode"
+        diagnostic:
+          $ref: "#/components/schemas/SubtitleValidatorDiagnosticSummary"
     SubtitleValidatorDownloadValidationResponse:
       type: object
       required:

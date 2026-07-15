@@ -3,7 +3,33 @@ import {
   providerTypeRequiresCredentials,
 } from "@/server/providers/provider-repository";
 import type { SubtitleProviderKey } from "@/server/providers/provider-adapter";
-import type { SubtitleValidatorProviderCapability } from "@/server/subtitles/admin-subtitle-validator-schema";
+import type {
+  SubtitleValidatorProviderCapability,
+  SubtitleValidatorSearchField,
+} from "@/server/subtitles/admin-subtitle-validator-schema";
+
+const baseFields: SubtitleValidatorSearchField[] = [
+  "title",
+  "query",
+  "language",
+  "type",
+  "year",
+];
+
+const extendedFieldsByProvider: Record<
+  SubtitleProviderKey,
+  SubtitleValidatorSearchField[]
+> = {
+  opensubtitles: ["season", "episode", "imdbId", "tmdbId"],
+  xunlei: [],
+};
+
+const extendedFieldNoticeByProvider: Record<SubtitleProviderKey, string> = {
+  opensubtitles:
+    "IMDb ID、TMDb ID 与 season / episode 属于 OpenSubtitles 扩展参数，用于缩小结果范围，不是系统统一业务字段。",
+  xunlei:
+    "Xunlei 当前优先验证关键词搜索链路；未展示的字段表示当前 provider 不需要额外扩展参数。",
+};
 
 const capabilityNotes: Record<SubtitleProviderKey, string[]> = {
   opensubtitles: [
@@ -16,11 +42,24 @@ const capabilityNotes: Record<SubtitleProviderKey, string[]> = {
   ],
 };
 
+export function buildSubtitleValidatorSearchFieldGroups(
+  providerKey: SubtitleProviderKey,
+) {
+  return {
+    baseFields,
+    extendedFields: extendedFieldsByProvider[providerKey],
+    baseNotice:
+      "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。",
+    extendedNotice: extendedFieldNoticeByProvider[providerKey],
+  };
+}
+
 export function mapProviderToValidatorCapability(
   provider: ProviderWithCredentialSummary,
 ): SubtitleValidatorProviderCapability {
   const providerKey = provider.type;
   const requiresCredentials = providerTypeRequiresCredentials(provider.type);
+  const fieldGroups = buildSubtitleValidatorSearchFieldGroups(providerKey);
 
   return {
     providerId: provider.id,
@@ -38,6 +77,10 @@ export function mapProviderToValidatorCapability(
     supportsSearch: true,
     supportsDownloadValidation: providerKey === "opensubtitles",
     supportsDirectDownloadUrl: providerKey === "xunlei",
+    baseFields: fieldGroups.baseFields,
+    extendedFields: fieldGroups.extendedFields,
+    baseFieldNotice: fieldGroups.baseNotice,
+    extendedFieldNotice: fieldGroups.extendedNotice,
     notes: capabilityNotes[providerKey],
     lastHealthCheckAt: provider.lastHealthCheckedAt,
     lastHealthErrorSummary: provider.lastErrorSummary,

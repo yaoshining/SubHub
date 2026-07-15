@@ -1,0 +1,300 @@
+import { RotateCcw, Search } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import type {
+  SubtitleValidatorProviderCapability,
+  SubtitleValidatorSearchRequest,
+} from "@/server/subtitles/admin-subtitle-validator-schema";
+
+type SubtitleValidatorSearchComposerProps = {
+  provider: SubtitleValidatorProviderCapability | null;
+  form: SubtitleValidatorSearchRequest;
+  searching: boolean;
+  onChange: (next: SubtitleValidatorSearchRequest) => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onReset: () => void;
+};
+
+export function SubtitleValidatorSearchComposer({
+  provider,
+  form,
+  searching,
+  onChange,
+  onSubmit,
+  onReset,
+}: SubtitleValidatorSearchComposerProps) {
+  const providerKey = provider?.providerKey;
+  const showEpisodeFields =
+    providerKey === "opensubtitles" || form.type === "episode";
+  const showIdentifierFields = providerKey === "opensubtitles";
+
+  return (
+    <Card className="border-border bg-surface shadow-none">
+      <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <CardTitle className="text-base">Search Composer</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            保留稳定的通用参数区，把 provider
+            特有输入收敛到扩展区，避免切换时整页跳变。
+          </p>
+        </div>
+        <Badge variant="secondary">
+          {provider ? provider.providerName : "未选择 Provider"}
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <form className="grid gap-5" onSubmit={onSubmit}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2 md:col-span-2">
+              <label className="text-sm font-medium" htmlFor="validator-title">
+                关键词 / 标题
+              </label>
+              <Input
+                id="validator-title"
+                onChange={(event) =>
+                  onChange({
+                    ...form,
+                    title: event.target.value,
+                  })
+                }
+                placeholder="例如 The Matrix / Friends S01E01"
+                required
+                value={form.title}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium" htmlFor="validator-query">
+                附加查询
+              </label>
+              <Input
+                id="validator-query"
+                onChange={(event) =>
+                  onChange({
+                    ...form,
+                    query: event.target.value || undefined,
+                  })
+                }
+                placeholder="可选关键词补充"
+                value={form.query ?? ""}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label
+                className="text-sm font-medium"
+                htmlFor="validator-language"
+              >
+                语言
+              </label>
+              <Input
+                id="validator-language"
+                onChange={(event) =>
+                  onChange({
+                    ...form,
+                    language: event.target.value || undefined,
+                  })
+                }
+                placeholder="如 zh-CN / en"
+                value={form.language ?? ""}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium" htmlFor="validator-type">
+                媒体类型
+              </label>
+              <Select
+                onValueChange={(value) =>
+                  onChange({
+                    ...form,
+                    type:
+                      value === "all"
+                        ? undefined
+                        : (value as SubtitleValidatorSearchRequest["type"]),
+                  })
+                }
+                value={form.type ?? "all"}
+              >
+                <SelectTrigger id="validator-type">
+                  <SelectValue placeholder="全部类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部类型</SelectItem>
+                  <SelectItem value="movie">电影</SelectItem>
+                  <SelectItem value="episode">剧集</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium" htmlFor="validator-year">
+                年份
+              </label>
+              <Input
+                id="validator-year"
+                inputMode="numeric"
+                onChange={(event) =>
+                  onChange({
+                    ...form,
+                    year: event.target.value
+                      ? Number(event.target.value)
+                      : undefined,
+                  })
+                }
+                placeholder="如 1999"
+                value={form.year?.toString() ?? ""}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="rounded-2xl border border-dashed border-border/70 px-4 py-3 text-xs text-muted-foreground">
+            {provider?.baseFieldNotice ??
+              "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。"}
+          </div>
+
+          <div className="grid gap-3">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                Provider 扩展参数
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {provider?.extendedFieldNotice ??
+                  "当前仅在 Provider 支持时展示额外字段；未出现的字段表示当前验证场景不需要。"}
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {showEpisodeFields ? (
+                <>
+                  <div className="grid gap-2">
+                    <label
+                      className="text-sm font-medium"
+                      htmlFor="validator-season"
+                    >
+                      Season
+                    </label>
+                    <Input
+                      id="validator-season"
+                      inputMode="numeric"
+                      onChange={(event) =>
+                        onChange({
+                          ...form,
+                          season: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="1"
+                      value={form.season?.toString() ?? ""}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label
+                      className="text-sm font-medium"
+                      htmlFor="validator-episode"
+                    >
+                      Episode
+                    </label>
+                    <Input
+                      id="validator-episode"
+                      inputMode="numeric"
+                      onChange={(event) =>
+                        onChange({
+                          ...form,
+                          episode: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="1"
+                      value={form.episode?.toString() ?? ""}
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {showIdentifierFields ? (
+                <>
+                  <div className="grid gap-2">
+                    <label
+                      className="text-sm font-medium"
+                      htmlFor="validator-imdb-id"
+                    >
+                      IMDb ID
+                    </label>
+                    <Input
+                      id="validator-imdb-id"
+                      onChange={(event) =>
+                        onChange({
+                          ...form,
+                          imdbId: event.target.value || undefined,
+                        })
+                      }
+                      placeholder="tt0133093"
+                      value={form.imdbId ?? ""}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label
+                      className="text-sm font-medium"
+                      htmlFor="validator-tmdb-id"
+                    >
+                      TMDb ID
+                    </label>
+                    <Input
+                      id="validator-tmdb-id"
+                      inputMode="numeric"
+                      onChange={(event) =>
+                        onChange({
+                          ...form,
+                          tmdbId: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                      placeholder="603"
+                      value={form.tmdbId?.toString() ?? ""}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-border/70 px-4 py-4 text-sm text-muted-foreground md:col-span-2">
+                  当前 Provider
+                  没有额外的结构化扩展参数；推荐先用关键词验证基础搜索链路。
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button disabled={!provider || searching} type="submit">
+              <Search className="mr-2 size-4" />
+              {searching ? "正在验证" : "搜索验证"}
+            </Button>
+            <Button onClick={onReset} type="button" variant="outline">
+              <RotateCcw className="mr-2 size-4" />
+              重置参数
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              这是内部诊断请求，不替代正式字幕搜索用户路径。
+            </span>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

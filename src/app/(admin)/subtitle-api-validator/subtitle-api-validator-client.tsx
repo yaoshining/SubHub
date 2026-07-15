@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Shield } from "lucide-react";
+import { AlertTriangle, Shield } from "lucide-react";
 
 import {
   type SubtitleValidatorProviderCapability,
@@ -12,18 +12,24 @@ import {
   validateSubtitleValidatorDownload,
 } from "@/lib/api/subtitle-validator";
 import { AppError } from "@/lib/errors";
+import { SubtitleValidatorDiagnosticSummary } from "@/components/providers/subtitle-validator-diagnostic-summary";
+import { SubtitleValidatorDownloadStatus } from "@/components/providers/subtitle-validator-download-status";
+import { SubtitleValidatorProviderOverview } from "@/components/providers/subtitle-validator-provider-overview";
+import { SubtitleValidatorProviderRail } from "@/components/providers/subtitle-validator-provider-rail";
+import { SubtitleValidatorResultsConsole } from "@/components/providers/subtitle-validator-results-console";
+import { SubtitleValidatorSearchComposer } from "@/components/providers/subtitle-validator-search-composer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const initialFormState: SubtitleValidatorSearchRequest = {
   title: "",
@@ -31,6 +37,11 @@ const initialFormState: SubtitleValidatorSearchRequest = {
   query: undefined,
   language: undefined,
   type: undefined,
+  year: undefined,
+  season: undefined,
+  episode: undefined,
+  imdbId: undefined,
+  tmdbId: undefined,
 };
 
 function getErrorMessage(error: unknown) {
@@ -43,10 +54,24 @@ function getErrorMessage(error: unknown) {
   return "Validator 请求失败，请稍后重试。";
 }
 
+function getDefaultProviderId(
+  providers: SubtitleValidatorProviderCapability[],
+) {
+  return (
+    providers.find((item) => item.status === "degraded")?.providerId ??
+    providers.find((item) => item.status === "needs_config")?.providerId ??
+    providers[0]?.providerId ??
+    null
+  );
+}
+
 export function SubtitleApiValidatorClient() {
   const [providers, setProviders] = React.useState<
     SubtitleValidatorProviderCapability[]
   >([]);
+  const [selectedProviderId, setSelectedProviderId] = React.useState<
+    string | null
+  >(null);
   const [loadingProviders, setLoadingProviders] = React.useState(true);
   const [providerError, setProviderError] = React.useState<string | null>(null);
   const [permissionError, setPermissionError] = React.useState<string | null>(
@@ -60,6 +85,9 @@ export function SubtitleApiValidatorClient() {
   const [downloadMessage, setDownloadMessage] = React.useState<string | null>(
     null,
   );
+  const [downloadTone, setDownloadTone] = React.useState<"success" | "error">(
+    "success",
+  );
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -69,6 +97,9 @@ export function SubtitleApiValidatorClient() {
         const data = await fetchSubtitleValidatorProviders();
         if (!mounted) return;
         setProviders(data.items);
+        setSelectedProviderId(
+          (current) => current ?? getDefaultProviderId(data.items),
+        );
       } catch (error) {
         if (!mounted) return;
         if (error instanceof AppError && error.code === "FORBIDDEN") {
@@ -88,13 +119,48 @@ export function SubtitleApiValidatorClient() {
     };
   }, []);
 
+  const selectedProvider = React.useMemo(
+    () =>
+      providers.find(
+        (provider) => provider.providerId === selectedProviderId,
+      ) ?? null,
+    [providers, selectedProviderId],
+  );
+
+  const handleSelectProvider = React.useCallback(
+    (providerId: string) => {
+      const nextProvider =
+        providers.find((provider) => provider.providerId === providerId) ?? null;
+      setSelectedProviderId(providerId);
+      setForm((current) => ({
+        ...initialFormState,
+        title: current.title,
+        query: current.query,
+        language: current.language,
+        type: current.type,
+        provider: nextProvider?.providerKey,
+      }));
+      setSearchResult(null);
+      setSearchError(null);
+      setDownloadMessage(null);
+    },
+    [providers],
+  );
+
   const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!selectedProvider) {
+      return;
+    }
+
     setSearching(true);
     setSearchError(null);
     setDownloadMessage(null);
     try {
-      const result = await runSubtitleValidatorSearch(form);
+      const result = await runSubtitleValidatorSearch({
+        ...form,
+        provider: selectedProvider.providerKey,
+      });
       setSearchResult(result);
     } catch (error) {
       setSearchError(getErrorMessage(error));
@@ -109,10 +175,12 @@ export function SubtitleApiValidatorClient() {
     setDownloadMessage(null);
     try {
       const result = await validateSubtitleValidatorDownload({ subtitleRef });
+      setDownloadTone("success");
       setDownloadMessage(
         `已验证 ${result.fileName}（${result.contentType}，${result.contentLength} bytes）`,
       );
     } catch (error) {
+      setDownloadTone("error");
       setDownloadMessage(getErrorMessage(error));
     } finally {
       setDownloadingId(null);
@@ -129,6 +197,16 @@ export function SubtitleApiValidatorClient() {
     );
   }
 
+  const diagnostic = searchResult?.diagnostic ?? null;
+  const effectiveDiagnosticStatus = searchError
+    ? "error"
+    : (diagnostic?.status ??
+      (searchResult
+        ? searchResult.results.length > 0
+          ? "success"
+          : "empty"
+        : "idle"));
+
   return (
     <div className="grid gap-6" data-testid="subtitle-api-validator-page">
       <Card className="border-border bg-surface shadow-none">
@@ -140,14 +218,14 @@ export function SubtitleApiValidatorClient() {
             </div>
             <CardTitle className="text-xl">Subtitle API Validator</CardTitle>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-              用于快速检查 provider
-              能力摘要、搜索请求形态与统一下载校验链路；本期只交付基础骨架与契约验证，不替代正式字幕业务流程。
+              用于快速判断 provider
+              配置、搜索链路与下载链路是否可用。这里是内部诊断工作台，不替代正式字幕搜索或正式下载产品流。
             </p>
           </div>
           <div className="grid gap-2 text-sm text-muted-foreground md:text-right">
             <span>Provider 摘要：{providers.length}</span>
             <span>
-              可下载校验：
+              支持浏览器下载校验：
               {
                 providers.filter((item) => item.supportsDownloadValidation)
                   .length
@@ -157,311 +235,145 @@ export function SubtitleApiValidatorClient() {
         </CardHeader>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
-        <Card className="border-border bg-surface shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base">请求验证</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSearch}>
-              <div className="grid gap-2 md:col-span-2">
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="validator-title"
-                >
-                  标题
-                </label>
-                <Input
-                  id="validator-title"
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      title: event.target.value,
-                    }))
-                  }
-                  placeholder="例如：The Matrix"
-                  required
-                  value={form.title}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="validator-query"
-                >
-                  附加查询
-                </label>
-                <Input
-                  id="validator-query"
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      query: event.target.value || undefined,
-                    }))
-                  }
-                  placeholder="可选关键字"
-                  value={form.query ?? ""}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="validator-provider"
-                >
-                  Provider
-                </label>
-                <Select
-                  onValueChange={(value) =>
-                    setForm((current) => ({
-                      ...current,
-                      provider:
-                        value === "all"
-                          ? undefined
-                          : (value as SubtitleValidatorSearchRequest["provider"]),
-                    }))
-                  }
-                  value={form.provider ?? "all"}
-                >
-                  <SelectTrigger id="validator-provider">
-                    <SelectValue placeholder="全部 provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部 provider</SelectItem>
-                    <SelectItem value="opensubtitles">OpenSubtitles</SelectItem>
-                    <SelectItem value="xunlei">Xunlei</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="validator-language"
-                >
-                  语言
-                </label>
-                <Input
-                  id="validator-language"
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      language: event.target.value || undefined,
-                    }))
-                  }
-                  placeholder="如 zh-CN / en"
-                  value={form.language ?? ""}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium" htmlFor="validator-type">
-                  类型
-                </label>
-                <Select
-                  onValueChange={(value) =>
-                    setForm((current) => ({
-                      ...current,
-                      type:
-                        value === "all"
-                          ? undefined
-                          : (value as SubtitleValidatorSearchRequest["type"]),
-                    }))
-                  }
-                  value={form.type ?? "all"}
-                >
-                  <SelectTrigger id="validator-type">
-                    <SelectValue placeholder="全部类型" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部类型</SelectItem>
-                    <SelectItem value="movie">电影</SelectItem>
-                    <SelectItem value="episode">剧集</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 md:col-span-2">
-                <Button
-                  aria-label="运行字幕搜索校验"
-                  disabled={searching}
-                  type="submit"
-                >
-                  {searching ? (
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                  ) : null}
-                  运行 Search 校验
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  结果用于校验契约与 provider 反馈，不代表正式前台用户路径。
-                </span>
-              </div>
-            </form>
-
-            {searchError ? (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>搜索校验失败</AlertTitle>
-                <AlertDescription>{searchError}</AlertDescription>
-              </Alert>
-            ) : null}
-
-            {downloadMessage ? (
-              <Alert>
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle>下载校验结果</AlertTitle>
-                <AlertDescription>{downloadMessage}</AlertDescription>
-              </Alert>
-            ) : null}
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-medium">搜索结果</h3>
-                {searchResult ? (
-                  <Badge variant="secondary">{searchResult.status}</Badge>
-                ) : null}
-              </div>
-              {searching ? (
-                <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                  正在执行 validator search...
-                </div>
-              ) : null}
-              {!searching && searchResult?.results.length ? (
-                <div className="grid gap-3">
-                  {searchResult.results.map((item) => (
-                    <div
-                      className="rounded-lg border bg-surface-elevated p-4"
-                      key={item.id}
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{item.provider}</Badge>
-                            <span className="text-sm font-medium">
-                              {item.releaseName ?? item.id}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {item.language ?? "unknown"} · {item.format} ·{" "}
-                            {item.providerDownloadUrl ?? item.subtitleRef}
-                          </p>
-                        </div>
-                        <Button
-                          aria-label={`校验 ${item.releaseName ?? item.id} 下载链路`}
-                          disabled={
-                            downloadingId === item.id ||
-                            item.provider !== "opensubtitles"
-                          }
-                          onClick={() =>
-                            handleDownloadValidation(item.subtitleRef)
-                          }
-                          size="sm"
-                          variant="outline"
-                        >
-                          {downloadingId === item.id ? (
-                            <Loader2 className="mr-2 size-4 animate-spin" />
-                          ) : null}
-                          校验下载
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-              {!searching &&
-              searchResult &&
-              searchResult.results.length === 0 ? (
-                <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                  当前没有返回结果；可继续检查 providerFailures 与 provider
-                  配置状态。
-                </div>
-              ) : null}
-              {!searching && searchResult?.providerFailures.length ? (
-                <div className="grid gap-3">
-                  {searchResult.providerFailures.map((item) => (
-                    <Alert
-                      key={`${item.provider}-${item.reason}`}
-                      variant="destructive"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>
-                        {item.provider} · {item.reason}
-                      </AlertTitle>
-                      <AlertDescription>{item.message}</AlertDescription>
-                    </Alert>
-                  ))}
-                </div>
-              ) : null}
+      <div className="grid gap-4 xl:hidden">
+        <Drawer>
+          <DrawerTrigger asChild>
+            <Button
+              className="w-full justify-between"
+              type="button"
+              variant="outline"
+            >
+              <span>{selectedProvider?.providerName ?? "选择 Provider"}</span>
+              <Badge variant="secondary">{providers.length}</Badge>
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>选择 Provider</DrawerTitle>
+              <DrawerDescription>
+                Tablet / mobile 下 Provider Rail
+                收敛为顶部抽屉，右侧工作区语义保持不变。
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-6">
+              <SubtitleValidatorProviderRail
+                onSelectProvider={handleSelectProvider}
+                providers={providers}
+                selectedProviderId={selectedProviderId}
+              />
             </div>
-          </CardContent>
-        </Card>
+          </DrawerContent>
+        </Drawer>
+      </div>
 
-        <Card className="border-border bg-surface shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base">Provider 能力摘要</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingProviders ? (
-              <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                正在加载 provider capabilities...
-              </div>
-            ) : null}
-            {providerError ? (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>读取失败</AlertTitle>
-                <AlertDescription>{providerError}</AlertDescription>
-              </Alert>
-            ) : null}
-            {!loadingProviders && !providerError && providers.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                当前没有可用 provider；请先到服务商页完成基础配置。
-              </div>
-            ) : null}
-            {providers.map((provider) => (
-              <div
-                className="rounded-lg border bg-surface-elevated p-4"
-                key={provider.providerId}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{provider.providerKey}</Badge>
-                      <span className="text-sm font-medium">
-                        {provider.providerName}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {provider.status} · health {provider.healthStatus}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      provider.supportsDownloadValidation
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {provider.supportsDownloadValidation
-                      ? "支持统一下载校验"
-                      : "仅搜索校验"}
-                  </Badge>
+      <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden xl:block">
+          <Card className="border-border bg-surface shadow-none">
+            <CardHeader>
+              <CardTitle className="text-base">Provider Rail</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {loadingProviders ? (
+                <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+                  正在加载 provider capabilities...
                 </div>
-                <div className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                  <span>
-                    凭据：{provider.availableCredentialCount}/
-                    {provider.credentialCount}
-                    {provider.requiresCredentials
-                      ? " 可用"
-                      : "（该 provider 不要求凭据）"}
-                  </span>
-                  {provider.notes.map((note) => (
-                    <span key={note}>{note}</span>
-                  ))}
-                  {provider.lastHealthErrorSummary ? (
-                    <span>最近错误：{provider.lastHealthErrorSummary}</span>
-                  ) : null}
+              ) : null}
+              {providerError ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>读取失败</AlertTitle>
+                  <AlertDescription>{providerError}</AlertDescription>
+                </Alert>
+              ) : null}
+              {!loadingProviders && !providerError && providers.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+                  当前没有可用 provider；请先到服务商页完成基础配置。
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ) : null}
+              {!loadingProviders && !providerError && providers.length > 0 ? (
+                <SubtitleValidatorProviderRail
+                  onSelectProvider={handleSelectProvider}
+                  providers={providers}
+                  selectedProviderId={selectedProviderId}
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+        </aside>
+
+        <section className="grid gap-6">
+          <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
+            <SubtitleValidatorProviderOverview provider={selectedProvider} />
+            <SubtitleValidatorDiagnosticSummary
+              errorCategory={diagnostic?.errorCategory}
+              lastMessage={
+                searchError ?? downloadMessage ?? diagnostic?.summary ?? null
+              }
+              nextActionHint={diagnostic?.nextActionHint}
+              resultCount={searchResult?.results.length ?? 0}
+              searching={searching}
+              selectedProviderName={selectedProvider?.providerName ?? null}
+              status={effectiveDiagnosticStatus}
+            />
+          </div>
+
+          {providerError && !loadingProviders && providers.length === 0 ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Provider 列表不可用</AlertTitle>
+              <AlertDescription>{providerError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {!providerError && !loadingProviders && providers.length === 0 ? (
+            <Card className="border-border bg-surface shadow-none">
+              <CardContent className="px-6 py-8 text-sm text-muted-foreground">
+                当前没有可验证对象。请先回到 Provider
+                管理页完成基础配置，再回到此页发起搜索或下载验证。
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {providers.length > 0 ? (
+            <>
+              <SubtitleValidatorSearchComposer
+                form={form}
+                onChange={setForm}
+                onReset={() =>
+                  setForm({
+                    ...initialFormState,
+                    provider: selectedProvider?.providerKey,
+                  })
+                }
+                onSubmit={handleSearch}
+                provider={selectedProvider}
+                searching={searching}
+              />
+
+              {searchError ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>搜索校验失败</AlertTitle>
+                  <AlertDescription>{searchError}</AlertDescription>
+                </Alert>
+              ) : null}
+
+              <SubtitleValidatorDownloadStatus
+                message={downloadMessage}
+                tone={downloadTone}
+              />
+
+              <SubtitleValidatorResultsConsole
+                downloadingId={downloadingId}
+                failures={searchResult?.providerFailures ?? []}
+                nextActionHint={diagnostic?.nextActionHint}
+                onValidateDownload={handleDownloadValidation}
+                results={searchResult?.results ?? []}
+                searching={searching}
+              />
+            </>
+          ) : null}
+        </section>
       </div>
     </div>
   );
