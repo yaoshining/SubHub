@@ -264,3 +264,16 @@ Status: Enabled
   - ❌ 不得把异常隔离设计成隐式自动消失
   - ❌ 不得用同一组件硬塞 OS 与 Xunlei 的凭据区差异
   - ❌ 不得在 Xunlei 详情页渲染「新增凭据」按钮
+
+## Data / Dependencies
+
+- **Data sources**: Provider detail、credential pool、provider health、recent provider activity
+- **External dependencies**: Provider 管理 API
+- **Cross-page dependencies**: `docs/pages/providers.md`、`docs/pages/subtitle-api-validator.md`
+
+## Notes
+
+- 本页承接的是单个 provider 的配置、凭据池与最近行为，不是正式搜索页，也不是内部链路验证页。
+- `/providers` 负责多 provider 的可见性、选择与列表态摘要，本页负责当前 provider 的细粒度配置与状态治理。
+- `docs/pages/subtitle-api-validator.md` 负责搜索 / 下载链路验证；若需要实际排查 provider 搜索结果或下载可达性，应从管理上下文进入 validator，而不是把验证工作区塞进详情页。
+- 当前原型强调 type-aware 差异：OpenSubtitles 是可维护凭据池的 provider，Xunlei 是受限能力展示；后续若增加新 provider，也应优先沿用这一差异化结构，而不是强行做成完全同构配置页。
