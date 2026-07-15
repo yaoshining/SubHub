@@ -130,7 +130,8 @@ export function SubtitleApiValidatorClient() {
   const handleSelectProvider = React.useCallback(
     (providerId: string) => {
       const nextProvider =
-        providers.find((provider) => provider.providerId === providerId) ?? null;
+        providers.find((provider) => provider.providerId === providerId) ??
+        null;
       setSelectedProviderId(providerId);
       setForm((current) => ({
         ...initialFormState,
@@ -175,6 +176,14 @@ export function SubtitleApiValidatorClient() {
     setDownloadMessage(null);
     try {
       const result = await validateSubtitleValidatorDownload({ subtitleRef });
+      setSearchResult((current) =>
+        current
+          ? {
+              ...current,
+              diagnostic: result.diagnostic,
+            }
+          : current,
+      );
       setDownloadTone("success");
       setDownloadMessage(
         `已验证 ${result.fileName}（${result.contentType}，${result.contentLength} bytes）`,

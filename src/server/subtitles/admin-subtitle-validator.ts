@@ -550,30 +550,31 @@ export async function searchSubtitleValidator(
   });
 
   const primaryProvider = filteredProviders[0] ?? null;
-  const diagnostic = primaryProvider
-    ? buildSubtitleValidatorDiagnosticSummary({
-        action: "search",
-        providerKey: primaryProvider.type,
-        providerName: primaryProvider.name,
-        providerStatus: primaryProvider.status,
-        status:
-          results.length > 0
-            ? "success"
-            : providerFailures.length > 0
-              ? "error"
-              : "empty",
-        resultCount: results.length,
-        elapsedMs: Date.now() - startedAt,
-        error:
-          providerFailures.length > 0
-            ? {
-                category: providerFailures[0].errorCategory,
-                safeMessage: providerFailures[0].message,
-                nextActionHint: providerFailures[0].nextActionHint,
-              }
-            : null,
-      })
-    : null;
+  const diagnostic =
+    input.provider && primaryProvider
+      ? buildSubtitleValidatorDiagnosticSummary({
+          action: "search",
+          providerKey: primaryProvider.type,
+          providerName: primaryProvider.name,
+          providerStatus: primaryProvider.status,
+          status:
+            results.length > 0
+              ? "success"
+              : providerFailures.length > 0
+                ? "error"
+                : "empty",
+          resultCount: results.length,
+          elapsedMs: Date.now() - startedAt,
+          error:
+            providerFailures.length > 0
+              ? {
+                  category: providerFailures[0].errorCategory,
+                  safeMessage: providerFailures[0].message,
+                  nextActionHint: providerFailures[0].nextActionHint,
+                }
+              : null,
+        })
+      : null;
 
   return {
     status: providerFailures.some(

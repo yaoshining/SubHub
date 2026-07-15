@@ -14,6 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type {
   SubtitleValidatorProviderCapability,
+  SubtitleValidatorSearchField,
   SubtitleValidatorSearchRequest,
 } from "@/server/subtitles/admin-subtitle-validator-schema";
 
@@ -26,6 +27,13 @@ type SubtitleValidatorSearchComposerProps = {
   onReset: () => void;
 };
 
+function supportsField(
+  provider: SubtitleValidatorProviderCapability | null,
+  field: SubtitleValidatorSearchField,
+) {
+  return provider?.extendedFields.includes(field) ?? false;
+}
+
 export function SubtitleValidatorSearchComposer({
   provider,
   form,
@@ -34,10 +42,10 @@ export function SubtitleValidatorSearchComposer({
   onSubmit,
   onReset,
 }: SubtitleValidatorSearchComposerProps) {
-  const providerKey = provider?.providerKey;
   const showEpisodeFields =
-    providerKey === "opensubtitles" || form.type === "episode";
-  const showIdentifierFields = providerKey === "opensubtitles";
+    supportsField(provider, "season") || supportsField(provider, "episode");
+  const showIdentifierFields =
+    supportsField(provider, "imdbId") || supportsField(provider, "tmdbId");
 
   return (
     <Card className="border-border bg-surface shadow-none">

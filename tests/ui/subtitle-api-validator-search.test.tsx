@@ -60,7 +60,7 @@ describe("Subtitle API Validator 搜索交互", () => {
             score: 98,
           },
         ],
-        diagnostic: createSearchResultData({}).diagnostic,
+        diagnostic: null,
       }),
     );
 
