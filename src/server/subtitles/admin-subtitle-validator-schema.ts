@@ -65,7 +65,8 @@ export const subtitleValidatorSearchResultSchema = z.object({
   language: z.string().nullable(),
   releaseName: z.string().nullable(),
   format: z.string().min(1),
-  downloadUrl: z.string().min(1),
+  subtitleRef: z.string().min(1),
+  providerDownloadUrl: z.string().url().nullable(),
   raw: z.record(z.string(), z.unknown()).optional(),
   score: z.number().nullable().optional(),
 });

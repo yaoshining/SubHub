@@ -66,6 +66,7 @@ const toFailureResponse = (
 ): SubtitleValidatorProviderFailure => ({
   provider: provider.type,
   reason:
+    error.reason === "upstream_failed" ||
     error.reason === "timeout" ||
     error.reason === "rate_limited" ||
     error.reason === "authentication_failed"
@@ -235,13 +236,31 @@ export async function searchSubtitleValidator(
   input: SubtitleValidatorSearchRequest,
 ): Promise<SubtitleValidatorSearchResultData> {
   const db = getStorageClient().db;
+  const now = new Date();
   const providers = await requireProviderByKey(input.provider, db);
   const searchInput = buildSearchInput(input);
 
   const outcomes = await Promise.all(
     providers.map(async (provider) => {
       const adapter = getAdapter(provider.type);
-      const outcome = await adapter.search(null, searchInput);
+      const credential =
+        provider.availableCredentialCount > 0
+          ? await selectProviderCredential(provider.id, { db, now })
+          : null;
+      const outcome = await adapter.search(credential, searchInput);
+
+      if (!outcome.ok && credential) {
+        await markCredentialFailure(
+          provider,
+          credential.id,
+          outcome.error.reason,
+          outcome.error.message,
+          { db, now },
+        );
+      } else if (!outcome.skipped && credential) {
+        await markCredentialUsed(provider.id, credential.id, { db, now });
+      }
+
       return { provider, outcome };
     }),
   );
@@ -257,10 +276,9 @@ export async function searchSubtitleValidator(
       language: item.language,
       releaseName: item.releaseName,
       format: item.format,
-      downloadUrl:
-        provider.type === "xunlei" && item.providerDownloadUrl
-          ? item.providerDownloadUrl
-          : `/api/subtitles/download?subtitleId=${encodeURIComponent(`${provider.type}:${provider.id}:${item.id}`)}`,
+      subtitleRef: `${provider.type}:${provider.id}:${item.id}`,
+      providerDownloadUrl:
+        provider.type === "xunlei" ? item.providerDownloadUrl : null,
       raw: item.raw,
       score: item.score ?? null,
     }));

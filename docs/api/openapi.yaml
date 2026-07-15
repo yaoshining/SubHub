@@ -1355,7 +1355,8 @@ components:
         - language
         - releaseName
         - format
-        - downloadUrl
+        - subtitleRef
+        - providerDownloadUrl
       properties:
         id:
           type: string
@@ -1369,8 +1370,12 @@ components:
           nullable: true
         format:
           type: string
-        downloadUrl:
+        subtitleRef:
           type: string
+        providerDownloadUrl:
+          type: string
+          format: uri
+          nullable: true
         raw:
           type: object
           additionalProperties: true

@@ -14,7 +14,8 @@ export interface SubtitleValidatorSearchResult {
   language: string | null;
   releaseName: string | null;
   format: string;
-  downloadUrl: string;
+  subtitleRef: string;
+  providerDownloadUrl: string | null;
   raw?: SubtitleValidatorSearchResultRaw;
   score?: number | null;
 }

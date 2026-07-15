@@ -339,7 +339,7 @@ export function SubtitleApiValidatorClient() {
                           </div>
                           <p className="text-xs text-muted-foreground">
                             {item.language ?? "unknown"} · {item.format} ·{" "}
-                            {item.downloadUrl}
+                            {item.providerDownloadUrl ?? item.subtitleRef}
                           </p>
                         </div>
                         <Button
@@ -348,7 +348,9 @@ export function SubtitleApiValidatorClient() {
                             downloadingId === item.id ||
                             item.provider !== "opensubtitles"
                           }
-                          onClick={() => handleDownloadValidation(item.id)}
+                          onClick={() =>
+                            handleDownloadValidation(item.subtitleRef)
+                          }
                           size="sm"
                           variant="outline"
                         >
