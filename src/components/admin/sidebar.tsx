@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   KeyRound,
   Moon,
+  SearchCheck,
   Server,
   Settings,
   Sun,
@@ -38,6 +39,12 @@ const navigationItems = [
     Icon: KeyRound,
   },
   { href: "/users", label: "用户", iconName: "users", Icon: Users },
+  {
+    href: "/subtitle-api-validator",
+    label: "字幕 API 验证",
+    iconName: "search-check",
+    Icon: SearchCheck,
+  },
   { href: "/settings", label: "设置", iconName: "settings", Icon: Settings },
 ] as const;
 

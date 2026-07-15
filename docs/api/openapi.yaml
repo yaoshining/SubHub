@@ -835,6 +835,94 @@ paths:
           $ref: "#/components/responses/ErrorResponse"
         "503":
           $ref: "#/components/responses/ErrorResponse"
+  /api/admin/subtitle-validator/providers:
+    get:
+      tags:
+        - Subtitle Validator
+      operationId: listAdminSubtitleValidatorProviders
+      summary: 查询字幕 Validator provider 能力摘要
+      description: 返回字幕 Validator 页面所需的 provider 能力摘要，仅用于后台内部契约验证与排障，不替代正式字幕聚合入口。
+      security:
+        - AdminSession: []
+      responses:
+        "200":
+          description: Validator provider 能力摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubtitleValidatorProvidersResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/subtitle-validator/search:
+    post:
+      tags:
+        - Subtitle Validator
+      operationId: runAdminSubtitleValidatorSearch
+      summary: 执行字幕 Validator 搜索校验
+      description: 直接按 provider adapter 执行后台内部搜索校验，绕过对外 caller-key 鉴权链路；用于验证 provider 配置、字段映射与错误反馈。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubtitleValidatorSearchRequest"
+      responses:
+        "200":
+          description: Validator 搜索结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubtitleValidatorSearchResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/admin/subtitle-validator/download-validation:
+    post:
+      tags:
+        - Subtitle Validator
+      operationId: validateAdminSubtitleDownload
+      summary: 执行字幕 Validator 下载校验
+      description: 对支持统一下载链路的 provider 执行后台内部下载校验；当前仅支持 OpenSubtitles，不记录对外 caller-key 下载请求。
+      security:
+        - AdminSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubtitleValidatorDownloadValidationRequest"
+      responses:
+        "200":
+          description: 下载校验结果摘要
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubtitleValidatorDownloadValidationResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ErrorResponse"
 components:
   parameters:
     ProviderId:
@@ -1125,6 +1213,250 @@ components:
         - isolated
         - disabled
         - exhausted
+    SubtitleValidatorProviderStatus:
+      type: string
+      enum:
+        - enabled
+        - disabled
+        - needs_config
+        - degraded
+    SubtitleValidatorProviderHealthStatus:
+      type: string
+      enum:
+        - ready
+        - degraded
+        - unknown
+    SubtitleValidatorProviderFailureReason:
+      type: string
+      enum:
+        - upstream_failed
+        - timeout
+        - rate_limited
+        - skipped_missing_fields
+        - skipped_disabled
+        - authentication_failed
+    SubtitleValidatorProviderCapability:
+      type: object
+      required:
+        - providerId
+        - providerKey
+        - providerName
+        - status
+        - healthStatus
+        - requiresCredentials
+        - credentialCount
+        - availableCredentialCount
+        - supportsSearch
+        - supportsDownloadValidation
+        - supportsDirectDownloadUrl
+        - notes
+        - lastHealthCheckAt
+        - lastHealthErrorSummary
+      properties:
+        providerId:
+          type: string
+        providerKey:
+          $ref: "#/components/schemas/ProviderType"
+        providerName:
+          type: string
+        status:
+          $ref: "#/components/schemas/SubtitleValidatorProviderStatus"
+        healthStatus:
+          $ref: "#/components/schemas/SubtitleValidatorProviderHealthStatus"
+        requiresCredentials:
+          type: boolean
+        credentialCount:
+          type: integer
+          minimum: 0
+        availableCredentialCount:
+          type: integer
+          minimum: 0
+        supportsSearch:
+          type: boolean
+        supportsDownloadValidation:
+          type: boolean
+        supportsDirectDownloadUrl:
+          type: boolean
+        notes:
+          type: array
+          items:
+            type: string
+        lastHealthCheckAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastHealthErrorSummary:
+          type: string
+          nullable: true
+    SubtitleValidatorProviderList:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorProviderCapability"
+        total:
+          type: integer
+          minimum: 0
+    SubtitleValidatorProvidersResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/SubtitleValidatorProviderList"
+    SubtitleValidatorSearchRequest:
+      type: object
+      required:
+        - title
+      properties:
+        provider:
+          $ref: "#/components/schemas/ProviderType"
+        title:
+          type: string
+          minLength: 1
+        query:
+          type: string
+          minLength: 1
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+        season:
+          type: integer
+          minimum: 1
+        episode:
+          type: integer
+          minimum: 1
+        language:
+          type: string
+          minLength: 2
+          maxLength: 16
+        imdbId:
+          type: string
+          minLength: 1
+          maxLength: 32
+        tmdbId:
+          type: integer
+          minimum: 1
+        type:
+          type: string
+          enum:
+            - movie
+            - episode
+    SubtitleValidatorSearchResult:
+      type: object
+      required:
+        - id
+        - provider
+        - language
+        - releaseName
+        - format
+        - subtitleRef
+        - providerDownloadUrl
+      properties:
+        id:
+          type: string
+        provider:
+          $ref: "#/components/schemas/ProviderType"
+        language:
+          type: string
+          nullable: true
+        releaseName:
+          type: string
+          nullable: true
+        format:
+          type: string
+        subtitleRef:
+          type: string
+        providerDownloadUrl:
+          type: string
+          format: uri
+          nullable: true
+        raw:
+          type: object
+          additionalProperties: true
+        score:
+          type: number
+          nullable: true
+    SubtitleValidatorProviderFailure:
+      type: object
+      required:
+        - provider
+        - reason
+        - message
+      properties:
+        provider:
+          $ref: "#/components/schemas/ProviderType"
+        reason:
+          $ref: "#/components/schemas/SubtitleValidatorProviderFailureReason"
+        message:
+          type: string
+    SubtitleValidatorSearchResultData:
+      type: object
+      required:
+        - status
+        - results
+        - providerFailures
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+            - partial
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorSearchResult"
+        providerFailures:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorProviderFailure"
+    SubtitleValidatorSearchResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/SubtitleValidatorSearchResultData"
+    SubtitleValidatorDownloadValidationRequest:
+      type: object
+      required:
+        - subtitleRef
+      properties:
+        subtitleRef:
+          type: string
+          minLength: 1
+    SubtitleValidatorDownloadValidationResult:
+      type: object
+      required:
+        - subtitleRef
+        - provider
+        - fileName
+        - contentType
+        - contentLength
+      properties:
+        subtitleRef:
+          type: string
+        provider:
+          $ref: "#/components/schemas/ProviderType"
+        fileName:
+          type: string
+        contentType:
+          type: string
+        contentLength:
+          type: integer
+          minimum: 0
+    SubtitleValidatorDownloadValidationResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/SubtitleValidatorDownloadValidationResult"
     Provider:
       type: object
       required:
