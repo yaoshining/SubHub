@@ -515,24 +515,31 @@ describe("Providers 页面", () => {
 
       await screen.findAllByText("OpenSubtitles Primary");
 
-      // Click disable button
+      // 先确认弹窗出现，避免在 CI 慢机上点到尚未挂载的确认按钮。
       const disableButtons = screen.getAllByRole("button", { name: "禁用" });
       await user.click(disableButtons[0]!);
+      const confirmButton = await screen.findByRole("button", { name: "确认" });
+      await user.click(confirmButton);
 
-      // Confirm
-      await user.click(screen.getByRole("button", { name: "确认" }));
-
-      // Should call disableProvider API
+      // 成功链路以刷新后的 UI 状态为锚点，避免只盯 mock 调用次数导致时序竞争。
       await waitFor(() =>
         expect(vi.mocked(api.disableProvider)).toHaveBeenCalledWith(
           "provider_001",
         ),
       );
-
-      // Should reload providers
       await waitFor(() =>
         expect(vi.mocked(api.fetchProviders)).toHaveBeenCalledTimes(2),
       );
+      const primaryRow = screen
+        .getAllByTestId("provider-list-row")
+        .find((row) => row.textContent?.includes("OpenSubtitles Primary"));
+      expect(primaryRow).toBeDefined();
+      expect(primaryRow!).toHaveAttribute("role", "option");
+      expect(primaryRow!).toHaveAttribute("aria-selected", "false");
+      expect(primaryRow!).toHaveTextContent("停用");
+      expect(
+        within(primaryRow!).getByRole("button", { name: "启用" }),
+      ).toBeInTheDocument();
     });
 
     it("失败时显示错误提示并保持状态", async () => {
