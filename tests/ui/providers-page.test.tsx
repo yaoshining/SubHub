@@ -530,16 +530,18 @@ describe("Providers 页面", () => {
       await waitFor(() =>
         expect(vi.mocked(api.fetchProviders)).toHaveBeenCalledTimes(2),
       );
-      const primaryRow = screen
-        .getAllByTestId("provider-list-row")
-        .find((row) => row.textContent?.includes("OpenSubtitles Primary"));
-      expect(primaryRow).toBeDefined();
-      expect(primaryRow!).toHaveAttribute("role", "option");
-      expect(primaryRow!).toHaveAttribute("aria-selected", "false");
-      expect(primaryRow!).toHaveTextContent("停用");
-      expect(
-        within(primaryRow!).getByRole("button", { name: "启用" }),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        const primaryRow = screen
+          .getAllByTestId("provider-list-row")
+          .find((row) => row.textContent?.includes("OpenSubtitles Primary"));
+        expect(primaryRow).toBeDefined();
+        expect(primaryRow!).toHaveAttribute("role", "option");
+        expect(primaryRow!).toHaveAttribute("aria-selected", "false");
+        expect(primaryRow!).toHaveTextContent("停用");
+        expect(
+          within(primaryRow!).getByRole("button", { name: "启用" }),
+        ).toBeInTheDocument();
+      });
     });
 
     it("失败时显示错误提示并保持状态", async () => {
