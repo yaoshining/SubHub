@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import * as React from "react";
-import { AlertTriangle, Shield } from "lucide-react";
+import { AlertTriangle, ArrowLeft, RefreshCw, Shield } from "lucide-react";
 
 import {
   type SubtitleValidatorProviderCapability,
@@ -90,6 +91,26 @@ export function SubtitleApiValidatorClient() {
   );
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
 
+  const loadProviders = React.useCallback(async () => {
+    try {
+      const data = await fetchSubtitleValidatorProviders();
+      setProviders(data.items);
+      setSelectedProviderId((current) =>
+        current && data.items.some((item) => item.providerId === current)
+          ? current
+          : getDefaultProviderId(data.items),
+      );
+    } catch (error) {
+      if (error instanceof AppError && error.code === "FORBIDDEN") {
+        setPermissionError(error.message);
+      } else {
+        setProviderError(getErrorMessage(error));
+      }
+    } finally {
+      setLoadingProviders(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     let mounted = true;
     void (async () => {
@@ -97,8 +118,10 @@ export function SubtitleApiValidatorClient() {
         const data = await fetchSubtitleValidatorProviders();
         if (!mounted) return;
         setProviders(data.items);
-        setSelectedProviderId(
-          (current) => current ?? getDefaultProviderId(data.items),
+        setSelectedProviderId((current) =>
+          current && data.items.some((item) => item.providerId === current)
+            ? current
+            : getDefaultProviderId(data.items),
         );
       } catch (error) {
         if (!mounted) return;
@@ -198,11 +221,21 @@ export function SubtitleApiValidatorClient() {
 
   if (permissionError) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>无权限访问</AlertTitle>
-        <AlertDescription>{permissionError}</AlertDescription>
-      </Alert>
+      <Card className="border-border bg-surface shadow-none">
+        <CardContent className="space-y-4 px-6 py-8">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>无权限访问</AlertTitle>
+            <AlertDescription>{permissionError}</AlertDescription>
+          </Alert>
+          <Button asChild variant="outline">
+            <Link href="/providers">
+              <ArrowLeft />
+              返回 Provider 管理
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -231,15 +264,23 @@ export function SubtitleApiValidatorClient() {
               配置、搜索链路与下载链路是否可用。这里是内部诊断工作台，不替代正式字幕搜索或正式下载产品流。
             </p>
           </div>
-          <div className="grid gap-2 text-sm text-muted-foreground md:text-right">
-            <span>Provider 摘要：{providers.length}</span>
-            <span>
-              支持浏览器下载校验：
-              {
-                providers.filter((item) => item.supportsDownloadValidation)
-                  .length
-              }
-            </span>
+          <div className="flex flex-wrap items-center gap-2 md:justify-end">
+            <div className="grid gap-1 text-sm text-muted-foreground md:text-right">
+              <span>Provider 摘要：{providers.length}</span>
+              <span>
+                支持浏览器下载校验：
+                {
+                  providers.filter((item) => item.supportsDownloadValidation)
+                    .length
+                }
+              </span>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/providers">
+                <ArrowLeft />
+                返回 Providers
+              </Link>
+            </Button>
           </div>
         </CardHeader>
       </Card>
@@ -291,7 +332,22 @@ export function SubtitleApiValidatorClient() {
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>读取失败</AlertTitle>
-                  <AlertDescription>{providerError}</AlertDescription>
+                  <AlertDescription className="space-y-3">
+                    <p>{providerError}</p>
+                    <Button
+                      onClick={() => {
+                        setLoadingProviders(true);
+                        setProviderError(null);
+                        void loadProviders();
+                      }}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <RefreshCw />
+                      重试读取
+                    </Button>
+                  </AlertDescription>
                 </Alert>
               ) : null}
               {!loadingProviders && !providerError && providers.length === 0 ? (
@@ -330,7 +386,22 @@ export function SubtitleApiValidatorClient() {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Provider 列表不可用</AlertTitle>
-              <AlertDescription>{providerError}</AlertDescription>
+              <AlertDescription className="space-y-3">
+                <p>{providerError}</p>
+                <Button
+                  onClick={() => {
+                    setLoadingProviders(true);
+                    setProviderError(null);
+                    void loadProviders();
+                  }}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <RefreshCw />
+                  重试读取
+                </Button>
+              </AlertDescription>
             </Alert>
           ) : null}
 

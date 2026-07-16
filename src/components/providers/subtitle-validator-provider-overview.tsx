@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SubtitleValidatorProviderCapability } from "@/server/subtitles/admin-subtitle-validator-schema";
@@ -61,6 +62,27 @@ export function SubtitleValidatorProviderOverview({
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
+        {provider.status === "disabled" ? (
+          <Alert variant="warning">
+            <AlertTitle>此 Provider 已禁用</AlertTitle>
+            <AlertDescription>
+              仍可用于本页排障验证；验证成功不代表其已恢复到正式服务流量。
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {provider.status === "needs_config" ||
+        provider.status === "degraded" ? (
+          <Alert variant="warning">
+            <AlertTitle>
+              {provider.status === "needs_config"
+                ? "此 Provider 待配置"
+                : "此 Provider 已降级"}
+            </AlertTitle>
+            <AlertDescription>
+              当前状态限制正式服务可用性。本页结果仅用于定位配置或上游链路问题。
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-border/70 bg-surface-elevated px-4 py-3">
             <p className="text-xs text-muted-foreground">搜索能力</p>
