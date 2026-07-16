@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.2.3
  */
 import type { ProviderType } from "./providerType";
+import type { SubtitleValidatorDiagnosticSummary } from "./subtitleValidatorDiagnosticSummary";
+import type { SubtitleValidatorDownloadMode } from "./subtitleValidatorDownloadMode";
 
 export interface SubtitleValidatorDownloadValidationResult {
   subtitleRef: string;
@@ -14,4 +16,6 @@ export interface SubtitleValidatorDownloadValidationResult {
   contentType: string;
   /** @minimum 0 */
   contentLength: number;
+  downloadMode: SubtitleValidatorDownloadMode;
+  diagnostic: SubtitleValidatorDiagnosticSummary;
 }

@@ -6,10 +6,13 @@
  * OpenAPI spec version: 0.2.3
  */
 import type { ProviderType } from "./providerType";
+import type { SubtitleValidatorErrorCategory } from "./subtitleValidatorErrorCategory";
 import type { SubtitleValidatorProviderFailureReason } from "./subtitleValidatorProviderFailureReason";
 
 export interface SubtitleValidatorProviderFailure {
   provider: ProviderType;
   reason: SubtitleValidatorProviderFailureReason;
   message: string;
+  errorCategory: SubtitleValidatorErrorCategory;
+  nextActionHint: string | null;
 }

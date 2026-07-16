@@ -8,6 +8,7 @@
 import type { ProviderType } from "./providerType";
 import type { SubtitleValidatorProviderHealthStatus } from "./subtitleValidatorProviderHealthStatus";
 import type { SubtitleValidatorProviderStatus } from "./subtitleValidatorProviderStatus";
+import type { SubtitleValidatorSearchField } from "./subtitleValidatorSearchField";
 
 export interface SubtitleValidatorProviderCapability {
   providerId: string;
@@ -23,6 +24,10 @@ export interface SubtitleValidatorProviderCapability {
   supportsSearch: boolean;
   supportsDownloadValidation: boolean;
   supportsDirectDownloadUrl: boolean;
+  baseFields: SubtitleValidatorSearchField[];
+  extendedFields: SubtitleValidatorSearchField[];
+  baseFieldNotice: string;
+  extendedFieldNotice: string;
   notes: string[];
   lastHealthCheckAt: string | null;
   lastHealthErrorSummary: string | null;

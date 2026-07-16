@@ -20,6 +20,35 @@ const providerFailureReasonSchema = z.enum([
   "authentication_failed",
 ]);
 
+const subtitleValidatorSearchFieldSchema = z.enum([
+  "title",
+  "query",
+  "language",
+  "type",
+  "year",
+  "season",
+  "episode",
+  "imdbId",
+  "tmdbId",
+]);
+
+const subtitleValidatorErrorCategorySchema = z.enum([
+  "invalid_params",
+  "empty_results",
+  "timeout",
+  "provider_error",
+  "provider_unavailable",
+  "missing_download",
+  "invalid_url",
+  "download_failed",
+  "unknown",
+]);
+
+const subtitleValidatorDownloadModeSchema = z.enum([
+  "browser_download",
+  "url_check",
+]);
+
 export const subtitleValidatorProviderCapabilitySchema = z.object({
   providerId: z.string().min(1),
   providerKey: providerKeySchema,
@@ -32,6 +61,10 @@ export const subtitleValidatorProviderCapabilitySchema = z.object({
   supportsSearch: z.boolean(),
   supportsDownloadValidation: z.boolean(),
   supportsDirectDownloadUrl: z.boolean(),
+  baseFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
+  extendedFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
+  baseFieldNotice: z.string().min(1),
+  extendedFieldNotice: z.string().min(1),
   notes: z.array(z.string().min(1)).default([]),
   lastHealthCheckAt: z.string().datetime().nullable(),
   lastHealthErrorSummary: z.string().nullable(),
@@ -75,12 +108,30 @@ export const subtitleValidatorProviderFailureSchema = z.object({
   provider: providerKeySchema,
   reason: providerFailureReasonSchema,
   message: z.string().min(1),
+  errorCategory: subtitleValidatorErrorCategorySchema,
+  nextActionHint: z.string().min(1).nullable(),
+});
+
+export const subtitleValidatorDiagnosticSummarySchema = z.object({
+  action: z.enum(["search", "download_validation"]),
+  provider: providerKeySchema,
+  providerName: z.string().min(1),
+  providerStatus: providerStatusSchema,
+  status: z.enum(["idle", "loading", "success", "empty", "error"]),
+  resultCount: z.number().int().nonnegative(),
+  elapsedMs: z.number().int().nonnegative().nullable(),
+  summary: z.string().min(1),
+  errorCategory: subtitleValidatorErrorCategorySchema.nullable(),
+  nextActionHint: z.string().min(1).nullable(),
+  fileName: z.string().min(1).nullable(),
+  downloadMode: subtitleValidatorDownloadModeSchema.nullable(),
 });
 
 export const subtitleValidatorSearchResultDataSchema = z.object({
   status: z.enum(["success", "partial"]),
   results: z.array(subtitleValidatorSearchResultSchema),
   providerFailures: z.array(subtitleValidatorProviderFailureSchema).default([]),
+  diagnostic: subtitleValidatorDiagnosticSummarySchema.nullable().default(null),
 });
 
 export const subtitleValidatorSearchResponseSchema = z.object({
@@ -97,6 +148,8 @@ export const subtitleValidatorDownloadValidationResultSchema = z.object({
   fileName: z.string().min(1),
   contentType: z.string().min(1),
   contentLength: z.number().int().nonnegative(),
+  downloadMode: subtitleValidatorDownloadModeSchema,
+  diagnostic: subtitleValidatorDiagnosticSummarySchema,
 });
 
 export const subtitleValidatorDownloadValidationResponseSchema = z.object({
@@ -115,11 +168,23 @@ export type SubtitleValidatorProvidersResponse = z.infer<
 export type SubtitleValidatorSearchRequest = z.infer<
   typeof subtitleValidatorSearchRequestSchema
 >;
+export type SubtitleValidatorSearchField = z.infer<
+  typeof subtitleValidatorSearchFieldSchema
+>;
+export type SubtitleValidatorErrorCategory = z.infer<
+  typeof subtitleValidatorErrorCategorySchema
+>;
+export type SubtitleValidatorDownloadMode = z.infer<
+  typeof subtitleValidatorDownloadModeSchema
+>;
 export type SubtitleValidatorSearchResult = z.infer<
   typeof subtitleValidatorSearchResultSchema
 >;
 export type SubtitleValidatorProviderFailure = z.infer<
   typeof subtitleValidatorProviderFailureSchema
+>;
+export type SubtitleValidatorDiagnosticSummary = z.infer<
+  typeof subtitleValidatorDiagnosticSummarySchema
 >;
 export type SubtitleValidatorSearchResultData = z.infer<
   typeof subtitleValidatorSearchResultDataSchema

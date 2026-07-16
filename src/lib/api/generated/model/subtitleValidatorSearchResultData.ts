@@ -5,6 +5,7 @@
  * SubHub MVP 管理控制台与统一字幕出口 API 契约骨架。v0.2.3 扩展 provider 管理 API 支持多 provider（OpenSubtitles / Xunlei），补齐启停、基础配置编辑与健康状态查看。
  * OpenAPI spec version: 0.2.3
  */
+import type { SubtitleValidatorDiagnosticSummary } from "./subtitleValidatorDiagnosticSummary";
 import type { SubtitleValidatorProviderFailure } from "./subtitleValidatorProviderFailure";
 import type { SubtitleValidatorSearchResult } from "./subtitleValidatorSearchResult";
 import type { SubtitleValidatorSearchResultDataStatus } from "./subtitleValidatorSearchResultDataStatus";
@@ -13,4 +14,5 @@ export interface SubtitleValidatorSearchResultData {
   status: SubtitleValidatorSearchResultDataStatus;
   results: SubtitleValidatorSearchResult[];
   providerFailures: SubtitleValidatorProviderFailure[];
+  diagnostic: SubtitleValidatorDiagnosticSummary | null;
 }
