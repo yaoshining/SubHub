@@ -29,14 +29,14 @@ const requiredSearchFieldsByProvider: Record<
   SubtitleValidatorSearchField[]
 > = {
   opensubtitles: [],
-  xunlei: ["query", "language"],
+  xunlei: ["query"],
 };
 
 const extendedFieldNoticeByProvider: Record<SubtitleProviderKey, string> = {
   opensubtitles:
     "IMDb ID、TMDb ID 与 season / episode 属于 OpenSubtitles 扩展参数，用于缩小结果范围，不是系统统一业务字段。",
   xunlei:
-    "Xunlei 当前优先验证关键词搜索链路；未展示的字段表示当前 provider 不需要额外扩展参数。",
+    "Xunlei 使用附加查询作为上游 name；语言为可选筛选，可从已知值选择或输入上游原生 languages 值。",
 };
 
 const capabilityNotes: Record<SubtitleProviderKey, string[]> = {

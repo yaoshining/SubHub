@@ -149,7 +149,7 @@ describe("subtitle validator diagnostics helpers", () => {
       "year",
     ]);
     expect(xunlei.extendedFields).toEqual([]);
-    expect(xunlei.requiredSearchFields).toEqual(["query", "language"]);
-    expect(xunlei.extendedNotice).toContain("关键词");
+    expect(xunlei.requiredSearchFields).toEqual(["query"]);
+    expect(xunlei.extendedNotice).toContain("附加查询");
   });
 });

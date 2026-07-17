@@ -177,7 +177,7 @@ describe("admin subtitle validator search", () => {
       ),
     ).rejects.toMatchObject({
       code: "VALIDATION_FAILED",
-      message: "当前 Provider 缺少必填参数：附加查询、语言。",
+      message: "当前 Provider 缺少必填参数：附加查询。",
       target: "providerParams.query",
     });
     expect(missingFieldsAdapter.search).not.toHaveBeenCalled();

@@ -55,6 +55,7 @@ export function SubtitleValidatorSearchComposer({
     supportsField(provider, "season") || supportsField(provider, "episode");
   const showIdentifierFields =
     supportsField(provider, "imdbId") || supportsField(provider, "tmdbId");
+  const isXunlei = provider?.providerKey === "xunlei";
   const isRequiredField = (field: SubtitleValidatorSearchField) =>
     provider?.requiredSearchFields.includes(field) ?? false;
   const hasRequiredFieldError = (field: SubtitleValidatorSearchField) =>
@@ -197,24 +198,76 @@ export function SubtitleValidatorSearchComposer({
               >
                 语言{isRequiredField("language") ? "（必填）" : ""}
               </label>
-              <Input
-                aria-describedby={
-                  hasRequiredFieldError("language")
-                    ? "validator-language-error"
-                    : undefined
-                }
-                aria-invalid={hasRequiredFieldError("language")}
-                id="validator-language"
-                onChange={(event) => {
-                  setProviderParam("language", event.target.value);
-                  clearRequiredFieldError("language");
-                }}
-                placeholder={
-                  isRequiredField("language") ? "请输入语言" : "如 zh-CN / en"
-                }
-                required={isRequiredField("language")}
-                value={getStringParam("language")}
-              />
+              {isXunlei ? (
+                <div className="grid gap-2">
+                  <Select
+                    onValueChange={(value) =>
+                      setProviderParam(
+                        "language",
+                        value === "custom" ? null : value,
+                      )
+                    }
+                    value={
+                      ["简体", "默认", "英语"].includes(
+                        getStringParam("language"),
+                      )
+                        ? getStringParam("language")
+                        : "custom"
+                    }
+                  >
+                    <SelectTrigger id="validator-language">
+                      <SelectValue placeholder="选择已知语言筛选" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">自定义输入</SelectItem>
+                      <SelectItem value="简体">简体</SelectItem>
+                      <SelectItem value="默认">默认</SelectItem>
+                      <SelectItem value="英语">英语</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    aria-describedby={
+                      hasRequiredFieldError("language")
+                        ? "validator-language-error"
+                        : "validator-language-hint"
+                    }
+                    aria-invalid={hasRequiredFieldError("language")}
+                    aria-label="自定义语言筛选"
+                    onChange={(event) => {
+                      setProviderParam("language", event.target.value);
+                      clearRequiredFieldError("language");
+                    }}
+                    placeholder="自定义迅雷 languages 值（可选）"
+                    value={getStringParam("language")}
+                  />
+                  <p
+                    className="text-xs text-muted-foreground"
+                    id="validator-language-hint"
+                  >
+                    可选择已知值，或输入迅雷上游返回的其他 languages
+                    值；留空则不筛选。
+                  </p>
+                </div>
+              ) : (
+                <Input
+                  aria-describedby={
+                    hasRequiredFieldError("language")
+                      ? "validator-language-error"
+                      : undefined
+                  }
+                  aria-invalid={hasRequiredFieldError("language")}
+                  id="validator-language"
+                  onChange={(event) => {
+                    setProviderParam("language", event.target.value);
+                    clearRequiredFieldError("language");
+                  }}
+                  placeholder={
+                    isRequiredField("language") ? "请输入语言" : "如 zh-CN / en"
+                  }
+                  required={isRequiredField("language")}
+                  value={getStringParam("language")}
+                />
+              )}
               {hasRequiredFieldError("language") ? (
                 <p
                   className="text-xs text-destructive"

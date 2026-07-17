@@ -24,6 +24,10 @@ type XunleiSubtitleRecord = {
   mt?: number;
 };
 
+type XunleiSearchResponse = {
+  data?: unknown;
+};
+
 export type XunleiAdapterOptions = {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -53,7 +57,7 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
     const name = input.query?.trim();
     const languages = input.language?.trim();
 
-    if (!name || !languages) {
+    if (!name) {
       return {
         ok: true,
         skipped: true,
@@ -64,7 +68,9 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
 
     const params = new URLSearchParams();
     params.set("name", name);
-    params.set("languages", languages);
+    if (languages) {
+      params.set("languages", languages);
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -111,8 +117,13 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
         };
       }
 
-      const data = (await response.json()) as unknown;
-      const records = Array.isArray(data) ? data : [];
+      const data = (await response.json()) as XunleiSearchResponse | unknown[];
+      const responseData = (data as XunleiSearchResponse).data;
+      const records: unknown[] = Array.isArray(data)
+        ? data
+        : Array.isArray(responseData)
+          ? responseData
+          : [];
 
       const results: ProviderSearchResult[] = records
         .map((item) => this.parseRecord(item as XunleiSubtitleRecord))
