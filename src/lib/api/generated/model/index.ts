@@ -130,6 +130,7 @@ export * from "./subtitleValidatorDownloadMode";
 export * from "./subtitleValidatorDownloadValidationRequest";
 export * from "./subtitleValidatorDownloadValidationResponse";
 export * from "./subtitleValidatorDownloadValidationResult";
+export * from "./subtitleValidatorDownloadValidationStatus";
 export * from "./subtitleValidatorErrorCategory";
 export * from "./subtitleValidatorProviderCapability";
 export * from "./subtitleValidatorProviderFailure";

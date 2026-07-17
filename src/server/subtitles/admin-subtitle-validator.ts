@@ -19,15 +19,13 @@ import type {
   SubtitleValidatorDownloadMode,
   SubtitleValidatorDownloadValidationRequest,
   SubtitleValidatorDownloadValidationResult,
+  SubtitleValidatorDownloadValidationStatus,
   SubtitleValidatorErrorCategory,
   SubtitleValidatorProviderList,
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResultData,
 } from "@/server/subtitles/admin-subtitle-validator-schema";
-import {
-  buildSubtitleDownloadHeaders,
-  type SubtitleDownloadOptions,
-} from "@/server/subtitles/subtitle-download";
+import { buildSubtitleDownloadHeaders } from "@/server/subtitles/subtitle-download";
 import {
   getStorageClient,
   type StorageDatabase,
@@ -61,9 +59,14 @@ const buildSearchInput = (input: SubtitleValidatorSearchRequest) => {
 
 const redactSensitiveText = (message: string) =>
   message
-    .replace(/access_token=[^\s]+/gi, "[redacted]")
-    .replace(/token=[^\s]+/gi, "[redacted]")
-    .replace(/secret=[^\s]+/gi, "[redacted]")
+    .replace(
+      /\b(access_token|token|secret|credential|api[_-]?key|password)=([^\s&]+)/gi,
+      "[redacted]",
+    )
+    .replace(
+      /(["']?(?:access_token|token|secret|credential|api[_-]?key|password)["']?\s*:\s*["'])[^"']+/gi,
+      "[redacted]",
+    )
     .replace(/bearer\s+[a-z0-9._\-]+/gi, "bearer [redacted]");
 
 export function classifySubtitleValidatorError(
@@ -82,6 +85,15 @@ export function classifySubtitleValidatorError(
 
   if (error instanceof AppError) {
     if (error.code === "VALIDATION_FAILED") {
+      if (error.target === "download_mode") {
+        return {
+          category: "unsupported",
+          safeMessage: message,
+          nextActionHint:
+            "请选择当前 Provider 支持的下载验证模式，或切换到其他结果项。",
+        };
+      }
+
       return {
         category:
           error.target === "subtitleRef" ? "invalid_url" : "invalid_params",
@@ -263,35 +275,6 @@ const parseSubtitleRef = (subtitleRef: string) => {
   );
 };
 
-const requireDownloadProvider = async (
-  db: StorageDatabase,
-  providerId: string,
-  now: Date,
-) => {
-  const provider = await new ProviderRepository(db).requireProvider(
-    providerId,
-    now,
-  );
-
-  if (provider.status !== "enabled" && provider.status !== "degraded") {
-    throw new AppError(
-      "SERVICE_NOT_READY",
-      "字幕所属 Provider 当前不可用于下载。",
-      "provider",
-    );
-  }
-
-  if (provider.type !== "xunlei" && provider.availableCredentialCount === 0) {
-    throw new AppError(
-      "SERVICE_NOT_READY",
-      "字幕所属 Provider 没有可用凭据。",
-      "credential_pool",
-    );
-  }
-
-  return provider;
-};
-
 const sanitizeFileName = (fileName: string) => {
   const normalized = fileName.trim().replaceAll(/[^\w.\- ]/g, "_");
   return normalized || "subtitle.srt";
@@ -307,28 +290,62 @@ export type SubtitleValidatorDependencies = {
   selectCredential?: typeof selectProviderCredential;
   markCredentialUsed?: typeof markCredentialUsed;
   markCredentialFailure?: typeof markCredentialFailure;
+  fetchImpl?: typeof fetch;
 };
 
 async function downloadSubtitleForValidator(
   subtitleRef: string,
-  options: SubtitleDownloadOptions = {},
+  dependencies: SubtitleValidatorDependencies = {},
 ): Promise<SubtitleValidatorDownloadValidationResult> {
-  const db = options.db ?? getStorageClient().db;
-  const now = options.now ?? new Date();
+  const db = dependencies.db ?? getStorageClient().db;
+  const now = dependencies.now ?? new Date();
   const startedAt = Date.now();
   const parsed = parseSubtitleRef(subtitleRef);
 
   if (parsed.providerType === "xunlei") {
     throw new AppError(
       "VALIDATION_FAILED",
-      "Xunlei 搜索结果使用 provider 直链下载，统一下载校验仅支持 OpenSubtitles。",
-      "subtitleRef",
+      "Xunlei 不支持浏览器下载验证，请改用 URL 检查。",
+      "download_mode",
     );
   }
 
-  const provider = await requireDownloadProvider(db, parsed.providerId, now);
-  const credential = await selectProviderCredential(provider.id, { db, now });
-  const adapter = options.adapter ?? getRegisteredAdapter("opensubtitles");
+  const listProviders =
+    dependencies.listProviders ??
+    (() => new ProviderRepository(db).listProviders(undefined, now));
+  const provider = (await listProviders()).find(
+    (candidate) => candidate.id === parsed.providerId,
+  );
+  if (!provider) {
+    throw new AppError(
+      "PROVIDER_UNAVAILABLE",
+      "Provider 不存在。",
+      "providerId",
+    );
+  }
+  if (provider.status !== "enabled" && provider.status !== "degraded") {
+    throw new AppError(
+      "SERVICE_NOT_READY",
+      "字幕所属 Provider 当前不可用于下载。",
+      "provider",
+    );
+  }
+  if (provider.availableCredentialCount === 0) {
+    throw new AppError(
+      "SERVICE_NOT_READY",
+      "字幕所属 Provider 没有可用凭据。",
+      "credential_pool",
+    );
+  }
+  const selectCredential =
+    dependencies.selectCredential ?? selectProviderCredential;
+  const markUsed = dependencies.markCredentialUsed ?? markCredentialUsed;
+  const markFailure =
+    dependencies.markCredentialFailure ?? markCredentialFailure;
+  const credential = await selectCredential(provider.id, { db, now });
+  const adapter =
+    dependencies.getAdapter?.("opensubtitles") ??
+    getRegisteredAdapter("opensubtitles");
 
   try {
     if (!("download" in adapter) || typeof adapter.download !== "function") {
@@ -339,7 +356,7 @@ async function downloadSubtitleForValidator(
     }
 
     const result = await adapter.download(credential.secret, parsed.subtitleId);
-    await markCredentialUsed(provider.id, credential.id, { db, now });
+    await markUsed(provider.id, credential.id, { db, now });
 
     const headers = buildSubtitleDownloadHeaders({
       contentType: result.contentType,
@@ -350,11 +367,16 @@ async function downloadSubtitleForValidator(
 
     return {
       subtitleRef,
+      resultId: subtitleRef,
       provider: "opensubtitles",
+      status: "success",
+      httpStatus: 200,
+      message: "浏览器下载验证成功。",
       fileName,
       contentType: headers.get("Content-Type") ?? result.contentType,
       contentLength,
       downloadMode: "browser_download",
+      browserDownloadUrl: null,
       diagnostic: buildSubtitleValidatorDiagnosticSummary({
         action: "download_validation",
         providerKey: "opensubtitles",
@@ -373,7 +395,8 @@ async function downloadSubtitleForValidator(
     }
 
     if (error instanceof AppError) {
-      await markCredentialFailure(
+      const safeError = classifySubtitleValidatorError(error, error.message);
+      await markFailure(
         provider,
         credential.id,
         error.code === "PROVIDER_CREDENTIAL_EXHAUSTED"
@@ -383,17 +406,13 @@ async function downloadSubtitleForValidator(
               ? "authentication_failed"
               : "quota_exhausted"
           : "upstream_failed",
-        error.message,
+        safeError.safeMessage,
         { db, now },
       );
-      throw new AppError(
-        "UPSTREAM_FAILED",
-        classifySubtitleValidatorError(error, error.message).safeMessage,
-        "provider",
-      );
+      throw new AppError("UPSTREAM_FAILED", safeError.safeMessage, "provider");
     }
 
-    await markCredentialFailure(
+    await markFailure(
       provider,
       credential.id,
       "upstream_failed",
@@ -565,8 +584,233 @@ export async function searchSubtitleValidator(
 
 export async function validateSubtitleDownload(
   input: SubtitleValidatorDownloadValidationRequest,
+  dependencies: SubtitleValidatorDependencies = {},
 ): Promise<SubtitleValidatorDownloadValidationResult> {
-  return downloadSubtitleForValidator(input.subtitleRef);
+  const startedAt = Date.now();
+  const subtitleRef = input.subtitleRef ?? input.resultId;
+
+  if (!subtitleRef) {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "缺少可验证的字幕结果。",
+      "resultId",
+    );
+  }
+
+  const parsed = parseSubtitleRef(subtitleRef);
+  if (input.providerId && input.providerId !== parsed.providerId) {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "下载结果与当前 Provider 不匹配。",
+      "providerId",
+    );
+  }
+
+  const db = dependencies.db ?? getStorageClient().db;
+  const now = dependencies.now ?? new Date();
+  const listProviders =
+    dependencies.listProviders ??
+    (() => new ProviderRepository(db).listProviders(undefined, now));
+  const provider = (await listProviders()).find(
+    (candidate) => candidate.id === parsed.providerId,
+  );
+  if (!provider) {
+    throw new AppError(
+      "PROVIDER_UNAVAILABLE",
+      "Provider 不存在。",
+      "providerId",
+    );
+  }
+  if (provider.type !== parsed.providerType) {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      "下载结果与当前 Provider 类型不匹配。",
+      "resultId",
+    );
+  }
+
+  const mode = input.mode;
+  const resultId = input.resultId ?? subtitleRef;
+  const buildResult = (params: {
+    status: SubtitleValidatorDownloadValidationStatus;
+    httpStatus?: number | null;
+    message: string;
+    error?: ReturnType<typeof classifySubtitleValidatorError> | null;
+    fileName?: string | null;
+    contentType?: string | null;
+    contentLength?: number | null;
+  }): SubtitleValidatorDownloadValidationResult => ({
+    subtitleRef,
+    resultId,
+    provider: provider.type,
+    status: params.status,
+    httpStatus: params.httpStatus ?? null,
+    message: params.message,
+    fileName: params.fileName ?? null,
+    contentType: params.contentType ?? null,
+    contentLength: params.contentLength ?? null,
+    downloadMode: mode,
+    browserDownloadUrl: null,
+    diagnostic: buildSubtitleValidatorDiagnosticSummary({
+      action: "download_validation",
+      providerKey: provider.type,
+      providerName: provider.name,
+      providerStatus: provider.status,
+      status: params.status === "success" ? "success" : "error",
+      resultCount: params.status === "success" ? 1 : 0,
+      elapsedMs: Date.now() - startedAt,
+      error: params.error ?? null,
+      fileName: params.fileName ?? null,
+      downloadMode: mode,
+    }),
+  });
+
+  if (mode === "browser_download" && parsed.providerType === "xunlei") {
+    const error = classifySubtitleValidatorError(
+      new AppError(
+        "VALIDATION_FAILED",
+        "Xunlei 不支持浏览器下载验证，请改用 URL 检查。",
+        "download_mode",
+      ),
+      "Xunlei 不支持浏览器下载验证，请改用 URL 检查。",
+    );
+    return buildResult({
+      status: "unsupported",
+      message: error.safeMessage,
+      error,
+    });
+  }
+
+  if (mode === "url_check") {
+    if (parsed.providerType !== "xunlei") {
+      const error = classifySubtitleValidatorError(
+        new AppError(
+          "VALIDATION_FAILED",
+          "当前 Provider 没有可直接校验的下载 URL，请使用浏览器下载验证。",
+          "download_mode",
+        ),
+        "当前 Provider 没有可直接校验的下载 URL，请使用浏览器下载验证。",
+      );
+      return buildResult({
+        status: "unsupported",
+        message: error.safeMessage,
+        error,
+      });
+    }
+
+    if (!input.downloadReference) {
+      const error = classifySubtitleValidatorError(
+        new AppError(
+          "SUBTITLE_NOT_FOUND",
+          "该结果没有可验证的下载地址。",
+          "subtitleRef",
+        ),
+        "该结果没有可验证的下载地址。",
+      );
+      return buildResult({
+        status: "missing_download",
+        message: error.safeMessage,
+        error,
+      });
+    }
+
+    let downloadUrl: URL;
+    try {
+      downloadUrl = new URL(input.downloadReference);
+      if (
+        downloadUrl.protocol !== "https:" ||
+        ["localhost", "127.0.0.1", "::1"].includes(
+          downloadUrl.hostname.toLowerCase(),
+        ) ||
+        /^10\.|^127\.|^169\.254\.|^172\.(1[6-9]|2\d|3[0-1])\.|^192\.168\./.test(
+          downloadUrl.hostname,
+        )
+      ) {
+        throw new Error("unsafe download URL");
+      }
+    } catch {
+      const error = classifySubtitleValidatorError(
+        new AppError(
+          "VALIDATION_FAILED",
+          "下载地址无效或不允许由服务端校验。",
+          "subtitleRef",
+        ),
+        "下载地址无效或不允许由服务端校验。",
+      );
+      return buildResult({
+        status: "failed",
+        message: error.safeMessage,
+        error,
+      });
+    }
+
+    try {
+      const response = await (dependencies.fetchImpl ?? fetch)(
+        downloadUrl.toString(),
+        {
+          method: "HEAD",
+          redirect: "follow",
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+      if (!response.ok) {
+        const error = classifySubtitleValidatorError(
+          new AppError(
+            "UPSTREAM_FAILED",
+            `下载地址返回 HTTP ${response.status}。`,
+            "provider",
+          ),
+          `下载地址返回 HTTP ${response.status}。`,
+        );
+        return buildResult({
+          status: "failed",
+          httpStatus: response.status,
+          message: "下载 URL 不可访问。",
+          error,
+        });
+      }
+
+      return buildResult({
+        status: "success",
+        httpStatus: response.status,
+        message: "下载 URL 可访问。",
+      });
+    } catch (cause) {
+      const error = classifySubtitleValidatorError(
+        cause,
+        "下载 URL 校验失败。",
+      );
+      return buildResult({
+        status: "failed",
+        message: "下载 URL 校验失败。",
+        error,
+      });
+    }
+  }
+
+  try {
+    const download = await downloadSubtitleForValidator(
+      subtitleRef,
+      dependencies,
+    );
+    return {
+      ...download,
+      resultId,
+      downloadMode: mode,
+      diagnostic: {
+        ...download.diagnostic,
+        downloadMode: mode,
+      },
+    };
+  } catch (cause) {
+    const error = classifySubtitleValidatorError(cause, "浏览器下载验证失败。");
+    return buildResult({
+      status:
+        error.category === "missing_download" ? "missing_download" : "failed",
+      message: error.safeMessage,
+      error,
+    });
+  }
 }
 
 export type { SubtitleValidatorErrorCategory } from "@/server/subtitles/admin-subtitle-validator-schema";

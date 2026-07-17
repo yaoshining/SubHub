@@ -39,6 +39,7 @@ const subtitleValidatorErrorCategorySchema = z.enum([
   "provider_error",
   "provider_unavailable",
   "missing_download",
+  "unsupported",
   "invalid_url",
   "download_failed",
   "unknown",
@@ -47,6 +48,13 @@ const subtitleValidatorErrorCategorySchema = z.enum([
 const subtitleValidatorDownloadModeSchema = z.enum([
   "browser_download",
   "url_check",
+]);
+
+const subtitleValidatorDownloadValidationStatusSchema = z.enum([
+  "success",
+  "failed",
+  "missing_download",
+  "unsupported",
 ]);
 
 export const subtitleValidatorProviderCapabilitySchema = z.object({
@@ -139,18 +147,51 @@ export const subtitleValidatorSearchResponseSchema = z.object({
   data: subtitleValidatorSearchResultDataSchema,
 });
 
-export const subtitleValidatorDownloadValidationRequestSchema = z.object({
-  subtitleRef: z.string().trim().min(1),
-});
+export const subtitleValidatorDownloadValidationRequestSchema = z
+  .object({
+    // subtitleRef is retained temporarily so clients deployed with the original
+    // browser-download-only contract can complete their request while the
+    // validator UI moves to the explicit provider/result/mode contract.
+    subtitleRef: z.string().trim().min(1).optional(),
+    providerId: z.string().trim().min(1).optional(),
+    resultId: z.string().trim().min(1).optional(),
+    mode: subtitleValidatorDownloadModeSchema.default("browser_download"),
+    downloadReference: z.string().trim().url().nullable().optional(),
+  })
+  .superRefine((input, context) => {
+    if (input.subtitleRef) {
+      return;
+    }
+
+    if (!input.providerId) {
+      context.addIssue({
+        code: "custom",
+        path: ["providerId"],
+        message: "providerId 不能为空。",
+      });
+    }
+    if (!input.resultId) {
+      context.addIssue({
+        code: "custom",
+        path: ["resultId"],
+        message: "resultId 不能为空。",
+      });
+    }
+  });
 
 export const subtitleValidatorDownloadValidationResultSchema = z.object({
   subtitleRef: z.string().min(1),
+  resultId: z.string().min(1),
   provider: providerKeySchema,
-  fileName: z.string().min(1),
-  contentType: z.string().min(1),
-  contentLength: z.number().int().nonnegative(),
+  status: subtitleValidatorDownloadValidationStatusSchema,
+  httpStatus: z.number().int().min(100).max(599).nullable(),
+  message: z.string().min(1),
+  fileName: z.string().min(1).nullable(),
+  contentType: z.string().min(1).nullable(),
+  contentLength: z.number().int().nonnegative().nullable(),
   downloadMode: subtitleValidatorDownloadModeSchema,
   diagnostic: subtitleValidatorDiagnosticSummarySchema,
+  browserDownloadUrl: z.string().url().nullable(),
 });
 
 export const subtitleValidatorDownloadValidationResponseSchema = z.object({
@@ -177,6 +218,9 @@ export type SubtitleValidatorErrorCategory = z.infer<
 >;
 export type SubtitleValidatorDownloadMode = z.infer<
   typeof subtitleValidatorDownloadModeSchema
+>;
+export type SubtitleValidatorDownloadValidationStatus = z.infer<
+  typeof subtitleValidatorDownloadValidationStatusSchema
 >;
 export type SubtitleValidatorSearchResult = z.infer<
   typeof subtitleValidatorSearchResultSchema

@@ -5,6 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SubtitleApiValidatorClient } from "@/app/(admin)/subtitle-api-validator/subtitle-api-validator-client";
 import { AppError } from "@/lib/errors";
+import {
+  createProviderCapability,
+  createSearchResultData,
+} from "./subtitle-validator-test-data";
 import { renderWithTheme } from "../helpers/ui";
 
 vi.mock("@/lib/api/subtitle-validator", () => ({
@@ -67,5 +71,48 @@ describe("Subtitle API Validator 诊断状态", () => {
         "当前没有可验证对象。请先回到 Provider 管理页完成基础配置，再回到此页发起搜索或下载验证。",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("将搜索空结果的错误类别、下一步建议与动作摘要展示在 Diagnostic Snapshot", async () => {
+    const user = userEvent.setup();
+    const provider = createProviderCapability({
+      providerId: "provider-os",
+      providerName: "OpenSubtitles",
+    });
+    vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
+      items: [provider],
+      total: 1,
+    });
+    vi.mocked(api.runSubtitleValidatorSearch).mockResolvedValue(
+      createSearchResultData({
+        diagnostic: {
+          action: "search",
+          provider: "opensubtitles",
+          providerName: "OpenSubtitles",
+          providerStatus: "enabled",
+          status: "empty",
+          resultCount: 0,
+          elapsedMs: 120,
+          summary: "没有匹配的字幕结果。",
+          errorCategory: "empty_results",
+          nextActionHint: "调整关键词或语言后重试。",
+          fileName: null,
+          downloadMode: null,
+        },
+      }),
+    );
+
+    renderWithTheme(<SubtitleApiValidatorClient />);
+
+    await screen.findByRole("button", { name: /OpenSubtitles/ });
+    await user.type(screen.getByLabelText("关键词 / 标题"), "Matrix");
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    expect(await screen.findAllByText("空结果")).not.toHaveLength(0);
+    expect(screen.getByText("动作：搜索验证")).toBeInTheDocument();
+    expect(screen.getByText("错误类别：empty_results")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("下一步建议：调整关键词或语言后重试。"),
+    ).not.toHaveLength(0);
   });
 });

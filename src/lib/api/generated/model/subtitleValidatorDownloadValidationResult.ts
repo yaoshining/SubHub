@@ -8,14 +8,28 @@
 import type { ProviderType } from "./providerType";
 import type { SubtitleValidatorDiagnosticSummary } from "./subtitleValidatorDiagnosticSummary";
 import type { SubtitleValidatorDownloadMode } from "./subtitleValidatorDownloadMode";
+import type { SubtitleValidatorDownloadValidationStatus } from "./subtitleValidatorDownloadValidationStatus";
 
 export interface SubtitleValidatorDownloadValidationResult {
+  /** 结果的内部 provider 引用，不含凭据。 */
   subtitleRef: string;
+  resultId: string;
   provider: ProviderType;
-  fileName: string;
-  contentType: string;
+  status: SubtitleValidatorDownloadValidationStatus;
+  /**
+   * URL 检查或上游下载可获取时的 HTTP 状态。
+   * @minimum 100
+   * @maximum 599
+   */
+  httpStatus: number | null;
+  /** 面向管理员的脱敏动作摘要。 */
+  message: string;
+  fileName: string | null;
+  contentType: string | null;
   /** @minimum 0 */
-  contentLength: number;
+  contentLength: number | null;
   downloadMode: SubtitleValidatorDownloadMode;
   diagnostic: SubtitleValidatorDiagnosticSummary;
+  /** 仅在安全的浏览器直接下载入口可用时提供；当前受控验证不返回上游直链。 */
+  browserDownloadUrl: string | null;
 }

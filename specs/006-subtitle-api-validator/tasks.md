@@ -7,10 +7,10 @@
 
 **目的**: 建立 validator feature 的实现入口、导航承接与 API/client 基础骨架。
 
-- [ ] T001 新增 Subtitle API Validator 页面路由入口于 `src/app/(admin)/subtitle-api-validator/page.tsx`
-- [ ] T002 新增页面客户端容器骨架于 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx`
-- [ ] T003 新增 validator API 手写封装文件于 `src/lib/api/subtitle-validator.ts`
-- [ ] T004 更新管理后台导航入口于 `src/components/admin/sidebar.tsx`
+- [x] T001 新增 Subtitle API Validator 页面路由入口于 `src/app/(admin)/subtitle-api-validator/page.tsx`
+- [x] T002 新增页面客户端容器骨架于 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx`
+- [x] T003 新增 validator API 手写封装文件于 `src/lib/api/subtitle-validator.ts`
+- [x] T004 更新管理后台导航入口于 `src/components/admin/sidebar.tsx`
 
 ---
 
@@ -18,14 +18,14 @@
 
 **目的**: 建立所有用户故事共用的 admin facade、契约、共享类型与受控调用边界；完成后各故事才能独立推进。
 
-- [ ] T005 [P] 定义 validator 共享 schema 与诊断类型于 `src/server/subtitles/admin-subtitle-validator-schema.ts`
-- [ ] T006 [P] 实现 provider 能力摘要与参数定义映射于 `src/server/subtitles/admin-subtitle-validator-capabilities.ts`
-- [ ] T007 实现 admin validator 服务 facade 于 `src/server/subtitles/admin-subtitle-validator.ts`
-- [ ] T008 [P] 新增 provider 列表路由于 `src/app/api/admin/subtitle-validator/providers/route.ts`
-- [ ] T009 [P] 新增搜索验证路由于 `src/app/api/admin/subtitle-validator/search/route.ts`
-- [ ] T010 [P] 新增下载验证路由于 `src/app/api/admin/subtitle-validator/download-validation/route.ts`
-- [ ] T011 更新 OpenAPI 契约于 `docs/api/openapi.yaml`
-- [ ] T012 生成并校验前端 API 客户端输出于 `src/lib/api/generated/`
+- [x] T005 [P] 定义 validator 共享 schema 与诊断类型于 `src/server/subtitles/admin-subtitle-validator-schema.ts`
+- [x] T006 [P] 实现 provider 能力摘要与参数定义映射于 `src/server/subtitles/admin-subtitle-validator-capabilities.ts`
+- [x] T007 实现 admin validator 服务 facade 于 `src/server/subtitles/admin-subtitle-validator.ts`
+- [x] T008 [P] 新增 provider 列表路由于 `src/app/api/admin/subtitle-validator/providers/route.ts`
+- [x] T009 [P] 新增搜索验证路由于 `src/app/api/admin/subtitle-validator/search/route.ts`
+- [x] T010 [P] 新增下载验证路由于 `src/app/api/admin/subtitle-validator/download-validation/route.ts`
+- [x] T011 更新 OpenAPI 契约于 `docs/api/openapi.yaml`
+- [x] T012 生成并校验前端 API 客户端输出于 `src/lib/api/generated/`
 
 **检查点**: admin-only validator API 契约、类型与 facade 已建立，且不改变正式 `src/app/api/subtitles/*` 行为。
 
@@ -37,14 +37,14 @@
 
 **独立测试**: 打开 `/admin/subtitle-api-validator`，可看到 provider rail、内部工具提示、默认选中 provider、disabled/restricted 状态表达与列表加载失败反馈。
 
-- [ ] T013 [P] [US1] 为 provider 列表 API 编写契约测试于 `tests/contract/subtitle-validator-providers.contract.test.ts`
-- [ ] T014 [P] [US1] 为 provider rail 状态与默认选择规则编写 UI 测试于 `tests/ui/subtitle-api-validator-page.test.tsx`
-- [ ] T015 [US1] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中实现 provider 列表与默认选中逻辑，包含 disabled/restricted 可见性与状态说明
-- [ ] T016 [US1] 在 `src/lib/api/subtitle-validator.ts` 中实现 provider 列表请求封装
-- [ ] T017 [US1] 实现 Provider Rail 与页面 Header/内部工具提示于 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx`
-- [ ] T018 [US1] 新增 provider rail 展示组件于 `src/components/providers/subtitle-validator-provider-rail.tsx`
-- [ ] T019 [US1] 新增 provider 概览/能力面板组件于 `src/components/providers/subtitle-validator-provider-overview.tsx`
-- [ ] T020 [US1] 为 provider 列表加载失败、空列表与权限拒绝增加集成测试于 `tests/integration/subtitle-validator-access-flow.test.ts`
+- [x] T013 [P] [US1] 为 provider 列表 API 编写契约测试于 `tests/contract/subtitle-validator-providers.contract.test.ts`
+- [x] T014 [P] [US1] 为 provider rail 状态与默认选择规则编写 UI 测试于 `tests/ui/subtitle-api-validator-page.test.tsx`
+- [x] T015 [US1] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中实现 provider 列表与默认选中逻辑，包含 disabled/restricted 可见性与状态说明
+- [x] T016 [US1] 在 `src/lib/api/subtitle-validator.ts` 中实现 provider 列表请求封装
+- [x] T017 [US1] 实现 Provider Rail 与页面 Header/内部工具提示于 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx`
+- [x] T018 [US1] 新增 provider rail 展示组件于 `src/components/providers/subtitle-validator-provider-rail.tsx`
+- [x] T019 [US1] 新增 provider 概览/能力面板组件于 `src/components/providers/subtitle-validator-provider-overview.tsx`
+- [x] T020 [US1] 为 provider 列表加载失败、空列表与权限拒绝增加集成测试于 `tests/integration/subtitle-validator-access-flow.test.ts`
 
 ---
 
@@ -73,15 +73,15 @@
 
 **独立测试**: 对搜索结果项发起下载验证；页面能展示 success / failed / missing_download / unsupported，且 Xunlei 可 URL check 但 browser download 可返回 unsupported。
 
-- [ ] T031 [P] [US3] 为下载验证路由状态矩阵编写契约测试于 `tests/contract/subtitle-validator-download-validation.contract.test.ts`
-- [ ] T032 [P] [US3] 为结果项下载验证交互编写 UI 测试于 `tests/ui/subtitle-api-validator-download.test.tsx`
-- [ ] T033 [P] [US3] 为下载模式分支与 Xunlei 特例编写单元测试于 `tests/unit/admin-subtitle-validator-download.test.ts`
-- [ ] T034 [US3] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中实现下载验证 facade，区分 browser download / url check / missing_download / unsupported
-- [ ] T035 [US3] 在 `src/lib/api/subtitle-validator.ts` 中实现下载验证请求封装
-- [ ] T036 [US3] 新增搜索结果控制台组件于 `src/components/providers/subtitle-validator-results-console.tsx`
-- [ ] T037 [US3] 新增下载验证反馈组件于 `src/components/providers/subtitle-validator-download-status.tsx`
-- [ ] T038 [US3] 在 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx` 中集成结果项下载验证、最近一次验证反馈与诊断摘要联动
-- [ ] T039 [US3] 新增下载验证闭环集成测试于 `tests/integration/subtitle-validator-download-flow.test.ts`
+- [x] T031 [P] [US3] 为下载验证路由状态矩阵编写契约测试于 `tests/contract/subtitle-validator-download-validation.contract.test.ts`
+- [x] T032 [P] [US3] 为结果项下载验证交互编写 UI 测试于 `tests/ui/subtitle-api-validator-download.test.tsx`
+- [x] T033 [P] [US3] 为下载模式分支与 Xunlei 特例编写单元测试于 `tests/unit/admin-subtitle-validator-download.test.ts`
+- [x] T034 [US3] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中实现下载验证 facade，区分 browser download / url check / missing_download / unsupported
+- [x] T035 [US3] 在 `src/lib/api/subtitle-validator.ts` 中实现下载验证请求封装
+- [x] T036 [US3] 新增搜索结果控制台组件于 `src/components/providers/subtitle-validator-results-console.tsx`
+- [x] T037 [US3] 新增下载验证反馈组件于 `src/components/providers/subtitle-validator-download-status.tsx`
+- [x] T038 [US3] 在 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx` 中集成结果项下载验证、最近一次验证反馈与诊断摘要联动
+- [x] T039 [US3] 新增下载验证闭环集成测试于 `tests/integration/subtitle-validator-download-flow.test.ts`
 
 ---
 
@@ -91,12 +91,12 @@
 
 **独立测试**: 切换 provider 后参数区稳定、扩展字段自然切换；失败态能区分 invalid params / timeout / provider error / unknown error，且不泄露敏感信息。
 
-- [ ] T040 [P] [US4] 为错误上下文与脱敏反馈编写 UI 测试于 `tests/ui/subtitle-api-validator-diagnostics.test.tsx`
-- [ ] T041 [P] [US4] 为诊断摘要与错误脱敏编写单元测试于 `tests/unit/admin-subtitle-validator-diagnostics.test.ts`
-- [ ] T042 [US4] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中补齐 error summary、nextActionHint 与脱敏诊断摘要
-- [ ] T043 [US4] 在 `src/components/providers/subtitle-validator-provider-overview.tsx` 与 `src/components/providers/subtitle-validator-search-composer.tsx` 中强化基础/扩展参数边界说明与限制提示
-- [ ] T044 [US4] 在 `src/components/providers/subtitle-validator-diagnostic-summary.tsx` 与 `src/components/providers/subtitle-validator-results-console.tsx` 中强化错误来源、动作类型与下一步建议呈现
-- [ ] T045 [US4] 新增跨 provider 切换与错误上下文集成测试于 `tests/integration/subtitle-validator-diagnostics-flow.test.ts`
+- [x] T040 [P] [US4] 为错误上下文与脱敏反馈编写 UI 测试于 `tests/ui/subtitle-api-validator-diagnostics.test.tsx`
+- [x] T041 [P] [US4] 为诊断摘要与错误脱敏编写单元测试于 `tests/unit/admin-subtitle-validator-diagnostics.test.ts`
+- [x] T042 [US4] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中补齐 error summary、nextActionHint 与脱敏诊断摘要
+- [x] T043 [US4] 在 `src/components/providers/subtitle-validator-provider-overview.tsx` 与 `src/components/providers/subtitle-validator-search-composer.tsx` 中强化基础/扩展参数边界说明与限制提示
+- [x] T044 [US4] 在 `src/components/providers/subtitle-validator-diagnostic-summary.tsx` 与 `src/components/providers/subtitle-validator-results-console.tsx` 中强化错误来源、动作类型与下一步建议呈现
+- [x] T045 [US4] 新增跨 provider 切换与错误上下文集成测试于 `tests/integration/subtitle-validator-diagnostics-flow.test.ts`
 
 ---
 
@@ -104,13 +104,13 @@
 
 **目的**: 收口文档、回归、契约链路与全量校验，确认正式 API 不受影响。
 
-- [ ] T046 [P] 更新页面规范收口实现差异于 `docs/pages/subtitle-api-validator.md`
+- [x] T046 [P] 更新页面规范收口实现差异于 `docs/pages/subtitle-api-validator.md`
 - [ ] T047 [P] 按需更新职责边界说明于 `docs/pages/providers.md`
 - [ ] T048 [P] 按需更新职责边界说明于 `docs/pages/provider-detail.md`
-- [ ] T049 回归正式字幕 API 相关测试，确认 `src/app/api/subtitles/search/route.ts` 与 `src/app/api/subtitles/download/route.ts` 行为不变
-- [ ] T050 运行 API 契约链路校验：`pnpm api:spec && pnpm api:client && pnpm api:check`
-- [ ] T051 运行定向测试集合：`pnpm test -- tests/contract/subtitle-validator-providers.contract.test.ts tests/contract/subtitle-validator-search.contract.test.ts tests/contract/subtitle-validator-download-validation.contract.test.ts tests/ui/subtitle-api-validator-page.test.tsx tests/ui/subtitle-api-validator-search.test.tsx tests/ui/subtitle-api-validator-download.test.tsx tests/ui/subtitle-api-validator-diagnostics.test.tsx tests/integration/subtitle-validator-access-flow.test.ts tests/integration/subtitle-validator-search-flow.test.ts tests/integration/subtitle-validator-download-flow.test.ts tests/integration/subtitle-validator-diagnostics-flow.test.ts`
-- [ ] T052 运行格式化、静态检查与类型检查：`pnpm format:write && pnpm lint && pnpm typecheck`
+- [x] T049 回归正式字幕 API 相关测试，确认 `src/app/api/subtitles/search/route.ts` 与 `src/app/api/subtitles/download/route.ts` 行为不变
+- [x] T050 运行 API 契约链路校验：`pnpm api:spec && pnpm api:client && pnpm api:check`
+- [x] T051 运行定向测试集合：`pnpm test -- tests/contract/subtitle-validator-providers.contract.test.ts tests/contract/subtitle-validator-search.contract.test.ts tests/contract/subtitle-validator-download-validation.contract.test.ts tests/ui/subtitle-api-validator-page.test.tsx tests/ui/subtitle-api-validator-search.test.tsx tests/ui/subtitle-api-validator-download.test.tsx tests/ui/subtitle-api-validator-diagnostics.test.tsx tests/integration/subtitle-validator-access-flow.test.ts tests/integration/subtitle-validator-search-flow.test.ts tests/integration/subtitle-validator-download-flow.test.ts tests/integration/subtitle-validator-diagnostics-flow.test.ts`
+- [x] T052 运行格式化、静态检查与类型检查：`pnpm format:write && pnpm lint && pnpm typecheck`
 
 ---
 

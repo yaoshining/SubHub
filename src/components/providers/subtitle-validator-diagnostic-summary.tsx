@@ -1,7 +1,17 @@
-import { AlertTriangle, CheckCircle2, Clock3, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  Download,
+  Search,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type {
+  SubtitleValidatorDiagnosticSummary,
+  SubtitleValidatorDiagnosticSummaryAction,
+} from "@/lib/api/subtitle-validator";
 
 type DiagnosticStatus = "idle" | "loading" | "success" | "empty" | "error";
 
@@ -11,8 +21,8 @@ type SubtitleValidatorDiagnosticSummaryProps = {
   resultCount: number;
   status: DiagnosticStatus;
   lastMessage: string | null;
-  nextActionHint?: string | null;
-  errorCategory?: string | null;
+  diagnostic?: SubtitleValidatorDiagnosticSummary | null;
+  actionAt?: string | null;
 };
 
 const iconByStatus = {
@@ -22,6 +32,11 @@ const iconByStatus = {
   empty: Search,
   error: AlertTriangle,
 } satisfies Record<DiagnosticStatus, typeof Search>;
+
+const actionLabel: Record<SubtitleValidatorDiagnosticSummaryAction, string> = {
+  search: "搜索验证",
+  download_validation: "下载验证",
+};
 
 const labelByStatus: Record<DiagnosticStatus, string> = {
   idle: "等待验证",
@@ -37,11 +52,13 @@ export function SubtitleValidatorDiagnosticSummary({
   resultCount,
   status,
   lastMessage,
-  nextActionHint,
-  errorCategory,
+  diagnostic,
+  actionAt,
 }: SubtitleValidatorDiagnosticSummaryProps) {
   const Icon = iconByStatus[searching ? "loading" : status];
   const effectiveStatus = searching ? "loading" : status;
+  const ActionIcon =
+    diagnostic?.action === "download_validation" ? Download : Search;
 
   return (
     <Card className="border-border bg-surface shadow-none">
@@ -69,7 +86,7 @@ export function SubtitleValidatorDiagnosticSummary({
           <div className="rounded-2xl border border-border/70 bg-surface-elevated px-4 py-3">
             <p className="text-xs text-muted-foreground">结果数</p>
             <p className="mt-1 text-sm font-medium text-foreground">
-              {resultCount}
+              {diagnostic?.resultCount ?? resultCount}
             </p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-surface-elevated px-4 py-3">
@@ -86,14 +103,34 @@ export function SubtitleValidatorDiagnosticSummary({
             {lastMessage ??
               "尚未执行验证。选择 Provider 后可直接开始搜索校验，最近一次结果会收敛在这里。"}
           </span>
-          {errorCategory ? (
+          {diagnostic ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-foreground/80">
+              <span className="inline-flex items-center gap-1">
+                <ActionIcon className="size-3.5" />
+                动作：{actionLabel[diagnostic.action]}
+              </span>
+              {actionAt ? <span>时间：{actionAt}</span> : null}
+              {diagnostic.elapsedMs !== null ? (
+                <span>耗时：{diagnostic.elapsedMs} ms</span>
+              ) : null}
+              {diagnostic.downloadMode ? (
+                <span>
+                  模式：
+                  {diagnostic.downloadMode === "browser_download"
+                    ? "浏览器下载验证"
+                    : "URL 检查"}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+          {diagnostic?.errorCategory ? (
             <span className="text-xs text-foreground/80">
-              错误类别：{errorCategory}
+              错误类别：{diagnostic.errorCategory}
             </span>
           ) : null}
-          {nextActionHint ? (
+          {diagnostic?.nextActionHint ? (
             <span className="text-xs text-foreground/80">
-              下一步建议：{nextActionHint}
+              下一步建议：{diagnostic.nextActionHint}
             </span>
           ) : null}
         </div>
