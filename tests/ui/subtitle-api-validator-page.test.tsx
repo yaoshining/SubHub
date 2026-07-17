@@ -193,12 +193,11 @@ describe("Subtitle API Validator 页面", () => {
     await user.click(screen.getByRole("button", { name: "搜索验证" }));
 
     await waitFor(() =>
-      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          provider: "opensubtitles",
-          title: "The Matrix",
-        }),
-      ),
+      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
+        providerId: "provider-degraded",
+        baseParams: { keyword: "The Matrix" },
+        providerParams: {},
+      }),
     );
 
     expect(

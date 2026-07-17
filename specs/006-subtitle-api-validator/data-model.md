@@ -66,7 +66,7 @@ interface ValidatorSearchRequest {
 
 约束：
 - `keyword` 为当前唯一强制基础字段。
-- `providerParams` 仅允许当前 provider 定义中存在的扩展字段。
+- `providerParams` 仅允许当前 provider capability 声明的可选字段；其中可包括 provider 专用扩展字段，以及 adapter 所需的语言、查询等可选字段。
 - 不在前端或 API 响应中回显 secret / token / credential 原文。
 
 ## 5. ValidatorSearchResponse

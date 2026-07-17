@@ -92,6 +92,11 @@ export type runAdminSubtitleValidatorSearchResponse403 = {
   status: 403;
 };
 
+export type runAdminSubtitleValidatorSearchResponse408 = {
+  data: ErrorResponseResponse;
+  status: 408;
+};
+
 export type runAdminSubtitleValidatorSearchResponse502 = {
   data: ErrorResponseResponse;
   status: 502;
@@ -110,6 +115,7 @@ export type runAdminSubtitleValidatorSearchResponseError = (
   | runAdminSubtitleValidatorSearchResponse400
   | runAdminSubtitleValidatorSearchResponse401
   | runAdminSubtitleValidatorSearchResponse403
+  | runAdminSubtitleValidatorSearchResponse408
   | runAdminSubtitleValidatorSearchResponse502
   | runAdminSubtitleValidatorSearchResponse503
 ) & {

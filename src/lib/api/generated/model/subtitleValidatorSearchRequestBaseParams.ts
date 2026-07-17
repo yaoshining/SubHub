@@ -6,10 +6,7 @@
  * OpenAPI spec version: 0.2.3
  */
 
-export type SubtitleValidatorSearchResultDataStatus =
-  (typeof SubtitleValidatorSearchResultDataStatus)[keyof typeof SubtitleValidatorSearchResultDataStatus];
-
-export const SubtitleValidatorSearchResultDataStatus = {
-  success: "success",
-  empty: "empty",
-} as const;
+export type SubtitleValidatorSearchRequestBaseParams = {
+  /** @minLength 1 */
+  keyword: string;
+};

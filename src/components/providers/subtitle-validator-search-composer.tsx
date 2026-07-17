@@ -46,6 +46,28 @@ export function SubtitleValidatorSearchComposer({
     supportsField(provider, "season") || supportsField(provider, "episode");
   const showIdentifierFields =
     supportsField(provider, "imdbId") || supportsField(provider, "tmdbId");
+  const setKeyword = (keyword: string) =>
+    onChange({ ...form, baseParams: { keyword } });
+  const setProviderParam = (
+    key: string,
+    value: string | number | boolean | null,
+  ) => {
+    const providerParams = { ...form.providerParams };
+    if (value === null || value === "") {
+      delete providerParams[key];
+    } else {
+      providerParams[key] = value;
+    }
+    onChange({ ...form, providerParams });
+  };
+  const getStringParam = (key: string) =>
+    typeof form.providerParams[key] === "string"
+      ? form.providerParams[key]
+      : "";
+  const getNumberParam = (key: string) =>
+    typeof form.providerParams[key] === "number"
+      ? String(form.providerParams[key])
+      : "";
 
   return (
     <Card className="border-border bg-surface shadow-none">
@@ -70,18 +92,12 @@ export function SubtitleValidatorSearchComposer({
               </label>
               <Input
                 id="validator-title"
-                onChange={(event) =>
-                  onChange({
-                    ...form,
-                    title: event.target.value,
-                  })
-                }
+                onChange={(event) => setKeyword(event.target.value)}
                 placeholder="例如 The Matrix / Friends S01E01"
                 required
-                value={form.title}
+                value={form.baseParams.keyword}
               />
             </div>
-
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="validator-query">
                 附加查询
@@ -89,16 +105,12 @@ export function SubtitleValidatorSearchComposer({
               <Input
                 id="validator-query"
                 onChange={(event) =>
-                  onChange({
-                    ...form,
-                    query: event.target.value || undefined,
-                  })
+                  setProviderParam("query", event.target.value)
                 }
                 placeholder="可选关键词补充"
-                value={form.query ?? ""}
+                value={getStringParam("query")}
               />
             </div>
-
             <div className="grid gap-2">
               <label
                 className="text-sm font-medium"
@@ -109,31 +121,21 @@ export function SubtitleValidatorSearchComposer({
               <Input
                 id="validator-language"
                 onChange={(event) =>
-                  onChange({
-                    ...form,
-                    language: event.target.value || undefined,
-                  })
+                  setProviderParam("language", event.target.value)
                 }
                 placeholder="如 zh-CN / en"
-                value={form.language ?? ""}
+                value={getStringParam("language")}
               />
             </div>
-
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="validator-type">
                 媒体类型
               </label>
               <Select
                 onValueChange={(value) =>
-                  onChange({
-                    ...form,
-                    type:
-                      value === "all"
-                        ? undefined
-                        : (value as SubtitleValidatorSearchRequest["type"]),
-                  })
+                  setProviderParam("type", value === "all" ? null : value)
                 }
-                value={form.type ?? "all"}
+                value={getStringParam("type") || "all"}
               >
                 <SelectTrigger id="validator-type">
                   <SelectValue placeholder="全部类型" />
@@ -145,7 +147,6 @@ export function SubtitleValidatorSearchComposer({
                 </SelectContent>
               </Select>
             </div>
-
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="validator-year">
                 年份
@@ -154,26 +155,21 @@ export function SubtitleValidatorSearchComposer({
                 id="validator-year"
                 inputMode="numeric"
                 onChange={(event) =>
-                  onChange({
-                    ...form,
-                    year: event.target.value
-                      ? Number(event.target.value)
-                      : undefined,
-                  })
+                  setProviderParam(
+                    "year",
+                    event.target.value ? Number(event.target.value) : null,
+                  )
                 }
                 placeholder="如 1999"
-                value={form.year?.toString() ?? ""}
+                value={getNumberParam("year")}
               />
             </div>
           </div>
-
           <Separator />
-
           <div className="rounded-2xl border border-dashed border-border/70 px-4 py-3 text-xs text-muted-foreground">
             {provider?.baseFieldNotice ??
               "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。"}
           </div>
-
           <div className="grid gap-3">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
@@ -184,7 +180,6 @@ export function SubtitleValidatorSearchComposer({
                   "当前仅在 Provider 支持时展示额外字段；未出现的字段表示当前验证场景不需要。"}
               </p>
             </div>
-
             <div className="grid gap-4 md:grid-cols-2">
               {showEpisodeFields ? (
                 <>
@@ -199,15 +194,15 @@ export function SubtitleValidatorSearchComposer({
                       id="validator-season"
                       inputMode="numeric"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          season: event.target.value
+                        setProviderParam(
+                          "season",
+                          event.target.value
                             ? Number(event.target.value)
-                            : undefined,
-                        })
+                            : null,
+                        )
                       }
                       placeholder="1"
-                      value={form.season?.toString() ?? ""}
+                      value={getNumberParam("season")}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -221,20 +216,19 @@ export function SubtitleValidatorSearchComposer({
                       id="validator-episode"
                       inputMode="numeric"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          episode: event.target.value
+                        setProviderParam(
+                          "episode",
+                          event.target.value
                             ? Number(event.target.value)
-                            : undefined,
-                        })
+                            : null,
+                        )
                       }
                       placeholder="1"
-                      value={form.episode?.toString() ?? ""}
+                      value={getNumberParam("episode")}
                     />
                   </div>
                 </>
               ) : null}
-
               {showIdentifierFields ? (
                 <>
                   <div className="grid gap-2">
@@ -247,13 +241,10 @@ export function SubtitleValidatorSearchComposer({
                     <Input
                       id="validator-imdb-id"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          imdbId: event.target.value || undefined,
-                        })
+                        setProviderParam("imdbId", event.target.value)
                       }
                       placeholder="tt0133093"
-                      value={form.imdbId ?? ""}
+                      value={getStringParam("imdbId")}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -267,15 +258,15 @@ export function SubtitleValidatorSearchComposer({
                       id="validator-tmdb-id"
                       inputMode="numeric"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          tmdbId: event.target.value
+                        setProviderParam(
+                          "tmdbId",
+                          event.target.value
                             ? Number(event.target.value)
-                            : undefined,
-                        })
+                            : null,
+                        )
                       }
                       placeholder="603"
-                      value={form.tmdbId?.toString() ?? ""}
+                      value={getNumberParam("tmdbId")}
                     />
                   </div>
                 </>
@@ -287,7 +278,6 @@ export function SubtitleValidatorSearchComposer({
               )}
             </div>
           </div>
-
           <div className="flex flex-wrap items-center gap-3">
             <Button disabled={!provider || searching} type="submit">
               <Search className="mr-2 size-4" />

@@ -40,16 +40,9 @@ import {
 } from "@/components/ui/drawer";
 
 const initialFormState: SubtitleValidatorSearchRequest = {
-  title: "",
-  provider: undefined,
-  query: undefined,
-  language: undefined,
-  type: undefined,
-  year: undefined,
-  season: undefined,
-  episode: undefined,
-  imdbId: undefined,
-  tmdbId: undefined,
+  providerId: "",
+  baseParams: { keyword: "" },
+  providerParams: {},
 };
 
 function getErrorMessage(error: unknown) {
@@ -192,12 +185,9 @@ export function SubtitleApiValidatorClient() {
         null;
       setSelectedProviderId(providerId);
       setForm((current) => ({
-        ...initialFormState,
-        title: current.title,
-        query: current.query,
-        language: current.language,
-        type: current.type,
-        provider: nextProvider?.providerKey,
+        providerId: nextProvider?.providerId ?? "",
+        baseParams: current.baseParams,
+        providerParams: {},
       }));
       setSearchResult(null);
       setSearchError(null);
@@ -224,7 +214,7 @@ export function SubtitleApiValidatorClient() {
     try {
       const result = await runSubtitleValidatorSearch({
         ...form,
-        provider: selectedProvider.providerKey,
+        providerId: selectedProvider.providerId,
       });
       setSearchResult(result);
     } catch (error) {
@@ -535,8 +525,9 @@ export function SubtitleApiValidatorClient() {
                 onChange={setForm}
                 onReset={() =>
                   setForm({
-                    ...initialFormState,
-                    provider: selectedProvider?.providerKey,
+                    providerId: selectedProvider?.providerId ?? "",
+                    baseParams: { keyword: "" },
+                    providerParams: {},
                   })
                 }
                 onSubmit={handleSearch}

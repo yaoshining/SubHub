@@ -74,15 +74,15 @@ describe("Subtitle API Validator 搜索交互", () => {
     await user.click(screen.getByRole("button", { name: "搜索验证" }));
 
     await waitFor(() =>
-      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          provider: "opensubtitles",
-          title: "The Matrix",
+      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
+        providerId: "provider-os",
+        baseParams: { keyword: "The Matrix" },
+        providerParams: {
           imdbId: "tt0133093",
           season: 1,
           episode: 2,
-        }),
-      ),
+        },
+      }),
     );
 
     expect(screen.getByText("The Matrix.zh-CN")).toBeInTheDocument();

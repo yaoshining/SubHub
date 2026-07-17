@@ -881,6 +881,8 @@ paths:
                 $ref: "#/components/schemas/SubtitleValidatorSearchResponse"
         "400":
           $ref: "#/components/responses/ErrorResponse"
+        "408":
+          $ref: "#/components/responses/ErrorResponse"
         "401":
           $ref: "#/components/responses/ErrorResponse"
         "403":
@@ -992,6 +994,7 @@ components:
         - NO_RESULTS
         - SUBTITLE_NOT_FOUND
         - UPSTREAM_FAILED
+        - TIMEOUT
     ErrorDetail:
       type: object
       required:
@@ -1365,42 +1368,29 @@ components:
     SubtitleValidatorSearchRequest:
       type: object
       required:
-        - title
+        - providerId
+        - baseParams
+        - providerParams
       properties:
-        provider:
-          $ref: "#/components/schemas/ProviderType"
-        title:
+        providerId:
           type: string
           minLength: 1
-        query:
-          type: string
-          minLength: 1
-        year:
-          type: integer
-          minimum: 1900
-          maximum: 2100
-        season:
-          type: integer
-          minimum: 1
-        episode:
-          type: integer
-          minimum: 1
-        language:
-          type: string
-          minLength: 2
-          maxLength: 16
-        imdbId:
-          type: string
-          minLength: 1
-          maxLength: 32
-        tmdbId:
-          type: integer
-          minimum: 1
-        type:
-          type: string
-          enum:
-            - movie
-            - episode
+        baseParams:
+          type: object
+          required:
+            - keyword
+          properties:
+            keyword:
+              type: string
+              minLength: 1
+        providerParams:
+          type: object
+          additionalProperties:
+            nullable: true
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
     SubtitleValidatorSearchResult:
       type: object
       required:
@@ -1526,7 +1516,7 @@ components:
           type: string
           enum:
             - success
-            - partial
+            - empty
         results:
           type: array
           items:
@@ -2495,9 +2485,9 @@ components:
           type: string
           enum:
             - success
-            - partial
+            - empty
           description: |
-            success: 所有 provider 成功或无 provider；partial: 至少一个 provider 失败但其他 provider 返回了结果。
+            success: 至少返回一个搜索结果；empty: 所有 provider 均成功执行但未返回结果。
         results:
           type: array
           items:
