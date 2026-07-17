@@ -57,15 +57,18 @@ const buildSearchInput = (input: SubtitleValidatorSearchRequest) => {
   };
 };
 
+const sensitiveDownloadParameterName =
+  /^(access_token|token|secret|credential|api[_-]?key|password)$/i;
+
 const redactSensitiveText = (message: string) =>
   message
     .replace(
       /\b(access_token|token|secret|credential|api[_-]?key|password)=([^\s&]+)/gi,
-      "[redacted]",
+      "$1=[redacted]",
     )
     .replace(
       /(["']?(?:access_token|token|secret|credential|api[_-]?key|password)["']?\s*:\s*["'])[^"']+/gi,
-      "[redacted]",
+      "$1[redacted]",
     )
     .replace(/bearer\s+[a-z0-9._\-]+/gi, "bearer [redacted]");
 
@@ -719,6 +722,11 @@ export async function validateSubtitleDownload(
       downloadUrl = new URL(input.downloadReference);
       if (
         downloadUrl.protocol !== "https:" ||
+        downloadUrl.username ||
+        downloadUrl.password ||
+        [...downloadUrl.searchParams.keys()].some((key) =>
+          sensitiveDownloadParameterName.test(key),
+        ) ||
         ["localhost", "127.0.0.1", "::1"].includes(
           downloadUrl.hostname.toLowerCase(),
         ) ||

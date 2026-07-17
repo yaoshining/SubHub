@@ -139,7 +139,7 @@ describe("admin subtitle validator download", () => {
     expect(fetchImpl.mock.calls[0]?.[1]).not.toHaveProperty("headers");
   });
 
-  it("将不安全或不可访问的下载地址标为 failed，且不回显敏感查询参数", async () => {
+  it("拒绝不安全或携带敏感凭据的下载地址，且不回显敏感值", async () => {
     const fetchImpl = vi.fn();
     const provider = createProvider({
       id: "provider-xl",
@@ -150,22 +150,30 @@ describe("admin subtitle validator download", () => {
       credentialCount: 0,
     });
 
-    const unsafeResult = await validateSubtitleDownload(
-      {
-        providerId: provider.id,
-        resultId: `xunlei:${provider.id}:subtitle-1`,
-        mode: "url_check",
-        downloadReference: "http://127.0.0.1/internal?token=secret-value",
-      },
-      {
-        db: {} as never,
-        listProviders: vi.fn().mockResolvedValue([provider]),
-        fetchImpl,
-      },
-    );
+    for (const downloadReference of [
+      "http://127.0.0.1/internal?token=secret-value",
+      "https://downloads.example.com/subtitle.srt?token=secret-value",
+      "https://user:password@downloads.example.com/subtitle.srt",
+    ]) {
+      const unsafeResult = await validateSubtitleDownload(
+        {
+          providerId: provider.id,
+          resultId: `xunlei:${provider.id}:subtitle-1`,
+          mode: "url_check",
+          downloadReference,
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([provider]),
+          fetchImpl,
+        },
+      );
 
-    expect(unsafeResult.status).toBe("failed");
-    expect(JSON.stringify(unsafeResult)).not.toContain("secret-value");
+      expect(unsafeResult.status).toBe("failed");
+      expect(JSON.stringify(unsafeResult)).not.toContain("secret-value");
+      expect(JSON.stringify(unsafeResult)).not.toContain("password");
+    }
+
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
