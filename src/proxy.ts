@@ -62,9 +62,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname === "/admin/subtitle-api-validator") {
+  if (
+    pathname === "/admin/subtitle-api-validator" ||
+    pathname.startsWith("/admin/subtitle-api-validator/")
+  ) {
     const validatorUrl = request.nextUrl.clone();
-    validatorUrl.pathname = "/subtitle-api-validator";
+    validatorUrl.pathname = pathname.slice("/admin".length);
     return NextResponse.rewrite(validatorUrl, {
       request: {
         headers: requestHeaders,
@@ -81,7 +84,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/subtitle-api-validator",
+    "/admin/subtitle-api-validator/:path*",
     "/dashboard/:path*",
     "/providers/:path*",
     "/api-keys/:path*",

@@ -12,6 +12,16 @@ import {
 import { AppError } from "@/lib/errors";
 import { renderWithTheme } from "../helpers/ui";
 
+const navigation = vi.hoisted(() => ({
+  pathname: "/admin/subtitle-api-validator",
+  searchParams: new URLSearchParams(),
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigation.pathname,
+  useSearchParams: () => navigation.searchParams,
+}));
+
 vi.mock("@/lib/api/subtitle-validator", () => ({
   fetchSubtitleValidatorProviders: vi.fn(),
   runSubtitleValidatorSearch: vi.fn(),
@@ -54,6 +64,8 @@ const xunleiProvider = createProviderCapability({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  navigation.pathname = "/admin/subtitle-api-validator";
+  navigation.searchParams = new URLSearchParams();
   vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
     items: [degradedProvider, xunleiProvider],
     total: 2,
@@ -87,7 +99,10 @@ describe("Subtitle API Validator 页面", () => {
     expect(screen.getByText(/最近错误摘要: 最近一次超时/)).toBeInTheDocument();
   });
 
-  it("认证失效时提供保留 Validator 返回路径的重新登录入口", async () => {
+  it("认证失效时提供保留当前查询参数的重新登录入口", async () => {
+    navigation.searchParams = new URLSearchParams(
+      "provider=opensubtitles&status=degraded",
+    );
     vi.mocked(api.fetchSubtitleValidatorProviders).mockRejectedValue(
       new AppError(
         "AUTHENTICATION_REQUIRED",
@@ -102,7 +117,7 @@ describe("Subtitle API Validator 页面", () => {
     const login = screen.getByRole("link", { name: "重新登录" });
     expect(login).toHaveAttribute(
       "href",
-      "/login?next=%2Fadmin%2Fsubtitle-api-validator&auth=session-expired",
+      "/login?next=%2Fadmin%2Fsubtitle-api-validator%3Fprovider%3Dopensubtitles%26status%3Ddegraded&auth=session-expired",
     );
     expect(screen.queryByText("重试读取")).not.toBeInTheDocument();
   });

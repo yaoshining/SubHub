@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
   AlertTriangle,
@@ -73,6 +74,8 @@ function getDefaultProviderId(
 }
 
 export function SubtitleApiValidatorClient() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [providers, setProviders] = React.useState<
     SubtitleValidatorProviderCapability[]
   >([]);
@@ -99,6 +102,15 @@ export function SubtitleApiValidatorClient() {
     "success",
   );
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+  const loginHref = React.useMemo(() => {
+    const search = searchParams.toString();
+    const loginParams = new URLSearchParams({
+      next: `${pathname}${search ? `?${search}` : ""}`,
+      auth: "session-expired",
+    });
+
+    return `/login?${loginParams.toString()}`;
+  }, [pathname, searchParams]);
 
   const loadProviders = React.useCallback(async () => {
     setAuthenticationError(null);
@@ -272,7 +284,7 @@ export function SubtitleApiValidatorClient() {
             </AlertDescription>
           </Alert>
           <Button asChild>
-            <Link href="/login?next=%2Fadmin%2Fsubtitle-api-validator&auth=session-expired">
+            <Link href={loginHref}>
               <LogIn />
               重新登录
             </Link>
