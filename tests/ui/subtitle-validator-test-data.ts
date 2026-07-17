@@ -13,6 +13,8 @@ export function createProviderCapability(
     providerKey: "opensubtitles",
     providerName: "OpenSubtitles",
     status: "enabled",
+    availabilityLabel: "已启用",
+    restrictionNote: null,
     healthStatus: "ready",
     requiresCredentials: true,
     credentialCount: 1,

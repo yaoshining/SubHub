@@ -42,6 +42,33 @@ const capabilityNotes: Record<SubtitleProviderKey, string[]> = {
   ],
 };
 
+const getAvailability = (
+  status: SubtitleValidatorProviderCapability["status"],
+) => {
+  switch (status) {
+    case "enabled":
+      return { label: "已启用", restrictionNote: null };
+    case "disabled":
+      return {
+        label: "已禁用",
+        restrictionNote:
+          "当前 Provider 已禁用；可用于排障验证，但不代表正式服务已恢复。",
+      };
+    case "needs_config":
+      return {
+        label: "待配置",
+        restrictionNote:
+          "当前 Provider 尚未完成配置；验证结果仅用于定位配置缺口。",
+      };
+    case "degraded":
+      return {
+        label: "已降级",
+        restrictionNote:
+          "当前 Provider 已降级；验证结果仅用于排障，不代表正式服务健康。",
+      };
+  }
+};
+
 export function buildSubtitleValidatorSearchFieldGroups(
   providerKey: SubtitleProviderKey,
 ) {
@@ -60,12 +87,15 @@ export function mapProviderToValidatorCapability(
   const providerKey = provider.type;
   const requiresCredentials = providerTypeRequiresCredentials(provider.type);
   const fieldGroups = buildSubtitleValidatorSearchFieldGroups(providerKey);
+  const availability = getAvailability(provider.status);
 
   return {
     providerId: provider.id,
     providerKey,
     providerName: provider.name,
     status: provider.status,
+    availabilityLabel: availability.label,
+    restrictionNote: availability.restrictionNote,
     healthStatus:
       provider.lastHealthStatus === "ready" ||
       provider.lastHealthStatus === "degraded"

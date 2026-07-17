@@ -1271,6 +1271,8 @@ components:
         - providerKey
         - providerName
         - status
+        - availabilityLabel
+        - restrictionNote
         - healthStatus
         - requiresCredentials
         - credentialCount
@@ -1294,6 +1296,13 @@ components:
           type: string
         status:
           $ref: "#/components/schemas/SubtitleValidatorProviderStatus"
+        availabilityLabel:
+          type: string
+          description: 面向管理员的 Provider 可用性状态文案。
+        restrictionNote:
+          type: string
+          nullable: true
+          description: disabled、needs_config 或 degraded Provider 的排障限制说明。
         healthStatus:
           $ref: "#/components/schemas/SubtitleValidatorProviderHealthStatus"
         requiresCredentials:

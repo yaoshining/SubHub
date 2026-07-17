@@ -56,7 +56,10 @@ export function getAdminPageMeta(
   if (path === "/settings") {
     return knownAdminPageMetas[5]!;
   }
-  if (path === "/subtitle-api-validator") {
+  if (
+    path === "/subtitle-api-validator" ||
+    path === "/admin/subtitle-api-validator"
+  ) {
     return knownAdminPageMetas[6]!;
   }
 

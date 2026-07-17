@@ -54,6 +54,8 @@ export const subtitleValidatorProviderCapabilitySchema = z.object({
   providerKey: providerKeySchema,
   providerName: z.string().min(1),
   status: providerStatusSchema,
+  availabilityLabel: z.string().min(1),
+  restrictionNote: z.string().min(1).nullable(),
   healthStatus: providerHealthSchema,
   requiresCredentials: z.boolean(),
   credentialCount: z.number().int().nonnegative(),

@@ -15,6 +15,10 @@ export interface SubtitleValidatorProviderCapability {
   providerKey: ProviderType;
   providerName: string;
   status: SubtitleValidatorProviderStatus;
+  /** 面向管理员的 Provider 可用性状态文案。 */
+  availabilityLabel: string;
+  /** disabled、needs_config 或 degraded Provider 的排障限制说明。 */
+  restrictionNote: string | null;
   healthStatus: SubtitleValidatorProviderHealthStatus;
   requiresCredentials: boolean;
   /** @minimum 0 */

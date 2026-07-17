@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import * as React from "react";
-import { AlertTriangle, ArrowLeft, RefreshCw, Shield } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  LogIn,
+  RefreshCw,
+  Shield,
+} from "lucide-react";
 
 import {
   type SubtitleValidatorProviderCapability,
@@ -67,6 +74,8 @@ function getDefaultProviderId(
 }
 
 export function SubtitleApiValidatorClient() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [providers, setProviders] = React.useState<
     SubtitleValidatorProviderCapability[]
   >([]);
@@ -78,6 +87,9 @@ export function SubtitleApiValidatorClient() {
   const [permissionError, setPermissionError] = React.useState<string | null>(
     null,
   );
+  const [authenticationError, setAuthenticationError] = React.useState<
+    string | null
+  >(null);
   const [form, setForm] = React.useState(initialFormState);
   const [searching, setSearching] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string | null>(null);
@@ -90,8 +102,21 @@ export function SubtitleApiValidatorClient() {
     "success",
   );
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+  const loginHref = React.useMemo(() => {
+    const search = searchParams?.toString() ?? "";
+    const loginParams = new URLSearchParams({
+      next: `${pathname ?? "/admin/subtitle-api-validator"}${
+        search ? `?${search}` : ""
+      }`,
+      auth: "session-expired",
+    });
+
+    return `/login?${loginParams.toString()}`;
+  }, [pathname, searchParams]);
 
   const loadProviders = React.useCallback(async () => {
+    setAuthenticationError(null);
+    setPermissionError(null);
     try {
       const data = await fetchSubtitleValidatorProviders();
       setProviders(data.items);
@@ -101,7 +126,12 @@ export function SubtitleApiValidatorClient() {
           : getDefaultProviderId(data.items),
       );
     } catch (error) {
-      if (error instanceof AppError && error.code === "FORBIDDEN") {
+      if (
+        error instanceof AppError &&
+        error.code === "AUTHENTICATION_REQUIRED"
+      ) {
+        setAuthenticationError(error.message);
+      } else if (error instanceof AppError && error.code === "FORBIDDEN") {
         setPermissionError(error.message);
       } else {
         setProviderError(getErrorMessage(error));
@@ -125,7 +155,12 @@ export function SubtitleApiValidatorClient() {
         );
       } catch (error) {
         if (!mounted) return;
-        if (error instanceof AppError && error.code === "FORBIDDEN") {
+        if (
+          error instanceof AppError &&
+          error.code === "AUTHENTICATION_REQUIRED"
+        ) {
+          setAuthenticationError(error.message);
+        } else if (error instanceof AppError && error.code === "FORBIDDEN") {
           setPermissionError(error.message);
         } else {
           setProviderError(getErrorMessage(error));
@@ -171,6 +206,12 @@ export function SubtitleApiValidatorClient() {
     [providers],
   );
 
+  const handleAuthenticationRequired = React.useCallback((error: AppError) => {
+    setAuthenticationError(error.message);
+    setSearchError(null);
+    setDownloadMessage(null);
+  }, []);
+
   const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedProvider) {
@@ -187,7 +228,14 @@ export function SubtitleApiValidatorClient() {
       });
       setSearchResult(result);
     } catch (error) {
-      setSearchError(getErrorMessage(error));
+      if (
+        error instanceof AppError &&
+        error.code === "AUTHENTICATION_REQUIRED"
+      ) {
+        handleAuthenticationRequired(error);
+      } else {
+        setSearchError(getErrorMessage(error));
+      }
       setSearchResult(null);
     } finally {
       setSearching(false);
@@ -212,12 +260,41 @@ export function SubtitleApiValidatorClient() {
         `已验证 ${result.fileName}（${result.contentType}，${result.contentLength} bytes）`,
       );
     } catch (error) {
-      setDownloadTone("error");
-      setDownloadMessage(getErrorMessage(error));
+      if (
+        error instanceof AppError &&
+        error.code === "AUTHENTICATION_REQUIRED"
+      ) {
+        handleAuthenticationRequired(error);
+      } else {
+        setDownloadTone("error");
+        setDownloadMessage(getErrorMessage(error));
+      }
     } finally {
       setDownloadingId(null);
     }
   };
+
+  if (authenticationError) {
+    return (
+      <Card className="border-border bg-surface shadow-none">
+        <CardContent className="space-y-4 px-6 py-8">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>管理员会话已失效</AlertTitle>
+            <AlertDescription>
+              {authenticationError} 请重新登录后继续使用验证工具。
+            </AlertDescription>
+          </Alert>
+          <Button asChild>
+            <Link href={loginHref}>
+              <LogIn />
+              重新登录
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (permissionError) {
     return (
@@ -286,34 +363,71 @@ export function SubtitleApiValidatorClient() {
       </Card>
 
       <div className="grid gap-4 xl:hidden">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button
-              className="w-full justify-between"
-              type="button"
-              variant="outline"
-            >
-              <span>{selectedProvider?.providerName ?? "选择 Provider"}</span>
-              <Badge variant="secondary">{providers.length}</Badge>
+        {loadingProviders ? (
+          <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            正在加载 provider capabilities...
+          </div>
+        ) : null}
+        {providerError ? (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>读取失败</AlertTitle>
+            <AlertDescription className="space-y-3">
+              <p>{providerError}</p>
+              <Button
+                onClick={() => {
+                  setLoadingProviders(true);
+                  setProviderError(null);
+                  void loadProviders();
+                }}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <RefreshCw />
+                重试读取
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {!loadingProviders && !providerError && providers.length === 0 ? (
+          <div className="space-y-3 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            <p>当前没有可用 provider；请先到服务商页完成基础配置。</p>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/providers">前往 Provider 管理</Link>
             </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>选择 Provider</DrawerTitle>
-              <DrawerDescription>
-                Tablet / mobile 下 Provider Rail
-                收敛为顶部抽屉，右侧工作区语义保持不变。
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="px-4 pb-6">
-              <SubtitleValidatorProviderRail
-                onSelectProvider={handleSelectProvider}
-                providers={providers}
-                selectedProviderId={selectedProviderId}
-              />
-            </div>
-          </DrawerContent>
-        </Drawer>
+          </div>
+        ) : null}
+        {!loadingProviders && !providerError && providers.length > 0 ? (
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button
+                className="w-full justify-between"
+                type="button"
+                variant="outline"
+              >
+                <span>{selectedProvider?.providerName ?? "选择 Provider"}</span>
+                <Badge variant="secondary">{providers.length}</Badge>
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>选择 Provider</DrawerTitle>
+                <DrawerDescription>
+                  Tablet / mobile 下 Provider Rail
+                  收敛为顶部抽屉，右侧工作区语义保持不变。
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="px-4 pb-6">
+                <SubtitleValidatorProviderRail
+                  onSelectProvider={handleSelectProvider}
+                  providers={providers}
+                  selectedProviderId={selectedProviderId}
+                />
+              </div>
+            </DrawerContent>
+          </Drawer>
+        ) : null}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
