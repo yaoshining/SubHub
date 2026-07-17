@@ -12,10 +12,12 @@ import {
 import { AppError } from "@/lib/errors";
 import { renderWithTheme } from "../helpers/ui";
 
-const navigation = vi.hoisted(() => ({
-  pathname: "/admin/subtitle-api-validator",
-  searchParams: new URLSearchParams(),
-}));
+const navigation = vi.hoisted(
+  (): { pathname: string | null; searchParams: URLSearchParams | null } => ({
+    pathname: "/admin/subtitle-api-validator",
+    searchParams: new URLSearchParams(),
+  }),
+);
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navigation.pathname,
@@ -120,6 +122,26 @@ describe("Subtitle API Validator 页面", () => {
       "/login?next=%2Fadmin%2Fsubtitle-api-validator%3Fprovider%3Dopensubtitles%26status%3Ddegraded&auth=session-expired",
     );
     expect(screen.queryByText("重试读取")).not.toBeInTheDocument();
+  });
+
+  it("路由上下文不可用时仍提供 Validator 返回路径的重新登录入口", async () => {
+    navigation.pathname = null;
+    navigation.searchParams = null;
+    vi.mocked(api.fetchSubtitleValidatorProviders).mockRejectedValue(
+      new AppError(
+        "AUTHENTICATION_REQUIRED",
+        "管理员会话已失效。",
+        "admin_session",
+      ),
+    );
+
+    renderWithTheme(<SubtitleApiValidatorClient />);
+
+    expect(await screen.findByText("管理员会话已失效")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "重新登录" })).toHaveAttribute(
+      "href",
+      "/login?next=%2Fadmin%2Fsubtitle-api-validator&auth=session-expired",
+    );
   });
 
   it("加载、读取失败和空列表时不渲染窄屏 Provider Drawer 入口", async () => {

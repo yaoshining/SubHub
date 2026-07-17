@@ -103,9 +103,11 @@ export function SubtitleApiValidatorClient() {
   );
   const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
   const loginHref = React.useMemo(() => {
-    const search = searchParams.toString();
+    const search = searchParams?.toString() ?? "";
     const loginParams = new URLSearchParams({
-      next: `${pathname}${search ? `?${search}` : ""}`,
+      next: `${pathname ?? "/admin/subtitle-api-validator"}${
+        search ? `?${search}` : ""
+      }`,
       auth: "session-expired",
     });
 
