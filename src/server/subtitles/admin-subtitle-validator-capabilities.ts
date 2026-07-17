@@ -60,7 +60,7 @@ export const redactSubtitleValidatorSensitiveText = (message: string) =>
       /(["']?(?:access_token|token|secret|credential|api[_-]?key|password)["']?\s*:\s*["'])[^"']+/gi,
       "$1[redacted]",
     )
-    .replace(/bearer\s+[a-z0-9._\-]+/gi, "bearer [redacted]");
+    .replace(/bearer\s+\S+/gi, "bearer [redacted]");
 
 const getAvailability = (
   status: SubtitleValidatorProviderCapability["status"],

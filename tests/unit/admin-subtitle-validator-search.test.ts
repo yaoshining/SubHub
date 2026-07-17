@@ -89,6 +89,53 @@ describe("admin subtitle validator search", () => {
     );
   });
 
+  it("在记录凭据失败前脱敏 provider 错误消息", async () => {
+    const provider = createProvider();
+    const markCredentialFailure = vi.fn().mockResolvedValue(undefined);
+    const adapter: SubtitleProviderAdapter = {
+      key: "opensubtitles",
+      search: vi.fn().mockResolvedValue({
+        ok: false,
+        skipped: false,
+        error: {
+          reason: "upstream_error",
+          message: "upstream rejected bearer ABC+/opaque==",
+        },
+      }),
+    };
+
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: provider.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: {},
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([provider]),
+          getAdapter: vi.fn().mockReturnValue(adapter),
+          selectCredential: vi.fn().mockResolvedValue({
+            id: "credential-1",
+            secret: "secret",
+          }),
+          markCredentialFailure,
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "UPSTREAM_FAILED",
+      message: "upstream rejected bearer [redacted]",
+    });
+
+    expect(markCredentialFailure).toHaveBeenCalledWith(
+      provider,
+      "credential-1",
+      "upstream_error",
+      "upstream rejected bearer [redacted]",
+      expect.objectContaining({ db: expect.anything() }),
+    );
+  });
+
   it("不会将无效媒体类型透传给 provider adapter", async () => {
     const provider = createProvider({
       id: "xunlei-default",

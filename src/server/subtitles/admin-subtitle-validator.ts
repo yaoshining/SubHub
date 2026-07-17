@@ -529,12 +529,15 @@ export async function searchSubtitleValidator(
   const outcome = await adapter.search(credential, searchInput);
 
   if (!outcome.ok) {
+    const safeMessage = redactSubtitleValidatorSensitiveText(
+      outcome.error.message,
+    );
     if (credential) {
       await markFailure(
         provider,
         credential.id,
         outcome.error.reason,
-        outcome.error.message,
+        safeMessage,
         {
           db,
           now,
@@ -547,7 +550,7 @@ export async function searchSubtitleValidator(
       provider,
       startedAt,
       code,
-      message: outcome.error.message,
+      message: safeMessage,
       target: "provider",
     });
   }

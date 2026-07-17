@@ -156,13 +156,13 @@ describe("subtitle validator diagnostics helpers", () => {
 
   it("脱敏 Provider 健康摘要中的凭据", () => {
     const summary = redactSubtitleValidatorSensitiveText(
-      "上游失败: bearer secret-token access_token=top-secret api-key=another-secret",
+      "上游失败: bearer ABC+/opaque== access_token=top-secret api-key=another-secret",
     );
 
     expect(summary).toBe(
       "上游失败: bearer [redacted] access_token=[redacted] api-key=[redacted]",
     );
-    expect(summary).not.toContain("secret-token");
+    expect(summary).not.toContain("ABC+/opaque==");
     expect(summary).not.toContain("top-secret");
     expect(summary).not.toContain("another-secret");
   });

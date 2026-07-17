@@ -66,7 +66,9 @@ function getErrorDiagnostic(
 ): SubtitleValidatorDiagnosticSummaryData | null {
   if (!(error instanceof AppError)) return null;
   const diagnostic = error.details?.diagnostic;
-  return diagnostic && typeof diagnostic === "object"
+  return diagnostic &&
+    typeof diagnostic === "object" &&
+    !Array.isArray(diagnostic)
     ? (diagnostic as SubtitleValidatorDiagnosticSummaryData)
     : null;
 }
