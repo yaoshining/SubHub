@@ -452,9 +452,9 @@ export function SubtitleApiValidatorClient() {
         ) : null}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="hidden xl:block">
-          <Card className="border-border bg-surface shadow-none">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden min-w-0 xl:block">
+          <Card className="min-w-0 border-border bg-surface shadow-none">
             <CardHeader>
               <CardTitle className="text-base">Provider Rail</CardTitle>
             </CardHeader>
