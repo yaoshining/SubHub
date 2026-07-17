@@ -7,6 +7,7 @@ import {
 import { AppError, toApiErrorResponse } from "@/lib/errors";
 
 const protectedAdminPages = [
+  "/admin/subtitle-api-validator",
   "/dashboard",
   "/providers",
   "/api-keys",
@@ -61,6 +62,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  if (pathname === "/admin/subtitle-api-validator") {
+    const validatorUrl = request.nextUrl.clone();
+    validatorUrl.pathname = "/subtitle-api-validator";
+    return NextResponse.rewrite(validatorUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
   return NextResponse.next({
     request: {
       headers: requestHeaders,
@@ -70,6 +81,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/admin/subtitle-api-validator",
     "/dashboard/:path*",
     "/providers/:path*",
     "/api-keys/:path*",

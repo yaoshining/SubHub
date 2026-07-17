@@ -40,7 +40,7 @@ const navigationItems = [
   },
   { href: "/users", label: "用户", iconName: "users", Icon: Users },
   {
-    href: "/subtitle-api-validator",
+    href: "/admin/subtitle-api-validator",
     label: "字幕 API 验证",
     iconName: "search-check",
     Icon: SearchCheck,

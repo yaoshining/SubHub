@@ -7,16 +7,6 @@ type SubtitleValidatorProviderOverviewProps = {
   provider: SubtitleValidatorProviderCapability | null;
 };
 
-const statusLabel: Record<
-  SubtitleValidatorProviderCapability["status"],
-  string
-> = {
-  enabled: "已启用",
-  disabled: "已禁用",
-  needs_config: "待配置",
-  degraded: "已降级",
-};
-
 const healthLabel: Record<
   SubtitleValidatorProviderCapability["healthStatus"],
   string
@@ -55,32 +45,17 @@ export function SubtitleValidatorProviderOverview({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">{statusLabel[provider.status]}</Badge>
+          <Badge variant="outline">{provider.availabilityLabel}</Badge>
           <Badge variant="secondary">
             Health {healthLabel[provider.healthStatus]}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
-        {provider.status === "disabled" ? (
+        {provider.restrictionNote ? (
           <Alert variant="warning">
-            <AlertTitle>此 Provider 已禁用</AlertTitle>
-            <AlertDescription>
-              仍可用于本页排障验证；验证成功不代表其已恢复到正式服务流量。
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {provider.status === "needs_config" ||
-        provider.status === "degraded" ? (
-          <Alert variant="warning">
-            <AlertTitle>
-              {provider.status === "needs_config"
-                ? "此 Provider 待配置"
-                : "此 Provider 已降级"}
-            </AlertTitle>
-            <AlertDescription>
-              当前状态限制正式服务可用性。本页结果仅用于定位配置或上游链路问题。
-            </AlertDescription>
+            <AlertTitle>此 Provider {provider.availabilityLabel}</AlertTitle>
+            <AlertDescription>{provider.restrictionNote}</AlertDescription>
           </Alert>
         ) : null}
         <div className="grid gap-3 sm:grid-cols-3">

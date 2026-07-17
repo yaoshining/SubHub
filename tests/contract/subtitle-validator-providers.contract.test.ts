@@ -102,6 +102,8 @@ describe("Subtitle Validator Provider 列表 API 契约", () => {
           providerKey: string;
           providerName: string;
           status: string;
+          availabilityLabel: string;
+          restrictionNote: string | null;
           requiresCredentials: boolean;
           credentialCount: number;
           availableCredentialCount: number;
@@ -124,6 +126,8 @@ describe("Subtitle Validator Provider 列表 API 契约", () => {
           providerKey: "opensubtitles",
           providerName: "OpenSubtitles Disabled",
           status: "disabled",
+          availabilityLabel: "已禁用",
+          restrictionNote: expect.stringContaining("已禁用"),
           requiresCredentials: true,
           credentialCount: 1,
           availableCredentialCount: 1,
