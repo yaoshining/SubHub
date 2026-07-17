@@ -6,9 +6,12 @@
  * OpenAPI spec version: 0.2.3
  */
 import type { ErrorCode } from "./errorCode";
+import type { ErrorDetailDetails } from "./errorDetailDetails";
 
 export interface ErrorDetail {
   code: ErrorCode;
   message: string;
   target?: string;
+  /** 可选的接口专属结构化诊断信息；不得包含凭据或其他敏感信息。 */
+  details?: ErrorDetailDetails;
 }

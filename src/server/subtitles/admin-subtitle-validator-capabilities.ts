@@ -50,6 +50,18 @@ const capabilityNotes: Record<SubtitleProviderKey, string[]> = {
   ],
 };
 
+export const redactSubtitleValidatorSensitiveText = (message: string) =>
+  message
+    .replace(
+      /\b(access_token|token|secret|credential|api[_-]?key|password)=([^\s&]+)/gi,
+      "$1=[redacted]",
+    )
+    .replace(
+      /(["']?(?:access_token|token|secret|credential|api[_-]?key|password)["']?\s*:\s*["'])[^"']+/gi,
+      "$1[redacted]",
+    )
+    .replace(/bearer\s+\S+/gi, "bearer [redacted]");
+
 const getAvailability = (
   status: SubtitleValidatorProviderCapability["status"],
 ) => {
@@ -123,6 +135,8 @@ export function mapProviderToValidatorCapability(
     extendedFieldNotice: fieldGroups.extendedNotice,
     notes: capabilityNotes[providerKey],
     lastHealthCheckAt: provider.lastHealthCheckedAt,
-    lastHealthErrorSummary: provider.lastErrorSummary,
+    lastHealthErrorSummary: provider.lastErrorSummary
+      ? redactSubtitleValidatorSensitiveText(provider.lastErrorSummary)
+      : null,
   };
 }

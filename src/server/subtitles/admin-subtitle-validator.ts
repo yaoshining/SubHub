@@ -13,6 +13,7 @@ import {
 import {
   buildSubtitleValidatorSearchFieldGroups,
   mapProviderToValidatorCapability,
+  redactSubtitleValidatorSensitiveText,
 } from "@/server/subtitles/admin-subtitle-validator-capabilities";
 import type {
   SubtitleValidatorDiagnosticSummary,
@@ -60,18 +61,6 @@ const buildSearchInput = (input: SubtitleValidatorSearchRequest) => {
 const sensitiveDownloadParameterName =
   /^(access_token|token|secret|credential|api[_-]?key|password)$/i;
 
-const redactSensitiveText = (message: string) =>
-  message
-    .replace(
-      /\b(access_token|token|secret|credential|api[_-]?key|password)=([^\s&]+)/gi,
-      "$1=[redacted]",
-    )
-    .replace(
-      /(["']?(?:access_token|token|secret|credential|api[_-]?key|password)["']?\s*:\s*["'])[^"']+/gi,
-      "$1[redacted]",
-    )
-    .replace(/bearer\s+[a-z0-9._\-]+/gi, "bearer [redacted]");
-
 export function classifySubtitleValidatorError(
   error: unknown,
   fallbackMessage: string,
@@ -80,7 +69,7 @@ export function classifySubtitleValidatorError(
   safeMessage: string;
   nextActionHint: string | null;
 } {
-  const message = redactSensitiveText(
+  const message = redactSubtitleValidatorSensitiveText(
     error instanceof AppError || error instanceof Error
       ? error.message
       : fallbackMessage,
@@ -163,6 +152,31 @@ export function classifySubtitleValidatorError(
     nextActionHint:
       "可先重试一次；若仍失败，请回到 Provider 管理页检查健康摘要。",
   };
+}
+
+function createSubtitleValidatorSearchError(input: {
+  provider: ProviderWithCredentialSummary;
+  startedAt: number;
+  code: ConstructorParameters<typeof AppError>[0];
+  message: string;
+  target?: string;
+}) {
+  const error = new AppError(input.code, input.message, input.target);
+  const classifiedError = classifySubtitleValidatorError(error, input.message);
+  const diagnostic = buildSubtitleValidatorDiagnosticSummary({
+    action: "search",
+    providerKey: input.provider.type,
+    providerName: input.provider.name,
+    providerStatus: input.provider.status,
+    status: "error",
+    resultCount: 0,
+    elapsedMs: Date.now() - input.startedAt,
+    error: classifiedError,
+  });
+
+  return new AppError(error.code, classifiedError.safeMessage, error.target, {
+    diagnostic,
+  });
 }
 
 export function buildSubtitleValidatorDiagnosticSummary(input: {
@@ -473,11 +487,13 @@ export async function searchSubtitleValidator(
     (key) => !allowedParams.has(key as never),
   );
   if (unsupportedParam) {
-    throw new AppError(
-      "VALIDATION_FAILED",
-      `当前 Provider 不支持参数 ${unsupportedParam}。`,
-      `providerParams.${unsupportedParam}`,
-    );
+    throw createSubtitleValidatorSearchError({
+      provider,
+      startedAt,
+      code: "VALIDATION_FAILED",
+      message: `当前 Provider 不支持参数 ${unsupportedParam}。`,
+      target: `providerParams.${unsupportedParam}`,
+    });
   }
 
   const searchInput = buildSearchInput(input);
@@ -496,11 +512,13 @@ export async function searchSubtitleValidator(
       title: "关键词 / 标题",
     };
     const names = missingFields.map((field) => fieldLabels[field] ?? field);
-    throw new AppError(
-      "VALIDATION_FAILED",
-      `当前 Provider 缺少必填参数：${names.join("、")}。`,
-      `providerParams.${missingFields[0]}`,
-    );
+    throw createSubtitleValidatorSearchError({
+      provider,
+      startedAt,
+      code: "VALIDATION_FAILED",
+      message: `当前 Provider 缺少必填参数：${names.join("、")}。`,
+      target: `providerParams.${missingFields[0]}`,
+    });
   }
 
   const adapter = getAdapter(provider.type);
@@ -511,12 +529,15 @@ export async function searchSubtitleValidator(
   const outcome = await adapter.search(credential, searchInput);
 
   if (!outcome.ok) {
+    const safeMessage = redactSubtitleValidatorSensitiveText(
+      outcome.error.message,
+    );
     if (credential) {
       await markFailure(
         provider,
         credential.id,
         outcome.error.reason,
-        outcome.error.message,
+        safeMessage,
         {
           db,
           now,
@@ -525,30 +546,33 @@ export async function searchSubtitleValidator(
     }
     const code =
       outcome.error.reason === "timeout" ? "TIMEOUT" : "UPSTREAM_FAILED";
-    throw new AppError(
+    throw createSubtitleValidatorSearchError({
+      provider,
+      startedAt,
       code,
-      classifySubtitleValidatorError(
-        new AppError(code, outcome.error.message, "provider"),
-        outcome.error.message,
-      ).safeMessage,
-      "provider",
-    );
+      message: safeMessage,
+      target: "provider",
+    });
   }
 
   if (outcome.skipped) {
     if (outcome.reason === "missing_required_field") {
-      throw new AppError(
-        "VALIDATION_FAILED",
-        "当前 Provider 缺少执行搜索所需的参数。",
-        "providerParams",
-      );
+      throw createSubtitleValidatorSearchError({
+        provider,
+        startedAt,
+        code: "VALIDATION_FAILED",
+        message: "当前 Provider 缺少执行搜索所需的参数。",
+        target: "providerParams",
+      });
     }
 
-    throw new AppError(
-      "PROVIDER_UNAVAILABLE",
-      "当前 Provider 暂不可用于搜索验证。",
-      "providerId",
-    );
+    throw createSubtitleValidatorSearchError({
+      provider,
+      startedAt,
+      code: "PROVIDER_UNAVAILABLE",
+      message: "当前 Provider 暂不可用于搜索验证。",
+      target: "providerId",
+    });
   }
 
   if (credential) {
