@@ -82,6 +82,7 @@ export * from "./dashboardSummaryResponse";
 export * from "./downloadSubtitleParams";
 export * from "./errorCode";
 export * from "./errorDetail";
+export * from "./errorDetailDetails";
 export * from "./errorResponse";
 export * from "./errorResponseResponse";
 export * from "./isolateProviderCredentialRequest";

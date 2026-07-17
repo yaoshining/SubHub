@@ -61,6 +61,16 @@ function getErrorMessage(error: unknown) {
   return "Validator 请求失败，请稍后重试。";
 }
 
+function getErrorDiagnostic(
+  error: unknown,
+): SubtitleValidatorDiagnosticSummaryData | null {
+  if (!(error instanceof AppError)) return null;
+  const diagnostic = error.details?.diagnostic;
+  return diagnostic && typeof diagnostic === "object"
+    ? (diagnostic as SubtitleValidatorDiagnosticSummaryData)
+    : null;
+}
+
 function getDefaultProviderId(
   providers: SubtitleValidatorProviderCapability[],
 ) {
@@ -94,6 +104,8 @@ export function SubtitleApiValidatorClient() {
   const [searchError, setSearchError] = React.useState<string | null>(null);
   const [searchResult, setSearchResult] =
     React.useState<SubtitleValidatorSearchResultData | null>(null);
+  const [searchDiagnostic, setSearchDiagnostic] =
+    React.useState<SubtitleValidatorDiagnosticSummaryData | null>(null);
   const [recentDownloadValidation, setRecentDownloadValidation] =
     React.useState<SubtitleValidatorRecentDownloadValidation | null>(null);
   const [downloadError, setDownloadError] = React.useState<string | null>(null);
@@ -198,6 +210,7 @@ export function SubtitleApiValidatorClient() {
         providerParams: {},
       }));
       setSearchResult(null);
+      setSearchDiagnostic(null);
       setSearchError(null);
       setRecentDownloadValidation(null);
       setDownloadError(null);
@@ -209,6 +222,7 @@ export function SubtitleApiValidatorClient() {
   const handleAuthenticationRequired = React.useCallback((error: AppError) => {
     setAuthenticationError(error.message);
     setSearchError(null);
+    setSearchDiagnostic(null);
     setDownloadError(null);
   }, []);
 
@@ -220,6 +234,7 @@ export function SubtitleApiValidatorClient() {
 
     setSearching(true);
     setSearchError(null);
+    setSearchDiagnostic(null);
     setDownloadError(null);
     try {
       const result = await runSubtitleValidatorSearch({
@@ -235,6 +250,7 @@ export function SubtitleApiValidatorClient() {
         handleAuthenticationRequired(error);
       } else {
         setSearchError(getErrorMessage(error));
+        setSearchDiagnostic(getErrorDiagnostic(error));
       }
       setSearchResult(null);
     } finally {
@@ -337,7 +353,10 @@ export function SubtitleApiValidatorClient() {
   }
 
   const diagnostic: SubtitleValidatorDiagnosticSummaryData | null =
-    recentDownloadValidation?.diagnostic ?? searchResult?.diagnostic ?? null;
+    recentDownloadValidation?.diagnostic ??
+    searchDiagnostic ??
+    searchResult?.diagnostic ??
+    null;
   const effectiveDiagnosticStatus =
     searchError || downloadError
       ? "error"

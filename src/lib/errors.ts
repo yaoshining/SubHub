@@ -20,6 +20,7 @@ export class AppError extends Error {
     public readonly code: AppErrorCode,
     message: string,
     public readonly target?: string,
+    public readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "AppError";
@@ -31,6 +32,7 @@ export type ApiErrorResponse = {
     code: AppErrorCode;
     message: string;
     target?: string;
+    details?: Record<string, unknown>;
   };
 };
 
@@ -40,6 +42,7 @@ export function toApiErrorResponse(error: AppError): ApiErrorResponse {
       code: error.code,
       message: error.message,
       ...(error.target ? { target: error.target } : {}),
+      ...(error.details ? { details: error.details } : {}),
     },
   };
 }

@@ -115,4 +115,39 @@ describe("Subtitle API Validator 诊断状态", () => {
       screen.getAllByText("下一步建议：调整关键词或语言后重试。"),
     ).not.toHaveLength(0);
   });
+  it("搜索失败时在 Diagnostic Snapshot 展示服务端结构化类别与建议", async () => {
+    const user = userEvent.setup();
+    const provider = createProviderCapability({ providerId: "provider-os" });
+    vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
+      items: [provider],
+      total: 1,
+    });
+    vi.mocked(api.runSubtitleValidatorSearch).mockRejectedValue(
+      new AppError("TIMEOUT", "OpenSubtitles 搜索超时。", "provider", {
+        diagnostic: {
+          action: "search",
+          provider: "opensubtitles",
+          providerName: "OpenSubtitles",
+          providerStatus: "enabled",
+          status: "error",
+          resultCount: 0,
+          elapsedMs: 1200,
+          summary: "OpenSubtitles 搜索超时。",
+          errorCategory: "timeout",
+          nextActionHint: "稍后重试。",
+          fileName: null,
+          downloadMode: null,
+        },
+      }),
+    );
+
+    renderWithTheme(<SubtitleApiValidatorClient />);
+    await screen.findByRole("button", { name: /OpenSubtitles/ });
+    await user.type(screen.getByLabelText("关键词 / 标题"), "Matrix");
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    expect(await screen.findByText("错误类别：timeout")).toBeInTheDocument();
+    expect(screen.getByText("下一步建议：稍后重试。")).toBeInTheDocument();
+    expect(screen.getByText("动作：搜索验证")).toBeInTheDocument();
+  });
 });

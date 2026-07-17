@@ -20,6 +20,7 @@ vi.mock("@/server/subtitles/admin-subtitle-validator", () => ({
 }));
 
 import { adminSessionCookieName } from "@/lib/auth/constants";
+import { AppError } from "@/lib/errors";
 import * as bootstrapRoute from "@/app/api/admin/bootstrap/route";
 import * as loginRoute from "@/app/api/admin/auth/login/route";
 import * as searchRoute from "@/app/api/admin/subtitle-validator/search/route";
@@ -126,6 +127,54 @@ describe("Subtitle Validator 搜索 API 契约", () => {
     expect(payload.data.status).toBe("empty");
     expect(searchSubtitleValidator).toHaveBeenCalledWith(request);
     expect(JSON.stringify(payload)).not.toMatch(/secret|token|credential/i);
+  });
+
+  it("失败时返回脱敏的结构化诊断", async () => {
+    searchSubtitleValidator.mockRejectedValue(
+      new AppError(
+        "TIMEOUT",
+        "OpenSubtitles (enabled) search failed: bearer [redacted]",
+        "provider",
+        {
+          diagnostic: {
+            action: "search",
+            provider: "opensubtitles",
+            providerName: "OpenSubtitles",
+            providerStatus: "enabled",
+            status: "error",
+            resultCount: 0,
+            elapsedMs: 1200,
+            summary: "OpenSubtitles (enabled) search failed: bearer [redacted]",
+            errorCategory: "timeout",
+            nextActionHint: "稍后重试。",
+            fileName: null,
+            downloadMode: null,
+          },
+        },
+      ),
+    );
+    const cookie = await createAdminSessionCookie();
+
+    const response = await searchRoute.POST(
+      jsonRequest(
+        "http://localhost/api/admin/subtitle-validator/search",
+        {
+          providerId: "provider-os",
+          baseParams: { keyword: "Matrix" },
+          providerParams: {},
+        },
+        cookie,
+      ),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(408);
+    expect(payload.error.details.diagnostic).toMatchObject({
+      action: "search",
+      errorCategory: "timeout",
+      nextActionHint: "稍后重试。",
+    });
+    expect(JSON.stringify(payload)).not.toContain("secret");
   });
 
   it("在服务调用前拒绝非法 provider 参数负载", async () => {

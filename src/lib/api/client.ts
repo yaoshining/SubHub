@@ -48,6 +48,7 @@ export async function subhubApiClient<TResponse>(
         payload.error.code,
         payload.error.message,
         payload.error.target,
+        payload.error.details,
       );
     }
     throw new AppError("UPSTREAM_FAILED", `请求失败：${response.status}`);
