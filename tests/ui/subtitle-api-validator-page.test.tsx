@@ -78,6 +78,7 @@ describe("Subtitle API Validator 页面", () => {
     const selected = screen.getByRole("option", { selected: true });
     expect(selected).toHaveTextContent("OpenSubtitles Degraded");
     expect(screen.getByText("Provider Overview")).toBeInTheDocument();
+    expect(screen.getByText("此 Provider 已降级")).toBeInTheDocument();
     expect(screen.getByText("Diagnostic Snapshot")).toBeInTheDocument();
     expect(screen.getByText(/最近错误摘要: 最近一次超时/)).toBeInTheDocument();
   });
