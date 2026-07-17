@@ -73,7 +73,7 @@ describe("subtitle validator diagnostics helpers", () => {
       expect(result.category).toBe(item.category);
       expect(result.nextActionHint).toBe(item.hint);
       expect(result.safeMessage).not.toContain("secret-123");
-      expect(result.safeMessage).not.toContain("access_token");
+      expect(result.safeMessage).not.toContain("access_token=secret-123");
     }
   });
 

@@ -5,7 +5,7 @@
 - **Page**: Subtitle API Validator
 - **Route / Entry Point**: `/admin/subtitle-api-validator`；从 provider 管理上下文进入的内部工具入口
 - **Status**: Draft
-- **Last Updated**: 2026-07-14
+- **Last Updated**: 2026-07-17
 - **Related Feature Specs**: `specs/006-subtitle-api-validator/spec.md`
 
 ## Goal
@@ -94,8 +94,8 @@
 - **Permission / access state**: 仅管理员可访问；无权限用户必须看到明确拒绝状态，不暴露 provider 列表、请求参数或验证结果。
 - **Disabled / restricted provider state**: 已禁用或受限 provider 仍可被选择用于验证，但说明区、状态标签与诊断摘要中都必须持续显示其当前状态，避免被误解为已恢复线上可用。
 - **No-download state**: 某条搜索结果无可用下载地址或标识时，下载验证按钮必须禁用或转为说明态，并明确显示“无下载地址可验证”。
-- **Download validation success state**: 下载验证成功后，结果项与 Recent Validation 摘要区必须同步回显成功状态、动作类型与发生时间，给管理员足够信心判断下载链路正常。
-- **Download validation failure state**: 下载验证失败时，不得只显示红色失败标签；必须可区分无下载地址、URL 无效、provider 返回异常、浏览器下载失败或未知错误，并保留最小可诊断上下文。
+- **Download validation success state**: 下载验证成功后，结果项与 Recent Validation 摘要区必须同步回显成功状态、动作类型与发生时间；摘要保留状态、脱敏消息、模式、HTTP 状态、文件名与诊断上下文，给管理员足够信心判断下载链路正常。
+- **Download validation failure state**: 下载验证失败时，不得只显示红色失败标签；必须可区分无下载地址、URL 无效、provider 返回异常、浏览器下载失败或未知错误，并保留错误类别、下一步建议等最小可诊断上下文。
 
 ## Content Hierarchy
 
@@ -119,6 +119,7 @@
 - 搜索开始后，结果区应优先给出进行中的明确反馈；返回成功后应把注意力自然引导到结果头部与可操作结果项；失败后应把注意力引导到错误摘要与下一步建议。
 - 下载验证是链路验证，不得触发正式字幕入库、缓存转正或其他深度业务副作用。
 - 若同时支持“浏览器下载”与“验证下载 URL”，必须把这两种动作区分表达：前者偏向实际下载动作，后者偏向链路可达性检查。
+- “验证下载 URL”必须调用后台 admin validator API，不得在浏览器中打开或渲染 provider 原始下载链接；Xunlei 浏览器下载按钮保持禁用并说明其仅支持 URL 检查。
 - 对 disabled / restricted provider 的验证结果，页面文案必须明确这是排障结果，不代表正式服务已恢复可用。
 - 错误反馈可展示 provider 名称、动作类型、错误类别、请求耗时与可读摘要，但不得暴露 secret、token、凭据原文或上游敏感响应全文。
 - 结果列表需要在“足够可读”和“足够紧凑”之间保持平衡：优先使用紧凑行式结构承载核心字段，provider 特有或低频字段进入展开区，而不是默认全部摊开。

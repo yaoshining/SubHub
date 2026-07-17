@@ -12,8 +12,11 @@ import {
 } from "lucide-react";
 
 import {
+  type SubtitleValidatorDiagnosticSummary as SubtitleValidatorDiagnosticSummaryData,
+  type SubtitleValidatorDownloadMode,
   type SubtitleValidatorProviderCapability,
   type SubtitleValidatorSearchRequest,
+  type SubtitleValidatorSearchResult,
   type SubtitleValidatorSearchResultData,
   fetchSubtitleValidatorProviders,
   runSubtitleValidatorSearch,
@@ -21,7 +24,10 @@ import {
 } from "@/lib/api/subtitle-validator";
 import { AppError } from "@/lib/errors";
 import { SubtitleValidatorDiagnosticSummary } from "@/components/providers/subtitle-validator-diagnostic-summary";
-import { SubtitleValidatorDownloadStatus } from "@/components/providers/subtitle-validator-download-status";
+import {
+  SubtitleValidatorDownloadStatus,
+  type SubtitleValidatorRecentDownloadValidation,
+} from "@/components/providers/subtitle-validator-download-status";
 import { SubtitleValidatorProviderOverview } from "@/components/providers/subtitle-validator-provider-overview";
 import { SubtitleValidatorProviderRail } from "@/components/providers/subtitle-validator-provider-rail";
 import { SubtitleValidatorResultsConsole } from "@/components/providers/subtitle-validator-results-console";
@@ -88,13 +94,11 @@ export function SubtitleApiValidatorClient() {
   const [searchError, setSearchError] = React.useState<string | null>(null);
   const [searchResult, setSearchResult] =
     React.useState<SubtitleValidatorSearchResultData | null>(null);
-  const [downloadMessage, setDownloadMessage] = React.useState<string | null>(
-    null,
-  );
-  const [downloadTone, setDownloadTone] = React.useState<"success" | "error">(
-    "success",
-  );
-  const [downloadingId, setDownloadingId] = React.useState<string | null>(null);
+  const [recentDownloadValidation, setRecentDownloadValidation] =
+    React.useState<SubtitleValidatorRecentDownloadValidation | null>(null);
+  const [downloadError, setDownloadError] = React.useState<string | null>(null);
+  const [downloadingIds, setDownloadingIds] = React.useState<string[]>([]);
+  const selectedProviderIdRef = React.useRef<string | null>(null);
   const loginHref = React.useMemo(() => {
     const search = searchParams?.toString() ?? "";
     const loginParams = new URLSearchParams({
@@ -178,6 +182,10 @@ export function SubtitleApiValidatorClient() {
     [providers, selectedProviderId],
   );
 
+  React.useEffect(() => {
+    selectedProviderIdRef.current = selectedProviderId;
+  }, [selectedProviderId]);
+
   const handleSelectProvider = React.useCallback(
     (providerId: string) => {
       const nextProvider =
@@ -191,7 +199,9 @@ export function SubtitleApiValidatorClient() {
       }));
       setSearchResult(null);
       setSearchError(null);
-      setDownloadMessage(null);
+      setRecentDownloadValidation(null);
+      setDownloadError(null);
+      setDownloadingIds([]);
     },
     [providers],
   );
@@ -199,7 +209,7 @@ export function SubtitleApiValidatorClient() {
   const handleAuthenticationRequired = React.useCallback((error: AppError) => {
     setAuthenticationError(error.message);
     setSearchError(null);
-    setDownloadMessage(null);
+    setDownloadError(null);
   }, []);
 
   const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -210,7 +220,7 @@ export function SubtitleApiValidatorClient() {
 
     setSearching(true);
     setSearchError(null);
-    setDownloadMessage(null);
+    setDownloadError(null);
     try {
       const result = await runSubtitleValidatorSearch({
         ...form,
@@ -232,35 +242,55 @@ export function SubtitleApiValidatorClient() {
     }
   };
 
-  const handleDownloadValidation = async (subtitleRef: string) => {
-    setDownloadingId(subtitleRef);
-    setDownloadMessage(null);
+  const handleDownloadValidation = async (
+    resultItem: SubtitleValidatorSearchResult,
+    mode: SubtitleValidatorDownloadMode,
+  ) => {
+    if (!selectedProvider) {
+      return;
+    }
+
+    setDownloadingIds((current) =>
+      current.includes(resultItem.id) ? current : [...current, resultItem.id],
+    );
+    setDownloadError(null);
     try {
-      const result = await validateSubtitleValidatorDownload({ subtitleRef });
-      setSearchResult((current) =>
-        current
-          ? {
-              ...current,
-              diagnostic: result.diagnostic,
-            }
-          : current,
-      );
-      setDownloadTone("success");
-      setDownloadMessage(
-        `已验证 ${result.fileName}（${result.contentType}，${result.contentLength} bytes）`,
-      );
+      const result = await validateSubtitleValidatorDownload({
+        providerId: selectedProvider.providerId,
+        resultId: resultItem.id,
+        mode,
+        ...(mode === "url_check" && resultItem.providerDownloadUrl
+          ? { downloadReference: resultItem.providerDownloadUrl }
+          : {}),
+      });
+      if (selectedProviderIdRef.current !== selectedProvider.providerId) {
+        return;
+      }
+      setRecentDownloadValidation({
+        status: result.status,
+        message: result.message,
+        downloadMode: result.downloadMode,
+        httpStatus: result.httpStatus,
+        fileName: result.fileName,
+        diagnostic: result.diagnostic,
+        resultId: result.resultId,
+        completedAt: new Date().toISOString(),
+      });
     } catch (error) {
       if (
         error instanceof AppError &&
         error.code === "AUTHENTICATION_REQUIRED"
       ) {
         handleAuthenticationRequired(error);
-      } else {
-        setDownloadTone("error");
-        setDownloadMessage(getErrorMessage(error));
+      } else if (
+        selectedProviderIdRef.current === selectedProvider.providerId
+      ) {
+        setDownloadError(getErrorMessage(error));
       }
     } finally {
-      setDownloadingId(null);
+      setDownloadingIds((current) =>
+        current.filter((itemId) => itemId !== resultItem.id),
+      );
     }
   };
 
@@ -306,15 +336,17 @@ export function SubtitleApiValidatorClient() {
     );
   }
 
-  const diagnostic = searchResult?.diagnostic ?? null;
-  const effectiveDiagnosticStatus = searchError
-    ? "error"
-    : (diagnostic?.status ??
-      (searchResult
-        ? searchResult.results.length > 0
-          ? "success"
-          : "empty"
-        : "idle"));
+  const diagnostic: SubtitleValidatorDiagnosticSummaryData | null =
+    recentDownloadValidation?.diagnostic ?? searchResult?.diagnostic ?? null;
+  const effectiveDiagnosticStatus =
+    searchError || downloadError
+      ? "error"
+      : (diagnostic?.status ??
+        (searchResult
+          ? searchResult.results.length > 0
+            ? "success"
+            : "empty"
+          : "idle"));
 
   return (
     <div className="grid gap-6" data-testid="subtitle-api-validator-page">
@@ -420,9 +452,9 @@ export function SubtitleApiValidatorClient() {
         ) : null}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="hidden xl:block">
-          <Card className="border-border bg-surface shadow-none">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden min-w-0 xl:block">
+          <Card className="min-w-0 border-border bg-surface shadow-none">
             <CardHeader>
               <CardTitle className="text-base">Provider Rail</CardTitle>
             </CardHeader>
@@ -474,11 +506,23 @@ export function SubtitleApiValidatorClient() {
           <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)]">
             <SubtitleValidatorProviderOverview provider={selectedProvider} />
             <SubtitleValidatorDiagnosticSummary
-              errorCategory={diagnostic?.errorCategory}
               lastMessage={
-                searchError ?? downloadMessage ?? diagnostic?.summary ?? null
+                downloadError ??
+                recentDownloadValidation?.message ??
+                searchError ??
+                diagnostic?.summary ??
+                null
               }
-              nextActionHint={diagnostic?.nextActionHint}
+              diagnostic={diagnostic}
+              actionAt={
+                recentDownloadValidation
+                  ? new Intl.DateTimeFormat("zh-CN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    }).format(new Date(recentDownloadValidation.completedAt))
+                  : null
+              }
               resultCount={searchResult?.results.length ?? 0}
               searching={searching}
               selectedProviderName={selectedProvider?.providerName ?? null}
@@ -544,15 +588,25 @@ export function SubtitleApiValidatorClient() {
               ) : null}
 
               <SubtitleValidatorDownloadStatus
-                message={downloadMessage}
-                tone={downloadTone}
+                validation={recentDownloadValidation}
               />
 
+              {downloadError ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>下载验证请求失败</AlertTitle>
+                  <AlertDescription>
+                    {downloadError} 请检查当前 provider 状态或稍后重试。
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+
               <SubtitleValidatorResultsConsole
-                downloadingId={downloadingId}
+                downloadingIds={downloadingIds}
                 failures={searchResult?.providerFailures ?? []}
-                nextActionHint={diagnostic?.nextActionHint}
+                nextActionHint={searchResult?.diagnostic?.nextActionHint}
                 onValidateDownload={handleDownloadValidation}
+                recentValidation={recentDownloadValidation}
                 results={searchResult?.results ?? []}
                 searching={searching}
               />

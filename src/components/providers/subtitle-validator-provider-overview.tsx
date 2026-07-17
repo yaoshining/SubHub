@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SubtitleValidatorProviderCapability } from "@/server/subtitles/admin-subtitle-validator-schema";
+import type { SubtitleValidatorProviderCapability } from "@/lib/api/subtitle-validator";
 
 type SubtitleValidatorProviderOverviewProps = {
   provider: SubtitleValidatorProviderCapability | null;
@@ -72,14 +72,16 @@ export function SubtitleValidatorProviderOverview({
             <p className="mt-1 text-sm font-medium text-foreground">
               {provider.supportsDownloadValidation
                 ? "支持浏览器下载校验"
-                : "不支持统一下载校验"}
+                : provider.supportsDirectDownloadUrl
+                  ? "仅支持 URL 检查"
+                  : "当前不支持下载验证"}
             </p>
           </div>
           <div className="rounded-2xl border border-border/70 bg-surface-elevated px-4 py-3">
             <p className="text-xs text-muted-foreground">URL 检查</p>
             <p className="mt-1 text-sm font-medium text-foreground">
               {provider.supportsDirectDownloadUrl
-                ? "支持 provider 直链校验"
+                ? "服务端受控 URL 检查"
                 : "无独立直链检查能力"}
             </p>
           </div>

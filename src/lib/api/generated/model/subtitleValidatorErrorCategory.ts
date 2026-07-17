@@ -16,6 +16,7 @@ export const SubtitleValidatorErrorCategory = {
   provider_error: "provider_error",
   provider_unavailable: "provider_unavailable",
   missing_download: "missing_download",
+  unsupported: "unsupported",
   invalid_url: "invalid_url",
   download_failed: "download_failed",
   unknown: "unknown",

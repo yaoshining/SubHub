@@ -11,13 +11,20 @@ import type {
 } from "@/lib/api/generated/model";
 
 export type {
+  SubtitleValidatorDiagnosticSummary,
+  SubtitleValidatorDiagnosticSummaryAction,
+  SubtitleValidatorDownloadMode,
   SubtitleValidatorDownloadValidationRequest,
   SubtitleValidatorDownloadValidationResponse,
   SubtitleValidatorDownloadValidationResult,
+  SubtitleValidatorDownloadValidationStatus,
   SubtitleValidatorProviderCapability,
+  SubtitleValidatorProviderFailure,
   SubtitleValidatorProvidersResponse,
+  SubtitleValidatorSearchField,
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResponse,
+  SubtitleValidatorSearchResult,
   SubtitleValidatorSearchResultData,
 } from "@/lib/api/generated/model";
 

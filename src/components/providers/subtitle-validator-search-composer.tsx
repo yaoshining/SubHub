@@ -17,7 +17,7 @@ import type {
   SubtitleValidatorProviderCapability,
   SubtitleValidatorSearchField,
   SubtitleValidatorSearchRequest,
-} from "@/server/subtitles/admin-subtitle-validator-schema";
+} from "@/lib/api/subtitle-validator";
 
 type SubtitleValidatorSearchComposerProps = {
   provider: SubtitleValidatorProviderCapability | null;
@@ -317,8 +317,11 @@ export function SubtitleValidatorSearchComposer({
           </div>
           <Separator />
           <div className="rounded-2xl border border-dashed border-border/70 px-4 py-3 text-xs text-muted-foreground">
-            {provider?.baseFieldNotice ??
-              "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。"}
+            <p className="font-medium text-foreground">基础通用参数</p>
+            <p className="mt-1">
+              {provider?.baseFieldNotice ??
+                "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。"}
+            </p>
           </div>
           <div className="grid gap-3">
             <div className="space-y-1">

@@ -59,8 +59,8 @@ export function SubtitleValidatorProviderRail({
             type="button"
             variant="ghost"
           >
-            <div className="grid w-full gap-3">
-              <div className="flex items-start justify-between gap-3">
+            <div className="grid w-full min-w-0 gap-3">
+              <div className="min-[360px]:flex-row min-[360px]:justify-between min-[360px]:gap-3 flex min-w-0 flex-col items-start gap-2">
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-sm font-semibold text-foreground">
@@ -74,6 +74,7 @@ export function SubtitleValidatorProviderRail({
                   </p>
                 </div>
                 <Badge
+                  className="shrink-0"
                   variant={
                     provider.supportsDownloadValidation
                       ? "default"

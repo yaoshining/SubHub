@@ -79,11 +79,16 @@ export function createDownloadValidationResult(
 ): SubtitleValidatorDownloadValidationResult {
   return {
     subtitleRef: "opensubtitles:provider-default:item-1",
+    resultId: "opensubtitles:provider-default:item-1",
     provider: "opensubtitles",
+    status: "success",
+    httpStatus: 200,
+    message: "浏览器下载验证成功。",
     fileName: "sample.srt",
     contentType: "application/x-subrip; charset=utf-8",
     contentLength: 120,
     downloadMode: "browser_download",
+    browserDownloadUrl: null,
     diagnostic: createDiagnosticSummary({
       action: "download_validation",
       status: "success",

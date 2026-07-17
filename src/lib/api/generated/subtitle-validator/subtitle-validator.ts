@@ -208,7 +208,7 @@ export const getValidateAdminSubtitleDownloadUrl = () => {
 };
 
 /**
- * 对支持统一下载链路的 provider 执行后台内部下载校验；当前仅支持 OpenSubtitles，不记录对外 caller-key 下载请求。
+ * 对单个搜索结果执行后台下载链路验证。`browser_download` 通过受控服务端调用验证 OpenSubtitles 下载链路；Xunlei 仅支持不携带凭据的 `url_check`。验证结果以 success、failed、missing_download 或 unsupported 统一在 200 响应中返回，不记录对外 caller-key 下载请求，也不返回 provider 凭据或原始敏感链接。
  * @summary 执行字幕 Validator 下载校验
  */
 export const validateAdminSubtitleDownload = async (
