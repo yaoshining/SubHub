@@ -46,32 +46,30 @@ describe("subtitle validator diagnostics flow", () => {
       },
     };
 
-    const result = await searchSubtitleValidator(
-      { provider: "opensubtitles", title: "Matrix" },
-      {
-        db: {} as never,
-        now: new Date("2026-07-16T00:00:00.000Z"),
-        listProviders: vi.fn().mockResolvedValue([provider]),
-        getAdapter: vi.fn().mockReturnValue(adapter),
-        selectCredential: vi.fn().mockResolvedValue({
-          id: "cred-1",
-          secret: "secret",
-        }),
-        markCredentialUsed: vi.fn(),
-        markCredentialFailure: vi.fn(),
-      },
-    );
-
-    expect(result.status).toBe("partial");
-    expect(result.providerFailures[0]).toMatchObject({
-      provider: "opensubtitles",
-      reason: "upstream_failed",
-      errorCategory: "provider_error",
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: "provider-os",
+          baseParams: { keyword: "Matrix" },
+          providerParams: {},
+        },
+        {
+          db: {} as never,
+          now: new Date("2026-07-16T00:00:00.000Z"),
+          listProviders: vi.fn().mockResolvedValue([provider]),
+          getAdapter: vi.fn().mockReturnValue(adapter),
+          selectCredential: vi.fn().mockResolvedValue({
+            id: "cred-1",
+            secret: "secret",
+          }),
+          markCredentialUsed: vi.fn(),
+          markCredentialFailure: vi.fn(),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "UPSTREAM_FAILED",
+      message: expect.not.stringContaining("secret-value"),
     });
-    expect(result.providerFailures[0]?.message).not.toContain("secret-value");
-    expect(result.providerFailures[0]?.nextActionHint).toContain(
-      "上游返回结构",
-    );
   });
 
   it("搜索成功但下载缺失时保留独立 missing_download 语义", () => {

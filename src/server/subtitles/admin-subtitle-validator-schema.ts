@@ -65,6 +65,7 @@ export const subtitleValidatorProviderCapabilitySchema = z.object({
   supportsDirectDownloadUrl: z.boolean(),
   baseFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
   extendedFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
+  requiredSearchFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
   baseFieldNotice: z.string().min(1),
   extendedFieldNotice: z.string().min(1),
   notes: z.array(z.string().min(1)).default([]),
@@ -82,16 +83,14 @@ export const subtitleValidatorProvidersResponseSchema = z.object({
 });
 
 export const subtitleValidatorSearchRequestSchema = z.object({
-  provider: providerKeySchema.optional(),
-  title: z.string().trim().min(1),
-  query: z.string().trim().min(1).optional(),
-  year: z.number().int().min(1900).max(2100).optional(),
-  season: z.number().int().min(1).max(999).optional(),
-  episode: z.number().int().min(1).max(999).optional(),
-  language: z.string().trim().min(2).max(16).optional(),
-  imdbId: z.string().trim().min(1).max(32).optional(),
-  tmdbId: z.number().int().positive().optional(),
-  type: z.enum(["movie", "episode"]).optional(),
+  providerId: z.string().trim().min(1),
+  baseParams: z.object({
+    keyword: z.string().trim().min(1),
+  }),
+  providerParams: z.record(
+    z.string(),
+    z.string().or(z.number()).or(z.boolean()).nullable(),
+  ),
 });
 
 export const subtitleValidatorSearchResultSchema = z.object({
@@ -130,7 +129,7 @@ export const subtitleValidatorDiagnosticSummarySchema = z.object({
 });
 
 export const subtitleValidatorSearchResultDataSchema = z.object({
-  status: z.enum(["success", "partial"]),
+  status: z.enum(["success", "empty"]),
   results: z.array(subtitleValidatorSearchResultSchema),
   providerFailures: z.array(subtitleValidatorProviderFailureSchema).default([]),
   diagnostic: subtitleValidatorDiagnosticSummarySchema.nullable().default(null),

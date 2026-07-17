@@ -8,7 +8,7 @@ import type {
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResponse,
   SubtitleValidatorSearchResultData,
-} from "@/server/subtitles/admin-subtitle-validator-schema";
+} from "@/lib/api/generated/model";
 
 export type {
   SubtitleValidatorDownloadValidationRequest,
@@ -19,7 +19,7 @@ export type {
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResponse,
   SubtitleValidatorSearchResultData,
-} from "@/server/subtitles/admin-subtitle-validator-schema";
+} from "@/lib/api/generated/model";
 
 const jsonHeaders = (options?: RequestInit) => ({
   "Content-Type": "application/json",

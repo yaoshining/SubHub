@@ -1,3 +1,4 @@
+import * as React from "react";
 import { RotateCcw, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -42,10 +43,83 @@ export function SubtitleValidatorSearchComposer({
   onSubmit,
   onReset,
 }: SubtitleValidatorSearchComposerProps) {
+  const [requiredFieldErrors, setRequiredFieldErrors] = React.useState<{
+    providerId: string | null;
+    fields: SubtitleValidatorSearchField[];
+  }>({ providerId: null, fields: [] });
+  const activeRequiredFieldErrors =
+    requiredFieldErrors.providerId === provider?.providerId
+      ? requiredFieldErrors.fields
+      : [];
   const showEpisodeFields =
     supportsField(provider, "season") || supportsField(provider, "episode");
   const showIdentifierFields =
     supportsField(provider, "imdbId") || supportsField(provider, "tmdbId");
+  const isXunlei = provider?.providerKey === "xunlei";
+  const isRequiredField = (field: SubtitleValidatorSearchField) =>
+    provider?.requiredSearchFields.includes(field) ?? false;
+  const hasRequiredFieldError = (field: SubtitleValidatorSearchField) =>
+    activeRequiredFieldErrors.includes(field);
+  const clearRequiredFieldError = (field: SubtitleValidatorSearchField) => {
+    setRequiredFieldErrors({
+      providerId: provider?.providerId ?? null,
+      fields: activeRequiredFieldErrors.filter((item) => item !== field),
+    });
+  };
+  const setKeyword = (keyword: string) => {
+    onChange({ ...form, baseParams: { ...form.baseParams, keyword } });
+    clearRequiredFieldError("title");
+  };
+  const setProviderParam = (
+    key: string,
+    value: string | number | boolean | null,
+  ) => {
+    const providerParams = { ...form.providerParams };
+    if (value === null || value === "") {
+      delete providerParams[key];
+    } else {
+      providerParams[key] = value;
+    }
+    onChange({ ...form, providerParams });
+  };
+  const getStringParam = (key: string) =>
+    typeof form.providerParams[key] === "string"
+      ? form.providerParams[key]
+      : "";
+  const getNumberParam = (key: string) =>
+    typeof form.providerParams[key] === "number"
+      ? String(form.providerParams[key])
+      : "";
+  const getFieldLabel = (field: SubtitleValidatorSearchField) => {
+    const labels: Partial<Record<SubtitleValidatorSearchField, string>> = {
+      query: "附加查询",
+      language: "语言",
+      title: "关键词 / 标题",
+    };
+    return labels[field] ?? field;
+  };
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const missingFields = (provider?.requiredSearchFields ?? []).filter(
+      (field) => {
+        if (field === "title") {
+          return !form.baseParams.keyword.trim();
+        }
+        const value = form.providerParams[field];
+        return typeof value !== "string" || !value.trim();
+      },
+    );
+
+    setRequiredFieldErrors({
+      providerId: provider?.providerId ?? null,
+      fields: missingFields,
+    });
+    if (missingFields.length > 0) {
+      return;
+    }
+
+    onSubmit(event);
+  };
 
   return (
     <Card className="border-border bg-surface shadow-none">
@@ -62,7 +136,17 @@ export function SubtitleValidatorSearchComposer({
         </Badge>
       </CardHeader>
       <CardContent className="space-y-5">
-        <form className="grid gap-5" onSubmit={onSubmit}>
+        <form className="grid gap-5" noValidate onSubmit={handleSubmit}>
+          {activeRequiredFieldErrors.length > 0 ? (
+            <div
+              aria-live="polite"
+              className="rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+              role="alert"
+            >
+              请填写必填参数：
+              {activeRequiredFieldErrors.map(getFieldLabel).join("、")}。
+            </div>
+          ) : null}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2 md:col-span-2">
               <label className="text-sm font-medium" htmlFor="validator-title">
@@ -70,70 +154,138 @@ export function SubtitleValidatorSearchComposer({
               </label>
               <Input
                 id="validator-title"
-                onChange={(event) =>
-                  onChange({
-                    ...form,
-                    title: event.target.value,
-                  })
-                }
+                onChange={(event) => setKeyword(event.target.value)}
                 placeholder="例如 The Matrix / Friends S01E01"
                 required
-                value={form.title}
+                value={form.baseParams.keyword}
               />
             </div>
-
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="validator-query">
-                附加查询
+                附加查询{isRequiredField("query") ? "（必填）" : ""}
               </label>
               <Input
-                id="validator-query"
-                onChange={(event) =>
-                  onChange({
-                    ...form,
-                    query: event.target.value || undefined,
-                  })
+                aria-describedby={
+                  hasRequiredFieldError("query")
+                    ? "validator-query-error"
+                    : undefined
                 }
-                placeholder="可选关键词补充"
-                value={form.query ?? ""}
+                aria-invalid={hasRequiredFieldError("query")}
+                id="validator-query"
+                onChange={(event) => {
+                  setProviderParam("query", event.target.value);
+                  clearRequiredFieldError("query");
+                }}
+                placeholder={
+                  isRequiredField("query") ? "请输入附加查询" : "可选关键词补充"
+                }
+                required={isRequiredField("query")}
+                value={getStringParam("query")}
               />
+              {hasRequiredFieldError("query") ? (
+                <p
+                  className="text-xs text-destructive"
+                  id="validator-query-error"
+                >
+                  请填写附加查询。
+                </p>
+              ) : null}
             </div>
-
             <div className="grid gap-2">
               <label
                 className="text-sm font-medium"
                 htmlFor="validator-language"
               >
-                语言
+                语言{isRequiredField("language") ? "（必填）" : ""}
               </label>
-              <Input
-                id="validator-language"
-                onChange={(event) =>
-                  onChange({
-                    ...form,
-                    language: event.target.value || undefined,
-                  })
-                }
-                placeholder="如 zh-CN / en"
-                value={form.language ?? ""}
-              />
+              {isXunlei ? (
+                <div className="grid gap-2">
+                  <Select
+                    onValueChange={(value) =>
+                      setProviderParam(
+                        "language",
+                        value === "custom" ? null : value,
+                      )
+                    }
+                    value={
+                      ["简体", "默认", "英语"].includes(
+                        getStringParam("language"),
+                      )
+                        ? getStringParam("language")
+                        : "custom"
+                    }
+                  >
+                    <SelectTrigger id="validator-language">
+                      <SelectValue placeholder="选择已知语言筛选" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">自定义输入</SelectItem>
+                      <SelectItem value="简体">简体</SelectItem>
+                      <SelectItem value="默认">默认</SelectItem>
+                      <SelectItem value="英语">英语</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    aria-describedby={
+                      hasRequiredFieldError("language")
+                        ? "validator-language-error"
+                        : "validator-language-hint"
+                    }
+                    aria-invalid={hasRequiredFieldError("language")}
+                    aria-label="自定义语言筛选"
+                    onChange={(event) => {
+                      setProviderParam("language", event.target.value);
+                      clearRequiredFieldError("language");
+                    }}
+                    placeholder="自定义迅雷 languages 值（可选）"
+                    value={getStringParam("language")}
+                  />
+                  <p
+                    className="text-xs text-muted-foreground"
+                    id="validator-language-hint"
+                  >
+                    可选择已知值，或输入迅雷上游返回的其他 languages
+                    值；留空则不筛选。
+                  </p>
+                </div>
+              ) : (
+                <Input
+                  aria-describedby={
+                    hasRequiredFieldError("language")
+                      ? "validator-language-error"
+                      : undefined
+                  }
+                  aria-invalid={hasRequiredFieldError("language")}
+                  id="validator-language"
+                  onChange={(event) => {
+                    setProviderParam("language", event.target.value);
+                    clearRequiredFieldError("language");
+                  }}
+                  placeholder={
+                    isRequiredField("language") ? "请输入语言" : "如 zh-CN / en"
+                  }
+                  required={isRequiredField("language")}
+                  value={getStringParam("language")}
+                />
+              )}
+              {hasRequiredFieldError("language") ? (
+                <p
+                  className="text-xs text-destructive"
+                  id="validator-language-error"
+                >
+                  请填写语言。
+                </p>
+              ) : null}
             </div>
-
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="validator-type">
                 媒体类型
               </label>
               <Select
                 onValueChange={(value) =>
-                  onChange({
-                    ...form,
-                    type:
-                      value === "all"
-                        ? undefined
-                        : (value as SubtitleValidatorSearchRequest["type"]),
-                  })
+                  setProviderParam("type", value === "all" ? null : value)
                 }
-                value={form.type ?? "all"}
+                value={getStringParam("type") || "all"}
               >
                 <SelectTrigger id="validator-type">
                   <SelectValue placeholder="全部类型" />
@@ -145,7 +297,6 @@ export function SubtitleValidatorSearchComposer({
                 </SelectContent>
               </Select>
             </div>
-
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="validator-year">
                 年份
@@ -154,26 +305,21 @@ export function SubtitleValidatorSearchComposer({
                 id="validator-year"
                 inputMode="numeric"
                 onChange={(event) =>
-                  onChange({
-                    ...form,
-                    year: event.target.value
-                      ? Number(event.target.value)
-                      : undefined,
-                  })
+                  setProviderParam(
+                    "year",
+                    event.target.value ? Number(event.target.value) : null,
+                  )
                 }
                 placeholder="如 1999"
-                value={form.year?.toString() ?? ""}
+                value={getNumberParam("year")}
               />
             </div>
           </div>
-
           <Separator />
-
           <div className="rounded-2xl border border-dashed border-border/70 px-4 py-3 text-xs text-muted-foreground">
             {provider?.baseFieldNotice ??
               "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。"}
           </div>
-
           <div className="grid gap-3">
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
@@ -184,7 +330,6 @@ export function SubtitleValidatorSearchComposer({
                   "当前仅在 Provider 支持时展示额外字段；未出现的字段表示当前验证场景不需要。"}
               </p>
             </div>
-
             <div className="grid gap-4 md:grid-cols-2">
               {showEpisodeFields ? (
                 <>
@@ -199,15 +344,15 @@ export function SubtitleValidatorSearchComposer({
                       id="validator-season"
                       inputMode="numeric"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          season: event.target.value
+                        setProviderParam(
+                          "season",
+                          event.target.value
                             ? Number(event.target.value)
-                            : undefined,
-                        })
+                            : null,
+                        )
                       }
                       placeholder="1"
-                      value={form.season?.toString() ?? ""}
+                      value={getNumberParam("season")}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -221,20 +366,19 @@ export function SubtitleValidatorSearchComposer({
                       id="validator-episode"
                       inputMode="numeric"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          episode: event.target.value
+                        setProviderParam(
+                          "episode",
+                          event.target.value
                             ? Number(event.target.value)
-                            : undefined,
-                        })
+                            : null,
+                        )
                       }
                       placeholder="1"
-                      value={form.episode?.toString() ?? ""}
+                      value={getNumberParam("episode")}
                     />
                   </div>
                 </>
               ) : null}
-
               {showIdentifierFields ? (
                 <>
                   <div className="grid gap-2">
@@ -247,13 +391,10 @@ export function SubtitleValidatorSearchComposer({
                     <Input
                       id="validator-imdb-id"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          imdbId: event.target.value || undefined,
-                        })
+                        setProviderParam("imdbId", event.target.value)
                       }
                       placeholder="tt0133093"
-                      value={form.imdbId ?? ""}
+                      value={getStringParam("imdbId")}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -267,15 +408,15 @@ export function SubtitleValidatorSearchComposer({
                       id="validator-tmdb-id"
                       inputMode="numeric"
                       onChange={(event) =>
-                        onChange({
-                          ...form,
-                          tmdbId: event.target.value
+                        setProviderParam(
+                          "tmdbId",
+                          event.target.value
                             ? Number(event.target.value)
-                            : undefined,
-                        })
+                            : null,
+                        )
                       }
                       placeholder="603"
-                      value={form.tmdbId?.toString() ?? ""}
+                      value={getNumberParam("tmdbId")}
                     />
                   </div>
                 </>
@@ -287,7 +428,6 @@ export function SubtitleValidatorSearchComposer({
               )}
             </div>
           </div>
-
           <div className="flex flex-wrap items-center gap-3">
             <Button disabled={!provider || searching} type="submit">
               <Search className="mr-2 size-4" />

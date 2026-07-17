@@ -20,7 +20,6 @@ import type {
   SubtitleValidatorDownloadValidationRequest,
   SubtitleValidatorDownloadValidationResult,
   SubtitleValidatorErrorCategory,
-  SubtitleValidatorProviderFailure,
   SubtitleValidatorProviderList,
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResultData,
@@ -34,17 +33,31 @@ import {
   type StorageDatabase,
 } from "@/server/storage/client";
 
-const buildSearchInput = (input: SubtitleValidatorSearchRequest) => ({
-  title: input.title,
-  query: input.query,
-  year: input.year,
-  season: input.season,
-  episode: input.episode,
-  language: input.language,
-  imdbId: input.imdbId,
-  tmdbId: input.tmdbId,
-  type: input.type,
-});
+const buildSearchInput = (input: SubtitleValidatorSearchRequest) => {
+  const params = input.providerParams;
+  const stringParam = (key: string) =>
+    typeof params[key] === "string" ? params[key] : undefined;
+  const numberParam = (key: string) =>
+    typeof params[key] === "number" ? params[key] : undefined;
+
+  const mediaType = stringParam("type");
+  let type: "movie" | "episode" | undefined;
+  if (mediaType === "movie" || mediaType === "episode") {
+    type = mediaType;
+  }
+
+  return {
+    title: input.baseParams.keyword,
+    query: stringParam("query"),
+    year: numberParam("year"),
+    season: numberParam("season"),
+    episode: numberParam("episode"),
+    language: stringParam("language"),
+    imdbId: stringParam("imdbId"),
+    tmdbId: numberParam("tmdbId"),
+    type,
+  };
+};
 
 const redactSensitiveText = (message: string) =>
   message
@@ -101,7 +114,7 @@ export function classifySubtitleValidatorError(
       };
     }
 
-    if (error.code === "UPSTREAM_FAILED") {
+    if (error.code === "UPSTREAM_FAILED" || error.code === "TIMEOUT") {
       if (/timeout|超时/i.test(message)) {
         return {
           category: "timeout",
@@ -222,68 +235,6 @@ export function buildSubtitleValidatorDiagnosticSummary(input: {
     downloadMode: input.downloadMode ?? null,
   };
 }
-
-const requireProviderByKey = async (
-  providerKey: SubtitleValidatorSearchRequest["provider"],
-  db: StorageDatabase,
-) => {
-  const repository = new ProviderRepository(db);
-  const providers = await repository.listProviders();
-  const filtered = providerKey
-    ? providers.filter((provider) => provider.type === providerKey)
-    : providers;
-
-  if (providerKey && filtered.length === 0) {
-    throw new AppError(
-      "PROVIDER_UNAVAILABLE",
-      `未找到 provider=${providerKey} 的配置实例。`,
-      "provider",
-    );
-  }
-
-  return filtered;
-};
-
-const toFailureResponse = (
-  provider: ProviderWithCredentialSummary,
-  error: { reason: string; message: string } | { reason: string },
-): SubtitleValidatorProviderFailure => {
-  const rawMessage =
-    "message" in error
-      ? error.message
-      : `provider ${provider.type} 跳过：${error.reason}`;
-  const classified = classifySubtitleValidatorError(
-    new AppError(
-      error.reason === "timeout" ||
-        error.reason === "upstream_failed" ||
-        error.reason === "rate_limited" ||
-        error.reason === "authentication_failed"
-        ? "UPSTREAM_FAILED"
-        : error.reason === "missing_required_field"
-          ? "VALIDATION_FAILED"
-          : "SERVICE_NOT_READY",
-      rawMessage,
-      error.reason === "missing_required_field" ? "query" : "provider",
-    ),
-    rawMessage,
-  );
-
-  return {
-    provider: provider.type,
-    reason:
-      error.reason === "upstream_failed" ||
-      error.reason === "timeout" ||
-      error.reason === "rate_limited" ||
-      error.reason === "authentication_failed"
-        ? error.reason
-        : error.reason === "missing_required_field"
-          ? "skipped_missing_fields"
-          : "skipped_disabled",
-    message: classified.safeMessage,
-    errorCategory: classified.category,
-    nextActionHint: classified.nextActionHint,
-  };
-};
 
 const parseSubtitleRef = (subtitleRef: string) => {
   const [providerType, providerId, ...rest] = subtitleRef.split(":");
@@ -472,121 +423,143 @@ export async function searchSubtitleValidator(
   const startedAt = Date.now();
   const listProviders =
     dependencies.listProviders ??
-    (async () => requireProviderByKey(input.provider, db));
+    (() => new ProviderRepository(db).listProviders(undefined, now));
   const getAdapter = dependencies.getAdapter ?? getRegisteredAdapter;
   const selectCredential =
     dependencies.selectCredential ?? selectProviderCredential;
   const markUsed = dependencies.markCredentialUsed ?? markCredentialUsed;
   const markFailure =
     dependencies.markCredentialFailure ?? markCredentialFailure;
+  const provider = (await listProviders()).find(
+    (candidate) => candidate.id === input.providerId,
+  );
 
-  const providers = await listProviders();
-  const filteredProviders = input.provider
-    ? providers.filter((provider) => provider.type === input.provider)
-    : providers;
-
-  if (input.provider && filteredProviders.length === 0) {
+  if (!provider) {
     throw new AppError(
       "PROVIDER_UNAVAILABLE",
-      `未找到 provider=${input.provider} 的配置实例。`,
-      "provider",
+      "Provider 不存在。",
+      "providerId",
+    );
+  }
+
+  const fields = buildSubtitleValidatorSearchFieldGroups(provider.type);
+  const allowedParams = new Set([
+    ...fields.baseFields.filter((field) => field !== "title"),
+    ...fields.extendedFields,
+  ]);
+  const unsupportedParam = Object.keys(input.providerParams).find(
+    (key) => !allowedParams.has(key as never),
+  );
+  if (unsupportedParam) {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      `当前 Provider 不支持参数 ${unsupportedParam}。`,
+      `providerParams.${unsupportedParam}`,
     );
   }
 
   const searchInput = buildSearchInput(input);
-
-  const outcomes = await Promise.all(
-    filteredProviders.map(async (provider) => {
-      const adapter = getAdapter(provider.type);
-      const credential =
-        provider.availableCredentialCount > 0 && provider.type !== "xunlei"
-          ? await selectCredential(provider.id, { db, now })
-          : null;
-      const outcome = await adapter.search(credential, searchInput);
-
-      if (!outcome.ok && credential) {
-        await markFailure(
-          provider,
-          credential.id,
-          outcome.error.reason,
-          outcome.error.message,
-          { db, now },
-        );
-      } else if (!outcome.skipped && credential) {
-        await markUsed(provider.id, credential.id, { db, now });
-      }
-
-      return { provider, outcome };
-    }),
-  );
-
-  const results = outcomes.flatMap(({ provider, outcome }) => {
-    if (!outcome.ok || outcome.skipped) {
-      return [];
+  const missingFields = fields.requiredSearchFields.filter((field) => {
+    if (field === "title") {
+      return !searchInput.title.trim();
     }
 
-    return outcome.results.map((item) => ({
-      id: `${provider.type}:${provider.id}:${item.id}`,
-      provider: provider.type,
-      language: item.language,
-      releaseName: item.releaseName,
-      format: item.format,
-      subtitleRef: `${provider.type}:${provider.id}:${item.id}`,
-      providerDownloadUrl:
-        provider.type === "xunlei" ? item.providerDownloadUrl : null,
-      raw: item.raw,
-      score: item.score ?? null,
-    }));
+    const value = searchInput[field];
+    return typeof value !== "string" || !value.trim();
   });
+  if (missingFields.length > 0) {
+    const fieldLabels: Record<string, string> = {
+      query: "附加查询",
+      language: "语言",
+      title: "关键词 / 标题",
+    };
+    const names = missingFields.map((field) => fieldLabels[field] ?? field);
+    throw new AppError(
+      "VALIDATION_FAILED",
+      `当前 Provider 缺少必填参数：${names.join("、")}。`,
+      `providerParams.${missingFields[0]}`,
+    );
+  }
 
-  const providerFailures = outcomes.flatMap(({ provider, outcome }) => {
-    if (outcome.ok && !outcome.skipped) {
-      return [];
-    }
-    if (outcome.ok && outcome.skipped) {
-      return [toFailureResponse(provider, { reason: outcome.reason })];
-    }
-    return [toFailureResponse(provider, outcome.error)];
-  });
-
-  const primaryProvider = filteredProviders[0] ?? null;
-  const diagnostic =
-    input.provider && primaryProvider
-      ? buildSubtitleValidatorDiagnosticSummary({
-          action: "search",
-          providerKey: primaryProvider.type,
-          providerName: primaryProvider.name,
-          providerStatus: primaryProvider.status,
-          status:
-            results.length > 0
-              ? "success"
-              : providerFailures.length > 0
-                ? "error"
-                : "empty",
-          resultCount: results.length,
-          elapsedMs: Date.now() - startedAt,
-          error:
-            providerFailures.length > 0
-              ? {
-                  category: providerFailures[0].errorCategory,
-                  safeMessage: providerFailures[0].message,
-                  nextActionHint: providerFailures[0].nextActionHint,
-                }
-              : null,
-        })
+  const adapter = getAdapter(provider.type);
+  const credential =
+    provider.availableCredentialCount > 0 && provider.type !== "xunlei"
+      ? await selectCredential(provider.id, { db, now })
       : null;
+  const outcome = await adapter.search(credential, searchInput);
+
+  if (!outcome.ok) {
+    if (credential) {
+      await markFailure(
+        provider,
+        credential.id,
+        outcome.error.reason,
+        outcome.error.message,
+        {
+          db,
+          now,
+        },
+      );
+    }
+    const code =
+      outcome.error.reason === "timeout" ? "TIMEOUT" : "UPSTREAM_FAILED";
+    throw new AppError(
+      code,
+      classifySubtitleValidatorError(
+        new AppError(code, outcome.error.message, "provider"),
+        outcome.error.message,
+      ).safeMessage,
+      "provider",
+    );
+  }
+
+  if (outcome.skipped) {
+    if (outcome.reason === "missing_required_field") {
+      throw new AppError(
+        "VALIDATION_FAILED",
+        "当前 Provider 缺少执行搜索所需的参数。",
+        "providerParams",
+      );
+    }
+
+    throw new AppError(
+      "PROVIDER_UNAVAILABLE",
+      "当前 Provider 暂不可用于搜索验证。",
+      "providerId",
+    );
+  }
+
+  if (credential) {
+    await markUsed(provider.id, credential.id, { db, now });
+  }
+
+  const results = outcome.results.map((item) => ({
+    id: `${provider.type}:${provider.id}:${item.id}`,
+    provider: provider.type,
+    language: item.language,
+    releaseName: item.releaseName,
+    format: item.format,
+    subtitleRef: `${provider.type}:${provider.id}:${item.id}`,
+    providerDownloadUrl:
+      provider.type === "xunlei" ? item.providerDownloadUrl : null,
+    raw: item.raw,
+    score: item.score ?? null,
+  }));
+  const status = results.length > 0 ? "success" : "empty";
 
   return {
-    status: providerFailures.some(
-      (item) =>
-        item.reason !== "skipped_missing_fields" &&
-        item.reason !== "skipped_disabled",
-    )
-      ? "partial"
-      : "success",
+    status,
     results,
-    providerFailures,
-    diagnostic,
+    providerFailures: [],
+    diagnostic: buildSubtitleValidatorDiagnosticSummary({
+      action: "search",
+      providerKey: provider.type,
+      providerName: provider.name,
+      providerStatus: provider.status,
+      status,
+      resultCount: results.length,
+      elapsedMs: Date.now() - startedAt,
+    }),
   };
 }
 

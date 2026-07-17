@@ -54,16 +54,16 @@
 
 **独立测试**: 选择 provider，输入关键词并提交；页面可呈现 searching / success / empty / invalid params / timeout / provider error 等状态，且空结果是 200 成功语义。
 
-- [ ] T021 [P] [US2] 为搜索验证路由与空结果语义编写契约测试于 `tests/contract/subtitle-validator-search.contract.test.ts`
-- [ ] T022 [P] [US2] 为 provider-aware 参数表单与搜索状态编写 UI 测试于 `tests/ui/subtitle-api-validator-search.test.tsx`
-- [ ] T023 [P] [US2] 为参数映射与错误归类编写单元测试于 `tests/unit/admin-subtitle-validator-search.test.ts`
-- [ ] T024 [US2] 在 `src/server/subtitles/admin-subtitle-validator-capabilities.ts` 中实现基础参数/扩展参数定义与示例参数映射
-- [ ] T025 [US2] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中实现单 provider 搜索验证、空结果独立成功态与错误分类
-- [ ] T026 [US2] 在 `src/lib/api/subtitle-validator.ts` 中实现搜索验证请求封装
-- [ ] T027 [US2] 新增搜索参数与操作区组件于 `src/components/providers/subtitle-validator-search-composer.tsx`
-- [ ] T028 [US2] 新增诊断摘要组件于 `src/components/providers/subtitle-validator-diagnostic-summary.tsx`
-- [ ] T029 [US2] 在 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx` 中集成 provider 切换、搜索提交、loading/empty/error 状态与结果上下文清理
-- [ ] T030 [US2] 新增搜索验证闭环集成测试于 `tests/integration/subtitle-validator-search-flow.test.ts`
+- [x] T021 [P] [US2] 为搜索验证路由与空结果语义编写契约测试于 `tests/contract/subtitle-validator-search.contract.test.ts`
+- [x] T022 [P] [US2] 为 provider-aware 参数表单与搜索状态编写 UI 测试于 `tests/ui/subtitle-api-validator-search.test.tsx`
+- [x] T023 [P] [US2] 为参数映射与错误归类编写单元测试于 `tests/unit/admin-subtitle-validator-search.test.ts`
+- [x] T024 [US2] 在 `src/server/subtitles/admin-subtitle-validator-capabilities.ts` 中实现基础参数/扩展参数定义与示例参数映射
+- [x] T025 [US2] 在 `src/server/subtitles/admin-subtitle-validator.ts` 中实现单 provider 搜索验证、空结果独立成功态与错误分类
+- [x] T026 [US2] 在 `src/lib/api/subtitle-validator.ts` 中实现搜索验证请求封装
+- [x] T027 [US2] 新增搜索参数与操作区组件于 `src/components/providers/subtitle-validator-search-composer.tsx`
+- [x] T028 [US2] 新增诊断摘要组件于 `src/components/providers/subtitle-validator-diagnostic-summary.tsx`
+- [x] T029 [US2] 在 `src/app/(admin)/subtitle-api-validator/subtitle-api-validator-client.tsx` 中集成 provider 切换、搜索提交、loading/empty/error 状态与结果上下文清理
+- [x] T030 [US2] 新增搜索验证闭环集成测试于 `tests/integration/subtitle-validator-search-flow.test.ts`
 
 ---
 

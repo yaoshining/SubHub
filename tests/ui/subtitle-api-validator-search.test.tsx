@@ -74,19 +74,103 @@ describe("Subtitle API Validator 搜索交互", () => {
     await user.click(screen.getByRole("button", { name: "搜索验证" }));
 
     await waitFor(() =>
-      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith(
-        expect.objectContaining({
-          provider: "opensubtitles",
-          title: "The Matrix",
+      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
+        providerId: "provider-os",
+        baseParams: { keyword: "The Matrix" },
+        providerParams: {
           imdbId: "tt0133093",
           season: 1,
           episode: 2,
-        }),
-      ),
+        },
+      }),
     );
 
     expect(screen.getByText("The Matrix.zh-CN")).toBeInTheDocument();
     expect(screen.getByText("结果 1")).toBeInTheDocument();
+  });
+
+  it("阻止 Xunlei 缺少附加查询的搜索，并允许省略语言筛选", async () => {
+    const user = userEvent.setup();
+    const xunlei = createProviderCapability({
+      providerId: "provider-xunlei",
+      providerKey: "xunlei",
+      providerName: "Xunlei",
+      requiresCredentials: false,
+      credentialCount: 0,
+      availableCredentialCount: 0,
+      supportsDownloadValidation: false,
+      supportsDirectDownloadUrl: true,
+      extendedFields: [],
+      requiredSearchFields: ["query"],
+    });
+    vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
+      items: [xunlei],
+      total: 1,
+    });
+
+    renderWithTheme(<SubtitleApiValidatorClient />);
+
+    await screen.findByRole("button", { name: /Xunlei/ });
+    await user.type(screen.getByLabelText("关键词 / 标题"), "The Matrix");
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    expect(screen.getByText("请填写必填参数：附加查询。")).toBeInTheDocument();
+    expect(screen.getByText("请填写附加查询。")).toBeInTheDocument();
+    expect(screen.queryByText("请填写语言。")).not.toBeInTheDocument();
+    expect(vi.mocked(api.runSubtitleValidatorSearch)).not.toHaveBeenCalled();
+
+    await user.type(screen.getByLabelText(/附加查询/), "The Matrix");
+    vi.mocked(api.runSubtitleValidatorSearch).mockResolvedValue(
+      createSearchResultData({ diagnostic: null }),
+    );
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    await waitFor(() =>
+      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
+        providerId: "provider-xunlei",
+        baseParams: { keyword: "The Matrix" },
+        providerParams: { query: "The Matrix" },
+      }),
+    );
+  });
+
+  it("Xunlei 语言筛选支持选择已知值并透传", async () => {
+    const user = userEvent.setup();
+    const xunlei = createProviderCapability({
+      providerId: "provider-xunlei",
+      providerKey: "xunlei",
+      providerName: "Xunlei",
+      requiresCredentials: false,
+      credentialCount: 0,
+      availableCredentialCount: 0,
+      supportsDownloadValidation: false,
+      supportsDirectDownloadUrl: true,
+      extendedFields: [],
+      requiredSearchFields: ["query"],
+    });
+    vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
+      items: [xunlei],
+      total: 1,
+    });
+    vi.mocked(api.runSubtitleValidatorSearch).mockResolvedValue(
+      createSearchResultData({ diagnostic: null }),
+    );
+
+    renderWithTheme(<SubtitleApiValidatorClient />);
+
+    await screen.findByRole("button", { name: /Xunlei/ });
+    await user.type(screen.getByLabelText("关键词 / 标题"), "The Matrix");
+    await user.type(screen.getByLabelText(/附加查询/), "The Matrix");
+    await user.type(screen.getByLabelText("自定义语言筛选"), "简体");
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    await waitFor(() =>
+      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
+        providerId: "provider-xunlei",
+        baseParams: { keyword: "The Matrix" },
+        providerParams: { query: "The Matrix", language: "简体" },
+      }),
+    );
   });
 
   it("搜索失败时保留输入并展示错误反馈", async () => {

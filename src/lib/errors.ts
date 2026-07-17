@@ -10,6 +10,7 @@ export const appErrorCodes = [
   "NO_RESULTS",
   "SUBTITLE_NOT_FOUND",
   "UPSTREAM_FAILED",
+  "TIMEOUT",
 ] as const;
 
 export type AppErrorCode = (typeof appErrorCodes)[number];

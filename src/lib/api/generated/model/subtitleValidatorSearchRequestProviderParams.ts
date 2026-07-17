@@ -6,10 +6,6 @@
  * OpenAPI spec version: 0.2.3
  */
 
-export type SubtitleValidatorSearchRequestType =
-  (typeof SubtitleValidatorSearchRequestType)[keyof typeof SubtitleValidatorSearchRequestType];
-
-export const SubtitleValidatorSearchRequestType = {
-  movie: "movie",
-  episode: "episode",
-} as const;
+export type SubtitleValidatorSearchRequestProviderParams = {
+  [key: string]: string | number | boolean | null;
+};

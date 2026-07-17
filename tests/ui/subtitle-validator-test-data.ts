@@ -24,6 +24,7 @@ export function createProviderCapability(
     supportsDirectDownloadUrl: false,
     baseFields: ["title", "query", "language", "type", "year"],
     extendedFields: ["season", "episode", "imdbId", "tmdbId"],
+    requiredSearchFields: [],
     baseFieldNotice:
       "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。",
     extendedFieldNotice:
