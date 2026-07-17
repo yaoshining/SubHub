@@ -105,8 +105,8 @@
 **目的**: 收口文档、回归、契约链路与全量校验，确认正式 API 不受影响。
 
 - [x] T046 [P] 更新页面规范收口实现差异于 `docs/pages/subtitle-api-validator.md`
-- [ ] T047 [P] 按需更新职责边界说明于 `docs/pages/providers.md`
-- [ ] T048 [P] 按需更新职责边界说明于 `docs/pages/provider-detail.md`
+- [x] T047 [P] 按需更新职责边界说明于 `docs/pages/providers.md`
+- [x] T048 [P] 按需更新职责边界说明于 `docs/pages/provider-detail.md`
 - [x] T049 回归正式字幕 API 相关测试，确认 `src/app/api/subtitles/search/route.ts` 与 `src/app/api/subtitles/download/route.ts` 行为不变
 - [x] T050 运行 API 契约链路校验：`pnpm api:spec && pnpm api:client && pnpm api:check`
 - [x] T051 运行定向测试集合：`pnpm test -- tests/contract/subtitle-validator-providers.contract.test.ts tests/contract/subtitle-validator-search.contract.test.ts tests/contract/subtitle-validator-download-validation.contract.test.ts tests/ui/subtitle-api-validator-page.test.tsx tests/ui/subtitle-api-validator-search.test.tsx tests/ui/subtitle-api-validator-download.test.tsx tests/ui/subtitle-api-validator-diagnostics.test.tsx tests/integration/subtitle-validator-access-flow.test.ts tests/integration/subtitle-validator-search-flow.test.ts tests/integration/subtitle-validator-download-flow.test.ts tests/integration/subtitle-validator-diagnostics-flow.test.ts`
