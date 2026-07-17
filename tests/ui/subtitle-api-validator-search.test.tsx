@@ -89,6 +89,54 @@ describe("Subtitle API Validator 搜索交互", () => {
     expect(screen.getByText("结果 1")).toBeInTheDocument();
   });
 
+  it("阻止 Xunlei 缺少必填参数的搜索，并指出具体字段", async () => {
+    const user = userEvent.setup();
+    const xunlei = createProviderCapability({
+      providerId: "provider-xunlei",
+      providerKey: "xunlei",
+      providerName: "Xunlei",
+      requiresCredentials: false,
+      credentialCount: 0,
+      availableCredentialCount: 0,
+      supportsDownloadValidation: false,
+      supportsDirectDownloadUrl: true,
+      extendedFields: [],
+      requiredSearchFields: ["query", "language"],
+    });
+    vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
+      items: [xunlei],
+      total: 1,
+    });
+
+    renderWithTheme(<SubtitleApiValidatorClient />);
+
+    await screen.findByRole("button", { name: /Xunlei/ });
+    await user.type(screen.getByLabelText("关键词 / 标题"), "The Matrix");
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    expect(
+      screen.getByText("请填写必填参数：附加查询、语言。"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("请填写附加查询。")).toBeInTheDocument();
+    expect(screen.getByText("请填写语言。")).toBeInTheDocument();
+    expect(vi.mocked(api.runSubtitleValidatorSearch)).not.toHaveBeenCalled();
+
+    await user.type(screen.getByLabelText(/附加查询/), "The Matrix");
+    await user.type(screen.getByLabelText(/语言/), "zh-CN");
+    vi.mocked(api.runSubtitleValidatorSearch).mockResolvedValue(
+      createSearchResultData({ diagnostic: null }),
+    );
+    await user.click(screen.getByRole("button", { name: "搜索验证" }));
+
+    await waitFor(() =>
+      expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
+        providerId: "provider-xunlei",
+        baseParams: { keyword: "The Matrix" },
+        providerParams: { query: "The Matrix", language: "zh-CN" },
+      }),
+    );
+  });
+
   it("搜索失败时保留输入并展示错误反馈", async () => {
     const user = userEvent.setup();
     vi.mocked(api.runSubtitleValidatorSearch).mockRejectedValue(

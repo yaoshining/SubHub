@@ -159,12 +159,7 @@ describe("admin subtitle validator search", () => {
     });
     const missingFieldsAdapter: SubtitleProviderAdapter = {
       key: "xunlei",
-      search: vi.fn().mockResolvedValue({
-        ok: true,
-        skipped: true,
-        reason: "missing_required_field",
-        results: [],
-      }),
+      search: vi.fn(),
     };
 
     await expect(
@@ -182,8 +177,10 @@ describe("admin subtitle validator search", () => {
       ),
     ).rejects.toMatchObject({
       code: "VALIDATION_FAILED",
-      target: "providerParams",
+      message: "当前 Provider 缺少必填参数：附加查询、语言。",
+      target: "providerParams.query",
     });
+    expect(missingFieldsAdapter.search).not.toHaveBeenCalled();
 
     const unavailableAdapter: SubtitleProviderAdapter = {
       key: "xunlei",

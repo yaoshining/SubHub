@@ -137,6 +137,7 @@ describe("subtitle validator diagnostics helpers", () => {
       "imdbId",
       "tmdbId",
     ]);
+    expect(openSubtitles.requiredSearchFields).toEqual([]);
     expect(openSubtitles.extendedNotice).toContain("IMDb");
 
     const xunlei = buildSubtitleValidatorSearchFieldGroups("xunlei");
@@ -148,6 +149,7 @@ describe("subtitle validator diagnostics helpers", () => {
       "year",
     ]);
     expect(xunlei.extendedFields).toEqual([]);
+    expect(xunlei.requiredSearchFields).toEqual(["query", "language"]);
     expect(xunlei.extendedNotice).toContain("关键词");
   });
 });

@@ -1285,6 +1285,7 @@ components:
         - supportsDirectDownloadUrl
         - baseFields
         - extendedFields
+        - requiredSearchFields
         - baseFieldNotice
         - extendedFieldNotice
         - notes
@@ -1328,6 +1329,11 @@ components:
             $ref: "#/components/schemas/SubtitleValidatorSearchField"
         extendedFields:
           type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorSearchField"
+        requiredSearchFields:
+          type: array
+          description: 当前 Provider 执行搜索时必须填写的字段。
           items:
             $ref: "#/components/schemas/SubtitleValidatorSearchField"
         baseFieldNotice:

@@ -24,6 +24,14 @@ const extendedFieldsByProvider: Record<
   xunlei: [],
 };
 
+const requiredSearchFieldsByProvider: Record<
+  SubtitleProviderKey,
+  SubtitleValidatorSearchField[]
+> = {
+  opensubtitles: [],
+  xunlei: ["query", "language"],
+};
+
 const extendedFieldNoticeByProvider: Record<SubtitleProviderKey, string> = {
   opensubtitles:
     "IMDb ID、TMDb ID 与 season / episode 属于 OpenSubtitles 扩展参数，用于缩小结果范围，不是系统统一业务字段。",
@@ -75,6 +83,7 @@ export function buildSubtitleValidatorSearchFieldGroups(
   return {
     baseFields,
     extendedFields: extendedFieldsByProvider[providerKey],
+    requiredSearchFields: requiredSearchFieldsByProvider[providerKey],
     baseNotice:
       "基础通用参数覆盖关键词、语言、媒体类型与年份；切换 provider 时这部分保持稳定。",
     extendedNotice: extendedFieldNoticeByProvider[providerKey],
@@ -109,6 +118,7 @@ export function mapProviderToValidatorCapability(
     supportsDirectDownloadUrl: providerKey === "xunlei",
     baseFields: fieldGroups.baseFields,
     extendedFields: fieldGroups.extendedFields,
+    requiredSearchFields: fieldGroups.requiredSearchFields,
     baseFieldNotice: fieldGroups.baseNotice,
     extendedFieldNotice: fieldGroups.extendedNotice,
     notes: capabilityNotes[providerKey],

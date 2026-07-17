@@ -30,6 +30,8 @@ export interface SubtitleValidatorProviderCapability {
   supportsDirectDownloadUrl: boolean;
   baseFields: SubtitleValidatorSearchField[];
   extendedFields: SubtitleValidatorSearchField[];
+  /** 当前 Provider 执行搜索时必须填写的字段。 */
+  requiredSearchFields: SubtitleValidatorSearchField[];
   baseFieldNotice: string;
   extendedFieldNotice: string;
   notes: string[];

@@ -65,6 +65,7 @@ export const subtitleValidatorProviderCapabilitySchema = z.object({
   supportsDirectDownloadUrl: z.boolean(),
   baseFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
   extendedFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
+  requiredSearchFields: z.array(subtitleValidatorSearchFieldSchema).default([]),
   baseFieldNotice: z.string().min(1),
   extendedFieldNotice: z.string().min(1),
   notes: z.array(z.string().min(1)).default([]),

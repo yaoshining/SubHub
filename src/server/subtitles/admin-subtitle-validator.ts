@@ -458,12 +458,35 @@ export async function searchSubtitleValidator(
     );
   }
 
+  const searchInput = buildSearchInput(input);
+  const missingFields = fields.requiredSearchFields.filter((field) => {
+    if (field === "title") {
+      return !searchInput.title.trim();
+    }
+
+    const value = searchInput[field];
+    return typeof value !== "string" || !value.trim();
+  });
+  if (missingFields.length > 0) {
+    const fieldLabels: Record<string, string> = {
+      query: "附加查询",
+      language: "语言",
+      title: "关键词 / 标题",
+    };
+    const names = missingFields.map((field) => fieldLabels[field] ?? field);
+    throw new AppError(
+      "VALIDATION_FAILED",
+      `当前 Provider 缺少必填参数：${names.join("、")}。`,
+      `providerParams.${missingFields[0]}`,
+    );
+  }
+
   const adapter = getAdapter(provider.type);
   const credential =
     provider.availableCredentialCount > 0 && provider.type !== "xunlei"
       ? await selectCredential(provider.id, { db, now })
       : null;
-  const outcome = await adapter.search(credential, buildSearchInput(input));
+  const outcome = await adapter.search(credential, searchInput);
 
   if (!outcome.ok) {
     if (credential) {
