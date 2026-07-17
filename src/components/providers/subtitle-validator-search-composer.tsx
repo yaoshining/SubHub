@@ -47,7 +47,7 @@ export function SubtitleValidatorSearchComposer({
   const showIdentifierFields =
     supportsField(provider, "imdbId") || supportsField(provider, "tmdbId");
   const setKeyword = (keyword: string) =>
-    onChange({ ...form, baseParams: { keyword } });
+    onChange({ ...form, baseParams: { ...form.baseParams, keyword } });
   const setProviderParam = (
     key: string,
     value: string | number | boolean | null,

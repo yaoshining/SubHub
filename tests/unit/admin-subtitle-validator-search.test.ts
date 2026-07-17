@@ -89,6 +89,44 @@ describe("admin subtitle validator search", () => {
     );
   });
 
+  it("不会将无效媒体类型透传给 provider adapter", async () => {
+    const provider = createProvider({
+      id: "xunlei-default",
+      type: "xunlei",
+      availableCredentialCount: 0,
+      credentialCount: 0,
+      activeCredentialCount: 0,
+    });
+    const adapter: SubtitleProviderAdapter = {
+      key: "xunlei",
+      search: vi
+        .fn()
+        .mockResolvedValue({ ok: true, skipped: false, results: [] }),
+    };
+
+    await searchSubtitleValidator(
+      {
+        providerId: provider.id,
+        baseParams: { keyword: "The Matrix" },
+        providerParams: {
+          query: "The Matrix",
+          language: "zh-CN",
+          type: "unsupported",
+        },
+      },
+      {
+        db: {} as never,
+        listProviders: vi.fn().mockResolvedValue([provider]),
+        getAdapter: vi.fn().mockReturnValue(adapter),
+      },
+    );
+
+    expect(adapter.search).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({ type: undefined }),
+    );
+  });
+
   it("拒绝当前 provider 不支持的参数", async () => {
     const provider = createProvider({ id: "xunlei-default", type: "xunlei" });
 
@@ -124,7 +162,8 @@ describe("admin subtitle validator search", () => {
       search: vi.fn().mockResolvedValue({
         ok: true,
         skipped: true,
-        error: { reason: "missing_required_field" },
+        reason: "missing_required_field",
+        results: [],
       }),
     };
 
@@ -144,6 +183,33 @@ describe("admin subtitle validator search", () => {
     ).rejects.toMatchObject({
       code: "VALIDATION_FAILED",
       target: "providerParams",
+    });
+
+    const unavailableAdapter: SubtitleProviderAdapter = {
+      key: "xunlei",
+      search: vi.fn().mockResolvedValue({
+        ok: true,
+        skipped: true,
+        reason: "disabled",
+        results: [],
+      }),
+    };
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: xunlei.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: { query: "The Matrix", language: "zh-CN" },
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([xunlei]),
+          getAdapter: vi.fn().mockReturnValue(unavailableAdapter),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "PROVIDER_UNAVAILABLE",
+      target: "providerId",
     });
 
     const timeoutAdapter: SubtitleProviderAdapter = {

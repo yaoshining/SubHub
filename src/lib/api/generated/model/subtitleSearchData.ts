@@ -10,7 +10,7 @@ import type { SubtitleSearchDataStatus } from "./subtitleSearchDataStatus";
 import type { SubtitleSearchResult } from "./subtitleSearchResult";
 
 export interface SubtitleSearchData {
-  /** success: 至少返回一个搜索结果；empty: 所有 provider 均成功执行但未返回结果。
+  /** success: 所有 provider 成功或无 provider；partial: 至少一个 provider 失败但其他 provider 返回了结果。
    *  */
   status: SubtitleSearchDataStatus;
   results: SubtitleSearchResult[];

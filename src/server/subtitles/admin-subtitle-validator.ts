@@ -40,6 +40,12 @@ const buildSearchInput = (input: SubtitleValidatorSearchRequest) => {
   const numberParam = (key: string) =>
     typeof params[key] === "number" ? params[key] : undefined;
 
+  const mediaType = stringParam("type");
+  let type: "movie" | "episode" | undefined;
+  if (mediaType === "movie" || mediaType === "episode") {
+    type = mediaType;
+  }
+
   return {
     title: input.baseParams.keyword,
     query: stringParam("query"),
@@ -49,7 +55,7 @@ const buildSearchInput = (input: SubtitleValidatorSearchRequest) => {
     language: stringParam("language"),
     imdbId: stringParam("imdbId"),
     tmdbId: numberParam("tmdbId"),
-    type: stringParam("type") as "movie" | "episode" | undefined,
+    type,
   };
 };
 
@@ -485,10 +491,18 @@ export async function searchSubtitleValidator(
   }
 
   if (outcome.skipped) {
+    if (outcome.reason === "missing_required_field") {
+      throw new AppError(
+        "VALIDATION_FAILED",
+        "当前 Provider 缺少执行搜索所需的参数。",
+        "providerParams",
+      );
+    }
+
     throw new AppError(
-      "VALIDATION_FAILED",
-      "当前 Provider 缺少执行搜索所需的参数。",
-      "providerParams",
+      "PROVIDER_UNAVAILABLE",
+      "当前 Provider 暂不可用于搜索验证。",
+      "providerId",
     );
   }
 
