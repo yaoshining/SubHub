@@ -15,9 +15,9 @@ import {
   type SubtitleValidatorDiagnosticSummary as SubtitleValidatorDiagnosticSummaryData,
   type SubtitleValidatorDownloadMode,
   type SubtitleValidatorProviderCapability,
+  type SubtitleValidatorSearchPayload,
   type SubtitleValidatorSearchRequest,
   type SubtitleValidatorSearchResult,
-  type SubtitleValidatorSearchResultData,
   fetchSubtitleValidatorProviders,
   runSubtitleValidatorSearch,
   validateSubtitleValidatorDownload,
@@ -77,6 +77,7 @@ function getDefaultProviderId(
   providers: SubtitleValidatorProviderCapability[],
 ) {
   return (
+    providers.find((item) => item.status === "enabled")?.providerId ??
     providers.find((item) => item.status === "degraded")?.providerId ??
     providers.find((item) => item.status === "needs_config")?.providerId ??
     providers[0]?.providerId ??
@@ -105,7 +106,7 @@ export function SubtitleApiValidatorClient() {
   const [searching, setSearching] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string | null>(null);
   const [searchResult, setSearchResult] =
-    React.useState<SubtitleValidatorSearchResultData | null>(null);
+    React.useState<SubtitleValidatorSearchPayload | null>(null);
   const [searchDiagnostic, setSearchDiagnostic] =
     React.useState<SubtitleValidatorDiagnosticSummaryData | null>(null);
   const [recentDownloadValidation, setRecentDownloadValidation] =
@@ -153,40 +154,12 @@ export function SubtitleApiValidatorClient() {
   }, []);
 
   React.useEffect(() => {
-    let mounted = true;
-    void (async () => {
-      try {
-        const data = await fetchSubtitleValidatorProviders();
-        if (!mounted) return;
-        setProviders(data.items);
-        setSelectedProviderId((current) =>
-          current && data.items.some((item) => item.providerId === current)
-            ? current
-            : getDefaultProviderId(data.items),
-        );
-      } catch (error) {
-        if (!mounted) return;
-        if (
-          error instanceof AppError &&
-          error.code === "AUTHENTICATION_REQUIRED"
-        ) {
-          setAuthenticationError(error.message);
-        } else if (error instanceof AppError && error.code === "FORBIDDEN") {
-          setPermissionError(error.message);
-        } else {
-          setProviderError(getErrorMessage(error));
-        }
-      } finally {
-        if (mounted) {
-          setLoadingProviders(false);
-        }
-      }
-    })();
+    const timeoutId = window.setTimeout(() => {
+      void loadProviders();
+    }, 0);
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadProviders]);
 
   const selectedProvider = React.useMemo(
     () =>

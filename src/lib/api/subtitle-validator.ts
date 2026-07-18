@@ -1,31 +1,31 @@
 import { subhubApiClient } from "./client";
 
 import type {
+  SubtitleValidatorDownloadValidationPayload,
   SubtitleValidatorDownloadValidationRequest,
   SubtitleValidatorDownloadValidationResponse,
-  SubtitleValidatorDownloadValidationResult,
   SubtitleValidatorProvidersResponse,
+  SubtitleValidatorSearchPayload,
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResponse,
-  SubtitleValidatorSearchResultData,
 } from "@/lib/api/generated/model";
 
 export type {
   SubtitleValidatorDiagnosticSummary,
   SubtitleValidatorDiagnosticSummaryAction,
   SubtitleValidatorDownloadMode,
+  SubtitleValidatorDownloadValidationPayload,
   SubtitleValidatorDownloadValidationRequest,
   SubtitleValidatorDownloadValidationResponse,
-  SubtitleValidatorDownloadValidationResult,
   SubtitleValidatorDownloadValidationStatus,
   SubtitleValidatorProviderCapability,
   SubtitleValidatorProviderFailure,
   SubtitleValidatorProvidersResponse,
   SubtitleValidatorSearchField,
+  SubtitleValidatorSearchPayload,
   SubtitleValidatorSearchRequest,
   SubtitleValidatorSearchResponse,
   SubtitleValidatorSearchResult,
-  SubtitleValidatorSearchResultData,
 } from "@/lib/api/generated/model";
 
 const jsonHeaders = (options?: RequestInit) => ({
@@ -50,7 +50,7 @@ export async function fetchSubtitleValidatorProviders(
 export async function runSubtitleValidatorSearch(
   input: SubtitleValidatorSearchRequest,
   options?: RequestInit,
-): Promise<SubtitleValidatorSearchResultData> {
+): Promise<SubtitleValidatorSearchPayload> {
   const response = await subhubApiClient<SubtitleValidatorSearchResponse>(
     "/api/admin/subtitle-validator/search",
     {
@@ -67,7 +67,7 @@ export async function runSubtitleValidatorSearch(
 export async function validateSubtitleValidatorDownload(
   input: SubtitleValidatorDownloadValidationRequest,
   options?: RequestInit,
-): Promise<SubtitleValidatorDownloadValidationResult> {
+): Promise<SubtitleValidatorDownloadValidationPayload> {
   const response =
     await subhubApiClient<SubtitleValidatorDownloadValidationResponse>(
       "/api/admin/subtitle-validator/download-validation",

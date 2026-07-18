@@ -4,12 +4,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type {
   SubtitleValidatorDiagnosticSummary,
   SubtitleValidatorDownloadMode,
-  SubtitleValidatorDownloadValidationResult,
+  SubtitleValidatorDownloadValidationPayload,
   SubtitleValidatorDownloadValidationStatus,
 } from "@/lib/api/subtitle-validator";
 
 export type SubtitleValidatorRecentDownloadValidation = Pick<
-  SubtitleValidatorDownloadValidationResult,
+  SubtitleValidatorDownloadValidationPayload,
   | "status"
   | "message"
   | "downloadMode"

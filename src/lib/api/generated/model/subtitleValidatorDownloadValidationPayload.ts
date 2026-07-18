@@ -10,7 +10,7 @@ import type { SubtitleValidatorDiagnosticSummary } from "./subtitleValidatorDiag
 import type { SubtitleValidatorDownloadMode } from "./subtitleValidatorDownloadMode";
 import type { SubtitleValidatorDownloadValidationStatus } from "./subtitleValidatorDownloadValidationStatus";
 
-export interface SubtitleValidatorDownloadValidationResult {
+export interface SubtitleValidatorDownloadValidationPayload {
   /** 结果的内部 provider 引用，不含凭据。 */
   subtitleRef: string;
   resultId: string;

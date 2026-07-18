@@ -1369,13 +1369,26 @@ components:
         total:
           type: integer
           minimum: 0
+    SubtitleValidatorProvidersPayload:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubtitleValidatorProviderCapability"
+        total:
+          type: integer
+          minimum: 0
     SubtitleValidatorProvidersResponse:
       type: object
       required:
         - data
       properties:
         data:
-          $ref: "#/components/schemas/SubtitleValidatorProviderList"
+          $ref: "#/components/schemas/SubtitleValidatorProvidersPayload"
     SubtitleValidatorSearchRequest:
       type: object
       required:
@@ -1515,7 +1528,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/SubtitleValidatorDownloadMode"
           nullable: true
-    SubtitleValidatorSearchResultData:
+    SubtitleValidatorSearchPayload:
       type: object
       required:
         - status
@@ -1546,7 +1559,7 @@ components:
         - data
       properties:
         data:
-          $ref: "#/components/schemas/SubtitleValidatorSearchResultData"
+          $ref: "#/components/schemas/SubtitleValidatorSearchPayload"
     SubtitleValidatorDownloadValidationRequest:
       oneOf:
         - type: object
@@ -1578,7 +1591,7 @@ components:
               format: uri
               nullable: true
               description: 仅用于 provider 允许的 URL 检查；不得包含 credential、secret 或 token。
-    SubtitleValidatorDownloadValidationResult:
+    SubtitleValidatorDownloadValidationPayload:
       type: object
       required:
         - subtitleRef
@@ -1644,7 +1657,7 @@ components:
         - data
       properties:
         data:
-          $ref: "#/components/schemas/SubtitleValidatorDownloadValidationResult"
+          $ref: "#/components/schemas/SubtitleValidatorDownloadValidationPayload"
     Provider:
       type: object
       required:

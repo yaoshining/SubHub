@@ -7,11 +7,11 @@
  */
 import type { SubtitleValidatorDiagnosticSummary } from "./subtitleValidatorDiagnosticSummary";
 import type { SubtitleValidatorProviderFailure } from "./subtitleValidatorProviderFailure";
+import type { SubtitleValidatorSearchPayloadStatus } from "./subtitleValidatorSearchPayloadStatus";
 import type { SubtitleValidatorSearchResult } from "./subtitleValidatorSearchResult";
-import type { SubtitleValidatorSearchResultDataStatus } from "./subtitleValidatorSearchResultDataStatus";
 
-export interface SubtitleValidatorSearchResultData {
-  status: SubtitleValidatorSearchResultDataStatus;
+export interface SubtitleValidatorSearchPayload {
+  status: SubtitleValidatorSearchPayloadStatus;
   results: SubtitleValidatorSearchResult[];
   providerFailures: SubtitleValidatorProviderFailure[];
   diagnostic: SubtitleValidatorDiagnosticSummary | null;

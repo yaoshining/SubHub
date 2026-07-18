@@ -32,6 +32,22 @@ vi.mock("@/lib/api/subtitle-validator", () => ({
 
 const api = await import("@/lib/api/subtitle-validator");
 
+const enabledProvider = createProviderCapability({
+  providerId: "provider-enabled",
+  providerKey: "opensubtitles",
+  providerName: "OpenSubtitles Enabled",
+  status: "enabled",
+  availabilityLabel: "已启用",
+  restrictionNote: null,
+  healthStatus: "ready",
+  credentialCount: 2,
+  availableCredentialCount: 1,
+  supportsDownloadValidation: true,
+  notes: ["可执行搜索与统一下载校验。"],
+  lastHealthCheckAt: "2026-07-14T11:00:00.000Z",
+  lastHealthErrorSummary: null,
+});
+
 const degradedProvider = createProviderCapability({
   providerId: "provider-degraded",
   providerKey: "opensubtitles",
@@ -69,8 +85,8 @@ beforeEach(() => {
   navigation.pathname = "/admin/subtitle-api-validator";
   navigation.searchParams = new URLSearchParams();
   vi.mocked(api.fetchSubtitleValidatorProviders).mockResolvedValue({
-    items: [degradedProvider, xunleiProvider],
-    total: 2,
+    items: [degradedProvider, enabledProvider, xunleiProvider],
+    total: 3,
   });
   vi.mocked(api.runSubtitleValidatorSearch).mockResolvedValue(
     createSearchResultData({}),
@@ -83,7 +99,7 @@ beforeEach(() => {
 });
 
 describe("Subtitle API Validator 页面", () => {
-  it("默认选中 degraded provider，并展示 rail + overview + diagnostic snapshot", async () => {
+  it("默认优先选中 enabled provider，并展示 rail + overview + diagnostic snapshot", async () => {
     renderWithTheme(<SubtitleApiValidatorClient />);
 
     await screen.findByText("Subtitle API Validator");
@@ -94,11 +110,11 @@ describe("Subtitle API Validator 页面", () => {
     );
 
     const selected = screen.getByRole("option", { selected: true });
-    expect(selected).toHaveTextContent("OpenSubtitles Degraded");
+    expect(selected).toHaveTextContent("OpenSubtitles Enabled");
     expect(screen.getByText("Provider Overview")).toBeInTheDocument();
-    expect(screen.getByText("此 Provider 已降级")).toBeInTheDocument();
+    expect(screen.getByText("已启用")).toBeInTheDocument();
     expect(screen.getByText("Diagnostic Snapshot")).toBeInTheDocument();
-    expect(screen.getByText(/最近错误摘要: 最近一次超时/)).toBeInTheDocument();
+    expect(screen.queryByText(/最近错误摘要:/)).not.toBeInTheDocument();
   });
 
   it("认证失效时提供保留当前查询参数的重新登录入口", async () => {
@@ -188,13 +204,13 @@ describe("Subtitle API Validator 页面", () => {
     const user = userEvent.setup();
     renderWithTheme(<SubtitleApiValidatorClient />);
 
-    await screen.findByRole("button", { name: /OpenSubtitles Degraded/ });
+    await screen.findByRole("button", { name: /OpenSubtitles Enabled/ });
     await user.type(screen.getByLabelText("关键词 / 标题"), "The Matrix");
     await user.click(screen.getByRole("button", { name: "搜索验证" }));
 
     await waitFor(() =>
       expect(vi.mocked(api.runSubtitleValidatorSearch)).toHaveBeenCalledWith({
-        providerId: "provider-degraded",
+        providerId: "provider-enabled",
         baseParams: { keyword: "The Matrix" },
         providerParams: {},
       }),
