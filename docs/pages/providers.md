@@ -269,4 +269,12 @@
 
 - **Data sources**: Provider 列表、type、status、health、credential pool summary、scheduling summary
 - **External dependencies**: Provider 管理 API
-- **Cross-page dependencies**: `docs/pages/provider-detail.md`、`docs/pages/create-provider.md`
+- **Cross-page dependencies**: `docs/pages/provider-detail.md`、`docs/pages/create-provider.md`、`docs/pages/subtitle-api-validator.md`
+
+## Notes
+
+- 本页不是 provider 详情页；右侧 Inspector 只承担摘要与承接，不承担完整编辑。
+- OpenSubtitles 与 Xunlei 共用 `/providers` 入口，但交互层必须让管理员一眼识别它们的配置差异，不可假装两者完全同构。
+- `create-provider` 是从本页触发的前置流程，但创建后的主战场仍回到 `providers` 列表与 Inspector。
+- Inspector 需要对 disabled / degraded / needs_config 状态形成足够可见的反馈，否则管理员会误以为 provider 正常参与流量。
+- 与 `docs/pages/subtitle-api-validator.md` 的职责边界必须明确：本页负责 provider 可见性、启停与配置承接；validator 页负责搜索 / 下载链路验证，不在本页混入正式诊断工作区。

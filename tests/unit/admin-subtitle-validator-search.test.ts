@@ -1,0 +1,285 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { searchSubtitleValidator } from "@/server/subtitles/admin-subtitle-validator";
+import type { SubtitleProviderAdapter } from "@/server/providers/provider-adapter";
+import type { ProviderWithCredentialSummary } from "@/server/providers/provider-repository";
+
+const createProvider = (
+  overrides: Partial<ProviderWithCredentialSummary> = {},
+): ProviderWithCredentialSummary => ({
+  id: "provider-os-primary",
+  name: "OpenSubtitles Primary",
+  type: "opensubtitles",
+  status: "enabled",
+  priority: 1,
+  weight: 100,
+  concurrencyLimit: 2,
+  rotationEnabled: true,
+  cooldownSeconds: 30,
+  fallbackProviderId: null,
+  lastHealthStatus: "ready",
+  lastHealthCheckedAt: null,
+  lastErrorSummary: null,
+  createdAt: "2026-07-16T00:00:00.000Z",
+  updatedAt: "2026-07-16T00:00:00.000Z",
+  activeCredentialCount: 1,
+  availableCredentialCount: 1,
+  credentialCount: 1,
+  ...overrides,
+});
+
+const emptyAdapter: SubtitleProviderAdapter = {
+  key: "opensubtitles",
+  search: vi.fn().mockResolvedValue({ ok: true, skipped: false, results: [] }),
+};
+
+describe("admin subtitle validator search", () => {
+  it("按 providerId 精确执行一个实例，并映射 OpenSubtitles 参数", async () => {
+    const selected = createProvider();
+    const sibling = createProvider({
+      id: "provider-os-secondary",
+      name: "OpenSubtitles Secondary",
+    });
+    const selectCredential = vi.fn().mockResolvedValue({
+      id: "credential-1",
+      secret: "secret",
+    });
+
+    const result = await searchSubtitleValidator(
+      {
+        providerId: selected.id,
+        baseParams: { keyword: "The Matrix" },
+        providerParams: {
+          language: "en",
+          season: 1,
+          episode: 2,
+          imdbId: "tt0133093",
+          tmdbId: 603,
+        },
+      },
+      {
+        db: {} as never,
+        listProviders: vi.fn().mockResolvedValue([selected, sibling]),
+        getAdapter: vi.fn().mockReturnValue(emptyAdapter),
+        selectCredential,
+        markCredentialUsed: vi.fn(),
+        markCredentialFailure: vi.fn(),
+      },
+    );
+
+    expect(result.status).toBe("empty");
+    expect(emptyAdapter.search).toHaveBeenCalledWith(
+      { id: "credential-1", secret: "secret" },
+      {
+        title: "The Matrix",
+        query: undefined,
+        year: undefined,
+        season: 1,
+        episode: 2,
+        language: "en",
+        imdbId: "tt0133093",
+        tmdbId: 603,
+        type: undefined,
+      },
+    );
+    expect(selectCredential).toHaveBeenCalledTimes(1);
+    expect(selectCredential).toHaveBeenCalledWith(
+      selected.id,
+      expect.anything(),
+    );
+  });
+
+  it("在记录凭据失败前脱敏 provider 错误消息", async () => {
+    const provider = createProvider();
+    const markCredentialFailure = vi.fn().mockResolvedValue(undefined);
+    const adapter: SubtitleProviderAdapter = {
+      key: "opensubtitles",
+      search: vi.fn().mockResolvedValue({
+        ok: false,
+        skipped: false,
+        error: {
+          reason: "upstream_error",
+          message: "upstream rejected bearer ABC+/opaque==",
+        },
+      }),
+    };
+
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: provider.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: {},
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([provider]),
+          getAdapter: vi.fn().mockReturnValue(adapter),
+          selectCredential: vi.fn().mockResolvedValue({
+            id: "credential-1",
+            secret: "secret",
+          }),
+          markCredentialFailure,
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "UPSTREAM_FAILED",
+      message: "upstream rejected bearer [redacted]",
+    });
+
+    expect(markCredentialFailure).toHaveBeenCalledWith(
+      provider,
+      "credential-1",
+      "upstream_error",
+      "upstream rejected bearer [redacted]",
+      expect.objectContaining({ db: expect.anything() }),
+    );
+  });
+
+  it("不会将无效媒体类型透传给 provider adapter", async () => {
+    const provider = createProvider({
+      id: "xunlei-default",
+      type: "xunlei",
+      availableCredentialCount: 0,
+      credentialCount: 0,
+      activeCredentialCount: 0,
+    });
+    const adapter: SubtitleProviderAdapter = {
+      key: "xunlei",
+      search: vi
+        .fn()
+        .mockResolvedValue({ ok: true, skipped: false, results: [] }),
+    };
+
+    await searchSubtitleValidator(
+      {
+        providerId: provider.id,
+        baseParams: { keyword: "The Matrix" },
+        providerParams: {
+          query: "The Matrix",
+          language: "zh-CN",
+          type: "unsupported",
+        },
+      },
+      {
+        db: {} as never,
+        listProviders: vi.fn().mockResolvedValue([provider]),
+        getAdapter: vi.fn().mockReturnValue(adapter),
+      },
+    );
+
+    expect(adapter.search).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({ type: undefined }),
+    );
+  });
+
+  it("拒绝当前 provider 不支持的参数", async () => {
+    const provider = createProvider({ id: "xunlei-default", type: "xunlei" });
+
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: provider.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: { season: 1 },
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([provider]),
+          getAdapter: vi.fn(),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      target: "providerParams.season",
+    });
+  });
+
+  it("将 provider 返回的缺失参数与超时分别归类", async () => {
+    const xunlei = createProvider({
+      id: "xunlei-default",
+      type: "xunlei",
+      availableCredentialCount: 0,
+      credentialCount: 0,
+      activeCredentialCount: 0,
+    });
+    const missingFieldsAdapter: SubtitleProviderAdapter = {
+      key: "xunlei",
+      search: vi.fn(),
+    };
+
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: xunlei.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: {},
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([xunlei]),
+          getAdapter: vi.fn().mockReturnValue(missingFieldsAdapter),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      message: "当前 Provider 缺少必填参数：附加查询。",
+      target: "providerParams.query",
+    });
+    expect(missingFieldsAdapter.search).not.toHaveBeenCalled();
+
+    const unavailableAdapter: SubtitleProviderAdapter = {
+      key: "xunlei",
+      search: vi.fn().mockResolvedValue({
+        ok: true,
+        skipped: true,
+        reason: "disabled",
+        results: [],
+      }),
+    };
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: xunlei.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: { query: "The Matrix", language: "zh-CN" },
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([xunlei]),
+          getAdapter: vi.fn().mockReturnValue(unavailableAdapter),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "PROVIDER_UNAVAILABLE",
+      target: "providerId",
+    });
+
+    const timeoutAdapter: SubtitleProviderAdapter = {
+      key: "xunlei",
+      search: vi.fn().mockResolvedValue({
+        ok: false,
+        skipped: false,
+        error: { reason: "timeout", message: "upstream timeout token=secret" },
+      }),
+    };
+    await expect(
+      searchSubtitleValidator(
+        {
+          providerId: xunlei.id,
+          baseParams: { keyword: "The Matrix" },
+          providerParams: { query: "The Matrix", language: "zh-CN" },
+        },
+        {
+          db: {} as never,
+          listProviders: vi.fn().mockResolvedValue([xunlei]),
+          getAdapter: vi.fn().mockReturnValue(timeoutAdapter),
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: "TIMEOUT",
+      message: expect.not.stringContaining("secret"),
+    });
+  });
+});

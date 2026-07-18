@@ -30,6 +30,7 @@ const statusByErrorCode: Record<AppErrorCode, number> = {
   NO_RESULTS: 404,
   SUBTITLE_NOT_FOUND: 404,
   UPSTREAM_FAILED: 502,
+  TIMEOUT: 408,
 };
 
 export type ApiSuccessResponse<T> = {

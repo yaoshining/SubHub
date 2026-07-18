@@ -5,7 +5,6 @@ Guidelines for defining, extracting, and enforcing brand colors.
 ## Color System Structure
 
 ### Hierarchy
-
 ```
 Primary Colors (1-2)
 ├── Main brand color - Used for CTAs, headers, key elements
@@ -30,37 +29,34 @@ Semantic Colors (4)
 ## Color Documentation Format
 
 ### Markdown Table
-
 ```markdown
-| Name         | Hex     | RGB            | HSL              | Usage       |
-| ------------ | ------- | -------------- | ---------------- | ----------- |
+| Name | Hex | RGB | HSL | Usage |
+|------|-----|-----|-----|-------|
 | Primary Blue | #2563EB | rgb(37,99,235) | hsl(217,91%,53%) | CTAs, links |
 ```
 
 ### CSS Variables
-
 ```css
 :root {
   /* Primary */
-  --color-primary: #2563eb;
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1d4ed8;
+  --color-primary: #2563EB;
+  --color-primary-light: #3B82F6;
+  --color-primary-dark: #1D4ED8;
 
   /* Secondary */
-  --color-secondary: #8b5cf6;
-  --color-accent: #f59e0b;
+  --color-secondary: #8B5CF6;
+  --color-accent: #F59E0B;
 
   /* Neutral */
-  --color-background: #ffffff;
-  --color-surface: #f9fafb;
+  --color-background: #FFFFFF;
+  --color-surface: #F9FAFB;
   --color-text-primary: #111827;
-  --color-text-secondary: #6b7280;
-  --color-border: #e5e7eb;
+  --color-text-secondary: #6B7280;
+  --color-border: #E5E7EB;
 }
 ```
 
 ### Tailwind Config
-
 ```javascript
 colors: {
   primary: {
@@ -77,18 +73,16 @@ colors: {
 ## Accessibility Requirements
 
 ### Contrast Ratios (WCAG 2.1)
-
 | Level | Normal Text | Large Text | UI Components |
-| ----- | ----------- | ---------- | ------------- |
-| AA    | 4.5:1       | 3:1        | 3:1           |
-| AAA   | 7:1         | 4.5:1      | 4.5:1         |
+|-------|-------------|------------|---------------|
+| AA | 4.5:1 | 3:1 | 3:1 |
+| AAA | 7:1 | 4.5:1 | 4.5:1 |
 
 ### Checking Contrast
-
 ```javascript
 // Formula for relative luminance
 function luminance(r, g, b) {
-  const [rs, gs, bs] = [r, g, b].map((v) => {
+  const [rs, gs, bs] = [r, g, b].map(v => {
     v /= 255;
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   });
@@ -105,18 +99,14 @@ function contrastRatio(l1, l2) {
 ## Color Extraction
 
 ### From Images
-
 Use `extract-colors.cjs` script to:
-
 1. Load image file
 2. Extract dominant colors using k-means clustering
 3. Map to nearest brand colors
 4. Report compliance percentage
 
 ### From Brand Guidelines
-
 Parse markdown to extract:
-
 - Hex values from tables
 - CSS variable definitions
 - Color names and usage descriptions
@@ -124,14 +114,12 @@ Parse markdown to extract:
 ## Brand Compliance Validation
 
 ### Rules
-
 1. **Primary color ratio**: 60-70% of design
 2. **Secondary color ratio**: 20-30% of design
 3. **Accent color ratio**: 5-10% of design
 4. **Off-brand tolerance**: Max 20% non-palette colors
 
 ### Validation Output
-
 ```json
 {
   "compliance": 85,
@@ -150,14 +138,12 @@ Parse markdown to extract:
 ## Color Usage Guidelines
 
 ### Do's
-
 - Use primary for main CTAs and key elements
 - Maintain consistent hover/active states
 - Test all combinations for accessibility
 - Document color decisions
 
 ### Don'ts
-
 - Use more than 2-3 colors in single component
 - Mix warm and cool tones without intent
 - Use pure black (#000) for text (use #111 or similar)
@@ -166,7 +152,6 @@ Parse markdown to extract:
 ## Color Palette Examples
 
 ### Tech/SaaS
-
 ```
 Primary: #2563EB (Blue)
 Secondary: #8B5CF6 (Purple)
@@ -176,7 +161,6 @@ Text: #111827
 ```
 
 ### Marketing/Creative
-
 ```
 Primary: #F97316 (Orange)
 Secondary: #EC4899 (Pink)
@@ -186,7 +170,6 @@ Text: #1F2937
 ```
 
 ### Professional/Corporate
-
 ```
 Primary: #1E40AF (Navy)
 Secondary: #475569 (Slate)

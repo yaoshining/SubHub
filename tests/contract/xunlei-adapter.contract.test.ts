@@ -4,7 +4,10 @@ import { XunleiAdapter } from "@/server/providers/xunlei-adapter";
 import type { SubtitleSearchInput } from "@/server/subtitles/subtitle-gateway";
 
 const createAdapterWithMock = () => {
-  const fetchImpl = vi.fn(async (): Promise<Response> => Response.json([]));
+  const fetchImpl = vi.fn(
+    async (): Promise<Response> =>
+      Response.json({ code: 0, data: [], result: "ok" }),
+  );
   const adapter = new XunleiAdapter({
     baseUrl: "https://xunlei.test/oracle/subtitle",
     fetchImpl: fetchImpl as unknown as typeof fetch,
@@ -33,7 +36,7 @@ const mockResponse = (data: unknown) =>
   vi.fn(async (): Promise<Response> => Response.json(data));
 
 describe("XunleiAdapter 字段映射", () => {
-  it("query 映射到上游 name，language 映射到上游 languages", async () => {
+  it("query 映射到上游 name，填写 language 时映射到上游 languages", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
     await adapter.search(
       null,
@@ -42,6 +45,19 @@ describe("XunleiAdapter 字段映射", () => {
     const params = getParams(fetchImpl);
     expect(params.get("name")).toBe("权力的游戏");
     expect(params.get("languages")).toBe("简体");
+  });
+
+  it("language 为空时不传 languages，仍可执行搜索", async () => {
+    const { fetchImpl, adapter } = createAdapterWithMock();
+    const outcome = await adapter.search(
+      null,
+      makeInput({ query: "权力的游戏", language: "" }),
+    );
+
+    expect(outcome).toMatchObject({ ok: true, skipped: false });
+    const params = getParams(fetchImpl);
+    expect(params.get("name")).toBe("权力的游戏");
+    expect(params.get("languages")).toBeNull();
   });
 
   it("不支持字段不传上游（imdb_id / tmdb_id / season / episode / type / year / title）", async () => {
@@ -76,20 +92,6 @@ describe("XunleiAdapter 必要条件缺失", () => {
     const outcome = await adapter.search(
       null,
       makeInput({ query: "", language: "简体" }),
-    );
-    expect(outcome).toEqual({
-      ok: true,
-      skipped: true,
-      reason: "missing_required_field",
-      results: [],
-    });
-  });
-
-  it("language 为空时返回 skipped: true, reason: missing_required_field", async () => {
-    const { adapter } = createAdapterWithMock();
-    const outcome = await adapter.search(
-      null,
-      makeInput({ query: "权力的游戏", language: "" }),
     );
     expect(outcome).toEqual({
       ok: true,
@@ -227,25 +229,29 @@ describe("XunleiAdapter 错误处理", () => {
 });
 
 describe("XunleiAdapter 响应解析", () => {
-  it("正常响应解析为 ProviderSearchResult，优先使用 gcid", async () => {
+  it("解析迅雷 response envelope 的 data 为 ProviderSearchResult，优先使用 gcid", async () => {
     const adapter = new XunleiAdapter({
       baseUrl: "https://xunlei.test",
-      fetchImpl: mockResponse([
-        {
-          cid: "abcdef1234567890",
-          gcid: "abcdef0123456789abcdef0123456789",
-          url: "https://example.test/subtitle.srt",
-          ext: "srt",
-          name: "肖申克的救赎.srt",
-          duration: 8520,
-          languages: ["zh", "zh-CN"],
-          source: "shoulei",
-          score: 0.95,
-          fingerprintf_score: 0.0,
-          extra_name: "简体&英文",
-          mt: 0,
-        },
-      ]) as unknown as typeof fetch,
+      fetchImpl: mockResponse({
+        code: 0,
+        data: [
+          {
+            cid: "abcdef1234567890",
+            gcid: "abcdef0123456789abcdef0123456789",
+            url: "https://example.test/subtitle.srt",
+            ext: "srt",
+            name: "肖申克的救赎.srt",
+            duration: 8520,
+            languages: ["zh", "zh-CN"],
+            source: "shoulei",
+            score: 0.95,
+            fingerprintf_score: 0.0,
+            extra_name: "简体&英文",
+            mt: 0,
+          },
+        ],
+        result: "ok",
+      }) as unknown as typeof fetch,
       timeoutMs: 1000,
     });
     const outcome = await adapter.search(null, makeInput());

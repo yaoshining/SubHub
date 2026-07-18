@@ -5,4 +5,5 @@ export * from "./settings";
 export * from "./providers";
 export * from "./caller-keys";
 export * from "./subtitles";
+export * from "./subtitle-validator";
 export * from "./users";

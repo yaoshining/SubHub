@@ -28,6 +28,10 @@ const knownAdminPageMetas: AdminPageMeta[] = [
     title: "设置",
     description: "确认系统状态，并跳转到正确治理页完成深配置。",
   },
+  {
+    title: "字幕 API 验证",
+    description: "验证 provider 能力摘要、搜索契约与统一下载校验链路。",
+  },
 ];
 
 const dashboardMeta = knownAdminPageMetas[0]!;
@@ -51,6 +55,12 @@ export function getAdminPageMeta(
   }
   if (path === "/settings") {
     return knownAdminPageMetas[5]!;
+  }
+  if (
+    path === "/subtitle-api-validator" ||
+    path === "/admin/subtitle-api-validator"
+  ) {
+    return knownAdminPageMetas[6]!;
   }
 
   return dashboardMeta;

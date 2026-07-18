@@ -27,6 +27,7 @@ const requiredIconNames = [
   "key-round",
   "layout-dashboard",
   "server",
+  "search-check",
   "cloud-off",
   "moon",
   "sun",
@@ -105,6 +106,7 @@ describe("Lucide 图标基线", () => {
       "server",
       "key-round",
       "users",
+      "search-check",
       "settings",
     ]);
   });
