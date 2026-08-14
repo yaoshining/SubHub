@@ -7,6 +7,7 @@ import type {
   ProviderSearchResult,
   SubtitleProviderAdapter,
 } from "@/server/providers/provider-adapter";
+import { resolveSubtitleFormat } from "@/server/subtitles/subtitle-format";
 import type { SubtitleSearchInput } from "@/server/subtitles/subtitle-gateway";
 
 export type OpenSubtitlesSearchInput = {
@@ -81,14 +82,11 @@ export class OpenSubtitlesAdapter implements SubtitleProviderAdapter {
       const results: ProviderSearchResult[] = subtitles
         .filter((s) => s.id)
         .map((s) => {
-          const extension = s.fileName?.includes(".")
-            ? s.fileName!.split(".").pop()?.toLowerCase()
-            : undefined;
           return {
             id: s.id,
             language: s.language,
             releaseName: s.fileName,
-            format: extension || "srt",
+            format: resolveSubtitleFormat(s.fileName),
             providerDownloadUrl: null,
             raw: {
               download_count: s.downloadCount,

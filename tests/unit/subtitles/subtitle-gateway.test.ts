@@ -105,6 +105,38 @@ describe("统一字幕查询与下载", () => {
     });
   });
 
+  it("fileName 末段为发布名而非字幕格式时 format 回退 srt", async () => {
+    const [callerKey] = await Promise.all([
+      createActiveCallerKey(),
+      createReadyProvider(),
+    ]);
+
+    const result = await searchSubtitles(
+      requestWithKey(callerKey.key),
+      { title: "Inception" },
+      {
+        adapter: {
+          searchRaw: vi.fn().mockResolvedValue([
+            {
+              id: "subtitle_002",
+              language: "en",
+              fileName: "Inception.2010.1080p.bluray.mora.25r",
+              downloadCount: 5,
+            },
+          ]),
+        },
+      },
+    );
+
+    expect(result.status).toBe("success");
+    expect(result.results[0]).toMatchObject({
+      provider: "opensubtitles",
+      language: "en",
+      releaseName: "Inception.2010.1080p.bluray.mora.25r",
+      format: "srt",
+    });
+  });
+
   it("无结果、无效 Key、上游失败和下载不可用返回统一错误码", async () => {
     const [callerKey, provider] = await Promise.all([
       createActiveCallerKey(),

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { SelectedProviderCredential } from "@/server/providers/credential-pool";
 import { OpenSubtitlesAdapter } from "@/server/providers/opensubtitles-adapter";
 
 const createAdapterWithMock = () => {
@@ -137,5 +138,59 @@ describe("OpenSubtitlesAdapter.searchRaw 参数映射", () => {
     });
     const params = getParams(fetchImpl);
     expect(params.get("query")).toBe("abc");
+  });
+});
+
+describe("OpenSubtitlesAdapter.search 格式解析", () => {
+  const credential = { secret: "test-secret" } as SelectedProviderCredential;
+
+  const createSearchAdapter = (fileName: string | null) => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({
+        data: [
+          {
+            id: "file_x",
+            attributes: {
+              language: "en",
+              files: [{ file_id: "file_x", file_name: fileName }],
+              download_count: 1,
+            },
+          },
+        ],
+      }),
+    );
+    const adapter = new OpenSubtitlesAdapter({
+      baseUrl: "https://opensubtitles.test",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      timeoutMs: 1000,
+    });
+    return adapter;
+  };
+
+  it("fileName 末段为发布名而非字幕格式时 format 回退 srt", async () => {
+    const adapter = createSearchAdapter("Inception.2010.1080p.bluray.mora.25r");
+    const outcome = await adapter.search(credential, { title: "Inception" });
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.results[0]).toMatchObject({
+      releaseName: "Inception.2010.1080p.bluray.mora.25r",
+      format: "srt",
+    });
+  });
+
+  it("fileName 为已知字幕扩展名时返回该格式", async () => {
+    const adapter = createSearchAdapter("Movie.2010.BluRay.ass");
+    const outcome = await adapter.search(credential, { title: "Movie" });
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.results[0]!.format).toBe("ass");
+  });
+
+  it("fileName 缺失时 format 回退 srt", async () => {
+    const adapter = createSearchAdapter(null);
+    const outcome = await adapter.search(credential, { title: "Movie" });
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.results[0]!.format).toBe("srt");
   });
 });

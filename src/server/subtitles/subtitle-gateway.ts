@@ -24,6 +24,7 @@ import {
 import type { CallerKey } from "@/server/storage/schema";
 import { assertProductionRuntimeReady } from "@/server/services/runtime-readiness-service";
 import { getEnabledCandidates } from "@/server/services/provider-service";
+import { resolveSubtitleFormat } from "@/server/subtitles/subtitle-format";
 import {
   mapFailure,
   normalize,
@@ -196,9 +197,7 @@ const callOpenSubtitles = async (
           id: s.id,
           language: s.language,
           releaseName: s.fileName,
-          format: s.fileName?.includes(".")
-            ? (s.fileName!.split(".").pop()?.toLowerCase() ?? "srt")
-            : "srt",
+          format: resolveSubtitleFormat(s.fileName),
           providerDownloadUrl: null,
           raw: { download_count: s.downloadCount },
           score: null,
