@@ -445,4 +445,146 @@ describe("统一字幕查询与下载", () => {
       });
     });
   });
+
+  describe("语言过滤（SubHub 侧）", () => {
+    const xunleiResults = [
+      {
+        id: "xl_zh",
+        language: "zh-CN",
+        releaseName: "权力的游戏.srt",
+        format: "srt",
+        providerDownloadUrl: "https://xunlei.test/1.srt",
+        raw: {},
+        score: null,
+      },
+      {
+        id: "xl_en",
+        language: "en",
+        releaseName: "game.of.thrones.srt",
+        format: "srt",
+        providerDownloadUrl: "https://xunlei.test/2.srt",
+        raw: {},
+        score: null,
+      },
+      {
+        id: "xl_bi",
+        language: "zh-CN,en",
+        releaseName: "CHSEN_权游.srt",
+        format: "srt",
+        providerDownloadUrl: "https://xunlei.test/3.srt",
+        raw: {},
+        score: null,
+      },
+    ];
+
+    const xunleiAdapterMock = () => ({
+      key: "xunlei" as const,
+      search: vi.fn().mockResolvedValue({
+        ok: true as const,
+        skipped: false as const,
+        results: xunleiResults,
+      }),
+    });
+
+    it("language=zh-CN 时按归一化语言过滤混合结果", async () => {
+      const [callerKey] = await Promise.all([
+        createActiveCallerKey(),
+        createReadyProvider(),
+      ]);
+
+      const result = await searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Example", language: "zh-CN" },
+        {
+          adapter: {
+            searchRaw: vi.fn().mockResolvedValue([
+              {
+                id: "os_zh",
+                language: "zh-CN",
+                fileName: "Example.zh-CN.srt",
+                downloadCount: 1,
+              },
+              {
+                id: "os_en",
+                language: "en",
+                fileName: "Example.en.srt",
+                downloadCount: 1,
+              },
+            ]),
+          },
+          xunleiAdapter: xunleiAdapterMock(),
+        },
+      );
+
+      expect(result.status).toBe("success");
+      expect(result.results.map((r) => r.language).sort()).toEqual([
+        "zh-CN",
+        "zh-CN",
+        "zh-CN,en",
+      ]);
+      expect(result.results.every((r) => r.language !== "en")).toBe(true);
+    });
+
+    it("未携带 language 时不过滤", async () => {
+      const [callerKey] = await Promise.all([
+        createActiveCallerKey(),
+        createReadyProvider(),
+      ]);
+
+      const result = await searchSubtitles(
+        requestWithKey(callerKey.key),
+        { title: "Example" },
+        {
+          adapter: {
+            searchRaw: vi.fn().mockResolvedValue([
+              {
+                id: "os_zh",
+                language: "zh-CN",
+                fileName: "Example.zh-CN.srt",
+                downloadCount: 1,
+              },
+            ]),
+          },
+          xunleiAdapter: xunleiAdapterMock(),
+        },
+      );
+
+      expect(result.status).toBe("success");
+      expect(result.results).toHaveLength(4);
+    });
+
+    it("过滤后为空返回 NO_RESULTS", async () => {
+      const [callerKey] = await Promise.all([
+        createActiveCallerKey(),
+        createReadyProvider(),
+      ]);
+
+      await expect(
+        searchSubtitles(
+          requestWithKey(callerKey.key),
+          { title: "Example", language: "zh-CN" },
+          {
+            adapter: {
+              searchRaw: vi.fn().mockResolvedValue([
+                {
+                  id: "os_en",
+                  language: "en",
+                  fileName: "Example.en.srt",
+                  downloadCount: 1,
+                },
+              ]),
+            },
+            xunleiAdapter: {
+              key: "xunlei" as const,
+              search: vi.fn().mockResolvedValue({
+                ok: true as const,
+                skipped: false as const,
+                results: [xunleiResults[1]],
+              }),
+            },
+          },
+        ),
+      ).rejects.toMatchObject({ code: "NO_RESULTS" });
+    });
+  });
 });

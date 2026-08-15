@@ -99,9 +99,9 @@ describe("多 provider 集成", () => {
             {
               id: "os_file_001",
               attributes: {
-                language: "en",
+                language: "zh",
                 files: [
-                  { file_id: "os_file_001", file_name: "Example.en.srt" },
+                  { file_id: "os_file_001", file_name: "Example.zh.srt" },
                 ],
               },
             },
@@ -203,9 +203,9 @@ describe("多 provider 集成", () => {
             {
               id: "os_file_003",
               attributes: {
-                language: "en",
+                language: "zh",
                 files: [
-                  { file_id: "os_file_003", file_name: "Example.en.srt" },
+                  { file_id: "os_file_003", file_name: "Example.zh.srt" },
                 ],
               },
             },

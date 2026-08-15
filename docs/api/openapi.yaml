@@ -735,6 +735,7 @@ paths:
         - name: language
           in: query
           required: false
+          description: 语言过滤；在 SubHub 侧按归一化后的结果语言过滤。OpenSubtitles 会透传上游过滤，迅雷 provider 不透传上游、由网关抓全量后归一化（基于 releaseName 优先 + 原始 language 兜底）并统一过滤。
           schema:
             type: string
             minLength: 1
@@ -2531,6 +2532,7 @@ components:
         language:
           type: string
           nullable: true
+          description: 归一化后的语言码（如 `zh-CN` / `zh-TW` / `en` / `zh-CN,en`）；无法判定时为 null。OpenSubtitles 透传上游语言码，迅雷 provider 由网关基于 releaseName（优先）+ 原始 language（兜底）归一化。
         releaseName:
           type: string
           nullable: true
