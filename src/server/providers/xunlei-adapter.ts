@@ -5,6 +5,7 @@ import type {
   SubtitleProviderAdapter,
 } from "@/server/providers/provider-adapter";
 import type { SelectedProviderCredential } from "@/server/providers/credential-pool";
+import { resolveSubtitleLanguage } from "@/server/subtitles/subtitle-language";
 import type { SubtitleSearchInput } from "@/server/subtitles/subtitle-gateway";
 
 const XUNLEI_BASE_URL = "https://api-shoulei-ssl.xunlei.com/oracle/subtitle";
@@ -55,7 +56,6 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
     void _options;
 
     const name = input.query?.trim();
-    const languages = input.language?.trim();
 
     if (!name) {
       return {
@@ -66,11 +66,10 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
       };
     }
 
+    // 迅雷上游的 `languages` 参数与 OpenSubtitles 语言码不一致（不认 zh-CN/chi/chs/zh），
+    // 传语言过滤反而返回空。这里不把 language 透传上游，抓全量后由 SubHub 侧按归一化语言过滤。
     const params = new URLSearchParams();
     params.set("name", name);
-    if (languages) {
-      params.set("languages", languages);
-    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -158,7 +157,10 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
     const id = record.gcid || record.cid;
     if (!id) return null;
 
-    const language = record.languages?.[0] ?? null;
+    const language = resolveSubtitleLanguage(
+      record.name,
+      record.languages?.[0] ?? null,
+    );
     const format = record.ext?.toLowerCase() || "srt";
 
     return {

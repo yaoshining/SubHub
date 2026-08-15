@@ -25,6 +25,7 @@ import type { CallerKey } from "@/server/storage/schema";
 import { assertProductionRuntimeReady } from "@/server/services/runtime-readiness-service";
 import { getEnabledCandidates } from "@/server/services/provider-service";
 import { resolveSubtitleFormat } from "@/server/subtitles/subtitle-format";
+import { matchesLanguageFilter } from "@/server/subtitles/subtitle-language";
 import {
   mapFailure,
   normalize,
@@ -399,6 +400,12 @@ export async function searchSubtitles(
   });
 
   const allResults = [...osResult.results, ...xunleiResult.results];
+  const requestedLanguage = input.language?.trim();
+  const visibleResults = requestedLanguage
+    ? allResults.filter((r) =>
+        matchesLanguageFilter(r.language, requestedLanguage),
+      )
+    : allResults;
   const failures = [osResult.failure, xunleiResult.failure].filter(
     (f): f is ProviderFailureInfo => f !== null,
   );
@@ -422,7 +429,7 @@ export async function searchSubtitles(
     );
   }
 
-  if (allResults.length === 0) {
+  if (visibleResults.length === 0) {
     const lastProviderId = osResult.providerId ?? xunleiResult.providerId;
     const lastCredentialId = osResult.credentialId ?? xunleiResult.credentialId;
     if (hardFailures.length > 0) {
@@ -442,11 +449,16 @@ export async function searchSubtitles(
 
   const lastProviderId = osResult.providerId ?? xunleiResult.providerId;
   const lastCredentialId = osResult.credentialId ?? xunleiResult.credentialId;
-  await record("success", allResults.length, lastProviderId, lastCredentialId);
+  await record(
+    "success",
+    visibleResults.length,
+    lastProviderId,
+    lastCredentialId,
+  );
 
   const data: SubtitleSearchData = {
     status,
-    results: allResults,
+    results: visibleResults,
   };
   if (failures.length > 0) {
     data.provider_failures = failures;

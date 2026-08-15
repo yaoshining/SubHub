@@ -36,7 +36,7 @@ const mockResponse = (data: unknown) =>
   vi.fn(async (): Promise<Response> => Response.json(data));
 
 describe("XunleiAdapter 字段映射", () => {
-  it("query 映射到上游 name，填写 language 时映射到上游 languages", async () => {
+  it("query 映射到上游 name，language 不传上游（避免迅雷不认语言码返回空）", async () => {
     const { fetchImpl, adapter } = createAdapterWithMock();
     await adapter.search(
       null,
@@ -44,7 +44,7 @@ describe("XunleiAdapter 字段映射", () => {
     );
     const params = getParams(fetchImpl);
     expect(params.get("name")).toBe("权力的游戏");
-    expect(params.get("languages")).toBe("简体");
+    expect(params.get("languages")).toBeNull();
   });
 
   it("language 为空时不传 languages，仍可执行搜索", async () => {
@@ -260,7 +260,7 @@ describe("XunleiAdapter 响应解析", () => {
     expect(outcome.results).toHaveLength(1);
     const result = outcome.results[0]!;
     expect(result.id).toBe("abcdef0123456789abcdef0123456789");
-    expect(result.language).toBe("zh");
+    expect(result.language).toBe("zh-CN");
     expect(result.releaseName).toBe("肖申克的救赎.srt");
     expect(result.format).toBe("srt");
     expect(result.providerDownloadUrl).toBe(
@@ -301,5 +301,65 @@ describe("XunleiAdapter 响应解析", () => {
     expect(outcome.ok).toBe(true);
     if (!outcome.ok) return;
     expect(outcome.results[0]!.format).toBe("srt");
+  });
+});
+
+describe("XunleiAdapter 语言归一化", () => {
+  const run = async (record: Record<string, unknown>) => {
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl: mockResponse([record]) as unknown as typeof fetch,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return null;
+    return outcome.results[0] ?? null;
+  };
+
+  it("中英双语 CHSEN 归一化为 zh-CN,en", async () => {
+    const result = await run({
+      gcid: "g1",
+      name: "CHSEN_权游.srt",
+      languages: ["CHSEN_权游"],
+    });
+    expect(result?.language).toBe("zh-CN,en");
+  });
+
+  it("空 language + 中文名归一化为 zh-CN", async () => {
+    const result = await run({
+      gcid: "g2",
+      name: "权力的游戏.第02季第01集.srt",
+      languages: [],
+    });
+    expect(result?.language).toBe("zh-CN");
+  });
+
+  it("默认 language + 中文名归一化为 zh-CN", async () => {
+    const result = await run({
+      gcid: "g3",
+      name: "御赐小仵作_29_中文含硬字幕片尾.srt",
+      languages: ["默认"],
+    });
+    expect(result?.language).toBe("zh-CN");
+  });
+
+  it("_en_ 标记优先于 CJK 标题归一化为 en", async () => {
+    const result = await run({
+      gcid: "g4",
+      name: "一枕山河踏月来_en_16.ass",
+      languages: [],
+    });
+    expect(result?.language).toBe("en");
+  });
+
+  it("无信号时 language 为 null，原始 languages 保留在 raw", async () => {
+    const result = await run({
+      gcid: "g5",
+      name: "game.of.thrones.srt",
+      languages: [""],
+    });
+    expect(result?.language).toBeNull();
+    expect(result?.raw).toMatchObject({ languages: [""] });
   });
 });
