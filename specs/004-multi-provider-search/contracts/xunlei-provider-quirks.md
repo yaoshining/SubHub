@@ -34,17 +34,17 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 
 ### 2.1 SubHub → 迅雷上游
 
-| SubHub 字段      | 迅雷上游字段 | 必需 | 处理                                |
-| ---------------- | ------------ | ---- | ----------------------------------- |
-| `input.query`    | `name`       | ✅   | trim 后非空才传；缺失返回 `skipped` |
+| SubHub 字段      | 迅雷上游字段 | 必需 | 处理                                              |
+| ---------------- | ------------ | ---- | ------------------------------------------------- |
+| `input.query`    | `name`       | ✅   | trim 后非空才传；缺失返回 `skipped`               |
 | `input.language` | —            | 否   | MUST 忽略，不传上游；由 SubHub 侧按归一化语言过滤 |
-| `input.imdbId`   | —            | 否   | MUST 忽略，不传上游                 |
-| `input.tmdbId`   | —            | 否   | MUST 忽略，不传上游                 |
-| `input.season`   | —            | 否   | MUST 忽略                           |
-| `input.episode`  | —            | 否   | MUST 忽略                           |
-| `input.type`     | —            | 否   | MUST 忽略                           |
-| `input.year`     | —            | 否   | MUST 忽略                           |
-| `input.title`    | —            | 否   | MUST 忽略（迅雷只识别 `query`）     |
+| `input.imdbId`   | —            | 否   | MUST 忽略，不传上游                               |
+| `input.tmdbId`   | —            | 否   | MUST 忽略，不传上游                               |
+| `input.season`   | —            | 否   | MUST 忽略                                         |
+| `input.episode`  | —            | 否   | MUST 忽略                                         |
+| `input.type`     | —            | 否   | MUST 忽略                                         |
+| `input.year`     | —            | 否   | MUST 忽略                                         |
+| `input.title`    | —            | 否   | MUST 忽略（迅雷只识别 `query`）                   |
 
 ### 2.2 迅雷上游 → SubHub `ProviderSearchResult`
 
@@ -54,7 +54,7 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 | `cid`                                                                                                                                | `id`                                                        | `gcid` 缺失时回退                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `ext`                                                                                                                                | `format`                                                    | 缺失时默认 `srt`                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `name`                                                                                                                               | `releaseName`                                               | 缺失时为 `null`                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `name` + `languages`                                                                                                                 | `language`                                                  | 用 `name`（优先）+ `languages[0]`（兜底）归一化为 `zh-CN`/`zh-TW`/`en`/`zh-CN,en`（无法判定为 `null`）；原始值保留在 `raw.languages`                                                                                                                                                                                                                                                                                                                             |
+| `name` + `languages`                                                                                                                 | `language`                                                  | 用 `name`（优先）+ `languages[0]`（兜底）归一化为 `zh-CN`/`zh-TW`/`en`/`zh-CN,en`/`zh-TW,en`（无法判定为 `null`）；原始值保留在 `raw.languages`                                                                                                                                                                                                                                                                                                                      |
 | `score`                                                                                                                              | `score` + `raw.score`                                       | 顶层 `score` 透传；原始保留                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `url`                                                                                                                                | adapter 内部 `providerDownloadUrl`（**绝不暴露给 client**） | 迅雷的 `url` 是 provider 原始下载地址，仅在 adapter 内部使用；adapter 将其放入 `ProviderSearchResult.providerDownloadUrl`（adapter 内部字段，不进入公共响应）。公共响应的 `downloadUrl` 由 SubHub gateway 统一生成为 `/api/subtitles/download?subtitleId={xunlei:providerId:gcid\|cid}`；download 路由根据 `subtitleId` 前缀判断 provider 后再走 adapter 的 URL 拉取。迅雷原始 `url` 仅保留在 `AggregatedSubtitleResult.raw.url`（用于调试与审计，不直接是下载入口） |
 | `cid` / `gcid` / `url` / `ext` / `name` / `duration` / `languages` / `source` / `score` / `fingerprintf_score` / `extra_name` / `mt` | `raw.*`                                                     | 全量保留                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -74,9 +74,9 @@ https://api-shoulei-ssl.xunlei.com/oracle/subtitle?name=权力的游戏&language
 
 ### 3.1 必要条件字段
 
-| 字段       | 必需 | 缺失时行为                                                         |
-| ---------- | ---- | ------------------------------------------------------------------ |
-| `query`    | ✅   | adapter 返回 `{ skipped: true, reason: 'missing_required_field' }` |
+| 字段    | 必需 | 缺失时行为                                                         |
+| ------- | ---- | ------------------------------------------------------------------ |
+| `query` | ✅   | adapter 返回 `{ skipped: true, reason: 'missing_required_field' }` |
 
 ### 3.2 跳过语义
 

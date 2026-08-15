@@ -72,6 +72,34 @@ describe("resolveSubtitleLanguage - releaseName 优先归一化", () => {
   });
 });
 
+describe("resolveSubtitleLanguage - 回归：词边界与优先级", () => {
+  it("英文单词子串 chi 不误判为中文（Children / Chicago）", () => {
+    expect(resolveSubtitleLanguage("Children.of.Men.2006.srt", "")).toBeNull();
+    expect(resolveSubtitleLanguage("Chicago.2002.srt", "")).toBeNull();
+  });
+
+  it("英文单词子串 eng 不误判为英文标记（Avengers）", () => {
+    expect(resolveSubtitleLanguage("Avengers.Endgame.2019.srt", "")).toBeNull();
+  });
+
+  it("zh-TW / zh-CN 标记被识别为中文", () => {
+    expect(resolveSubtitleLanguage("movie.zh-TW.srt", "")).toBe("zh-TW");
+    expect(resolveSubtitleLanguage("movie.zh-CN.srt", "")).toBe("zh-CN");
+  });
+
+  it("繁体标记单独出现也归为中文 zh-TW", () => {
+    expect(resolveSubtitleLanguage("movie.big5.srt", "")).toBe("zh-TW");
+  });
+
+  it("releaseName 显式英文优先于原始 language 中文", () => {
+    expect(resolveSubtitleLanguage("movie_en_16.srt", "中文")).toBe("en");
+  });
+
+  it("releaseName 显式中文优先于原始 language 英文", () => {
+    expect(resolveSubtitleLanguage("movie_zh_16.srt", "en")).toBe("zh-CN");
+  });
+});
+
 describe("matchesLanguageFilter - 语言过滤匹配", () => {
   it("精确匹配（忽略大小写）", () => {
     expect(matchesLanguageFilter("zh-CN", "zh-CN")).toBe(true);
