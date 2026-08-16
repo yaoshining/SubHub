@@ -82,6 +82,10 @@ describe("resolveSubtitleLanguage - 回归：词边界与优先级", () => {
     expect(resolveSubtitleLanguage("Avengers.Endgame.2019.srt", "")).toBeNull();
   });
 
+  it("英文单词子串 cht 不误判为繁体（Watchtower）", () => {
+    expect(resolveSubtitleLanguage("Watchtower.某剧.srt", "")).toBe("zh-CN");
+  });
+
   it("zh-TW / zh-CN 标记被识别为中文", () => {
     expect(resolveSubtitleLanguage("movie.zh-TW.srt", "")).toBe("zh-TW");
     expect(resolveSubtitleLanguage("movie.zh-CN.srt", "")).toBe("zh-CN");

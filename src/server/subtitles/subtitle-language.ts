@@ -12,6 +12,10 @@ const CJK_HAN = /[\u4e00-\u9fff]/;
 // 显式中英双语标记（CHSEN = 简体中文 + English；CHTEN = 繁体中文 + English）
 const BILINGUAL_MARKER = /chsen|chten|中英|双语/i;
 
+// 繁体中英双语显式标记（CHTEN）：传统/简体判定需在双语分支内单独处理，
+// 因为 `chten` 是 `cht` + `en` 的连写，不能被收紧后的 TRADITIONAL_MARKER 词边界命中。
+const TRADITIONAL_BILINGUAL_MARKER = /chten/i;
+
 // 显式中文标记。裸语言码（chs/cht/chi/chinese）加词边界，避免命中 Children/Chicago 等英文单词。
 const CHINESE_MARKER =
   /_zh[_.]|_chs[_.]|_cht[_.]|_chi[_.]|\bchs\b|\bcht\b|\bchi\b|\bchinese\b|zh[-_](cn|tw|hans|hant|hk|sg|mo)|简体|繁体|简中|繁中|中文|\.gb|big5/i;
@@ -20,8 +24,10 @@ const CHINESE_MARKER =
 // 英文/英语/英語 是中文语境下对 English 的显式标记，也归入英文。
 const ENGLISH_MARKER = /_en[_.]|\benglish\b|\beng\b|\.en\.|英文|英语|英語/i;
 
-// 繁体信号：命中则产出 zh-TW 而非 zh-CN
-const TRADITIONAL_MARKER = /繁体|繁中|cht|zh[-_]tw|zh[-_]hant|big5/i;
+// 繁体信号：命中则产出 zh-TW 而非 zh-CN。
+// cht 需作为独立语言标记（`_cht_` / `.cht.` / 独立 `cht`）匹配，避免命中 Watchtower 等普通单词。
+const TRADITIONAL_MARKER =
+  /繁体|繁中|_cht[_.]|\.cht\.|\bcht\b|zh[-_]tw|zh[-_]hant|big5/i;
 
 // 其他语言的显式标记：命中即产出对应 ISO 639-1 码。
 // 覆盖中文语境常用语言名（西语/韩文/日语…）与拉丁标记（全称 + 短码）。
@@ -157,7 +163,10 @@ const resolveFromName = (name: string): string | null => {
   const traditional = TRADITIONAL_MARKER.test(name);
 
   if (BILINGUAL_MARKER.test(name)) {
-    return traditional ? "zh-TW,en" : "zh-CN,en";
+    // CHTEN 显式表示繁体；CHSEN/中英/双语 则回落到 TRADITIONAL_MARKER 判定。
+    return TRADITIONAL_BILINGUAL_MARKER.test(name) || traditional
+      ? "zh-TW,en"
+      : "zh-CN,en";
   }
   if (CHINESE_MARKER.test(name)) {
     return traditional ? "zh-TW" : "zh-CN";
