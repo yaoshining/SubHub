@@ -4,7 +4,9 @@
 
 ## [Unreleased]
 
-当前没有已记录的未发布变更。
+### 修复
+
+- 缓解迅雷上游（xunlei）响应抖动导致的偶发 `502 UPSTREAM_FAILED`：增加失败/超时自动重试（默认 1 次）与指数退避，放宽默认超时（5s → 8s），并将超时、重试次数与退避基数做成环境变量可配置（`XUNLEI_API_TIMEOUT_MS` / `XUNLEI_API_MAX_RETRIES` / `XUNLEI_API_RETRY_BACKOFF_MS`）。
 
 ## [v0.2.3] - 2026-07-19
 
