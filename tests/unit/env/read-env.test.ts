@@ -79,4 +79,14 @@ describe("readEnv", () => {
     expect(env.XUNLEI_API_MAX_RETRIES).toBe(1);
     expect(env.XUNLEI_API_RETRY_BACKOFF_MS).toBe(200);
   });
+
+  it("rejects xunlei timeout above the setTimeout 32-bit ceiling", () => {
+    expect(() =>
+      readEnv(
+        createLocalTestEnv({
+          XUNLEI_API_TIMEOUT_MS: "2147483648",
+        }),
+      ),
+    ).toThrow();
+  });
 });

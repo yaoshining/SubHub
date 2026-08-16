@@ -24,7 +24,13 @@ const rawEnvSchema = z.object({
     .string()
     .url()
     .default("https://api.opensubtitles.com/api/v1"),
-  XUNLEI_API_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
+  // setTimeout 延迟上限为 32 位有符号整数（2147483647ms），超出会触发 Node.js 溢出并退化为 1ms。
+  XUNLEI_API_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(2_147_483_647)
+    .default(8000),
   XUNLEI_API_MAX_RETRIES: z.coerce.number().int().nonnegative().default(1),
   XUNLEI_API_RETRY_BACKOFF_MS: z.coerce
     .number()
