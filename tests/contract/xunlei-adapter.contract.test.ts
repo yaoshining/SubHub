@@ -124,6 +124,7 @@ describe("XunleiAdapter 错误处理", () => {
         async () => new Response("server error", { status: 502 }),
       ) as unknown as typeof fetch,
       timeoutMs: 1000,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(outcome).toMatchObject({
@@ -179,6 +180,7 @@ describe("XunleiAdapter 错误处理", () => {
           }),
       ) as unknown as typeof fetch,
       timeoutMs: 50,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(outcome).toMatchObject({
@@ -202,6 +204,7 @@ describe("XunleiAdapter 错误处理", () => {
           }),
       ) as unknown as typeof fetch,
       timeoutMs: 50,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(outcome).toMatchObject({
@@ -218,6 +221,7 @@ describe("XunleiAdapter 错误处理", () => {
         async () => new Response("not json", { status: 200 }),
       ) as unknown as typeof fetch,
       timeoutMs: 1000,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(outcome).toMatchObject({
