@@ -2532,7 +2532,7 @@ components:
         language:
           type: string
           nullable: true
-          description: 归一化后的语言码（如 `zh-CN` / `zh-TW` / `en` / `zh-CN,en`）；无法判定时为 null。OpenSubtitles 透传上游语言码，迅雷 provider 由网关基于 releaseName（优先）+ 原始 language（兜底）归一化。
+          description: 归一化后的语言码（如 `zh-CN` / `zh-TW` / `en` / `zh-CN,en` / `es` / `ko` / `ja` 等）；无法判定时为 null。OpenSubtitles 透传上游语言码，迅雷 provider 由网关基于 releaseName（优先）+ 原始 language（兜底）归一化。
         releaseName:
           type: string
           nullable: true

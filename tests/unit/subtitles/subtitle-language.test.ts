@@ -100,6 +100,51 @@ describe("resolveSubtitleLanguage - 回归：词边界与优先级", () => {
   });
 });
 
+describe("resolveSubtitleLanguage - 非中英语言标记归一化", () => {
+  it("西语标记归为 es", () => {
+    expect(resolveSubtitleLanguage("某剧_西语.srt", "")).toBe("es");
+    expect(resolveSubtitleLanguage("某剧_西班牙语.srt", "")).toBe("es");
+  });
+
+  it("韩文标记归为 ko", () => {
+    expect(resolveSubtitleLanguage("某剧_韩文.srt", "")).toBe("ko");
+    expect(resolveSubtitleLanguage("某剧_韩语.srt", "")).toBe("ko");
+  });
+
+  it("英文标记归为 en（此前会被 CJK 汉字误判为中文）", () => {
+    expect(resolveSubtitleLanguage("某剧_英文.srt", "")).toBe("en");
+    expect(resolveSubtitleLanguage("某剧_英语.srt", "")).toBe("en");
+  });
+
+  it("外文标记优先于 CJK 标题", () => {
+    expect(resolveSubtitleLanguage("权力的游戏_韩文.srt", "")).toBe("ko");
+    expect(resolveSubtitleLanguage("权力的游戏_西语.srt", "")).toBe("es");
+  });
+
+  it("日语/法语/德语等常见语言标记归一化", () => {
+    expect(resolveSubtitleLanguage("某剧_日语.srt", "")).toBe("ja");
+    expect(resolveSubtitleLanguage("某剧_法语.srt", "")).toBe("fr");
+    expect(resolveSubtitleLanguage("某剧_德语.srt", "")).toBe("de");
+    expect(resolveSubtitleLanguage("某剧_俄语.srt", "")).toBe("ru");
+    expect(resolveSubtitleLanguage("某剧_葡语.srt", "")).toBe("pt");
+  });
+
+  it("拉丁全称与短码标记归一化", () => {
+    expect(resolveSubtitleLanguage("movie_es_16.srt", "")).toBe("es");
+    expect(resolveSubtitleLanguage("movie.spanish.srt", "")).toBe("es");
+    expect(resolveSubtitleLanguage("movie_ko_16.srt", "")).toBe("ko");
+    expect(resolveSubtitleLanguage("movie.korean.srt", "")).toBe("ko");
+    expect(resolveSubtitleLanguage("movie.ja.srt", "")).toBe("ja");
+  });
+
+  it("原始 language 兜底命中非中英语言", () => {
+    expect(resolveSubtitleLanguage("", "es")).toBe("es");
+    expect(resolveSubtitleLanguage("", "spa")).toBe("es");
+    expect(resolveSubtitleLanguage("", "korean")).toBe("ko");
+    expect(resolveSubtitleLanguage("", "jpn")).toBe("ja");
+  });
+});
+
 describe("matchesLanguageFilter - 语言过滤匹配", () => {
   it("精确匹配（忽略大小写）", () => {
     expect(matchesLanguageFilter("zh-CN", "zh-CN")).toBe(true);
@@ -118,6 +163,14 @@ describe("matchesLanguageFilter - 语言过滤匹配", () => {
   it("英文族匹配", () => {
     expect(matchesLanguageFilter("en", "eng")).toBe(true);
     expect(matchesLanguageFilter("english", "en")).toBe(true);
+  });
+
+  it("非中英语言 family 匹配", () => {
+    expect(matchesLanguageFilter("es", "spa")).toBe(true);
+    expect(matchesLanguageFilter("es", "spanish")).toBe(true);
+    expect(matchesLanguageFilter("ko", "kor")).toBe(true);
+    expect(matchesLanguageFilter("ja", "japanese")).toBe(true);
+    expect(matchesLanguageFilter("pt-BR", "pt")).toBe(true);
   });
 
   it("双语结果命中任一语言分量", () => {
