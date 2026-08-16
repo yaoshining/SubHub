@@ -1,5 +1,7 @@
 import packageJson from "../../../package.json";
+import { readEnv } from "@/lib/env";
 import type {
+  ProviderSearchError,
   ProviderSearchOutcome,
   ProviderSearchResult,
   SubtitleProviderAdapter,
@@ -9,6 +11,11 @@ import { resolveSubtitleLanguage } from "@/server/subtitles/subtitle-language";
 import type { SubtitleSearchInput } from "@/server/subtitles/subtitle-gateway";
 
 const XUNLEI_BASE_URL = "https://api-shoulei-ssl.xunlei.com/oracle/subtitle";
+
+const RETRYABLE_REASONS: ReadonlySet<ProviderSearchError["reason"]> = new Set([
+  "timeout",
+  "upstream_failed",
+]);
 
 type XunleiSubtitleRecord = {
   cid?: string;
@@ -33,6 +40,7 @@ export type XunleiAdapterOptions = {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
+  maxRetries?: number;
 };
 
 export class XunleiAdapter implements SubtitleProviderAdapter {
@@ -40,11 +48,14 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
   private readonly baseUrl: string;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
+  private readonly maxRetries: number;
 
   constructor(options: XunleiAdapterOptions = {}) {
+    const env = readEnv();
     this.baseUrl = options.baseUrl ?? XUNLEI_BASE_URL;
     this.fetchImpl = options.fetchImpl ?? fetch;
-    this.timeoutMs = options.timeoutMs ?? 5000;
+    this.timeoutMs = options.timeoutMs ?? env.XUNLEI_API_TIMEOUT_MS;
+    this.maxRetries = options.maxRetries ?? env.XUNLEI_API_MAX_RETRIES;
   }
 
   async search(
@@ -55,6 +66,25 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
     void _credential;
     void _options;
 
+    for (let attempt = 0; ; attempt += 1) {
+      const outcome = await this.searchAttempt(input);
+
+      if (outcome.ok) {
+        return outcome;
+      }
+
+      if (
+        attempt >= this.maxRetries ||
+        !RETRYABLE_REASONS.has(outcome.error.reason)
+      ) {
+        return outcome;
+      }
+    }
+  }
+
+  private async searchAttempt(
+    input: SubtitleSearchInput,
+  ): Promise<ProviderSearchOutcome> {
     const name = input.query?.trim();
 
     if (!name) {

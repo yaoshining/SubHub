@@ -390,3 +390,138 @@ describe("XunleiAdapter 语言归一化", () => {
     expect(result?.raw).toMatchObject({ languages: [""] });
   });
 });
+
+describe("XunleiAdapter 超时重试与配置", () => {
+  it("上游 5xx 后重试一次成功，返回正常结果", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("server error", { status: 502 }))
+      .mockResolvedValueOnce(
+        Response.json({
+          code: 0,
+          data: [{ gcid: "g1", ext: "srt", name: "test.srt" }],
+          result: "ok",
+        }),
+      );
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(outcome).toMatchObject({ ok: true, skipped: false });
+  });
+
+  it("超时后重试一次成功，返回正常结果", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new DOMException("Aborted", "AbortError"))
+      .mockResolvedValueOnce(
+        Response.json({
+          code: 0,
+          data: [{ gcid: "g1", ext: "srt", name: "test.srt" }],
+          result: "ok",
+        }),
+      );
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(outcome).toMatchObject({ ok: true, skipped: false });
+  });
+
+  it("401 不重试", async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response("unauthorized", { status: 401 }),
+    ) as unknown as typeof fetch;
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(outcome).toMatchObject({
+      ok: false,
+      error: { reason: "authentication_failed" },
+    });
+  });
+
+  it("429 不重试", async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response("rate limited", { status: 429 }),
+    ) as unknown as typeof fetch;
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(outcome).toMatchObject({
+      ok: false,
+      error: { reason: "rate_limited" },
+    });
+  });
+
+  it("重试耗尽后返回最后一次错误", async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response("server error", { status: 502 }),
+    ) as unknown as typeof fetch;
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(outcome).toMatchObject({
+      ok: false,
+      error: { reason: "upstream_failed" },
+    });
+  });
+
+  it("XUNLEI_API_MAX_RETRIES 环境变量覆盖默认重试次数", async () => {
+    vi.stubEnv("XUNLEI_API_MAX_RETRIES", "0");
+    const fetchImpl = vi.fn(
+      async () => new Response("server error", { status: 502 }),
+    ) as unknown as typeof fetch;
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl,
+      timeoutMs: 1000,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(outcome).toMatchObject({
+      ok: false,
+      error: { reason: "upstream_failed" },
+    });
+  });
+
+  it("XUNLEI_API_TIMEOUT_MS 环境变量覆盖默认超时", async () => {
+    vi.stubEnv("XUNLEI_API_TIMEOUT_MS", "30");
+    const adapter = new XunleiAdapter({
+      baseUrl: "https://xunlei.test",
+      fetchImpl: vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((resolve, reject) => {
+            const timer = setTimeout(() => resolve(Response.json([])), 3000);
+            init?.signal?.addEventListener("abort", () => {
+              clearTimeout(timer);
+              reject(new DOMException("Aborted", "AbortError"));
+            });
+          }),
+      ) as unknown as typeof fetch,
+    });
+    const outcome = await adapter.search(null, makeInput());
+    expect(outcome).toMatchObject({
+      ok: false,
+      error: { reason: "timeout" },
+    });
+  });
+});
