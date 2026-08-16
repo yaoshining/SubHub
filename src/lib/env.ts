@@ -26,6 +26,11 @@ const rawEnvSchema = z.object({
     .default("https://api.opensubtitles.com/api/v1"),
   XUNLEI_API_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
   XUNLEI_API_MAX_RETRIES: z.coerce.number().int().nonnegative().default(1),
+  XUNLEI_API_RETRY_BACKOFF_MS: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .default(200),
   PROVIDER_CREDENTIAL_ENCRYPTION_KEY: z.string().min(32).optional(),
   ADMIN_SESSION_SECRET: z.string().min(32).optional(),
   CALLER_KEY_SECRET: z.string().min(32).optional(),
@@ -53,6 +58,7 @@ export type AppEnv = {
   OPENSUBTITLES_API_URL: string;
   XUNLEI_API_TIMEOUT_MS: number;
   XUNLEI_API_MAX_RETRIES: number;
+  XUNLEI_API_RETRY_BACKOFF_MS: number;
   PROVIDER_CREDENTIAL_ENCRYPTION_KEY?: string;
   ADMIN_SESSION_SECRET?: string;
   CALLER_KEY_SECRET?: string;
@@ -358,6 +364,7 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
     OPENSUBTITLES_API_URL: env.OPENSUBTITLES_API_URL,
     XUNLEI_API_TIMEOUT_MS: env.XUNLEI_API_TIMEOUT_MS,
     XUNLEI_API_MAX_RETRIES: env.XUNLEI_API_MAX_RETRIES,
+    XUNLEI_API_RETRY_BACKOFF_MS: env.XUNLEI_API_RETRY_BACKOFF_MS,
     PROVIDER_CREDENTIAL_ENCRYPTION_KEY: env.PROVIDER_CREDENTIAL_ENCRYPTION_KEY,
     ADMIN_SESSION_SECRET: env.ADMIN_SESSION_SECRET,
     CALLER_KEY_SECRET: env.CALLER_KEY_SECRET,

@@ -407,6 +407,7 @@ describe("XunleiAdapter 超时重试与配置", () => {
       baseUrl: "https://xunlei.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
       timeoutMs: 1000,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(fetchImpl).toHaveBeenCalledTimes(2);
@@ -428,6 +429,7 @@ describe("XunleiAdapter 超时重试与配置", () => {
       baseUrl: "https://xunlei.test",
       fetchImpl: fetchImpl as unknown as typeof fetch,
       timeoutMs: 1000,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(fetchImpl).toHaveBeenCalledTimes(2);
@@ -476,6 +478,7 @@ describe("XunleiAdapter 超时重试与配置", () => {
       baseUrl: "https://xunlei.test",
       fetchImpl,
       timeoutMs: 1000,
+      retryBackoffMs: 0,
     });
     const outcome = await adapter.search(null, makeInput());
     expect(fetchImpl).toHaveBeenCalledTimes(2);
@@ -485,43 +488,44 @@ describe("XunleiAdapter 超时重试与配置", () => {
     });
   });
 
-  it("XUNLEI_API_MAX_RETRIES 环境变量覆盖默认重试次数", async () => {
-    vi.stubEnv("XUNLEI_API_MAX_RETRIES", "0");
-    const fetchImpl = vi.fn(
-      async () => new Response("server error", { status: 502 }),
-    ) as unknown as typeof fetch;
-    const adapter = new XunleiAdapter({
-      baseUrl: "https://xunlei.test",
-      fetchImpl,
-      timeoutMs: 1000,
-    });
-    const outcome = await adapter.search(null, makeInput());
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
-    expect(outcome).toMatchObject({
-      ok: false,
-      error: { reason: "upstream_failed" },
-    });
-  });
-
-  it("XUNLEI_API_TIMEOUT_MS 环境变量覆盖默认超时", async () => {
-    vi.stubEnv("XUNLEI_API_TIMEOUT_MS", "30");
-    const adapter = new XunleiAdapter({
-      baseUrl: "https://xunlei.test",
-      fetchImpl: vi.fn(
-        (_url: string, init?: RequestInit) =>
-          new Promise((resolve, reject) => {
-            const timer = setTimeout(() => resolve(Response.json([])), 3000);
-            init?.signal?.addEventListener("abort", () => {
-              clearTimeout(timer);
-              reject(new DOMException("Aborted", "AbortError"));
-            });
+  it("重试前按退避时长等待，而非立即重试", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValueOnce(new Response("server error", { status: 502 }))
+        .mockResolvedValueOnce(
+          Response.json({
+            code: 0,
+            data: [{ gcid: "g1", ext: "srt", name: "test.srt" }],
+            result: "ok",
           }),
-      ) as unknown as typeof fetch,
-    });
-    const outcome = await adapter.search(null, makeInput());
-    expect(outcome).toMatchObject({
-      ok: false,
-      error: { reason: "timeout" },
-    });
+        );
+      const adapter = new XunleiAdapter({
+        baseUrl: "https://xunlei.test",
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+        timeoutMs: 1000,
+        retryBackoffMs: 300,
+      });
+
+      const resultPromise = adapter.search(null, makeInput());
+
+      // 第一次请求（502）落定后进入退避
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+      // 退避结束前不重试
+      await vi.advanceTimersByTimeAsync(299);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+      // 退避结束后触发重试
+      await vi.advanceTimersByTimeAsync(1);
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+
+      const outcome = await resultPromise;
+      expect(outcome).toMatchObject({ ok: true, skipped: false });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

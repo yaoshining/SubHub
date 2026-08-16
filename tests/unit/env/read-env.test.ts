@@ -57,4 +57,26 @@ describe("readEnv", () => {
       "postgresql://direct-user@localhost:5432/subhub",
     );
   });
+
+  it("coerces xunlei provider retry/timeout config from string env values", () => {
+    const env = readEnv(
+      createLocalTestEnv({
+        XUNLEI_API_TIMEOUT_MS: "1234",
+        XUNLEI_API_MAX_RETRIES: "2",
+        XUNLEI_API_RETRY_BACKOFF_MS: "400",
+      }),
+    );
+
+    expect(env.XUNLEI_API_TIMEOUT_MS).toBe(1234);
+    expect(env.XUNLEI_API_MAX_RETRIES).toBe(2);
+    expect(env.XUNLEI_API_RETRY_BACKOFF_MS).toBe(400);
+  });
+
+  it("falls back to defaults for xunlei provider retry/timeout config", () => {
+    const env = readEnv(createLocalTestEnv());
+
+    expect(env.XUNLEI_API_TIMEOUT_MS).toBe(8000);
+    expect(env.XUNLEI_API_MAX_RETRIES).toBe(1);
+    expect(env.XUNLEI_API_RETRY_BACKOFF_MS).toBe(200);
+  });
 });

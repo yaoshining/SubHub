@@ -1,5 +1,4 @@
 import packageJson from "../../../package.json";
-import { readEnv } from "@/lib/env";
 import type {
   ProviderSearchError,
   ProviderSearchOutcome,
@@ -12,10 +11,18 @@ import type { SubtitleSearchInput } from "@/server/subtitles/subtitle-gateway";
 
 const XUNLEI_BASE_URL = "https://api-shoulei-ssl.xunlei.com/oracle/subtitle";
 
+const XUNLEI_DEFAULT_TIMEOUT_MS = 8000;
+const XUNLEI_DEFAULT_MAX_RETRIES = 1;
+const XUNLEI_DEFAULT_RETRY_BACKOFF_MS = 200;
+const XUNLEI_MAX_RETRY_BACKOFF_MS = 2000;
+
 const RETRYABLE_REASONS: ReadonlySet<ProviderSearchError["reason"]> = new Set([
   "timeout",
   "upstream_failed",
 ]);
+
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 type XunleiSubtitleRecord = {
   cid?: string;
@@ -41,6 +48,7 @@ export type XunleiAdapterOptions = {
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
   maxRetries?: number;
+  retryBackoffMs?: number;
 };
 
 export class XunleiAdapter implements SubtitleProviderAdapter {
@@ -49,13 +57,15 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
   private readonly maxRetries: number;
+  private readonly retryBackoffMs: number;
 
   constructor(options: XunleiAdapterOptions = {}) {
-    const env = readEnv();
     this.baseUrl = options.baseUrl ?? XUNLEI_BASE_URL;
     this.fetchImpl = options.fetchImpl ?? fetch;
-    this.timeoutMs = options.timeoutMs ?? env.XUNLEI_API_TIMEOUT_MS;
-    this.maxRetries = options.maxRetries ?? env.XUNLEI_API_MAX_RETRIES;
+    this.timeoutMs = options.timeoutMs ?? XUNLEI_DEFAULT_TIMEOUT_MS;
+    this.maxRetries = options.maxRetries ?? XUNLEI_DEFAULT_MAX_RETRIES;
+    this.retryBackoffMs =
+      options.retryBackoffMs ?? XUNLEI_DEFAULT_RETRY_BACKOFF_MS;
   }
 
   async search(
@@ -79,7 +89,16 @@ export class XunleiAdapter implements SubtitleProviderAdapter {
       ) {
         return outcome;
       }
+
+      await sleep(this.backoffDelayMs(attempt));
     }
+  }
+
+  private backoffDelayMs(attempt: number): number {
+    return Math.min(
+      this.retryBackoffMs * 2 ** attempt,
+      XUNLEI_MAX_RETRY_BACKOFF_MS,
+    );
   }
 
   private async searchAttempt(
