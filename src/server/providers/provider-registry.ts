@@ -1,3 +1,4 @@
+import { readEnv } from "@/lib/env";
 import type {
   SubtitleProviderAdapter,
   SubtitleProviderKey,
@@ -10,7 +11,14 @@ const adapterFactories: Record<
   () => SubtitleProviderAdapter
 > = {
   opensubtitles: () => new OpenSubtitlesAdapter(),
-  xunlei: () => new XunleiAdapter(),
+  xunlei: () => {
+    const env = readEnv();
+    return new XunleiAdapter({
+      timeoutMs: env.XUNLEI_API_TIMEOUT_MS,
+      maxRetries: env.XUNLEI_API_MAX_RETRIES,
+      retryBackoffMs: env.XUNLEI_API_RETRY_BACKOFF_MS,
+    });
+  },
 };
 
 const adapterCache = new Map<SubtitleProviderKey, SubtitleProviderAdapter>();
