@@ -353,6 +353,33 @@ describe("XunleiAdapter 语言归一化", () => {
     expect(result?.language).toBe("en");
   });
 
+  it("西语标记归一化为 es", async () => {
+    const result = await run({
+      gcid: "g6",
+      name: "权力的游戏_西语.srt",
+      languages: [],
+    });
+    expect(result?.language).toBe("es");
+  });
+
+  it("韩文标记归一化为 ko", async () => {
+    const result = await run({
+      gcid: "g7",
+      name: "权力的游戏_韩文.srt",
+      languages: [],
+    });
+    expect(result?.language).toBe("ko");
+  });
+
+  it("英文标记归一化为 en（CJK 标题不误判为中文）", async () => {
+    const result = await run({
+      gcid: "g8",
+      name: "权力的游戏_英文.srt",
+      languages: [],
+    });
+    expect(result?.language).toBe("en");
+  });
+
   it("无信号时 language 为 null，原始 languages 保留在 raw", async () => {
     const result = await run({
       gcid: "g5",
